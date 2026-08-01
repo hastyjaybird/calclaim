@@ -1,0 +1,15 @@
+{
+  "version": "2026-07-31",
+  "notes": "Illustrative CARE/FERA-style annual income bands for demo routing. Verify against current PG&E published guidelines before production claims. Estimates only.",
+  "source": "PG&E CARE/FERA public income guidelines (freeze for demo; re-check periodically)",
+  "bandsByHouseholdSize": {
+    "1": { "careMax": 40340, "feraMax": 50425 },
+    "2": { "careMax": 40340, "feraMax": 50425 },
+    "3": { "careMax": 50880, "feraMax": 63600 },
+    "4": { "careMax": 61400, "feraMax": 76750 },
+    "5": { "careMax": 71940, "feraMax": 89925 },
+    "6": { "careMax": 82460, "feraMax": 103100 },
+    "7": { "careMax": 92980, "feraMax": 116225 },
+    "8": { "careMax": 103500, "feraMax": 129400 }
+  }
+}
