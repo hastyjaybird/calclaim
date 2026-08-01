@@ -213,13 +213,13 @@ Est. up to ~${max from maxBenefitUsd for household} (max; estimate). Deadline: {
 | 4 | ESA | Energy upgrades |
 | 5 | LIHEAP | Energy bill help |
 | 6 | AMP | If past due |
-| 7 | Tax credits | Higher friction |
-| 8 | CalWORKs | If kids under 18 / pregnancy |
+| 7 | CalWORKs | If kids under 18 / pregnancy |
 | … | WIC | If kids under 18 / pregnancy (YES arm) |
+| last | Tax credits | Highest friction — preparer meeting |
 
 ### NO offer order (CARE-band illustrative)
 
-CARE → FERA (if band) → LifeLine → ESA → LIHEAP → CalFresh → AMP? → tax → CalWORKs (if kids / pregnancy).
+CARE → FERA (if band) → LifeLine → ESA → LIHEAP → CalFresh → AMP? → CalWORKs (if kids / pregnancy) → tax (last).
 
 ---
 

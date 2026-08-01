@@ -544,9 +544,9 @@
         }
       ],
       "applySteps": [
-        "Keep receipts and income records",
-        "Use IRS Free File / VITA if eligible",
-        "Ask a tax preparer \u2014 CalClaim does not file taxes"
+        "Gather income records and receipts (W-2s, 1099s, award letters)",
+        "Book a VITA / tax-preparer appointment \u2014 this usually means a real meeting",
+        "CalClaim does not file taxes"
       ],
       "docsNeeded": [
         "incomeProof"
@@ -555,14 +555,14 @@
         "incomeProof"
       ],
       "timeToMoneyDays": 120,
-      "formFillMinutes": 35,
+      "formFillMinutes": 90,
       "branches": [
         "yes",
         "no",
         "tax_only"
       ],
-      "yesOrder": 7,
-      "noOrder": 8,
+      "yesOrder": 90,
+      "noOrder": 90,
       "gateFeeder": false,
       "skipCascades": [],
       "skipReasons": [],
