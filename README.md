@@ -27,30 +27,51 @@ cp .env.example .env
 npm run dev
 ```
 
-4. Open Telegram, tap your bot, send `/start`.
+4. Open Telegram, tap your bot, send `/start`.  
+5. Open the funder dashboard: [http://localhost:3000/impact](http://localhost:3000/impact)  
+6. Open the developer corpus watch: [http://localhost:3000/dev](http://localhost:3000/dev)
+
+Optional demo numbers:
+
+```bash
+npm run seed-impact
+```
 
 ### Env
 
 | Variable | Purpose |
 |---|---|
 | `TELEGRAM_BOT_TOKEN` | Required |
+| `TELEGRAM_BOT_USERNAME` | Optional; auto from Telegram at boot |
+| `PUBLIC_BASE_URL` | Origin for QR landings + apply redirects (default `http://localhost:3000`) |
 | `BOT_MODE` | `long_polling` (default) or `webhook` |
 | `WEBHOOK_URL` / `WEBHOOK_SECRET` / `PORT` | Webhook deploy |
 | `DATABASE_PATH` | SQLite file (default `./data/calclaim.sqlite`) |
 | `TZ` | `America/Los_Angeles` |
+| `OPENROUTER_API_KEY` / `OPENAI_API_KEY` | Optional — deeper LLM review on `/dev` corpus scans |
 
 `.env` is loaded automatically on start (existing shell env wins).
+
+## Funder impact site
+
+Public page at `/impact` shows people reached (QR + links), program apply-page opens, follow-throughs, estimated aid unlocked, a coarse map, and charts. Details: [`docs/funder-dashboard.md`](docs/funder-dashboard.md).
+
+Print QR codes to `/go/<campaignId>` (see `corpus/campaigns.json`). Apply buttons in Telegram go through `/r/<programId>` so clicks are countable.
+
+## Developer corpus watch
+
+Page at `/dev` (password + CAPTCHA; **humans only**) runs an advisory agent over each program’s apply URL and source citations: link health, deadlines, eligibility language, apply-process changes, funding/closed signals, max amounts, and CARE/FERA income bands. Optional LLM analysis if an API key is set. Findings never edit the frozen corpus — developers update `corpus/programs.json` by hand. Set `DEVELOPER_PASSWORD` in `.env`. Details: [`docs/developer-corpus-watch.md`](docs/developer-corpus-watch.md).
 
 ## What the bot does
 
 1. **Opt-in** — multi-category disclaimer  
 2. **Gate** — already on Medi-Cal / CalFresh / SSI / CalWORKs / WIC?  
 3. **YES / NO queues** — ranked by new docs + time-to-money (CARE is not hard-coded first for “energy” reasons)  
-4. **Offer cards** — Open apply page · add to list · Already · Remind · Skip  
+4. **Offer cards** — Open apply page now · Save to my to do list · Already enrolled · Skip  
 5. **Next-steps PDF** after each action  
 6. **Benefits report PDF** when the queue ends  
 7. **Reminders** — daily 12:00 PT scan (Tue closest + T-3 + T-1)  
-8. **Help / STOP / erase** + quiet free-form QC log (`data/responses.jsonl`)
+8. **Help / STOP / erase** + alpha feedback (text/voice → QC log + `/dev` to-do list; voice transcribed with Whisper when `OPENAI_API_KEY` is set)
 
 ## Demo script (~5 min)
 
@@ -58,7 +79,7 @@ npm run dev
 2. **Yes** on gate → past due **No**  
 3. Walk CARE (energy) → **Skip** or Sign up; then LifeLine (telecom) and CalFresh (food) — show multi-category  
 4. Open the PDF; confirm food + telecom + energy can all appear  
-5. Type `asdf` → “Thanks for your feedback…” (no advance)  
+5. Type `asdf` (or send a voice note) → “Thanks for your feedback!” + last prompt repeated (no advance); item appears on `/dev` feedback to-do  
 6. Help → About → STOP → erase  
 
 Sample PDF: `npm run sample-pdf` → `docs/samples/calclaim-next-steps-sample.pdf`
@@ -66,14 +87,17 @@ Sample PDF: `npm run sample-pdf` → `docs/samples/calclaim-next-steps-sample.pd
 ## Repo layout
 
 ```
-corpus/           Frozen programs + income bands
+corpus/           Frozen programs, income bands, QR campaigns
+public/impact/    Funder dashboard (HTML/CSS/JS)
+src/analytics/    Event log + impact aggregates
+src/web/          HTTP: dashboard, /go, /r redirects
 src/bot/          Grammy handlers + keyboards
 src/queue/        Deterministic ranker + CARE skip cascades
 src/nextsteps/    Todo model + PDF render
 src/reminders/    Cron
 src/privacy/      Copy
 src/qc/           responses.jsonl
-src/db/           SQLite sessions
+src/db/           SQLite sessions, analytics, telegram_users / telegram_messages
 docs/             Product specs (v2)
 PRIVACY.md
 ```
@@ -85,6 +109,7 @@ PRIVACY.md
 | [`docs/guidelines.md`](docs/guidelines.md) | v2 product rules |
 | [`docs/customer-experience.md`](docs/customer-experience.md) | CX tree |
 | [`docs/finish-line-ux.md`](docs/finish-line-ux.md) | Living file + reminders |
+| [`docs/funder-dashboard.md`](docs/funder-dashboard.md) | Impact site + tracking |
 | [`PROMPT.md`](PROMPT.md) | Build kickoff |
 
 ## Non-affiliation
@@ -93,6 +118,6 @@ Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, or Anthropic. Estimates on
 
 ## Deploy (Railway sketch)
 
-1. Set `BOT_MODE=webhook`, `WEBHOOK_URL`, `TELEGRAM_BOT_TOKEN`, volume for `/data`.  
+1. Set `BOT_MODE=webhook`, `WEBHOOK_URL`, `TELEGRAM_BOT_TOKEN`, `PUBLIC_BASE_URL`, volume for `/data`.  
 2. Start command: `npm start`  
-3. Health: `GET /health`
+3. Health: `GET /health` · Impact: `GET /impact`

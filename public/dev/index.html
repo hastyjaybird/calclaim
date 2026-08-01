@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <title>CalClaim — Developer corpus watch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/impact/styles.css" />
+  <link rel="stylesheet" href="/dev/styles.css" />
+</head>
+<body>
+  <div class="banner" role="banner">
+    <div class="banner-inner">
+      <span class="banner-mark">CalClaim</span>
+      <span class="banner-sep" aria-hidden="true"></span>
+      <nav class="site-nav" aria-label="Site">
+        <a href="/impact">Impact</a>
+        <a href="/dev" aria-current="page">Developer</a>
+        <button type="button" class="nav-logout" id="btn-logout">Log out</button>
+      </nav>
+      <span class="banner-line">Corpus freshness — humans only · advisory findings</span>
+    </div>
+  </div>
+
+  <header class="hero hero-dev">
+    <p class="eyebrow">Developer tools</p>
+    <h1>Corpus watch</h1>
+    <p class="lede">
+      Scan official program pages for date, eligibility, apply-process, funding, amount, and URL drift.
+      Findings never edit the frozen corpus — developers review and update <code>programs.json</code>.
+    </p>
+    <div class="cta-row">
+      <button type="button" class="cta" id="btn-scan">Run corpus check</button>
+      <a class="cta cta-ghost" href="#checklist">Watch checklist</a>
+    </div>
+    <p class="scan-status" id="scan-status" aria-live="polite"></p>
+  </header>
+
+  <main>
+    <section class="metrics" aria-label="Corpus status">
+      <article class="metric">
+        <p class="metric-label">Corpus version</p>
+        <p class="metric-value" id="m-version">—</p>
+        <p class="metric-note" id="m-age">Aging rule: 90 days</p>
+      </article>
+      <article class="metric">
+        <p class="metric-label">Programs</p>
+        <p class="metric-value" id="m-programs">—</p>
+        <p class="metric-note" id="m-bands">Income bands: —</p>
+      </article>
+      <article class="metric">
+        <p class="metric-label">Open findings</p>
+        <p class="metric-value" id="m-open">—</p>
+        <p class="metric-note"><span id="m-crit">0</span> critical · <span id="m-high">0</span> high</p>
+      </article>
+      <article class="metric metric-accent">
+        <p class="metric-label">LLM analysis</p>
+        <p class="metric-value metric-value-sm" id="m-llm">—</p>
+        <p class="metric-note">Optional via API key in env</p>
+      </article>
+    </section>
+
+    <section class="panel" aria-labelledby="feedback-heading">
+      <div class="panel-head panel-head-row">
+        <div>
+          <h2 id="feedback-heading">Alpha user feedback — to do</h2>
+          <p>
+            Text and voice notes from testers. Voice is transcribed to text when
+            <code>OPENAI_API_KEY</code> is set. Mark done after you act on it.
+          </p>
+        </div>
+        <label class="filter">
+          Show
+          <select id="feedback-filter">
+            <option value="open">Open</option>
+            <option value="all">All</option>
+            <option value="done">Done</option>
+          </select>
+        </label>
+      </div>
+      <div id="feedback-list" class="findings">
+        <p class="empty">Loading…</p>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="findings-heading">
+      <div class="panel-head panel-head-row">
+        <div>
+          <h2 id="findings-heading">Findings for developers</h2>
+          <p>Prioritized mismatches and link issues. Acknowledge or dismiss after you update the corpus.</p>
+        </div>
+        <label class="filter">
+          Show
+          <select id="finding-filter">
+            <option value="open">Open</option>
+            <option value="all">All</option>
+            <option value="acknowledged">Acknowledged</option>
+            <option value="dismissed">Dismissed</option>
+            <option value="fixed">Fixed</option>
+          </select>
+        </label>
+      </div>
+      <div id="findings-list" class="findings">
+        <p class="empty">Loading…</p>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="programs-heading">
+      <div class="panel-head">
+        <h2 id="programs-heading">Programs in corpus</h2>
+        <p>Each row is a frozen offer the chatbot can present. Open findings are from prior scans.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Program</th>
+              <th>Category</th>
+              <th class="num">Sources</th>
+              <th class="num">Deadlines</th>
+              <th class="num">Open findings</th>
+              <th>Apply URL</th>
+            </tr>
+          </thead>
+          <tbody id="program-rows">
+            <tr><td colspan="6">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="checklist" aria-labelledby="checklist-heading">
+      <div class="panel-head">
+        <h2 id="checklist-heading">What to keep an eye on</h2>
+        <p>Beyond dates, qualifications, apply steps, funding, max amounts, and URLs — these fields also break the bot when stale.</p>
+      </div>
+      <ul class="checklist" id="checklist-items"></ul>
+    </section>
+
+    <section class="panel" aria-labelledby="scans-heading">
+      <div class="panel-head">
+        <h2 id="scans-heading">Recent scans</h2>
+        <p>Scans hit apply URLs and source citations; they never write to the corpus.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Status</th>
+              <th>Progress</th>
+              <th>Findings</th>
+              <th>LLM</th>
+              <th>Started</th>
+            </tr>
+          </thead>
+          <tbody id="scan-rows">
+            <tr><td colspan="6">No scans yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      CalClaim developer tools · Authorized humans only — no robots, AI agents, or automated login ·
+      Frozen corpus stays human-edited · <a href="/impact">Impact dashboard</a>
+    </p>
+  </footer>
+
+  <script src="/dev/app.js"></script>
+</body>
+</html>

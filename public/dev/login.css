@@ -1,0 +1,235 @@
+:root {
+  --ink: #10241f;
+  --ink-soft: #3a5550;
+  --paper: #eef4f1;
+  --leaf: #0d7a5f;
+  --leaf-deep: #084d3d;
+  --line: rgba(16, 36, 31, 0.12);
+  --danger: #9b2c2c;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Figtree", system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background:
+    radial-gradient(900px 480px at 10% -10%, rgba(13, 122, 95, 0.2), transparent 55%),
+    radial-gradient(700px 420px at 100% 0%, rgba(56, 120, 140, 0.12), transparent 50%),
+    linear-gradient(180deg, #e2ece8 0%, var(--paper) 50%, #e7f0f3 100%);
+}
+
+.login-shell {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 3.5rem 1.25rem 3rem;
+  animation: rise 0.65s ease both;
+}
+
+.brand {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--leaf-deep);
+  letter-spacing: 0.02em;
+}
+
+h1 {
+  margin: 0.85rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 6vw, 3rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--leaf-deep);
+}
+
+.lede {
+  margin: 0.75rem 0 0;
+  color: var(--ink-soft);
+  font-size: 1.05rem;
+}
+
+.policy {
+  margin: 1.4rem 0 0;
+  padding: 0.95rem 1rem;
+  border-left: 3px solid var(--leaf);
+  background: rgba(248, 252, 250, 0.7);
+  border-radius: 0 0.75rem 0.75rem 0;
+}
+
+.policy p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.login-form {
+  margin-top: 1.6rem;
+  display: grid;
+  gap: 1.1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.field > span,
+.field-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+.field input,
+.captcha-block input {
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  border: 1.5px solid rgba(15, 61, 44, 0.28);
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.72);
+  font: inherit;
+  color: var(--ink);
+}
+
+.field input:focus,
+.captcha-block input:focus {
+  outline: 2px solid rgba(13, 122, 95, 0.45);
+  outline-offset: 1px;
+  border-color: var(--leaf);
+}
+
+.captcha-block {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.captcha-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+#captcha-img {
+  display: block;
+  border-radius: 0.7rem;
+  border: 1px solid var(--line);
+  background: #e2ece8;
+}
+
+.ghost-btn {
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba(15, 61, 44, 0.3);
+  background: transparent;
+  color: var(--leaf-deep);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.ghost-btn:hover {
+  background: rgba(31, 107, 74, 0.08);
+}
+
+.attest {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.attest input {
+  margin-top: 0.2rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--leaf-deep);
+  flex-shrink: 0;
+}
+
+.error {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.65rem;
+  background: rgba(155, 44, 44, 0.08);
+  color: var(--danger);
+  font-size: 0.92rem;
+}
+
+.submit {
+  padding: 0.85rem 1.15rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--leaf-deep);
+  color: #f7f3ea;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.submit:hover {
+  background: var(--leaf);
+  transform: translateY(-1px);
+}
+
+.submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+  transform: none;
+}
+
+.back {
+  margin: 1.75rem 0 0;
+  font-size: 0.9rem;
+}
+
+.back a {
+  color: var(--leaf-deep);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.back a:hover {
+  text-decoration: underline;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

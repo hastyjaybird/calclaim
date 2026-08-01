@@ -72,10 +72,10 @@ Energy bill discounts and free home upgrades are **valuable offers**, not the br
 
 If the user types anything that is not a valid control or expected answer for the current step:
 
-1. **Quietly log** to `data/responses.jsonl`: timestamp, user id, **step**, raw text, session snapshot. Do not announce the log.  
-2. **Reply:** `Thanks for your feedback. Please select above or type Help.`  
+1. **Quietly log** to `data/responses.jsonl` and append a row to the developer feedback to-do list (SQLite): timestamp, user id, **step**, raw text (voice transcribed when Whisper is configured), session snapshot. Do not announce the log.  
+2. **Reply:** `Thanks for your feedback!` then **repeat the last bot prompt** (same text + buttons).  
 3. **Do not** advance conversation state.  
-4. Erase/STOP clears that user’s responses-file rows with the rest of their data.
+4. Erase/STOP clears that user’s responses-file rows with the rest of their data. Restart/`/start` also clears that user’s next-steps list and developer feedback to-do rows.
 
 ---
 

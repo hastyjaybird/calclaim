@@ -42,15 +42,49 @@ export function loadConfig() {
   const mode = (process.env.BOT_MODE ?? "long_polling") as
     | "long_polling"
     | "webhook";
+  const port = Number(process.env.PORT ?? "3000");
+  const publicBaseUrl = (
+    process.env.PUBLIC_BASE_URL ?? `http://localhost:${port}`
+  ).replace(/\/$/, "");
+  const developerPassword = process.env.DEVELOPER_PASSWORD ?? "";
+  const developerSessionSecret =
+    process.env.DEVELOPER_SESSION_SECRET ??
+    process.env.WEBHOOK_SECRET ??
+    "calclaim-dev-session";
   return {
     token: env("TELEGRAM_BOT_TOKEN"),
     mode,
     webhookUrl: process.env.WEBHOOK_URL,
     webhookSecret: process.env.WEBHOOK_SECRET ?? "calclaim-webhook",
-    port: Number(process.env.PORT ?? "3000"),
+    port,
     databasePath: process.env.DATABASE_PATH ?? path.join(DATA_DIR, "calclaim.sqlite"),
     tz: process.env.TZ ?? "America/Los_Angeles",
+    /** Public origin for QR landings, apply redirects, and funder site */
+    publicBaseUrl,
+    botUsername: process.env.TELEGRAM_BOT_USERNAME ?? "",
+    /** Password for /dev (empty = developer login always fails) */
+    developerPassword,
+    developerSessionSecret,
   };
+}
+
+/** Mutable after getMe() so deep links work without env. */
+let resolvedBotUsername = "";
+
+export function setBotUsername(username: string): void {
+  resolvedBotUsername = username.replace(/^@/, "");
+}
+
+export function getBotUsername(configUsername?: string): string {
+  return resolvedBotUsername || (configUsername ?? "").replace(/^@/, "");
+}
+
+export function trackedApplyUrl(publicBaseUrl: string, programId: string): string {
+  return `${publicBaseUrl}/r/${encodeURIComponent(programId)}`;
+}
+
+export function campaignLandingUrl(publicBaseUrl: string, campaignId: string): string {
+  return `${publicBaseUrl}/go/${encodeURIComponent(campaignId)}`;
 }
 
 export type AppConfig = ReturnType<typeof loadConfig>;

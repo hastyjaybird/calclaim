@@ -76,8 +76,8 @@ Corpus is source of truth. Every program that enters a user’s queue must resol
 START (/start or first message)
   → OPT_IN (disclaimer)
   → GATE (household on Medi-Cal / CalFresh / SSI / CalWORKs / WIC?)
-       ├─ Yes → YES_SEED docsInHand → YES_QUEUE
-       └─ No  → NO_SEED docsInHand → INCOME_BAND → NO_QUEUE or tax-only
+       ├─ Yes → YES_SEED docsInHand → PAST_DUE → [HAS_CHILD if needed] → YES_QUEUE
+       └─ No  → NO_SEED docsInHand → INCOME_BAND → PAST_DUE (CARE band) → [HAS_CHILD if needed] → NO_QUEUE or tax-only
   → OFFER_CARD (loop)
        Sign up | Already enrolled | Remind me later | Skip (| CARE Skip sub-branch)
        → UPDATE next-steps file + sendDocument
@@ -108,29 +108,48 @@ CalClaim helps you find California benefits and bill help —
 food, health, phone discounts, energy bill programs, tax credits, and more.
 Estimates only. Not affiliated with any agency or utility.
 
+(Hi alpha user! Thank you for testing this app. At any time, you can
+text or send a voice message describing any issue that comes up or suggest
+an improvement.)
+
+Type 'help' for more options.
+
 [ Start ]
 ```
 
 | Control | Logic |
 |---|---|
 | Start | → GATE |
-| Gibberish | QC log + thanks; no advance |
+| Free-form text / voice | Store as developer feedback todo (+ QC log; voice transcribed when configured) → “Thanks for your feedback!” → repeat last prompt; no advance |
 
 ### GATE
 
 ```text
-Is anyone in your household already on Medi-Cal, CalFresh, SSI, CalWORKs, or WIC?
+Is anyone in your household on any of the following?
+(Household = people who share finances or depend on each other — not roommates who keep separate money.)
 
-[ Yes ]
-[ No ]
+[ tap programs… ] [ Done ] / [ None ]
 ```
 
 | Control | Logic |
 |---|---|
-| Yes | `docsInHand`: categoricalProof + photoId + utilityBill → YES_QUEUE |
-| No | `docsInHand`: photoId + utilityBill → INCOME_BAND |
+| Yes (any program) | `docsInHand`: categoricalProof + photoId + utilityBill → YES_QUEUE |
+| None | `docsInHand`: photoId + utilityBill → HOUSEHOLD_SIZE → INCOME_BAND |
+
+### HOUSEHOLD_SIZE (NO arm only)
+
+```text
+How many people are in your household for income guidelines?
+
+Count people who share finances or depend on each other — not roommates who pay their own way.
+```
 
 ### INCOME_BAND (NO arm only)
+
+```text
+About how much is that household's total yearly income before taxes?
+(Combined for everyone you counted — people who share finances, not separate roommates.)
+```
 
 Bands from frozen CARE/FERA-style tables × household size (corpus). Purpose: eliminate / route offers — **not** to center the product on CARE.
 
@@ -138,18 +157,34 @@ Bands from frozen CARE/FERA-style tables × household size (corpus). Purpose: el
 |---|---|
 | Above FERA | Tax-credits card only → files |
 | FERA band (per corpus HH rules) | FERA → tax → files |
-| CARE band | Full NO offer queue |
+| CARE band | PAST_DUE → [HAS_CHILD if needed] → full NO offer queue |
+
+### HAS_CHILD (only if a `requiresChildInHousehold` program would enter the queue)
+
+```text
+Any kids under 18 (or a pregnancy) in the household?
+
+[ Yes ] [ No ]
+```
+
+| Control | Logic |
+|---|---|
+| Yes | `hasChildInHousehold=true` → include CalWORKs / WIC (if otherwise eligible) |
+| No | Drop programs with `requiresChildInHousehold` (`NOT_IN_QUEUE`) |
+
+Same pattern as past-due for AMP: ask once, only when it gates an optional offer — not as a global early quiz.
 
 ### OFFER_CARD (every program)
 
 ```text
 {Program name} — {one-line plain benefit}
-Est. {maxBenefit} (estimate). Deadline: {deadline or “check site”}.
+Est. ~{formFillMinutes, discounted if docs already in hand} min to fill out form.
+Est. up to ~${max from maxBenefitUsd for household} (max; estimate). Deadline: {deadline or “check site”}.
+[If timeToMoneyDays ≥ 21:] Docs / numbers you'll likely need: • …
 
-[ Sign up ]
-[ Already enrolled ]
-[ Remind me later ]
-[ Skip ]
+[ Open apply page now ]
+[ Save to my to do list ]
+[ Already enrolled ] [ Skip ]
 ```
 
 | Control | Logic |
@@ -179,11 +214,12 @@ Est. {maxBenefit} (estimate). Deadline: {deadline or “check site”}.
 | 5 | LIHEAP | Energy bill help |
 | 6 | AMP | If past due |
 | 7 | Tax credits | Higher friction |
-| 8 | CalWORKs | Higher friction |
+| 8 | CalWORKs | If kids under 18 / pregnancy |
+| … | WIC | If kids under 18 / pregnancy (YES arm) |
 
 ### NO offer order (CARE-band illustrative)
 
-CARE → FERA (if band) → LifeLine → ESA → LIHEAP → CalFresh → AMP? → tax → CalWORKs.
+CARE → FERA (if band) → LifeLine → ESA → LIHEAP → CalFresh → AMP? → tax → CalWORKs (if kids / pregnancy).
 
 ---
 
@@ -234,7 +270,7 @@ On GATE type “asdf” → thanks/redirect; still on GATE; row in `data/respons
 - Session: user id, branch (YES/NO), answers, offer queue cursor, `NextSteps` items, reminder flags.  
 - Frozen corpus holds programs across categories + FPL/band tables + cascades + sources.  
 - Unlock/$ copy is estimate / upper bound only.  
-- Analytics (demo): taps to first Sign up; category mix of completed todos; reminder open rate.
+- Analytics: public funder dashboard at `/impact` — see [`funder-dashboard.md`](funder-dashboard.md).
 
 ---
 

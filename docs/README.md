@@ -13,6 +13,8 @@ Energy / PG&E programs are corpus rows, not the product identity.
 | [expansion-watchlist.md](expansion-watchlist.md) | Future language / geography / deep coach |
 | [session-log.md](session-log.md) | Planning turns; Turn 14 = v2 pivot |
 | [competitive-ux-research.md](competitive-ux-research.md) | Competitors (benefits-first; energy as subset) |
+| [funder-dashboard.md](funder-dashboard.md) | Public impact site + QR/apply tracking |
+| [developer-corpus-watch.md](developer-corpus-watch.md) | Developer tab — corpus freshness agent + watch checklist |
 
 Build kickoff: [`../PROMPT.md`](../PROMPT.md)  
 Cursor plan: Telegram PDF benefits bot (CalClaim v2)

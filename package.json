@@ -9,7 +9,8 @@
     "start": "tsx src/index.ts",
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "sample-pdf": "tsx scripts/generate-sample-pdf.ts"
+    "sample-pdf": "tsx scripts/generate-sample-pdf.ts",
+    "seed-impact": "tsx scripts/seed-impact.ts"
   },
   "engines": {
     "node": ">=20"

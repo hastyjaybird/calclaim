@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <title>CalClaim — Developer login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/dev/login.css" />
+</head>
+<body>
+  <main class="login-shell">
+    <p class="brand">CalClaim</p>
+    <h1>Developer login</h1>
+    <p class="lede">Authorized human operators only.</p>
+
+    <aside class="policy" role="note">
+      <p>
+        The Developer area is for authorized human operators only.
+        Robots, crawlers, scrapers, automated scripts, AI agents, bots,
+        and any other non-human systems are prohibited from logging in to
+        or accessing this page.
+      </p>
+    </aside>
+
+    <form id="login-form" class="login-form" autocomplete="off" novalidate>
+      <label class="field">
+        <span>Password</span>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          required
+          autocomplete="current-password"
+          spellcheck="false"
+        />
+      </label>
+
+      <div class="captcha-block">
+        <span class="field-label">CAPTCHA</span>
+        <div class="captcha-row">
+          <img id="captcha-img" alt="CAPTCHA challenge" width="220" height="64" />
+          <button type="button" id="captcha-refresh" class="ghost-btn" aria-label="Refresh CAPTCHA">
+            Refresh
+          </button>
+        </div>
+        <label class="field">
+          <span class="sr-only">CAPTCHA answer</span>
+          <input
+            id="captcha-answer"
+            name="captchaAnswer"
+            type="text"
+            inputmode="numeric"
+            required
+            autocomplete="off"
+            placeholder="Answer"
+          />
+        </label>
+        <input type="hidden" id="captcha-id" name="captchaId" />
+      </div>
+
+      <label class="attest">
+        <input id="human" name="human" type="checkbox" required />
+        <span>
+          I confirm I am a human, and not a robot, AI agent, crawler, or other
+          non-human system.
+        </span>
+      </label>
+
+      <p id="error" class="error" hidden></p>
+
+      <button type="submit" class="submit">Sign in</button>
+    </form>
+
+    <p class="back"><a href="/impact">← Back to funder dashboard</a></p>
+  </main>
+  <script src="/dev/login.js"></script>
+</body>
+</html>

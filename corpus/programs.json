@@ -8,7 +8,7 @@
       "name": "Medi-Cal",
       "category": "health",
       "oneLiner": "Low- or no-cost health coverage",
-      "maxBenefit": "Comprehensive health coverage (value varies)",
+      "maxBenefit": "Up to ~$400/mo coverage value (estimate; varies)",
       "applyUrl": "https://www.coveredca.com/",
       "deadlines": [],
       "applySteps": [
@@ -16,48 +16,93 @@
         "Provide income and household info",
         "Upload ID / proof of income if asked"
       ],
-      "docsNeeded": ["photoId", "incomeProof"],
-      "docsReusableFromGate": ["categoricalProof", "photoId"],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "categoricalProof",
+        "photoId"
+      ],
       "timeToMoneyDays": 30,
-      "branches": ["yes", "no"],
+      "formFillMinutes": 25,
+      "branches": [
+        "yes",
+        "no"
+      ],
       "yesOrder": 99,
       "noOrder": 99,
       "gateFeeder": true,
       "skipCascades": [],
       "skipReasons": [],
-      "sources": ["https://www.dhcs.ca.gov/services/medi-cal"]
+      "sources": [
+        "https://www.dhcs.ca.gov/services/medi-cal"
+      ],
+      "estAnnualUsd": 4800,
+      "maxBenefitUsd": {
+        "period": "month",
+        "amount": 400
+      }
     },
     {
       "id": "calfresh",
       "name": "CalFresh",
       "category": "food",
       "oneLiner": "Monthly grocery benefits (SNAP)",
-      "maxBenefit": "Up to ~$975/mo for a household of 4 (estimate; USDA FY tables)",
-      "applyUrl": "https://www.getcalfresh.org/",
+      "maxBenefit": "Up to FFY2026 USDA max allotment for household size (estimate)",
+      "applyUrl": "https://benefitscal.com/ApplyForBenefits/begin/ABOVR?lang=en",
       "deadlines": [],
       "applySteps": [
-        "Start at GetCalFresh or BenefitsCal",
+        "Apply on BenefitsCal",
         "Report household and income",
         "Complete interview if required",
         "Submit documents if requested"
       ],
-      "docsNeeded": ["photoId", "incomeProof"],
-      "docsReusableFromGate": ["categoricalProof", "photoId"],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "categoricalProof",
+        "photoId"
+      ],
       "timeToMoneyDays": 14,
-      "branches": ["yes", "no"],
+      "formFillMinutes": 25,
+      "branches": [
+        "yes",
+        "no"
+      ],
       "yesOrder": 3,
       "noOrder": 6,
       "gateFeeder": true,
       "skipCascades": [],
       "skipReasons": [],
-      "sources": ["https://www.cdss.ca.gov/calfresh", "https://www.getcalfresh.org/"]
+      "sources": [
+        "https://www.cdss.ca.gov/calfresh",
+        "https://www.getcalfresh.org/"
+      ],
+      "estAnnualUsd": 11928,
+      "maxBenefitUsd": {
+        "period": "month",
+        "byHouseholdSize": {
+          "1": 298,
+          "2": 546,
+          "3": 785,
+          "4": 994,
+          "5": 1183,
+          "6": 1421,
+          "7": 1571,
+          "8": 1789
+        },
+        "eachAdditional": 218
+      }
     },
     {
       "id": "wic",
       "name": "WIC",
       "category": "food",
       "oneLiner": "Food and nutrition support for pregnancy / young kids",
-      "maxBenefit": "Monthly food benefits + nutrition support (varies)",
+      "maxBenefit": "Up to ~$80/mo food benefits (estimate; package varies)",
       "applyUrl": "https://www.cdph.ca.gov/Programs/CFH/DWICSN/Pages/Program-Landing1.aspx",
       "deadlines": [],
       "applySteps": [
@@ -65,23 +110,40 @@
         "Schedule an appointment",
         "Bring ID and proof of income / categorical enrollment"
       ],
-      "docsNeeded": ["photoId", "incomeProof"],
-      "docsReusableFromGate": ["categoricalProof", "photoId"],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "categoricalProof",
+        "photoId"
+      ],
       "timeToMoneyDays": 21,
-      "branches": ["yes"],
+      "formFillMinutes": 20,
+      "branches": [
+        "yes"
+      ],
       "yesOrder": 98,
       "noOrder": 98,
       "gateFeeder": true,
+      "requiresChildInHousehold": true,
       "skipCascades": [],
       "skipReasons": [],
-      "sources": ["https://www.cdph.ca.gov/Programs/CFH/DWICSN"]
+      "sources": [
+        "https://www.cdph.ca.gov/Programs/CFH/DWICSN"
+      ],
+      "estAnnualUsd": 960,
+      "maxBenefitUsd": {
+        "period": "month",
+        "amount": 80
+      }
     },
     {
       "id": "ssi",
       "name": "SSI",
       "category": "cash",
       "oneLiner": "Federal disability / aged income support",
-      "maxBenefit": "Monthly federal benefit (amount set by SSA)",
+      "maxBenefit": "Up to $994/mo federal SSI for an individual (2026; estimate)",
       "applyUrl": "https://www.ssa.gov/benefits/ssi/",
       "deadlines": [],
       "applySteps": [
@@ -89,23 +151,38 @@
         "Provide medical and financial information",
         "Attend interview if scheduled"
       ],
-      "docsNeeded": ["photoId", "incomeProof"],
-      "docsReusableFromGate": ["categoricalProof", "photoId"],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "categoricalProof",
+        "photoId"
+      ],
       "timeToMoneyDays": 90,
+      "formFillMinutes": 45,
       "branches": [],
       "yesOrder": 97,
       "noOrder": 97,
       "gateFeeder": true,
       "skipCascades": [],
       "skipReasons": [],
-      "sources": ["https://www.ssa.gov/benefits/ssi/"]
+      "sources": [
+        "https://www.ssa.gov/benefits/ssi/"
+      ],
+      "estAnnualUsd": 11928,
+      "maxBenefitUsd": {
+        "period": "month",
+        "perPerson": 994,
+        "maxHousehold": 1491
+      }
     },
     {
       "id": "calworks",
       "name": "CalWORKs",
       "category": "cash",
       "oneLiner": "Cash aid and employment services for families with kids",
-      "maxBenefit": "Monthly cash aid (county-set; varies)",
+      "maxBenefit": "Up to county MAP cash aid by household size (estimate)",
       "applyUrl": "https://www.cdss.ca.gov/calworks",
       "deadlines": [],
       "applySteps": [
@@ -113,23 +190,51 @@
         "Complete interview",
         "Submit income and household documents"
       ],
-      "docsNeeded": ["photoId", "incomeProof"],
-      "docsReusableFromGate": ["categoricalProof", "photoId"],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "categoricalProof",
+        "photoId"
+      ],
       "timeToMoneyDays": 45,
-      "branches": ["yes", "no"],
+      "formFillMinutes": 40,
+      "branches": [
+        "yes",
+        "no"
+      ],
       "yesOrder": 8,
       "noOrder": 9,
       "gateFeeder": true,
+      "requiresChildInHousehold": true,
       "skipCascades": [],
       "skipReasons": [],
-      "sources": ["https://www.cdss.ca.gov/calworks"]
+      "sources": [
+        "https://www.cdss.ca.gov/calworks"
+      ],
+      "estAnnualUsd": 16344,
+      "maxBenefitUsd": {
+        "period": "month",
+        "byHouseholdSize": {
+          "1": 735,
+          "2": 928,
+          "3": 1148,
+          "4": 1362,
+          "5": 1552,
+          "6": 1743,
+          "7": 1915,
+          "8": 2084
+        },
+        "eachAdditional": 170
+      }
     },
     {
       "id": "lifeline",
       "name": "LifeLine",
       "category": "telecom",
       "oneLiner": "Discount on phone or internet service",
-      "maxBenefit": "Up to ~$19/mo phone or internet discount (estimate; check current CA LifeLine)",
+      "maxBenefit": "Up to ~$19/mo phone or internet discount (CA LifeLine estimate)",
       "applyUrl": "https://www.californialifeline.com/",
       "deadlines": [],
       "applySteps": [
@@ -137,23 +242,40 @@
         "Apply online or through your provider",
         "Keep approval letter"
       ],
-      "docsNeeded": ["photoId", "incomeProof"],
-      "docsReusableFromGate": ["categoricalProof", "photoId"],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "categoricalProof",
+        "photoId"
+      ],
       "timeToMoneyDays": 21,
-      "branches": ["yes", "no"],
+      "formFillMinutes": 12,
+      "branches": [
+        "yes",
+        "no"
+      ],
       "yesOrder": 2,
       "noOrder": 3,
       "gateFeeder": false,
       "skipCascades": [],
       "skipReasons": [],
-      "sources": ["https://www.californialifeline.com/"]
+      "sources": [
+        "https://www.californialifeline.com/"
+      ],
+      "estAnnualUsd": 228,
+      "maxBenefitUsd": {
+        "period": "month",
+        "amount": 19
+      }
     },
     {
       "id": "care",
       "name": "CARE",
       "category": "energy",
       "oneLiner": "Utility bill discount if you are with a participating CA utility (e.g. PG&E)",
-      "maxBenefit": "~30–35% off electric bill (estimate; utility-specific)",
+      "maxBenefit": "Up to ~$70/mo off electric (\u224835% of ~$200 bill; estimate)",
       "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financialassistance/carefera.html",
       "deadlines": [],
       "applySteps": [
@@ -161,48 +283,92 @@
         "Apply online for CARE/FERA shared form",
         "Have account number or recent bill ready"
       ],
-      "docsNeeded": ["utilityBill", "photoId"],
-      "docsReusableFromGate": ["categoricalProof", "utilityBill", "photoId"],
+      "docsNeeded": [
+        "utilityBill",
+        "photoId"
+      ],
+      "docsReusableFromGate": [
+        "categoricalProof",
+        "utilityBill",
+        "photoId"
+      ],
       "timeToMoneyDays": 7,
-      "branches": ["yes", "no"],
+      "formFillMinutes": 8,
+      "branches": [
+        "yes",
+        "no"
+      ],
       "yesOrder": 1,
       "noOrder": 1,
       "gateFeeder": false,
       "incomeGate": "careBand",
-      "skipCascades": ["esa", "amp", "medical_baseline"],
-      "skipReasons": ["not_my_bill", "not_interested", "remind_later"],
-      "sources": ["https://www.pge.com/en/account/billing-and-assistance/financialassistance/carefera.html"]
+      "skipCascades": [
+        "esa",
+        "amp",
+        "medical_baseline"
+      ],
+      "skipReasons": [
+        "not_my_bill",
+        "not_interested",
+        "remind_later"
+      ],
+      "sources": [
+        "https://www.pge.com/en/account/billing-and-assistance/financialassistance/carefera.html"
+      ],
+      "estAnnualUsd": 840,
+      "maxBenefitUsd": {
+        "period": "month",
+        "percentOff": 0.35,
+        "referenceBillUsd": 200
+      }
     },
     {
       "id": "fera",
       "name": "FERA",
       "category": "energy",
       "oneLiner": "Bill discount for households above CARE income but still eligible (participating utilities)",
-      "maxBenefit": "~18% off electric bill (estimate; utility-specific)",
+      "maxBenefit": "Up to ~$36/mo off electric (\u224818% of ~$200 bill; estimate)",
       "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financialassistance/carefera.html",
       "deadlines": [],
       "applySteps": [
         "Use the shared CARE/FERA application",
         "Have account number or recent bill ready"
       ],
-      "docsNeeded": ["utilityBill", "photoId"],
-      "docsReusableFromGate": ["utilityBill", "photoId"],
+      "docsNeeded": [
+        "utilityBill",
+        "photoId"
+      ],
+      "docsReusableFromGate": [
+        "utilityBill",
+        "photoId"
+      ],
       "timeToMoneyDays": 7,
-      "branches": ["no"],
+      "formFillMinutes": 8,
+      "branches": [
+        "no"
+      ],
       "yesOrder": 50,
       "noOrder": 2,
       "gateFeeder": false,
       "incomeGate": "feraBand",
       "skipCascades": [],
       "skipReasons": [],
-      "sources": ["https://www.pge.com/en/account/billing-and-assistance/financialassistance/carefera.html"]
+      "sources": [
+        "https://www.pge.com/en/account/billing-and-assistance/financialassistance/carefera.html"
+      ],
+      "estAnnualUsd": 432,
+      "maxBenefitUsd": {
+        "period": "month",
+        "percentOff": 0.18,
+        "referenceBillUsd": 200
+      }
     },
     {
       "id": "esa",
       "name": "ESA",
       "category": "energy",
       "oneLiner": "Free home energy upgrades for income-qualified utility customers",
-      "maxBenefit": "Free upgrades up to several thousand dollars in measures (estimate; utility program)",
+      "maxBenefit": "Up to ~$3,000 in free upgrades (estimate; utility measures)",
       "applyUrl": "https://www.pge.com/en/save-energy-and-money/energy-saving-programs/energy-savings-assistance-program.html",
       "deadlines": [],
       "applySteps": [
@@ -210,28 +376,45 @@
         "Schedule assessment if approved",
         "Landlord permission may be needed if renting"
       ],
-      "docsNeeded": ["utilityBill", "incomeProof"],
-      "docsReusableFromGate": ["categoricalProof", "utilityBill"],
+      "docsNeeded": [
+        "utilityBill",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "categoricalProof",
+        "utilityBill"
+      ],
       "timeToMoneyDays": 60,
-      "branches": ["yes", "no"],
+      "formFillMinutes": 15,
+      "branches": [
+        "yes",
+        "no"
+      ],
       "yesOrder": 4,
       "noOrder": 4,
       "gateFeeder": false,
       "incomeGate": "careOrFeraBand",
       "skipCascades": [],
       "skipReasons": [],
-      "sources": ["https://www.pge.com/en/save-energy-and-money/energy-saving-programs/energy-savings-assistance-program.html"]
+      "sources": [
+        "https://www.pge.com/en/save-energy-and-money/energy-saving-programs/energy-savings-assistance-program.html"
+      ],
+      "estAnnualUsd": 3000,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 3000
+      }
     },
     {
       "id": "liheap",
       "name": "LIHEAP",
       "category": "energy",
       "oneLiner": "Help with heating/cooling bills (seasonal; county-run)",
-      "maxBenefit": "One-time bill help (amount varies by county / season)",
+      "maxBenefit": "Up to ~$1,000 one-time bill help (estimate; county/season)",
       "applyUrl": "https://www.csd.ca.gov/Pages/LIHEAP.aspx",
       "deadlines": [
         {
-          "label": "Seasonal windows — check your county",
+          "label": "Seasonal windows \u2014 check your county",
           "date": null
         }
       ],
@@ -240,23 +423,42 @@
         "Apply during open window",
         "Bring ID, income proof, and utility bill"
       ],
-      "docsNeeded": ["photoId", "incomeProof", "utilityBill"],
-      "docsReusableFromGate": ["categoricalProof", "photoId", "utilityBill"],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof",
+        "utilityBill"
+      ],
+      "docsReusableFromGate": [
+        "categoricalProof",
+        "photoId",
+        "utilityBill"
+      ],
       "timeToMoneyDays": 30,
-      "branches": ["yes", "no"],
+      "formFillMinutes": 20,
+      "branches": [
+        "yes",
+        "no"
+      ],
       "yesOrder": 5,
       "noOrder": 5,
       "gateFeeder": false,
       "skipCascades": [],
       "skipReasons": [],
-      "sources": ["https://www.csd.ca.gov/Pages/LIHEAP.aspx"]
+      "sources": [
+        "https://www.csd.ca.gov/Pages/LIHEAP.aspx"
+      ],
+      "estAnnualUsd": 1000,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 1000
+      }
     },
     {
       "id": "amp",
       "name": "AMP (Arrearage Management)",
       "category": "energy",
       "oneLiner": "Forgiveness path for past-due utility balances (if you qualify)",
-      "maxBenefit": "Debt forgiveness over time if payments kept (utility-specific)",
+      "maxBenefit": "Up to ~$2,000 debt forgiveness path (estimate; utility-specific)",
       "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/payment-assistance.html",
       "deadlines": [],
       "applySteps": [
@@ -264,47 +466,76 @@
         "Enroll via utility assistance / AMP page",
         "Keep on-time payments as required"
       ],
-      "docsNeeded": ["utilityBill"],
-      "docsReusableFromGate": ["utilityBill"],
+      "docsNeeded": [
+        "utilityBill"
+      ],
+      "docsReusableFromGate": [
+        "utilityBill"
+      ],
       "timeToMoneyDays": 30,
-      "branches": ["yes", "no"],
+      "formFillMinutes": 12,
+      "branches": [
+        "yes",
+        "no"
+      ],
       "yesOrder": 6,
       "noOrder": 7,
       "gateFeeder": false,
       "requiresPastDue": true,
       "skipCascades": [],
       "skipReasons": [],
-      "sources": ["https://www.pge.com/en/account/billing-and-assistance/payment-assistance.html"]
+      "sources": [
+        "https://www.pge.com/en/account/billing-and-assistance/payment-assistance.html"
+      ],
+      "estAnnualUsd": 2000,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 2000
+      }
     },
     {
       "id": "medical_baseline",
       "name": "Medical Baseline",
       "category": "energy",
       "oneLiner": "Extra utility allowance for qualifying medical needs",
-      "maxBenefit": "Additional baseline allowance (utility-specific)",
+      "maxBenefit": "Up to ~$25/mo extra baseline allowance (estimate)",
       "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/medical-baseline.html",
       "deadlines": [],
       "applySteps": [
         "Get medical practitioner certification",
         "Submit Medical Baseline application to your utility"
       ],
-      "docsNeeded": ["utilityBill", "photoId"],
-      "docsReusableFromGate": ["utilityBill", "photoId"],
+      "docsNeeded": [
+        "utilityBill",
+        "photoId"
+      ],
+      "docsReusableFromGate": [
+        "utilityBill",
+        "photoId"
+      ],
       "timeToMoneyDays": 21,
+      "formFillMinutes": 20,
       "branches": [],
       "yesOrder": 96,
       "noOrder": 96,
       "gateFeeder": false,
       "skipCascades": [],
       "skipReasons": [],
-      "sources": ["https://www.pge.com/en/account/billing-and-assistance/medical-baseline.html"]
+      "sources": [
+        "https://www.pge.com/en/account/billing-and-assistance/medical-baseline.html"
+      ],
+      "estAnnualUsd": 300,
+      "maxBenefitUsd": {
+        "period": "month",
+        "amount": 25
+      }
     },
     {
       "id": "tax_credits",
       "name": "Tax credits (info)",
       "category": "tax",
       "oneLiner": "Federal/state credits you may claim at tax time (info path)",
-      "maxBenefit": "Varies (EITC, CTC, energy credits) — not a promise",
+      "maxBenefit": "Up to ~$4,000/yr combined credits for some households (estimate)",
       "applyUrl": "https://www.irs.gov/credits-deductions",
       "deadlines": [
         {
@@ -315,18 +546,34 @@
       "applySteps": [
         "Keep receipts and income records",
         "Use IRS Free File / VITA if eligible",
-        "Ask a tax preparer — CalClaim does not file taxes"
+        "Ask a tax preparer \u2014 CalClaim does not file taxes"
       ],
-      "docsNeeded": ["incomeProof"],
-      "docsReusableFromGate": ["incomeProof"],
+      "docsNeeded": [
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "incomeProof"
+      ],
       "timeToMoneyDays": 120,
-      "branches": ["yes", "no", "tax_only"],
+      "formFillMinutes": 35,
+      "branches": [
+        "yes",
+        "no",
+        "tax_only"
+      ],
       "yesOrder": 7,
       "noOrder": 8,
       "gateFeeder": false,
       "skipCascades": [],
       "skipReasons": [],
-      "sources": ["https://www.irs.gov/credits-deductions"]
+      "sources": [
+        "https://www.irs.gov/credits-deductions"
+      ],
+      "estAnnualUsd": 4000,
+      "maxBenefitUsd": {
+        "period": "year",
+        "amount": 4000
+      }
     }
   ]
 }

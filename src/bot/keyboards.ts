@@ -1,17 +1,27 @@
 import { InlineKeyboard } from "grammy";
 import { incomeBandLabels } from "../corpus/load.js";
+import { PRIVACY_POLICY_URL } from "../privacy/copy.js";
+
+/** Gate-feeder programs shown as multiselect options. */
+export const GATE_OPTIONS = [
+  { id: "medi_cal", label: "Medi-Cal" },
+  { id: "calfresh", label: "CalFresh" },
+  { id: "ssi", label: "SSI" },
+  { id: "calworks", label: "CalWORKs" },
+  { id: "wic", label: "WIC" },
+] as const;
 
 export function optInKeyboard(): InlineKeyboard {
   return new InlineKeyboard().text("Start", "opt:start");
 }
 
-export function gateKeyboard(): InlineKeyboard {
-  return new InlineKeyboard()
-    .text("Yes", "gate:yes")
-    .text("No", "gate:no")
-    .row()
-    .text("Help", "help:menu")
-    .text("STOP", "stop:ask");
+export function gateKeyboard(selected: string[] = []): InlineKeyboard {
+  const kb = new InlineKeyboard();
+  for (const opt of GATE_OPTIONS) {
+    const mark = selected.includes(opt.id) ? "✓ " : "";
+    kb.text(`${mark}${opt.label}`, `gate:toggle:${opt.id}`).row();
+  }
+  return kb.text("Done", "gate:done").text("None", "gate:none");
 }
 
 export function householdKeyboard(): InlineKeyboard {
@@ -20,7 +30,7 @@ export function householdKeyboard(): InlineKeyboard {
     kb.text(String(n), `hh:${n}`);
     if (n % 4 === 0) kb.row();
   }
-  return kb.row().text("Help", "help:menu").text("STOP", "stop:ask");
+  return kb;
 }
 
 export function incomeKeyboard(householdSize: number): InlineKeyboard {
@@ -30,34 +40,31 @@ export function incomeKeyboard(householdSize: number): InlineKeyboard {
     .row()
     .text(labels.feraBand, "income:feraBand")
     .row()
-    .text(labels.aboveFera, "income:aboveFera")
-    .row()
-    .text("Help", "help:menu")
-    .text("STOP", "stop:ask");
+    .text(labels.aboveFera, "income:aboveFera");
 }
 
 export function pastDueKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
     .text("Yes — past due", "pastdue:yes")
-    .text("No / not sure", "pastdue:no")
+    .text("No", "pastdue:no")
     .row()
-    .text("Help", "help:menu")
-    .text("STOP", "stop:ask");
+    .text("The PG&E bill is not in my name", "pastdue:not_my_name");
+}
+
+export function childHouseholdKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text("Yes", "child:yes")
+    .text("No", "child:no");
 }
 
 export function offerKeyboardWithUrl(programId: string, applyUrl: string): InlineKeyboard {
   return new InlineKeyboard()
-    .url("Open apply page", applyUrl)
+    .url("Open apply page now", applyUrl)
     .row()
-    .text("I opened it — add to list", `offer:signup:${programId}`)
+    .text("Save to my to do list", `offer:signup:${programId}`)
     .row()
     .text("Already enrolled", `offer:already:${programId}`)
-    .text("Remind me later", `offer:remind:${programId}`)
-    .row()
-    .text("Skip", `offer:skip:${programId}`)
-    .row()
-    .text("Help", "help:menu")
-    .text("STOP", "stop:ask");
+    .text("Skip", `offer:skip:${programId}`);
 }
 
 export function careSkipKeyboard(): InlineKeyboard {
@@ -66,21 +73,17 @@ export function careSkipKeyboard(): InlineKeyboard {
     .row()
     .text("Not interested", "care_skip:not_interested")
     .row()
-    .text("Remind me later", "care_skip:remind_later")
-    .row()
-    .text("Help", "help:menu")
-    .text("STOP", "stop:ask");
+    .text("Remind me later", "care_skip:remind_later");
 }
 
 export function helpKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
-    .text("Privacy policy", "help:privacy")
+    .url("Privacy policy", PRIVACY_POLICY_URL)
     .row()
     .text("Erase all my data", "help:erase_ask")
     .row()
     .text("About", "help:about")
     .row()
-    .text("STOP", "stop:ask")
     .text("Back", "help:back");
 }
 
@@ -91,9 +94,8 @@ export function confirmKeyboard(kind: "stop" | "erase"): InlineKeyboard {
 }
 
 export function idleKeyboard(): InlineKeyboard {
-  return new InlineKeyboard()
-    .text("Send my next-steps file again", "idle:resend")
-    .row()
-    .text("Help", "help:menu")
-    .text("STOP", "stop:ask");
+  return new InlineKeyboard().text(
+    "Send my 'next steps' file again",
+    "idle:resend",
+  );
 }

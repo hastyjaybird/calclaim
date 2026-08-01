@@ -16,18 +16,33 @@ interface IncomeBandsFile {
 }
 
 let programsCache: Program[] | null = null;
+let programsMeta: Omit<ProgramsFile, "programs"> | null = null;
 let bandsCache: IncomeBandsFile | null = null;
 let disclaimerCache = "";
 
+function loadProgramsFile(): ProgramsFile {
+  return JSON.parse(
+    readFileSync(path.join(CORPUS_DIR, "programs.json"), "utf8"),
+  ) as ProgramsFile;
+}
+
 export function loadPrograms(): Program[] {
   if (!programsCache) {
-    const raw = JSON.parse(
-      readFileSync(path.join(CORPUS_DIR, "programs.json"), "utf8"),
-    ) as ProgramsFile;
+    const raw = loadProgramsFile();
     programsCache = raw.programs;
+    programsMeta = {
+      version: raw.version,
+      market: raw.market,
+      disclaimer: raw.disclaimer,
+    };
     disclaimerCache = raw.disclaimer;
   }
   return programsCache;
+}
+
+export function getCorpusMeta(): { version: string; market: string; disclaimer: string } {
+  loadPrograms();
+  return programsMeta!;
 }
 
 export function getDisclaimer(): string {

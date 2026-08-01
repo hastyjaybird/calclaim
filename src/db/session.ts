@@ -1,7 +1,11 @@
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
+import { initAnalytics } from "../analytics/db.js";
 import type { SessionState } from "../corpus/types.js";
+import { initFeedbackTodos } from "../feedback/todos.js";
+import { eraseTelegramUserData, initTelegramCapture } from "./telegramCapture.js";
+import { initWatchdog } from "../watchdog/db.js";
 
 let db: Database.Database | null = null;
 
@@ -15,6 +19,10 @@ export function initDb(databasePath: string): void {
       updated_at TEXT NOT NULL
     );
   `);
+  initAnalytics(db);
+  initWatchdog(db);
+  initTelegramCapture(db);
+  initFeedbackTodos(db);
 }
 
 function getDb(): Database.Database {
@@ -32,6 +40,8 @@ export function emptySession(telegramUserId: number): SessionState {
     householdSize: null,
     incomeBand: null,
     pastDue: null,
+    billNotInMyName: false,
+    hasChildInHousehold: null,
     docsInHand: [],
     queue: [],
     queueIndex: 0,
@@ -39,6 +49,7 @@ export function emptySession(telegramUserId: number): SessionState {
     items: [],
     remindersEnabled: false,
     awaitingConfirm: null,
+    lastBotMessage: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -49,7 +60,10 @@ export function loadSession(telegramUserId: number): SessionState | null {
     .prepare("SELECT state_json FROM sessions WHERE telegram_user_id = ?")
     .get(telegramUserId) as { state_json: string } | undefined;
   if (!row) return null;
-  return JSON.parse(row.state_json) as SessionState;
+  const state = JSON.parse(row.state_json) as SessionState;
+  if (state.lastBotMessage === undefined) state.lastBotMessage = null;
+  if (state.hasChildInHousehold === undefined) state.hasChildInHousehold = null;
+  return state;
 }
 
 export function saveSession(state: SessionState): void {
@@ -66,6 +80,7 @@ export function saveSession(state: SessionState): void {
 }
 
 export function deleteSession(telegramUserId: number): void {
+  eraseTelegramUserData(telegramUserId);
   getDb()
     .prepare("DELETE FROM sessions WHERE telegram_user_id = ?")
     .run(telegramUserId);

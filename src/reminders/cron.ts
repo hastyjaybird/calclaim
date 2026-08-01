@@ -75,7 +75,7 @@ export function startReminderCron(bot: Bot, tz: string): void {
           await send(
             bot,
             session.telegramUserId,
-            `${messages.join("\n\n")}\n\nOpen Telegram and ask for your next-steps file anytime (Help). Type STOP to erase data.`,
+            `${messages.join("\n\n")}\n\nOpen Telegram and say 'to do' anytime for your 'next steps' file. Type erase to delete your data.`,
           );
         }
       }

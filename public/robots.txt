@@ -1,0 +1,39 @@
+# CalClaim
+# Funder impact dashboard is public. Developer tools are humans-only.
+
+User-agent: *
+Allow: /impact
+Allow: /go/
+Allow: /r/
+Disallow: /dev
+Disallow: /dev/
+Disallow: /api/dev
+Disallow: /api/dev/
+
+User-agent: GPTBot
+Disallow: /dev
+Disallow: /api/dev
+
+User-agent: ChatGPT-User
+Disallow: /dev
+Disallow: /api/dev
+
+User-agent: Google-Extended
+Disallow: /dev
+Disallow: /api/dev
+
+User-agent: CCBot
+Disallow: /dev
+Disallow: /api/dev
+
+User-agent: anthropic-ai
+Disallow: /dev
+Disallow: /api/dev
+
+User-agent: ClaudeBot
+Disallow: /dev
+Disallow: /api/dev
+
+User-agent: Bytespider
+Disallow: /dev
+Disallow: /api/dev

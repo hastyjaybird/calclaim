@@ -36,9 +36,21 @@ export function buildQueue(session: SessionState): string[] {
   const branch = session.branch;
   if (!branch) return [];
 
+  const notMyBillIds = session.billNotInMyName
+    ? new Set<string>([
+        "care",
+        "fera",
+        ...(getProgram("care")?.skipCascades ?? []),
+      ])
+    : null;
+
   const programs = loadPrograms().filter((p) => {
     if (!includeInBranch(p, branch)) return false;
     if (p.requiresPastDue && session.pastDue !== true) return false;
+    if (p.requiresChildInHousehold && session.hasChildInHousehold !== true) {
+      return false;
+    }
+    if (notMyBillIds?.has(p.id)) return false;
     if (!passesIncomeGate(p, session.incomeBand, branch)) return false;
     if (session.alreadyOn.includes(p.id)) return false;
     return true;
@@ -71,6 +83,15 @@ export function buildQueue(session: SessionState): string[] {
 export function currentProgram(session: SessionState): Program | undefined {
   const id = session.queue[session.queueIndex];
   return id ? getProgram(id) : undefined;
+}
+
+/** True when a child-gated program would enter the queue if the user said yes. */
+export function queueNeedsChildGate(session: SessionState): boolean {
+  if (session.hasChildInHousehold !== null) return false;
+  const probe: SessionState = { ...session, hasChildInHousehold: true };
+  return buildQueue(probe).some(
+    (id) => getProgram(id)?.requiresChildInHousehold === true,
+  );
 }
 
 export function applySkipCascade(
