@@ -20,6 +20,7 @@ export const WATCH_CHECKLIST: WatchItem[] = [
       "incomeGate",
       "requiresPastDue",
       "requiresChildInHousehold",
+      "excludeIfAlreadyOn",
       "applySteps",
     ],
   },

@@ -1,5 +1,5 @@
 {
-  "version": "2026-07-31",
+  "version": "2026-08-01",
   "market": "California",
   "disclaimer": "Estimates only. Not affiliated with any agency or utility. Official agencies decide eligibility.",
   "programs": [
@@ -30,13 +30,15 @@
         "yes",
         "no"
       ],
-      "yesOrder": 99,
-      "noOrder": 99,
+      "yesOrder": 7,
+      "noOrder": 7,
       "gateFeeder": true,
+      "incomeGate": "careOrFeraBand",
       "skipCascades": [],
       "skipReasons": [],
       "sources": [
-        "https://www.dhcs.ca.gov/services/medi-cal"
+        "https://www.dhcs.ca.gov/services/medi-cal",
+        "https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en"
       ],
       "estAnnualUsd": 4800,
       "maxBenefitUsd": {
@@ -75,11 +77,13 @@
       "yesOrder": 3,
       "noOrder": 6,
       "gateFeeder": true,
+      "incomeGate": "careOrFeraBand",
       "skipCascades": [],
       "skipReasons": [],
       "sources": [
         "https://www.cdss.ca.gov/calfresh",
-        "https://www.getcalfresh.org/"
+        "https://www.getcalfresh.org/",
+        "https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en"
       ],
       "estAnnualUsd": 11928,
       "maxBenefitUsd": {
@@ -121,11 +125,13 @@
       "timeToMoneyDays": 21,
       "formFillMinutes": 20,
       "branches": [
-        "yes"
+        "yes",
+        "no"
       ],
-      "yesOrder": 98,
-      "noOrder": 98,
+      "yesOrder": 9,
+      "noOrder": 9,
       "gateFeeder": true,
+      "incomeGate": "careOrFeraBand",
       "requiresChildInHousehold": true,
       "skipCascades": [],
       "skipReasons": [],
@@ -161,10 +167,15 @@
       ],
       "timeToMoneyDays": 90,
       "formFillMinutes": 45,
-      "branches": [],
-      "yesOrder": 97,
-      "noOrder": 97,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 13,
+      "noOrder": 13,
       "gateFeeder": true,
+      "incomeGate": "careOrFeraBand",
+      "requiresAgedBlindOrDisabled": true,
       "skipCascades": [],
       "skipReasons": [],
       "sources": [
@@ -188,7 +199,8 @@
       "applySteps": [
         "Apply via BenefitsCal or your county",
         "Complete interview",
-        "Submit income and household documents"
+        "Submit income and household documents",
+        "If approved, your county may require Welfare-to-Work (WtW) employment services"
       ],
       "docsNeeded": [
         "photoId",
@@ -207,11 +219,13 @@
       "yesOrder": 8,
       "noOrder": 9,
       "gateFeeder": true,
+      "incomeGate": "careOrFeraBand",
       "requiresChildInHousehold": true,
       "skipCascades": [],
       "skipReasons": [],
       "sources": [
-        "https://www.cdss.ca.gov/calworks"
+        "https://www.cdss.ca.gov/calworks",
+        "https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en"
       ],
       "estAnnualUsd": 16344,
       "maxBenefitUsd": {
@@ -227,6 +241,214 @@
           "8": 2084
         },
         "eachAdditional": 170
+      }
+    },
+    {
+      "id": "capi",
+      "name": "CAPI",
+      "category": "cash",
+      "oneLiner": "State cash aid for aged, blind, or disabled non-citizens ineligible for SSI/SSP solely due to immigration status",
+      "maxBenefit": "Up to ~$1,234/mo SSI/SSP-equivalent for an individual (Jan 2026 CAPI standard; estimate)",
+      "applyUrl": "https://benefitscal.com/ApplyForBenefits/begin/ABOVR?lang=en",
+      "deadlines": [],
+      "applySteps": [
+        "Apply via BenefitsCal or your county social services agency (SOC 814)",
+        "Show SSI/SSP denial (or proof of ineligibility) based on immigration status alone",
+        "Provide ID, residency, income, and resource documents",
+        "Complete county interview if scheduled"
+      ],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "categoricalProof",
+        "photoId"
+      ],
+      "timeToMoneyDays": 45,
+      "formFillMinutes": 40,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 9,
+      "noOrder": 10,
+      "gateFeeder": true,
+      "incomeGate": "careOrFeraBand",
+      "requiresAgedBlindOrDisabled": true,
+      "excludeIfAlreadyOn": [
+        "ssi"
+      ],
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.cdss.ca.gov/capi",
+        "https://cdss.ca.gov/inforesources/cash-assistance-for-immigrants",
+        "https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en"
+      ],
+      "estAnnualUsd": 14808,
+      "maxBenefitUsd": {
+        "period": "month",
+        "perPerson": 1234,
+        "maxHousehold": 2099
+      }
+    },
+    {
+      "id": "ga_gr",
+      "name": "GA/GR",
+      "category": "cash",
+      "oneLiner": "County General Assistance / General Relief cash aid for adults who do not qualify for other state or federal cash programs",
+      "maxBenefit": "County-set; often ~$200–$400/mo for a single adult (LA GR ~$221; estimate — varies by county)",
+      "applyUrl": "https://benefitscal.com/ApplyForBenefits/begin/ABOVR?lang=en",
+      "deadlines": [],
+      "applySteps": [
+        "Apply via BenefitsCal or your county social services agency",
+        "Expect strict income/resource limits and a county residency check",
+        "Complete interview; employable adults may need work registration",
+        "In Los Angeles County, employable GR clients may be referred to GROW job services"
+      ],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "categoricalProof",
+        "photoId"
+      ],
+      "timeToMoneyDays": 21,
+      "formFillMinutes": 30,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 10,
+      "noOrder": 8,
+      "gateFeeder": true,
+      "incomeGate": "careOrFeraBand",
+      "excludeIfAlreadyOn": [
+        "calworks",
+        "ssi",
+        "capi"
+      ],
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.cdss.ca.gov/general-assistance",
+        "https://dpss.lacounty.gov/en/cash/gr.html",
+        "https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en"
+      ],
+      "estAnnualUsd": 2652,
+      "maxBenefitUsd": {
+        "period": "month",
+        "amount": 221
+      }
+    },
+    {
+      "id": "cmsp",
+      "name": "CMSP",
+      "category": "health",
+      "oneLiner": "Temporary health coverage for low-income adults (21–64) in participating CMSP counties who are not eligible for other coverage",
+      "maxBenefit": "Up to ~$400/mo coverage value (estimate; county CMSP / Connect to Care packages vary)",
+      "applyUrl": "https://benefitscal.com/ApplyForBenefits/begin/ABOVR?lang=en",
+      "deadlines": [],
+      "applySteps": [
+        "Apply for health benefits via BenefitsCal or your county — they screen Medi-Cal and CMSP together",
+        "Confirm you live in a participating CMSP county (35 counties)",
+        "Provide residency, income, and resource verification if asked"
+      ],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "categoricalProof",
+        "photoId"
+      ],
+      "timeToMoneyDays": 30,
+      "formFillMinutes": 25,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 11,
+      "noOrder": 11,
+      "gateFeeder": true,
+      "incomeGate": "careOrFeraBand",
+      "excludeIfAlreadyOn": [
+        "medi_cal"
+      ],
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://cmspcounties.org/apply-now/",
+        "https://cmspcounties.org/healthcare-within-reach/",
+        "https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en"
+      ],
+      "estAnnualUsd": 4800,
+      "maxBenefitUsd": {
+        "period": "month",
+        "amount": 400
+      }
+    },
+    {
+      "id": "disaster_calfresh",
+      "name": "Disaster CalFresh",
+      "category": "food",
+      "oneLiner": "Temporary food benefits after a federally declared disaster — only when your county opens a D-CalFresh application window",
+      "maxBenefit": "Up to one month at the CalFresh max allotment for household size (estimate; disaster window only)",
+      "applyUrl": "https://benefitscal.com/ApplyForBenefits/begin/ABOVR?lang=en",
+      "deadlines": [
+        {
+          "label": "Only during county Disaster CalFresh application windows after a declared disaster",
+          "date": null
+        }
+      ],
+      "applySteps": [
+        "Check CDSS / your county for an open Disaster CalFresh window",
+        "Apply on BenefitsCal during that window only",
+        "Show you lived or worked in the disaster area and had a disaster-related loss (food, income, damage, or expenses)"
+      ],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "categoricalProof",
+        "photoId"
+      ],
+      "timeToMoneyDays": 3,
+      "formFillMinutes": 20,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 12,
+      "noOrder": 12,
+      "gateFeeder": false,
+      "excludeIfAlreadyOn": [
+        "calfresh"
+      ],
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.cdss.ca.gov/inforesources/calfresh/disaster-calfresh",
+        "https://cdss.ca.gov/disastercalfresh1",
+        "https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en"
+      ],
+      "estAnnualUsd": 298,
+      "maxBenefitUsd": {
+        "period": "once",
+        "byHouseholdSize": {
+          "1": 298,
+          "2": 546,
+          "3": 785,
+          "4": 994,
+          "5": 1183,
+          "6": 1421,
+          "7": 1571,
+          "8": 1789
+        },
+        "eachAdditional": 218
       }
     },
     {
@@ -276,7 +498,7 @@
       "category": "energy",
       "oneLiner": "Utility bill discount if you are with a participating CA utility (e.g. PG&E)",
       "maxBenefit": "Up to ~$70/mo off electric (\u224835% of ~$200 bill; estimate)",
-      "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financialassistance/carefera.html",
+      "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/california-alternate-rates-for-energy-program.html",
       "deadlines": [],
       "applySteps": [
         "Confirm your utility (PG&E link is common Bay Area path)",
@@ -313,7 +535,7 @@
         "remind_later"
       ],
       "sources": [
-        "https://www.pge.com/en/account/billing-and-assistance/financialassistance/carefera.html"
+        "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/california-alternate-rates-for-energy-program.html"
       ],
       "estAnnualUsd": 840,
       "maxBenefitUsd": {
@@ -326,9 +548,9 @@
       "id": "fera",
       "name": "FERA",
       "category": "energy",
-      "oneLiner": "Bill discount for households above CARE income but still eligible (participating utilities)",
+      "oneLiner": "Utility bill discount if you are with a participating CA utility (e.g. PG&E)",
       "maxBenefit": "Up to ~$36/mo off electric (\u224818% of ~$200 bill; estimate)",
-      "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financialassistance/carefera.html",
+      "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/family-electric-rate-assistance-program-fera.html",
       "deadlines": [],
       "applySteps": [
         "Use the shared CARE/FERA application",
@@ -354,7 +576,7 @@
       "skipCascades": [],
       "skipReasons": [],
       "sources": [
-        "https://www.pge.com/en/account/billing-and-assistance/financialassistance/carefera.html"
+        "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/family-electric-rate-assistance-program-fera.html"
       ],
       "estAnnualUsd": 432,
       "maxBenefitUsd": {
@@ -367,7 +589,7 @@
       "id": "esa",
       "name": "ESA",
       "category": "energy",
-      "oneLiner": "Free home energy upgrades for income-qualified utility customers",
+      "oneLiner": "Free home energy upgrades through your utility",
       "maxBenefit": "Up to ~$3,000 in free upgrades (estimate; utility measures)",
       "applyUrl": "https://www.pge.com/en/save-energy-and-money/energy-saving-programs/energy-savings-assistance-program.html",
       "deadlines": [],
@@ -457,9 +679,9 @@
       "id": "amp",
       "name": "AMP (Arrearage Management)",
       "category": "energy",
-      "oneLiner": "Forgiveness path for past-due utility balances (if you qualify)",
+      "oneLiner": "Forgiveness path for past-due utility balances",
       "maxBenefit": "Up to ~$2,000 debt forgiveness path (estimate; utility-specific)",
-      "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/payment-assistance.html",
+      "applyUrl": "https://help.pge.com/s/article/Arrearage-Management-Plan-AMP",
       "deadlines": [],
       "applySteps": [
         "Confirm you have qualifying past-due balance",
@@ -485,7 +707,8 @@
       "skipCascades": [],
       "skipReasons": [],
       "sources": [
-        "https://www.pge.com/en/account/billing-and-assistance/payment-assistance.html"
+        "https://help.pge.com/s/article/Arrearage-Management-Plan-AMP",
+        "https://www.pge.com/en/account/billing-and-assistance/financial-assistance.html"
       ],
       "estAnnualUsd": 2000,
       "maxBenefitUsd": {
@@ -497,9 +720,9 @@
       "id": "medical_baseline",
       "name": "Medical Baseline",
       "category": "energy",
-      "oneLiner": "Extra utility allowance for qualifying medical needs",
+      "oneLiner": "Extra utility allowance for medical needs",
       "maxBenefit": "Up to ~$25/mo extra baseline allowance (estimate)",
-      "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/medical-baseline.html",
+      "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/medical-baseline-program.html",
       "deadlines": [],
       "applySteps": [
         "Get medical practitioner certification",
@@ -522,7 +745,7 @@
       "skipCascades": [],
       "skipReasons": [],
       "sources": [
-        "https://www.pge.com/en/account/billing-and-assistance/medical-baseline.html"
+        "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/medical-baseline-program.html"
       ],
       "estAnnualUsd": 300,
       "maxBenefitUsd": {
@@ -539,7 +762,7 @@
       "applyUrl": "https://www.irs.gov/credits-deductions",
       "deadlines": [
         {
-          "label": "Typical federal filing season",
+          "label": "Tax year 2026 federal filing deadline",
           "date": "2027-04-15"
         }
       ],
@@ -561,8 +784,8 @@
         "no",
         "tax_only"
       ],
-      "yesOrder": 90,
-      "noOrder": 90,
+      "yesOrder": 999,
+      "noOrder": 999,
       "gateFeeder": false,
       "skipCascades": [],
       "skipReasons": [],

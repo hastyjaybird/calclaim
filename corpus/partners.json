@@ -1,0 +1,42 @@
+{
+  "version": "2026-08-01",
+  "disclaimer": "Community outreach partners host CalClaim QR codes. Not official agency affiliations.",
+  "partners": [
+    {
+      "id": "oakland_library",
+      "slug": "oakland-library",
+      "name": "Oakland Main Library",
+      "city": "Oakland, CA",
+      "campaignId": "qr_oakland_library",
+      "logo": "/brand/partners/oakland-library.svg",
+      "blurb": "Community outreach partner"
+    },
+    {
+      "id": "sf_mission",
+      "slug": "mission-community",
+      "name": "Mission District Community Board",
+      "city": "San Francisco, CA",
+      "campaignId": "qr_sf_mission",
+      "logo": "/brand/partners/mission-community.svg",
+      "blurb": "Community outreach partner"
+    },
+    {
+      "id": "fresno_food_bank",
+      "slug": "fresno-food-bank",
+      "name": "Fresno Food Bank",
+      "city": "Fresno, CA",
+      "campaignId": "qr_fresno_foodbank",
+      "logo": "/brand/partners/fresno-food-bank.svg",
+      "blurb": "Community outreach partner"
+    },
+    {
+      "id": "la_family_resource",
+      "slug": "la-family-resource",
+      "name": "LA Family Resource Center",
+      "city": "Los Angeles, CA",
+      "campaignId": "qr_la_family_resource",
+      "logo": "/brand/partners/la-family-resource.svg",
+      "blurb": "Community outreach partner"
+    }
+  ]
+}

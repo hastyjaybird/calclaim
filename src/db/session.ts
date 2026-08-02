@@ -42,14 +42,17 @@ export function emptySession(telegramUserId: number): SessionState {
     pastDue: null,
     billNotInMyName: false,
     hasChildInHousehold: null,
+    hasAgedBlindOrDisabled: null,
     docsInHand: [],
     queue: [],
     queueIndex: 0,
     alreadyOn: [],
     items: [],
     remindersEnabled: false,
+    remindersStopped: false,
     awaitingConfirm: null,
     lastBotMessage: null,
+    campaignId: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -63,6 +66,11 @@ export function loadSession(telegramUserId: number): SessionState | null {
   const state = JSON.parse(row.state_json) as SessionState;
   if (state.lastBotMessage === undefined) state.lastBotMessage = null;
   if (state.hasChildInHousehold === undefined) state.hasChildInHousehold = null;
+  if (state.hasAgedBlindOrDisabled === undefined) {
+    state.hasAgedBlindOrDisabled = null;
+  }
+  if (state.remindersStopped === undefined) state.remindersStopped = false;
+  if (state.campaignId === undefined) state.campaignId = null;
   return state;
 }
 
@@ -100,5 +108,15 @@ export function listReminderSessions(): SessionState[] {
     .all() as { state_json: string }[];
   return rows
     .map((r) => JSON.parse(r.state_json) as SessionState)
-    .filter((s) => s.remindersEnabled && s.items.some((i) => i.status === "todo" || i.status === "in_progress" || i.status === "snoozed"));
+    .filter(
+      (s) =>
+        s.remindersEnabled &&
+        !s.remindersStopped &&
+        s.items.some(
+          (i) =>
+            i.status === "todo" ||
+            i.status === "in_progress" ||
+            i.status === "snoozed",
+        ),
+    );
 }

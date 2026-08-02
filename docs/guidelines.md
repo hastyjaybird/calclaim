@@ -28,11 +28,11 @@ Utility / PG&E programs are **in scope as corpus rows**, not as the product iden
 2. Triage + offer queues per [`customer-experience.md`](customer-experience.md): gate → YES or NO arm → ranked cards → living next-steps updates.  
 3. **Multi-category corpus** — never ship a demo that only lists energy programs.  
 4. Rank by **document reuse** and **time-to-money** (corpus scores), not “energy first.”  
-5. Living next-steps PDF re-sent after meaningful actions; final benefits report at queue end.  
+5. Living to-do list PDF (= benefits report; one file) re-sent after meaningful actions and at queue end.  
 6. Deadline reminders (Tue noon closest; T-3 / T-1 Pacific).  
 7. Refuse / escalate when unknown; never invent rules.  
 8. Free-form / gibberish QC log behavior (below).  
-9. README + demo script + sample next-steps PDF.
+9. README + demo script + sample to-do list PDF.
 
 ---
 
@@ -94,7 +94,7 @@ A demo that only lists PG&E links **fails** the v2 bar.
 
 ## Completion friction bar
 
-The next-steps file and offer cards must work for someone **distracted, tired, or low working memory**:
+The to-do list / benefits report PDF and offer cards must work for someone **distracted, tired, or low working memory**:
 
 - One job per screen.  
 - Same button shapes on every offer card.  
@@ -128,4 +128,4 @@ The next-steps file and offer cards must work for someone **distracted, tired, o
 
 ## Definition of demo success
 
-A reviewer runs the Telegram path in &lt;10 minutes and ends with a **next-steps PDF + reminders armed** across **more than one program category** — not a list of utility homepage URLs.
+A reviewer runs the Telegram path in &lt;10 minutes and ends with a **to-do list PDF + reminders armed** across **more than one program category** — not a list of utility homepage URLs.

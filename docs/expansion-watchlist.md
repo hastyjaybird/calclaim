@@ -54,7 +54,7 @@
 
 | Priority | Program type | CalClaim fit |
 |---|---|---|
-| 1 | **Food / health / cash** (CalFresh, Medi-Cal, WIC, CalWORKs, SSI) | **Core** |
+| 1 | **Food / health / cash** (CalFresh, Disaster CalFresh, Medi-Cal, CMSP, WIC, CalWORKs, GA/GR, CAPI, SSI) | **Core** |
 | 2 | **Telecom** (LifeLine) | Core |
 | 3 | **Bill discounts / LIHEAP / AMP** | Core peers (not brand) |
 | 4 | **Utility free upgrades** (ESA-like) | Peer offer |

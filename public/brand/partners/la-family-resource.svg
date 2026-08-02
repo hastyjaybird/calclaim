@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="96" viewBox="0 0 320 96" role="img" aria-label="LA Family Resource Center">
+  <rect width="320" height="96" rx="12" fill="#f4f7f5"/>
+  <rect x="18" y="28" width="28" height="40" rx="4" fill="#246b52"/>
+  <rect x="24" y="36" width="16" height="10" rx="1" fill="#f4f7f5"/>
+  <text x="56" y="42" font-family="Georgia, serif" font-size="15" font-weight="700" fill="#084d3d">LA Family</text>
+  <text x="56" y="66" font-family="Georgia, serif" font-size="15" font-weight="700" fill="#084d3d">Resource Center</text>
+</svg>

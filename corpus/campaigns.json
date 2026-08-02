@@ -48,6 +48,15 @@
       "zip": null
     },
     {
+      "id": "qr_peer_share",
+      "name": "Peer share QR (Help menu)",
+      "kind": "qr",
+      "lat": null,
+      "lng": null,
+      "label": "Peer QR share",
+      "zip": null
+    },
+    {
       "id": "link_website",
       "name": "Website CTA",
       "kind": "link",

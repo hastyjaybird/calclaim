@@ -19,7 +19,7 @@ import type { DraftFinding, ScanRun } from "./types.js";
 
 /** Prefer CARE/FERA page already in corpus for income-band checks. */
 const INCOME_BAND_URL =
-  "https://www.pge.com/en/account/billing-and-assistance/financialassistance/carefera.html";
+  "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/california-alternate-rates-for-energy-program.html";
 
 let activePromise: Promise<ScanRun> | null = null;
 

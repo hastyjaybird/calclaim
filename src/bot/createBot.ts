@@ -1,4 +1,4 @@
-import { Bot, type Context } from "grammy";
+import { Bot, GrammyError, HttpError, type Context } from "grammy";
 import { sanitizeStartPayload } from "../analytics/campaigns.js";
 import type { SessionState } from "../corpus/types.js";
 import { recordAlphaFeedback } from "../feedback/record.js";
@@ -8,28 +8,52 @@ import {
 } from "../feedback/transcribe.js";
 import { captureTelegramUpdate } from "../db/telegramCapture.js";
 import { getOrCreateSession, saveSession } from "../db/session.js";
-import { THANKS_FEEDBACK } from "../privacy/copy.js";
-import { handleCallback, resetSession, sendOptIn, trackBotStart } from "./flow.js";
+import {
+  errorAck,
+  greetingAck,
+  interpretMessage,
+  mediaAck,
+  suggestAck,
+  unknownAck,
+  type CommandName,
+  type TextIntent,
+} from "./interpret.js";
+import {
+  handleCallback,
+  resetSession,
+  resumeRemindersAfterMessage,
+  sendOptIn,
+  trackBotStart,
+} from "./flow.js";
 import { idleKeyboard } from "./keyboards.js";
+import { openTodos } from "../nextsteps/model.js";
 import { repeatLastMessage } from "./reply.js";
 
-const COMMANDS = new Set(["/start", "/help", "/stop", "/restart"]);
+async function noteRemindersResumed(ctx: Context): Promise<void> {
+  await ctx.reply("Reminders are back on.");
+}
 
-function isExpectedText(session: SessionState, text: string): boolean {
-  const t = text.trim().toLowerCase();
-  if (COMMANDS.has(t.split(/\s/)[0] ?? "")) return true;
-  if (
-    t === "help" ||
-    t === "stop" ||
-    t === "erase" ||
-    t === "start" ||
-    t === "restart" ||
-    t === "to do" ||
-    t === "todo"
-  ) {
-    return true;
+async function safeReply(ctx: Context, text: string): Promise<void> {
+  try {
+    await ctx.reply(text);
+  } catch (err) {
+    console.error("safeReply failed:", err);
   }
-  return false;
+}
+
+async function reorient(
+  ctx: Context,
+  session: SessionState,
+  lead: string,
+): Promise<void> {
+  await safeReply(ctx, lead);
+  const repeated = await repeatLastMessage(ctx, session).catch(() => false);
+  if (!repeated) {
+    await safeReply(
+      ctx,
+      "Tap a button below when you're ready — or type help.",
+    );
+  }
 }
 
 async function beginFresh(ctx: Context, uid: number): Promise<void> {
@@ -37,15 +61,86 @@ async function beginFresh(ctx: Context, uid: number): Promise<void> {
   await sendOptIn(ctx, session);
 }
 
-async function acknowledgeFeedback(
+async function dispatchCommand(
   ctx: Context,
   session: SessionState,
+  uid: number,
+  command: CommandName,
 ): Promise<void> {
-  await ctx.reply(THANKS_FEEDBACK);
-  const repeated = await repeatLastMessage(ctx, session);
-  if (!repeated) {
-    await ctx.reply("Tap a button above when you’re ready.");
+  switch (command) {
+    case "stop":
+      await handleCallback(ctx, session, "stop:ask");
+      return;
+    case "help":
+      await handleCallback(ctx, session, "help:menu");
+      return;
+    case "share":
+      await handleCallback(ctx, session, "help:share");
+      return;
+    case "email":
+      await handleCallback(ctx, session, "idle:email");
+      return;
+    case "erase":
+      await handleCallback(ctx, session, "help:erase_ask");
+      return;
+    case "start":
+    case "restart":
+      await beginFresh(ctx, uid);
+      return;
+    case "todo":
+      await handleCallback(ctx, session, "todo:resend");
+      return;
   }
+}
+
+async function handleInterpretedText(
+  ctx: Context,
+  session: SessionState,
+  uid: number,
+  rawText: string,
+  source: "text" | "voice",
+): Promise<boolean> {
+  const intent: TextIntent = interpretMessage(rawText, session);
+
+  if (intent.kind === "command") {
+    // STOP should not resume reminders; everything else may.
+    if (intent.command !== "stop") {
+      if (resumeRemindersAfterMessage(session)) await noteRemindersResumed(ctx);
+    }
+    await dispatchCommand(ctx, session, uid, intent.command);
+    return true;
+  }
+
+  if (resumeRemindersAfterMessage(session)) await noteRemindersResumed(ctx);
+
+  if (intent.kind === "step_answer") {
+    await handleCallback(ctx, session, intent.callback);
+    return true;
+  }
+
+  if (intent.kind === "greeting") {
+    await reorient(ctx, session, greetingAck(session.step));
+    return true;
+  }
+
+  if (intent.kind === "suggest") {
+    await reorient(
+      ctx,
+      session,
+      suggestAck(intent.display, session.step),
+    );
+    return true;
+  }
+
+  // Unknown — log as alpha feedback, stay on the same step
+  recordAlphaFeedback({
+    session,
+    text: rawText,
+    source,
+    transcriptStatus: source === "voice" ? "ok" : undefined,
+  });
+  await reorient(ctx, session, unknownAck(session.step));
+  return true;
 }
 
 export function createBot(token: string): Bot {
@@ -59,16 +154,24 @@ export function createBot(token: string): Bot {
 
   bot.command("start", async (ctx) => {
     const uid = ctx.from?.id;
-    if (!uid) return;
+    if (!uid) {
+      await safeReply(ctx, errorAck());
+      return;
+    }
     const payload = sanitizeStartPayload(ctx.match?.trim());
     const session = resetSession(uid);
+    session.campaignId = payload;
+    saveSession(session);
     trackBotStart(uid, payload);
     await sendOptIn(ctx, session);
   });
 
   bot.command("help", async (ctx) => {
     const uid = ctx.from?.id;
-    if (!uid) return;
+    if (!uid) {
+      await safeReply(ctx, errorAck());
+      return;
+    }
     const session = getOrCreateSession(uid);
     session.step = "help_menu";
     saveSession(session);
@@ -77,20 +180,29 @@ export function createBot(token: string): Bot {
 
   bot.command("stop", async (ctx) => {
     const uid = ctx.from?.id;
-    if (!uid) return;
+    if (!uid) {
+      await safeReply(ctx, errorAck());
+      return;
+    }
     const session = getOrCreateSession(uid);
     await handleCallback(ctx, session, "stop:ask");
   });
 
   bot.command("restart", async (ctx) => {
     const uid = ctx.from?.id;
-    if (!uid) return;
+    if (!uid) {
+      await safeReply(ctx, errorAck());
+      return;
+    }
     await beginFresh(ctx, uid);
   });
 
   bot.on("callback_query:data", async (ctx) => {
     const uid = ctx.from?.id;
-    if (!uid) return;
+    if (!uid) {
+      await ctx.answerCallbackQuery().catch(() => undefined);
+      return;
+    }
     const session = getOrCreateSession(uid);
     const data = ctx.callbackQuery.data;
     await handleCallback(ctx, session, data);
@@ -98,53 +210,35 @@ export function createBot(token: string): Bot {
 
   bot.on("message:text", async (ctx) => {
     const uid = ctx.from?.id;
-    if (!uid) return;
-    const text = ctx.message.text.trim();
-    const lower = text.toLowerCase();
+    if (!uid) {
+      await safeReply(ctx, errorAck());
+      return;
+    }
+    // Slash commands are handled by bot.command(...) above — don't double-run.
+    const text = ctx.message.text ?? "";
+    if (text.startsWith("/")) return;
     const session = getOrCreateSession(uid);
-
-    if (lower === "help") {
-      await handleCallback(ctx, session, "help:menu");
-      return;
-    }
-    if (lower === "stop") {
-      await handleCallback(ctx, session, "stop:ask");
-      return;
-    }
-    if (lower === "erase") {
-      await handleCallback(ctx, session, "help:erase_ask");
-      return;
-    }
-    if (lower === "start" || lower === "restart") {
-      await beginFresh(ctx, uid);
-      return;
-    }
-    if (lower === "to do" || lower === "todo") {
-      await handleCallback(ctx, session, "todo:resend");
-      return;
-    }
-
-    if (isExpectedText(session, text)) return;
-
-    // Alpha feedback (text) — store for developers, do not advance
-    recordAlphaFeedback({ session, text, source: "text" });
-    await acknowledgeFeedback(ctx, session);
+    await handleInterpretedText(ctx, session, uid, text, "text");
   });
 
   bot.on(["message:voice", "message:audio"], async (ctx) => {
     const uid = ctx.from?.id;
-    if (!uid) return;
+    if (!uid) {
+      await safeReply(ctx, errorAck());
+      return;
+    }
     const session = getOrCreateSession(uid);
     const fileId =
       ctx.message.voice?.file_id ?? ctx.message.audio?.file_id;
     if (!fileId) {
+      if (resumeRemindersAfterMessage(session)) await noteRemindersResumed(ctx);
       recordAlphaFeedback({
         session,
         text: "[voice/audio with no file id]",
         source: "voice",
         transcriptStatus: "failed",
       });
-      await acknowledgeFeedback(ctx, session);
+      await reorient(ctx, session, mediaAck(session.step));
       return;
     }
 
@@ -153,9 +247,27 @@ export function createBot(token: string): Bot {
       if (!file.file_path) throw new Error("Missing file_path");
       const buf = await downloadTelegramFile(token, file.file_path);
       const { text, status } = await transcribeVoiceBuffer(buf, "voice.ogg");
+
+      if (text && status === "ok") {
+        const intent = interpretMessage(text, session);
+        if (intent.kind !== "unknown") {
+          await handleInterpretedText(ctx, session, uid, text, "voice");
+          return;
+        }
+        recordAlphaFeedback({
+          session,
+          text,
+          source: "voice",
+          transcriptStatus: status,
+        });
+        if (resumeRemindersAfterMessage(session)) await noteRemindersResumed(ctx);
+        await reorient(ctx, session, unknownAck(session.step));
+        return;
+      }
+
       recordAlphaFeedback({
         session,
-        text,
+        text: text || "[voice — empty transcript]",
         source: "voice",
         transcriptStatus: status,
       });
@@ -168,27 +280,103 @@ export function createBot(token: string): Bot {
         transcriptStatus: "failed",
       });
     }
-    await acknowledgeFeedback(ctx, session);
+    if (resumeRemindersAfterMessage(session)) await noteRemindersResumed(ctx);
+    await reorient(ctx, session, mediaAck(session.step));
   });
 
   // Other media: already logged by middleware; treat as soft feedback
   bot.on(
-    ["message:contact", "message:location", "message:venue", "message:photo", "message:document"],
+    [
+      "message:contact",
+      "message:location",
+      "message:venue",
+      "message:photo",
+      "message:document",
+      "message:sticker",
+      "message:video",
+      "message:animation",
+      "message:video_note",
+    ],
     async (ctx) => {
       const uid = ctx.from?.id;
-      if (!uid) return;
+      if (!uid) {
+        await safeReply(ctx, errorAck());
+        return;
+      }
       const session = getOrCreateSession(uid);
+      if (resumeRemindersAfterMessage(session)) await noteRemindersResumed(ctx);
+      const kind = ctx.message.photo
+        ? "photo"
+        : ctx.message.document
+          ? "document"
+          : ctx.message.contact
+            ? "contact"
+            : ctx.message.location
+              ? "location"
+              : ctx.message.sticker
+                ? "sticker"
+                : ctx.message.video
+                  ? "video"
+                  : "media";
       recordAlphaFeedback({
         session,
-        text: `[non-text message: ${ctx.message.photo ? "photo" : ctx.message.document ? "document" : ctx.message.contact ? "contact" : ctx.message.location ? "location" : "media"}]`,
+        text: `[non-text message: ${kind}]`,
         source: "text",
       });
-      await acknowledgeFeedback(ctx, session);
+      await reorient(ctx, session, mediaAck(session.step));
     },
   );
 
-  bot.catch((err) => {
-    console.error("Bot error:", err);
+  // Catch-all: any other message type still gets a human reply
+  bot.on("message", async (ctx) => {
+    // Skip if a more specific handler already ran (grammy won't double-fire
+    // the same update through overlapping filters in practice for these, but
+    // text/voice/media are registered above — this catches leftovers).
+    if (
+      ctx.message.text ||
+      ctx.message.voice ||
+      ctx.message.audio ||
+      ctx.message.photo ||
+      ctx.message.document ||
+      ctx.message.contact ||
+      ctx.message.location ||
+      ctx.message.venue ||
+      ctx.message.sticker ||
+      ctx.message.video ||
+      ctx.message.animation ||
+      ctx.message.video_note
+    ) {
+      return;
+    }
+    const uid = ctx.from?.id;
+    if (!uid) {
+      await safeReply(ctx, errorAck());
+      return;
+    }
+    const session = getOrCreateSession(uid);
+    if (resumeRemindersAfterMessage(session)) await noteRemindersResumed(ctx);
+    recordAlphaFeedback({
+      session,
+      text: "[unsupported message type]",
+      source: "text",
+    });
+    await reorient(ctx, session, mediaAck(session.step));
+  });
+
+  bot.catch(async (err) => {
+    const ctx = err.ctx;
+    console.error("Bot error:", err.error);
+    if (err.error instanceof GrammyError) {
+      console.error("Grammy error:", err.error.description);
+    } else if (err.error instanceof HttpError) {
+      console.error("HTTP error talking to Telegram:", err.error);
+    }
+    await safeReply(ctx, errorAck());
+    const uid = ctx.from?.id;
+    if (uid) {
+      const session = getOrCreateSession(uid);
+      await repeatLastMessage(ctx, session).catch(() => undefined);
+    }
   });
 
   return bot;
@@ -199,8 +387,9 @@ export async function sendReminder(
   bot: Bot,
   ctxLike: { telegramUserId: number; text: string },
 ): Promise<void> {
+  const session = getOrCreateSession(ctxLike.telegramUserId);
   await bot.api.sendMessage(ctxLike.telegramUserId, ctxLike.text, {
-    reply_markup: idleKeyboard(),
+    reply_markup: idleKeyboard(openTodos(session).length > 0),
   });
 }
 

@@ -17,6 +17,7 @@
 }
 
 body {
+  position: relative;
   margin: 0;
   min-height: 100vh;
   font-family: var(--font-body);
@@ -36,11 +37,13 @@ body {
 
 .brand {
   margin: 0;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.2rem;
-  color: var(--leaf-deep);
-  letter-spacing: 0.02em;
+}
+
+.brand-logo {
+  display: block;
+  width: min(100%, 16rem);
+  height: auto;
+  border-radius: 0.65rem;
 }
 
 h1 {
@@ -199,6 +202,14 @@ h1 {
 .back {
   margin: 1.75rem 0 0;
   font-size: 0.9rem;
+}
+
+.back-top {
+  position: absolute;
+  top: 1rem;
+  left: 1.25rem;
+  margin: 0;
+  z-index: 1;
 }
 
 .back a {

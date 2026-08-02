@@ -31,8 +31,8 @@ export type StepId =
   | "income_band"
   | "past_due"
   | "has_child"
+  | "has_abd"
   | "offer"
-  | "care_skip"
   | "idle"
   | "confirm_stop"
   | "confirm_erase"
@@ -91,6 +91,13 @@ export interface Program {
   requiresPastDue?: boolean;
   /** CalWORKs / WIC-style: needs a child under 18 or pregnancy in the household. */
   requiresChildInHousehold?: boolean;
+  /** SSI / CAPI-style: needs someone aged 65+, blind, or disabled. */
+  requiresAgedBlindOrDisabled?: boolean;
+  /**
+   * Drop from queue when user already marked one of these at the gate
+   * (e.g. Disaster CalFresh if already on CalFresh; CMSP if already on Medi-Cal).
+   */
+  excludeIfAlreadyOn?: string[];
   skipCascades: string[];
   skipReasons: string[];
   sources: string[];
@@ -126,15 +133,21 @@ export interface SessionState {
   billNotInMyName: boolean;
   /** Kids under 18 or pregnancy — gates requiresChildInHousehold programs. */
   hasChildInHousehold: boolean | null;
+  /** Aged 65+ / blind / disabled — gates requiresAgedBlindOrDisabled programs. */
+  hasAgedBlindOrDisabled: boolean | null;
   docsInHand: DocId[];
   queue: string[];
   queueIndex: number;
   alreadyOn: string[];
   items: NextStepsItem[];
   remindersEnabled: boolean;
+  /** User said STOP — pauses reminders until their next message (data kept). */
+  remindersStopped: boolean;
   awaitingConfirm: "stop" | "erase" | null;
   /** Most recent screen prompt (text + keyboard) for feedback replay. */
   lastBotMessage: LastBotMessage | null;
+  /** Campaign from QR / share /start payload — used for partner attribution. */
+  campaignId: string | null;
   createdAt: string;
   updatedAt: string;
 }

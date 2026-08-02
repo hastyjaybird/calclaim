@@ -9,8 +9,8 @@ export const FUNNEL_STAGES = [
   },
   {
     id: "bot_start",
-    label: "Opened bot",
-    detail: "Telegram /start",
+    label: "Opened CalClaim",
+    detail: "Started a session",
   },
   {
     id: "started",
@@ -45,7 +45,7 @@ export const FUNNEL_STAGES = [
   {
     id: "finished",
     label: "Finished queue",
-    detail: "Got final benefits report",
+    detail: "Got to-do list / benefits report",
   },
 ] as const;
 

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CalClaim — Partner impact</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="/partners/styles.css" />
+</head>
+<body data-page="partner">
+  <div class="banner" role="banner">
+    <div class="banner-inner">
+      <a class="banner-brand" href="/impact" data-i18n-aria="nav.homeAria" aria-label="CalClaim home">
+        <img
+          class="banner-mark"
+          src="/brand/calclaim-logo-horizontal-v2-fraunces.png"
+          alt="CalClaim"
+          width="180"
+          height="120"
+        />
+      </a>
+      <span class="banner-sep" aria-hidden="true"></span>
+      <nav class="site-nav" data-i18n-aria="nav.site" aria-label="Site">
+        <a href="/impact" data-i18n="nav.impact">Impact</a>
+        <a href="/impact#partners" aria-current="page" data-i18n="nav.partners">Leaderboard</a>
+        <a href="/impact#contact" data-i18n="nav.contact">Contact</a>
+        <a href="/impact#privacy" data-i18n="nav.privacy">Privacy</a>
+        <a href="/dev" data-i18n="nav.developer">Partner login</a>
+      </nav>
+      <div id="lang-switch" class="lang-switch"></div>
+    </div>
+  </div>
+
+  <div class="deck" id="deck">
+    <a class="back-link" href="/impact#partners" data-i18n="partners.backLink">← Back to partner leaderboard</a>
+
+    <header class="slide-hero">
+      <div class="co-brand" aria-label="Partnership">
+        <img
+          class="co-brand-logo co-brand-calclaim"
+          src="/brand/calclaim-logo-horizontal-v2-fraunces.png"
+          alt="CalClaim"
+          width="280"
+          height="187"
+        />
+        <span class="co-brand-with" data-i18n="partners.with">with</span>
+        <img
+          class="co-brand-logo co-brand-partner"
+          id="partner-logo"
+          src=""
+          alt=""
+          width="280"
+          height="96"
+        />
+      </div>
+      <h1 class="partner-title" id="partner-name">—</h1>
+      <p class="partner-city" id="partner-city"></p>
+      <p class="partner-blurb" id="partner-blurb" data-i18n="partners.blurbFallback">
+        Community outreach partner
+      </p>
+    </header>
+
+    <section class="slide-body">
+      <aside class="qr-panel">
+        <h2 id="partner-qr-heading">Partner unique QR code</h2>
+        <p data-i18n="partners.qrBody">
+          Print or share this code — every scan credits this partner on the leaderboard.
+        </p>
+        <img
+          class="partner-qr"
+          id="partner-qr"
+          src=""
+          width="220"
+          height="220"
+          data-i18n-alt="partners.qrAlt"
+          alt="Partner QR code for CalClaim"
+        />
+      </aside>
+
+      <section class="metrics" data-i18n-aria="partners.metricsAria" aria-label="Partner impact metrics">
+        <article class="metric">
+          <p class="metric-label" data-i18n="partners.peopleReached">People reached</p>
+          <p class="metric-value" id="m-reached">—</p>
+        </article>
+        <article class="metric">
+          <p class="metric-label" data-i18n="partners.botStarts">Opened CalClaim</p>
+          <p class="metric-value" id="m-starts">—</p>
+        </article>
+        <article class="metric">
+          <p class="metric-label" data-i18n="partners.followThroughs">Follow-throughs</p>
+          <p class="metric-value" id="m-follow">—</p>
+        </article>
+        <article class="metric metric-accent">
+          <p class="metric-label" data-i18n="partners.estAid">Est. aid unlocked</p>
+          <p class="metric-value" id="m-dollars">—</p>
+        </article>
+      </section>
+    </section>
+
+    <section class="charts" data-i18n-aria="partners.chartsAria" aria-label="Partner usage over time">
+      <div class="panel">
+        <div class="panel-head">
+          <h2 data-i18n="partners.usersPerDay">Users per day</h2>
+          <p data-i18n="partners.usersPerDayNote">Scans of this partner’s QR by day</p>
+        </div>
+        <canvas id="chart-daily" height="220"></canvas>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2 data-i18n="partners.cumulative">Total users over time</h2>
+          <p data-i18n="partners.cumulativeNote">Cumulative people reached via this partner</p>
+        </div>
+        <canvas id="chart-cumulative" height="220"></canvas>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="map-heading">
+      <div class="panel-head">
+        <h2 id="map-heading" data-i18n="partners.mapHeading">Where people found this code</h2>
+        <p data-i18n="partners.mapBody">
+          Partner poster site and coarse city-level location — never home addresses.
+        </p>
+      </div>
+      <div id="map" role="img" data-i18n-aria="partners.mapAria" aria-label="Map of partner outreach locations"></div>
+    </section>
+
+    <p class="disclaimer" id="disclaimer"></p>
+  </div>
+
+  <p class="error-banner" id="error-banner" hidden></p>
+
+  <footer class="site-footer">
+    <p data-i18n="partners.footer" data-i18n-html>
+      CalClaim demo · Community outreach partner stats ·
+      <a href="/impact#contact">Contact</a> ·
+      <a href="/impact#privacy">Privacy policy</a>
+    </p>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="/i18n/messages.js"></script>
+  <script src="/i18n/lang.js"></script>
+  <script src="/partners/app.js"></script>
+</body>
+</html>

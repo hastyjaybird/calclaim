@@ -25,20 +25,21 @@ Tables: `telegram_users`, `telegram_messages` in the demo database.
 - Next-steps todo items and deadlines derived from our frozen program corpus
 - Free-form text or voice notes you send that are not a recognized button/command (alpha feedback / developer quality control)
 - Voice notes are transcribed to text (when transcription is configured) and stored as feedback for the developer to-do list
+- Optional phone, email, and comments submitted on the public contact form (stored in the developer feedback to-do list in SQLite)
 
 ### Impact analytics (aggregate funder dashboard)
 
 - QR scans and shared-link clicks (campaign id, timestamp)
 - Clicks from the bot to official program apply pages (program id, timestamp)
-- “Save to my to do list” follow-through taps
+- “Add to my to do list” follow-through taps
 - Coarse location only: QR poster placement coordinates, and optionally city-level IP geolocation (rounded; never street address)
 
 ## What we do **not** collect (v2)
 
 - Document uploads as a required product step (ID, pay stubs, bills) — if you send a file anyway, file metadata may be logged as above
 - Payment information
-- Marketing email lists
-- Phone numbers unless you tap Telegram’s share-contact control
+- Marketing email lists (optional email on the contact form is for replies only; “Email report to my computer” opens your own Mail app with a download link and does not send us the address)
+- Phone numbers unless you tap Telegram’s share-contact control or optionally enter one on the contact form
 - Precise GPS unless you share a location
 - Raw IP addresses stored long-term (looked up briefly for city-level map dots, then discarded)
 
@@ -54,7 +55,8 @@ We do not sell your data. This demo does not send your Telegram profile or messa
 
 ## Retention & deletion
 
-- Message **STOP** or use **Help → Erase all my data** / type **erase** to delete your session, Telegram user/message rows, todos, reminder flags, your QC log rows, and your alpha feedback to-do rows.
+- Message **STOP** to pause deadline reminders only (your session and to-do list stay; message again to resume reminders).
+- Use **Help → Erase all my data** / type **erase** to delete your session, Telegram user/message rows, todos, reminder flags, your QC log rows, and your alpha feedback to-do rows.
 - Aggregate impact counts (anonymized event totals) may remain on the funder dashboard after you erase your session.
 - Hosting operators may wipe the demo database when the demo ends.
 

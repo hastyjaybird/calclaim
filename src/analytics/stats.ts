@@ -2,6 +2,11 @@ import { getProgram, loadPrograms } from "../corpus/load.js";
 import { listEvents, type AnalyticsEventRow } from "./db.js";
 import { getCampaign, loadCampaignsFile } from "./campaigns.js";
 import { FUNNEL_STAGES, type FunnelStageId } from "./funnel.js";
+import {
+  getPartnerBySlug,
+  listPartners,
+  type Partner,
+} from "./partners.js";
 
 export interface DailyCount {
   date: string;
@@ -107,7 +112,7 @@ export function buildImpactStats(): ImpactStats {
     mapPoints,
     funnel,
     disclaimer:
-      "Estimates only. Dollar totals use corpus annual benefit estimates × follow-through taps — not verified agency payouts. Map shows QR placement sites and coarse city-level IP when available; never street addresses. Funnel counts unique Telegram users per stage (QR/link reach is event count).",
+      "Estimates only. Dollar totals use corpus annual benefit estimates × follow-through taps — not verified agency payouts. Map shows QR placement sites and coarse city-level IP when available; never street addresses. Funnel counts unique people per stage (QR/link reach is event count).",
   };
 }
 
@@ -308,4 +313,184 @@ function buildMapPoints(awareness: AnalyticsEventRow[]): MapPoint[] {
   }
 
   return [...buckets.values()].sort((a, b) => b.count - a.count);
+}
+
+export interface PartnerLeaderboardRow {
+  rank: number;
+  id: string;
+  slug: string;
+  name: string;
+  city: string;
+  logo: string;
+  blurb: string;
+  campaignId: string;
+  peopleReached: number;
+  botStarts: number;
+  followThroughs: number;
+  estDollarsUnlocked: number;
+}
+
+export interface PartnerStats {
+  generatedAt: string;
+  partner: {
+    id: string;
+    slug: string;
+    name: string;
+    city: string;
+    logo: string;
+    blurb: string;
+    campaignId: string;
+  };
+  peopleReached: number;
+  botStarts: number;
+  programOpens: number;
+  followThroughs: number;
+  estDollarsUnlocked: number;
+  usersPerDay: DailyCount[];
+  mapPoints: MapPoint[];
+  programs: ProgramStat[];
+  disclaimer: string;
+}
+
+/** Map telegram users → first bot_start campaign (sticky attribution fallback). */
+function firstBotStartCampaignByUser(
+  events: AnalyticsEventRow[],
+): Map<number, string> {
+  const map = new Map<number, string>();
+  const starts = events
+    .filter((e) => e.event_type === "bot_start" && e.telegram_user_id != null)
+    .sort((a, b) => a.created_at.localeCompare(b.created_at));
+  for (const e of starts) {
+    const uid = e.telegram_user_id!;
+    if (map.has(uid)) continue;
+    if (e.campaign_id) map.set(uid, e.campaign_id);
+  }
+  return map;
+}
+
+function eventMatchesCampaign(
+  e: AnalyticsEventRow,
+  campaignId: string,
+  userCampaign: Map<number, string>,
+): boolean {
+  if (e.campaign_id === campaignId) return true;
+  if (e.telegram_user_id != null) {
+    return userCampaign.get(e.telegram_user_id) === campaignId;
+  }
+  return false;
+}
+
+function rollupPartner(
+  partner: Partner,
+  events: AnalyticsEventRow[],
+  userCampaign: Map<number, string>,
+): Omit<PartnerLeaderboardRow, "rank"> {
+  const cid = partner.campaignId;
+  const awareness = events.filter(
+    (e) => e.event_type === "awareness" && e.campaign_id === cid,
+  );
+  const botStarts = events.filter(
+    (e) =>
+      e.event_type === "bot_start" &&
+      eventMatchesCampaign(e, cid, userCampaign),
+  );
+  const followThroughs = events.filter(
+    (e) =>
+      e.event_type === "follow_through" &&
+      eventMatchesCampaign(e, cid, userCampaign),
+  );
+  let estDollarsUnlocked = 0;
+  for (const e of followThroughs) {
+    if (e.program_id) estDollarsUnlocked += estForProgram(e.program_id);
+  }
+  return {
+    id: partner.id,
+    slug: partner.slug,
+    name: partner.name,
+    city: partner.city,
+    logo: partner.logo,
+    blurb: partner.blurb,
+    campaignId: partner.campaignId,
+    peopleReached: awareness.length,
+    botStarts: uniqueUsers(botStarts),
+    followThroughs: uniqueUsers(followThroughs),
+    estDollarsUnlocked,
+  };
+}
+
+export function buildPartnerLeaderboard(): PartnerLeaderboardRow[] {
+  const events = listEvents();
+  const userCampaign = firstBotStartCampaignByUser(events);
+  const rows = listPartners().map((p) => rollupPartner(p, events, userCampaign));
+  rows.sort(
+    (a, b) =>
+      b.peopleReached - a.peopleReached ||
+      b.botStarts - a.botStarts ||
+      a.name.localeCompare(b.name),
+  );
+  return rows.map((row, i) => ({ ...row, rank: i + 1 }));
+}
+
+export function buildPartnerStats(slug: string): PartnerStats | null {
+  const partner = getPartnerBySlug(slug);
+  if (!partner) return null;
+
+  const events = listEvents();
+  const userCampaign = firstBotStartCampaignByUser(events);
+  const cid = partner.campaignId;
+  const summary = rollupPartner(partner, events, userCampaign);
+
+  const awareness = events.filter(
+    (e) => e.event_type === "awareness" && e.campaign_id === cid,
+  );
+  const attributed = events.filter((e) =>
+    eventMatchesCampaign(e, cid, userCampaign),
+  );
+  const programOpens = attributed.filter((e) => e.event_type === "program_open");
+
+  const campaign = getCampaign(cid);
+  const mapPoints = buildMapPoints(awareness);
+  // Always show the partner's placement pin
+  if (
+    campaign?.lat != null &&
+    campaign.lng != null &&
+    !mapPoints.some(
+      (p) =>
+        Math.abs(p.lat - campaign.lat!) < 0.01 &&
+        Math.abs(p.lng - campaign.lng!) < 0.01,
+    )
+  ) {
+    mapPoints.push({
+      lat: campaign.lat,
+      lng: campaign.lng,
+      label: campaign.label ?? partner.name,
+      count: awareness.length,
+      kind: "qr",
+    });
+  }
+
+  return {
+    generatedAt: new Date().toISOString(),
+    partner: {
+      id: partner.id,
+      slug: partner.slug,
+      name: partner.name,
+      city: partner.city,
+      logo: partner.logo,
+      blurb: partner.blurb,
+      campaignId: partner.campaignId,
+    },
+    peopleReached: summary.peopleReached,
+    botStarts: summary.botStarts,
+    programOpens: programOpens.length,
+    followThroughs: summary.followThroughs,
+    estDollarsUnlocked: summary.estDollarsUnlocked,
+    usersPerDay: buildUsersPerDay(awareness),
+    mapPoints,
+    programs: buildProgramStats(attributed).filter(
+      (p) => p.opens > 0 || p.followThroughs > 0,
+    ),
+    disclaimer:
+      "Partner stats credit people reached via this partner’s unique QR code. Downstream metrics use session attribution from that QR. Estimates only — not verified agency payouts.",
+  };
 }

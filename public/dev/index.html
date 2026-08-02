@@ -14,11 +14,22 @@
 <body>
   <div class="banner" role="banner">
     <div class="banner-inner">
-      <span class="banner-mark">CalClaim</span>
+      <a class="banner-brand" href="/impact" aria-label="CalClaim home">
+        <img
+          class="banner-mark"
+          src="/brand/calclaim-logo-horizontal-v2-fraunces.png"
+          alt="CalClaim"
+          width="180"
+          height="120"
+        />
+      </a>
       <span class="banner-sep" aria-hidden="true"></span>
       <nav class="site-nav" aria-label="Site">
         <a href="/impact">Impact</a>
-        <a href="/dev" aria-current="page">Developer</a>
+        <a href="/impact#partners">Leaderboard</a>
+        <a href="/impact#contact">Contact</a>
+        <a href="/impact#privacy">Privacy</a>
+        <a href="/dev" aria-current="page">Partner login</a>
         <button type="button" class="nav-logout" id="btn-logout">Log out</button>
       </nav>
       <span class="banner-line">Corpus freshness — humans only · advisory findings</span>
@@ -63,13 +74,42 @@
       </article>
     </section>
 
+    <section class="panel" id="funnel" aria-labelledby="funnel-heading">
+      <div class="panel-head">
+        <h2 id="funnel-heading">Pipeline fall-off</h2>
+        <p>Where people leave the conversation tree — from finding CalClaim to finishing the offer queue.</p>
+      </div>
+      <p class="funnel-callout" id="funnel-callout" hidden></p>
+      <div class="funnel-layout">
+        <div class="funnel-chart-wrap">
+          <canvas id="chart-funnel" height="320"></canvas>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th class="num">Users</th>
+                <th class="num">Drop-off</th>
+                <th class="num">Still in</th>
+              </tr>
+            </thead>
+            <tbody id="funnel-rows">
+              <tr><td colspan="4">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <section class="panel" aria-labelledby="feedback-heading">
       <div class="panel-head panel-head-row">
         <div>
           <h2 id="feedback-heading">Alpha user feedback — to do</h2>
           <p>
-            Text and voice notes from testers. Voice is transcribed to text when
-            <code>OPENAI_API_KEY</code> is set. Mark done after you act on it.
+            Text and voice notes from testers, plus web contact form messages.
+            Voice is transcribed to text when <code>OPENAI_API_KEY</code> is set.
+            Mark done after you act on it.
           </p>
         </div>
         <label class="filter">
@@ -111,7 +151,7 @@
     <section class="panel" aria-labelledby="programs-heading">
       <div class="panel-head">
         <h2 id="programs-heading">Programs in corpus</h2>
-        <p>Each row is a frozen offer the chatbot can present. Open findings are from prior scans.</p>
+        <p>Each row is a frozen offer CalClaim can present. Open findings are from prior scans.</p>
       </div>
       <div class="table-wrap">
         <table>
@@ -135,7 +175,7 @@
     <section class="panel" id="checklist" aria-labelledby="checklist-heading">
       <div class="panel-head">
         <h2 id="checklist-heading">What to keep an eye on</h2>
-        <p>Beyond dates, qualifications, apply steps, funding, max amounts, and URLs — these fields also break the bot when stale.</p>
+        <p>Beyond dates, qualifications, apply steps, funding, max amounts, and URLs — these fields also break CalClaim when stale.</p>
       </div>
       <ul class="checklist" id="checklist-items"></ul>
     </section>
@@ -168,10 +208,13 @@
   <footer>
     <p>
       CalClaim developer tools · Authorized humans only — no robots, AI agents, or automated login ·
-      Frozen corpus stays human-edited · <a href="/impact">Impact dashboard</a>
+      Frozen corpus stays human-edited · <a href="/impact">Impact Dashboard</a> ·
+      <a href="/impact#contact">Contact</a> ·
+      <a href="/impact#privacy">Privacy policy</a>
     </p>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="/dev/app.js"></script>
 </body>
 </html>

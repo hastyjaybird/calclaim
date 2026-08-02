@@ -8,10 +8,21 @@ import {
 } from "../analytics/campaigns.js";
 import { recordEvent } from "../analytics/db.js";
 import { clientIp, coarseFromIp, fromCampaignPin } from "../analytics/geo.js";
-import { buildImpactStats } from "../analytics/stats.js";
+import { getPartnerBySlug } from "../analytics/partners.js";
+import {
+  buildImpactStats,
+  buildPartnerLeaderboard,
+  buildPartnerStats,
+} from "../analytics/stats.js";
 import type { AppConfig } from "../config.js";
-import { getBotUsername, ROOT } from "../config.js";
+import { campaignLandingUrl, getBotUsername, ROOT } from "../config.js";
 import { getProgram } from "../corpus/load.js";
+import { renderShareQrPng } from "../bot/share.js";
+import {
+  getReportPdf,
+  mailtoWithReportLink,
+  reportDownloadUrl,
+} from "../nextsteps/reportLinks.js";
 import {
   listFeedbackTodos,
   setFeedbackTodoStatus,
@@ -21,6 +32,7 @@ import { getScan, listFindings, setFindingStatus } from "../watchdog/db.js";
 import { buildDevStatus } from "../watchdog/overview.js";
 import { startCorpusScan } from "../watchdog/runner.js";
 import type { FindingStatus } from "../watchdog/types.js";
+import { appendContactMessage } from "../contact/messages.js";
 import {
   createCaptchaChallenge,
   createSession,
@@ -97,6 +109,14 @@ function developerNoIndexHeaders(): Record<string, string> {
   };
 }
 
+/** Public pages may be served under /es/... or /zh/... ; developer pages are English-only. */
+function stripPublicLangPrefix(urlPath: string): { lang: "es" | "zh" | null; path: string } {
+  const m = urlPath.match(/^\/(es|zh)(?=\/|$)/);
+  if (!m) return { lang: null, path: urlPath };
+  const rest = urlPath.slice(m[0].length) || "/";
+  return { lang: m[1] as "es" | "zh", path: rest };
+}
+
 function serveStatic(
   res: http.ServerResponse,
   urlPath: string,
@@ -105,6 +125,12 @@ function serveStatic(
   let rel = urlPath;
   if (rel === "/" || rel === "/impact" || rel === "/impact/") rel = "/impact/index.html";
   if (rel === "/dev" || rel === "/dev/") rel = "/dev/index.html";
+  // Partner deck template: /partners and /partners/:slug → partners/index.html
+  if (rel === "/partners" || rel === "/partners/") {
+    rel = "/partners/index.html";
+  } else if (/^\/partners\/[A-Za-z0-9_-]+\/?$/.test(rel)) {
+    rel = "/partners/index.html";
+  }
   const safe = path.normalize(rel).replace(/^(\.\.[/\\])+/, "");
   const filePath = path.join(PUBLIC_DIR, safe);
   if (!filePath.startsWith(PUBLIC_DIR) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
@@ -477,6 +503,91 @@ async function handleGo(
   redirect(res, `https://t.me/${username}?start=${encodeURIComponent(campaignId)}`);
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * Phone → computer handoff page.
+ * Auto-opens Mail with a download link (phones can't attach PDFs to mailto:).
+ * Telegram URL buttons only allow http(s), so this page is the mailto bridge.
+ */
+function handleReportSharePage(
+  res: http.ServerResponse,
+  token: string,
+  config: AppConfig,
+): void {
+  const pdf = getReportPdf(token);
+  if (!pdf) {
+    send(
+      res,
+      404,
+      "This report link expired. In Telegram, tap Email report to my computer again.",
+      "text/plain; charset=utf-8",
+    );
+    return;
+  }
+  const pdfUrl = reportDownloadUrl(config.publicBaseUrl, token);
+  const mailHref = mailtoWithReportLink(pdfUrl);
+  const safeMail = escapeHtml(mailHref);
+  const safePdf = escapeHtml(pdfUrl);
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="refresh" content="0;url=${safeMail}" />
+  <title>Email your CalClaim report</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 28rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.45; color: #122; }
+    h1 { font-size: 1.25rem; margin: 0 0 0.75rem; }
+    p { color: #333; margin: 0 0 1rem; }
+    a.btn { display: block; text-align: center; text-decoration: none; padding: 0.85rem 1rem; border-radius: 0.5rem; font-weight: 600; margin: 0.5rem 0; }
+    a.primary { background: #0b5c2e; color: #fff; }
+    a.secondary { background: #e8f0eb; color: #0b5c2e; }
+    .note { font-size: 0.9rem; color: #555; }
+  </style>
+  <script>
+    window.location.href = ${JSON.stringify(mailHref)};
+  </script>
+</head>
+<body>
+  <h1>Opening your email app…</h1>
+  <p>Send the email to yourself, then open the download link on your laptop.</p>
+  <a class="btn primary" href="${safeMail}">Open email app with link</a>
+  <a class="btn secondary" href="${safePdf}">Download PDF on this phone</a>
+  <p class="note">Link works for 7 days. If Mail didn’t open, tap the green button.</p>
+</body>
+</html>`;
+  send(res, 200, html, "text/html; charset=utf-8", {
+    "Cache-Control": "no-store",
+  });
+}
+
+function handleReportDownload(
+  res: http.ServerResponse,
+  token: string,
+): void {
+  const pdf = getReportPdf(token);
+  if (!pdf) {
+    send(
+      res,
+      404,
+      "This report link expired. In Telegram, tap Email report to my computer again.",
+      "text/plain; charset=utf-8",
+    );
+    return;
+  }
+  send(res, 200, pdf, "application/pdf", {
+    "Content-Disposition": 'attachment; filename="calclaim-todo-list.pdf"',
+    "Cache-Control": "no-store",
+  });
+}
+
 async function handleApplyRedirect(
   req: http.IncomingMessage,
   res: http.ServerResponse,
@@ -537,6 +648,92 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
         return;
       }
 
+      if (pathname === "/api/partners") {
+        send(
+          res,
+          200,
+          JSON.stringify({
+            generatedAt: new Date().toISOString(),
+            partners: buildPartnerLeaderboard(),
+          }),
+          "application/json; charset=utf-8",
+        );
+        return;
+      }
+
+      if (pathname.startsWith("/api/partners/")) {
+        const slug = decodeURIComponent(
+          pathname.slice("/api/partners/".length).split("/")[0] ?? "",
+        );
+        const stats = buildPartnerStats(slug);
+        if (!stats) {
+          send(
+            res,
+            404,
+            JSON.stringify({ error: "Partner not found" }),
+            "application/json; charset=utf-8",
+          );
+          return;
+        }
+        send(res, 200, JSON.stringify(stats), "application/json; charset=utf-8");
+        return;
+      }
+
+      if (pathname === "/api/contact" && req.method === "POST") {
+        try {
+          const body = (await readJsonBody(req, 16_384)) as {
+            phone?: unknown;
+            email?: unknown;
+            comments?: unknown;
+          };
+          const saved = appendContactMessage(body);
+          if (!saved) {
+            send(
+              res,
+              400,
+              JSON.stringify({ error: "empty" }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          send(res, 200, JSON.stringify({ ok: true }), "application/json; charset=utf-8");
+        } catch {
+          send(
+            res,
+            400,
+            JSON.stringify({ error: "bad_request" }),
+            "application/json; charset=utf-8",
+          );
+        }
+        return;
+      }
+
+      if (pathname === "/api/qr/try") {
+        const target = campaignLandingUrl(config.publicBaseUrl, "link_website");
+        const png = await renderShareQrPng(target);
+        send(res, 200, png, "image/png", {
+          "Cache-Control": "public, max-age=3600",
+        });
+        return;
+      }
+
+      if (pathname.startsWith("/api/qr/partner/")) {
+        const slug = decodeURIComponent(
+          pathname.slice("/api/qr/partner/".length).split("/")[0] ?? "",
+        );
+        const partner = getPartnerBySlug(slug);
+        if (!partner) {
+          send(res, 404, "Partner not found", "text/plain; charset=utf-8");
+          return;
+        }
+        const target = campaignLandingUrl(config.publicBaseUrl, partner.campaignId);
+        const png = await renderShareQrPng(target);
+        send(res, 200, png, "image/png", {
+          "Cache-Control": "public, max-age=3600",
+        });
+        return;
+      }
+
       if (pathname.startsWith("/api/dev")) {
         const authHandled = await handleDevAuthApi(req, res, pathname, config);
         if (authHandled) return;
@@ -565,6 +762,72 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
         return;
       }
 
+      // Temporary to-do PDF links for "email to my computer"
+      if (pathname.startsWith("/report/")) {
+        const parts = pathname.slice("/report/".length).split("/").filter(Boolean);
+        const token = (parts[0] ?? "").replace(/[^a-f0-9]/gi, "");
+        if (!token || token.length < 16) {
+          send(res, 404, "Not found", "text/plain; charset=utf-8");
+          return;
+        }
+        if (parts[1] === "share") {
+          handleReportSharePage(res, token, config);
+          return;
+        }
+        if (!parts[1]) {
+          handleReportDownload(res, token);
+          return;
+        }
+        send(res, 404, "Not found", "text/plain; charset=utf-8");
+        return;
+      }
+
+      // Localized public URLs: /es/impact, /zh/privacy, etc.
+      // Developer login + /dev stay English-only (no alt-language pages).
+      const localized = stripPublicLangPrefix(pathname);
+      if (localized.lang) {
+        if (localized.path === "/dev" || localized.path.startsWith("/dev/")) {
+          redirect(res, localized.path === "/dev/" ? "/dev" : localized.path);
+          return;
+        }
+        const publicPath =
+          localized.path === "/" ? "/impact" : localized.path;
+        if (publicPath === "/privacy" || publicPath.startsWith("/privacy/")) {
+          redirect(res, `/${localized.lang}/impact#privacy`);
+          return;
+        }
+        if (publicPath === "/contact" || publicPath.startsWith("/contact/")) {
+          redirect(res, `/${localized.lang}/impact#contact`);
+          return;
+        }
+        if (publicPath === "/impact" || publicPath.startsWith("/impact/")) {
+          serveStatic(res, publicPath);
+          return;
+        }
+        if (publicPath === "/partners" || publicPath.startsWith("/partners/")) {
+          if (publicPath === "/partners" || publicPath === "/partners/") {
+            redirect(res, `/${localized.lang}/impact#partners`);
+            return;
+          }
+          if (/\.(css|js|map|svg|png|ico)$/i.test(publicPath)) {
+            serveStatic(res, publicPath);
+            return;
+          }
+          const slug = publicPath
+            .slice("/partners/".length)
+            .replace(/\/$/, "")
+            .split("/")[0] ?? "";
+          if (!getPartnerBySlug(slug)) {
+            send(res, 404, "Not found", "text/plain; charset=utf-8");
+            return;
+          }
+          serveStatic(res, `/partners/${slug}`);
+          return;
+        }
+        send(res, 404, "Not found", "text/plain; charset=utf-8");
+        return;
+      }
+
       if (pathname === "/dev" || pathname.startsWith("/dev/")) {
         const rel =
           pathname === "/dev" || pathname === "/dev/" ? "/dev/index.html" : pathname;
@@ -577,10 +840,40 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
         return;
       }
 
+      if (pathname === "/privacy" || pathname.startsWith("/privacy/")) {
+        redirect(res, "/impact#privacy");
+        return;
+      }
+      if (pathname === "/contact" || pathname.startsWith("/contact/")) {
+        redirect(res, "/impact#contact");
+        return;
+      }
+
+      if (pathname === "/partners" || pathname === "/partners/") {
+        redirect(res, "/impact#partners");
+        return;
+      }
+      if (pathname.startsWith("/partners/")) {
+        // Static assets: /partners/styles.css, /partners/app.js
+        if (/\.(css|js|map|svg|png|ico)$/i.test(pathname)) {
+          serveStatic(res, pathname);
+          return;
+        }
+        const slug = pathname.slice("/partners/".length).replace(/\/$/, "").split("/")[0] ?? "";
+        if (!getPartnerBySlug(slug)) {
+          send(res, 404, "Not found", "text/plain; charset=utf-8");
+          return;
+        }
+        serveStatic(res, `/partners/${slug}`);
+        return;
+      }
+
       if (
         pathname === "/" ||
         pathname === "/impact" ||
-        pathname.startsWith("/impact/")
+        pathname.startsWith("/impact/") ||
+        pathname.startsWith("/brand/") ||
+        pathname.startsWith("/i18n/")
       ) {
         serveStatic(res, pathname === "/" ? "/impact" : pathname);
         return;
@@ -612,6 +905,7 @@ export function startWebServer(
   server.listen(config.port, () => {
     console.log(`CalClaim web listening on :${config.port}`);
     console.log(`  Impact dashboard: ${config.publicBaseUrl}/impact`);
+    console.log(`  Partner leaderboard: ${config.publicBaseUrl}/impact#partners`);
     console.log(`  Developer (password + CAPTCHA): ${config.publicBaseUrl}/dev`);
     console.log(`  Sample QR landing: ${config.publicBaseUrl}/go/qr_oakland_library`);
     if (!config.developerPassword) {

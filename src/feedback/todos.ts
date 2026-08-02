@@ -1,7 +1,7 @@
 import type Database from "better-sqlite3";
 import type { SessionState } from "../corpus/types.js";
 
-export type FeedbackSource = "text" | "voice";
+export type FeedbackSource = "text" | "voice" | "contact";
 export type FeedbackTodoStatus = "open" | "done";
 
 export interface DeveloperFeedbackTodo {
@@ -14,6 +14,12 @@ export interface DeveloperFeedbackTodo {
   transcriptStatus: string | null;
   status: FeedbackTodoStatus;
   sessionSnapshot: string;
+}
+
+export interface ContactFeedbackFields {
+  phone: string;
+  email: string;
+  comments: string;
 }
 
 let db: Database.Database | null = null;
@@ -42,13 +48,49 @@ function getDb(): Database.Database {
   return db;
 }
 
+function insertTodoRow(input: {
+  telegramUserId: number;
+  step: string;
+  source: FeedbackSource;
+  text: string;
+  transcriptStatus?: string | null;
+  sessionSnapshot: string;
+}): DeveloperFeedbackTodo {
+  const createdAt = new Date().toISOString();
+  const result = getDb()
+    .prepare(
+      `INSERT INTO developer_feedback_todos
+        (created_at, telegram_user_id, step, source, text, transcript_status, status, session_snapshot)
+       VALUES (?, ?, ?, ?, ?, ?, 'open', ?)`,
+    )
+    .run(
+      createdAt,
+      input.telegramUserId,
+      input.step,
+      input.source,
+      input.text,
+      input.transcriptStatus ?? null,
+      input.sessionSnapshot,
+    );
+  return {
+    id: Number(result.lastInsertRowid),
+    createdAt,
+    telegramUserId: input.telegramUserId,
+    step: input.step,
+    source: input.source,
+    text: input.text,
+    transcriptStatus: input.transcriptStatus ?? null,
+    status: "open",
+    sessionSnapshot: input.sessionSnapshot,
+  };
+}
+
 export function insertFeedbackTodo(input: {
   session: SessionState;
   source: FeedbackSource;
   text: string;
   transcriptStatus?: string | null;
 }): DeveloperFeedbackTodo {
-  const createdAt = new Date().toISOString();
   const snapshot = JSON.stringify({
     branch: input.session.branch,
     householdSize: input.session.householdSize,
@@ -59,32 +101,36 @@ export function insertFeedbackTodo(input: {
     language: input.session.language,
     step: input.session.step,
   });
-  const result = getDb()
-    .prepare(
-      `INSERT INTO developer_feedback_todos
-        (created_at, telegram_user_id, step, source, text, transcript_status, status, session_snapshot)
-       VALUES (?, ?, ?, ?, ?, ?, 'open', ?)`,
-    )
-    .run(
-      createdAt,
-      input.session.telegramUserId,
-      input.session.step,
-      input.source,
-      input.text,
-      input.transcriptStatus ?? null,
-      snapshot,
-    );
-  return {
-    id: Number(result.lastInsertRowid),
-    createdAt,
+  return insertTodoRow({
     telegramUserId: input.session.telegramUserId,
     step: input.session.step,
     source: input.source,
     text: input.text,
-    transcriptStatus: input.transcriptStatus ?? null,
-    status: "open",
+    transcriptStatus: input.transcriptStatus,
     sessionSnapshot: snapshot,
-  };
+  });
+}
+
+/** Web contact form → same developer feedback queue as Telegram alpha feedback. */
+export function insertContactFeedbackTodo(
+  fields: ContactFeedbackFields,
+): DeveloperFeedbackTodo {
+  const lines: string[] = [];
+  if (fields.phone) lines.push(`Phone: ${fields.phone}`);
+  if (fields.email) lines.push(`Email: ${fields.email}`);
+  if (fields.comments) lines.push(fields.comments);
+  return insertTodoRow({
+    telegramUserId: 0,
+    step: "contact_form",
+    source: "contact",
+    text: lines.join("\n"),
+    sessionSnapshot: JSON.stringify({
+      channel: "web_contact",
+      phone: fields.phone,
+      email: fields.email,
+      comments: fields.comments,
+    }),
+  });
 }
 
 export function listFeedbackTodos(opts?: {

@@ -4,21 +4,31 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow, noarchive" />
-  <title>CalClaim — Developer login</title>
+  <title>CalClaim — Partner login</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/dev/login.css" />
 </head>
 <body>
+  <p class="back back-top"><a href="/impact">← Back to Impact Dashboard</a></p>
   <main class="login-shell">
-    <p class="brand">CalClaim</p>
-    <h1>Developer login</h1>
-    <p class="lede">Authorized human operators only.</p>
+    <p class="brand">
+      <img
+        class="brand-logo"
+        src="/brand/calclaim-logo-horizontal-v2-fraunces.png"
+        alt="CalClaim"
+        width="280"
+        height="187"
+      />
+    </p>
+    <h1>Partner login</h1>
+    <p class="lede">
+      The Partner login is for demo partners, developers to improve and connect to CalClaim’s service.
+    </p>
 
     <aside class="policy" role="note">
       <p>
-        The Developer area is for authorized human operators only.
         Robots, crawlers, scrapers, automated scripts, AI agents, bots,
         and any other non-human systems are prohibited from logging in to
         or accessing this page.
@@ -63,10 +73,7 @@
 
       <label class="attest">
         <input id="human" name="human" type="checkbox" required />
-        <span>
-          I confirm I am a human, and not a robot, AI agent, crawler, or other
-          non-human system.
-        </span>
+        <span>I'm not a robot.</span>
       </label>
 
       <p id="error" class="error" hidden></p>
@@ -74,7 +81,7 @@
       <button type="submit" class="submit">Sign in</button>
     </form>
 
-    <p class="back"><a href="/impact">← Back to funder dashboard</a></p>
+    <p class="back"><a href="/impact">← Back to Impact Dashboard</a></p>
   </main>
   <script src="/dev/login.js"></script>
 </body>

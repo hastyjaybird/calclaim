@@ -136,6 +136,7 @@ button.cta:disabled {
   color: var(--ink-soft);
   line-height: 1.45;
   font-size: 0.95rem;
+  white-space: pre-wrap;
 }
 
 .finding-meta {

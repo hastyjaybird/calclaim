@@ -184,10 +184,10 @@ Wired into `guidelines.md`, `PROMPT.md`, README, competitive research target pat
 
 - Node/TS + grammy + SQLite + PDFKit + node-cron  
 - Multi-category corpus (`corpus/programs.json`)  
-- Gate → YES/NO queues → offer cards → next-steps PDF → final report → reminders  
+- Gate → YES/NO queues → offer cards → one to-do list / benefits report PDF → reminders  
 - Help / STOP / erase + free-form QC log  
 - `npm run dev` after `.env` with `TELEGRAM_BOT_TOKEN`  
-- Sample PDF at `docs/samples/calclaim-next-steps-sample.pdf`
+- Sample PDF at `docs/samples/calclaim-todo-list-sample.pdf`
 
 ---
 
@@ -218,3 +218,33 @@ Wired into `guidelines.md`, `PROMPT.md`, README, competitive research target pat
 - `portfolio/products/applications/anthropic/beneficial-deployments/research/bd-operations-partnerships-channels-2026-07-30.md`  
 - `portfolio/experiences/climatedash/README.md`  
 - `portfolio/content/master-profile.md`
+
+---
+
+## Turn — Alpha UX feedback (2026-08-01)
+
+**User feedback:** Roommate vs household still confusing; remove tax card; no report if no tasks (push share); finish with restart / share / email report / more info; “You may qualify for X” on cards; buttons I’m already enrolled / Add to my to do list / Skip program; remove Open apply page (drop-off); finish = abbreviated text summary (docs→$, total, program URLs) then PDF; email PDF; report first line total $ this year + form-fill minutes; drop “open programs total” row.
+
+**Outcome:** Wired into bot + PDF + CX/finish-line docs. Email via optional `SMTP_*` env (nodemailer).
+
+---
+
+## Turn — Process alpha QC feedback (2026-08-01)
+
+**User feedback (Telegram 8795740677 / responses.jsonl):**
+1. Put sparkle after “improvement” (opt-in)
+2. Say “Thanks for your feedback!”
+3. Take out “(only affects one optional program)” (past_due)
+4. Copy the same household explanation to other household cards
+
+**Outcome:** Applied in `flow.ts` / `interpret.ts` / `privacy/copy.ts` + CX docs. Shared `HOUSEHOLD_EXPLAIN` on gate, household size, income, and has-child. Open feedback todo marked done.
+
+---
+
+## Turn — BenefitsCal program coverage (2026-08-01)
+
+**User:** Ensure we address all programs on BenefitsCal program descriptions (HCPRD); research quals and put in the tree per guidelines.
+
+**Gap:** Corpus had Medi-Cal, CalFresh, CalWORKs only from BenefitsCal’s set. Missing CAPI, GA/GR, CMSP, Disaster CalFresh. GROW / WtW are nested employment services (noted under GA/GR + CalWORKs apply steps, not separate offer cards).
+
+**Outcome:** Added corpus rows + gate toggles for CAPI / GA/GR / CMSP; Disaster CalFresh as seasonal offer; `excludeIfAlreadyOn` in ranker; CX / expansion-watchlist updated.

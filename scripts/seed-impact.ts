@@ -21,14 +21,26 @@ initAnalytics(db);
 db.exec("DELETE FROM analytics_events");
 
 const daysBack = 14;
-const campaigns = [
-  "qr_oakland_library",
-  "qr_sf_mission",
-  "qr_fresno_foodbank",
-  "qr_la_family_resource",
-  "link_share",
-  "link_website",
+/** Weighted so partner leaderboard has a clear #1 (Fresno) for the trophy demo. */
+const campaignWeights: { id: string; weight: number }[] = [
+  { id: "qr_fresno_foodbank", weight: 38 },
+  { id: "qr_oakland_library", weight: 24 },
+  { id: "qr_la_family_resource", weight: 16 },
+  { id: "qr_sf_mission", weight: 12 },
+  { id: "link_share", weight: 6 },
+  { id: "link_website", weight: 4 },
 ];
+const weightTotal = campaignWeights.reduce((s, c) => s + c.weight, 0);
+
+function pickCampaign(seed: number): string {
+  let n = ((seed * 37) % weightTotal) + 1;
+  for (const c of campaignWeights) {
+    n -= c.weight;
+    if (n <= 0) return c.id;
+  }
+  return campaignWeights[0]!.id;
+}
+
 const programs = ["calfresh", "lifeline", "care", "esa", "liheap", "tax_credits", "wic"];
 
 /** Simulated CX fall-off: each stage is a subset of the previous. */
@@ -62,7 +74,7 @@ let userSeq = 2000;
 for (let day = daysBack; day >= 0; day--) {
   const reachedToday = 4 + ((day * 3) % 5);
   for (let i = 0; i < reachedToday; i++) {
-    const campaignId = campaigns[(day + i) % campaigns.length]!;
+    const campaignId = pickCampaign(day * 11 + i * 3);
     const campaign = getCampaign(campaignId);
     const pin = fromCampaignPin({
       lat: campaign?.lat ?? 37.77 + (i % 3) * 0.05,

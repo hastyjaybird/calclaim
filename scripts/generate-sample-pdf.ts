@@ -16,12 +16,14 @@ const sample: SessionState = {
   pastDue: false,
   billNotInMyName: false,
   hasChildInHousehold: true,
+  hasAgedBlindOrDisabled: false,
   // Leave common docs out so the "Find your documents" incentive table has rows.
   docsInHand: ["categoricalProof"],
   queue: [],
   queueIndex: 0,
   alreadyOn: [],
   lastBotMessage: null,
+  campaignId: null,
   items: [
     {
       programId: "calfresh",
@@ -50,25 +52,15 @@ const sample: SessionState = {
       programName: "CARE",
       category: "energy",
       action: "Apply for CARE",
-      link: "https://www.pge.com/en/account/billing-and-assistance/financialassistance/carefera.html",
+      link: "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/california-alternate-rates-for-energy-program.html",
       deadlineLabel: "",
       deadlineDate: null,
       status: "todo",
       docs: ["utilityBill", "photoId"],
     },
-    {
-      programId: "tax_credits",
-      programName: "Tax credits (info)",
-      category: "tax",
-      action: "Remind later: Tax credits (info)",
-      link: "https://www.irs.gov/credits-deductions",
-      deadlineLabel: "Typical federal filing season",
-      deadlineDate: "2027-04-15",
-      status: "snoozed",
-      docs: ["incomeProof"],
-    },
   ],
   remindersEnabled: true,
+  remindersStopped: false,
   awaitingConfirm: null,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
@@ -77,6 +69,6 @@ const sample: SessionState = {
 const outDir = path.join(root, "docs", "samples");
 fs.mkdirSync(outDir, { recursive: true });
 const buf = await renderNextStepsPdf(sample);
-const out = path.join(outDir, "calclaim-next-steps-sample.pdf");
+const out = path.join(outDir, "calclaim-todo-list-sample.pdf");
 fs.writeFileSync(out, buf);
 console.log("Wrote", out);

@@ -1,3 +1,7 @@
+/* global Chart */
+
+const number = new Intl.NumberFormat("en-US");
+
 function el(id) {
   return document.getElementById(id);
 }
@@ -196,11 +200,33 @@ async function refreshFindings() {
   renderFindings(data.findings);
 }
 
+function feedbackSourceLabel(t) {
+  if (t.source === "voice") {
+    return `voice${t.transcriptStatus ? ` · ${t.transcriptStatus}` : ""}`;
+  }
+  if (t.source === "contact") return "contact form";
+  return "text";
+}
+
+function feedbackWhoLabel(t) {
+  if (t.source === "contact") {
+    try {
+      const snap = JSON.parse(t.sessionSnapshot || "{}");
+      if (snap.email) return snap.email;
+      if (snap.phone) return snap.phone;
+    } catch {
+      /* ignore */
+    }
+    return "Web contact";
+  }
+  return `User ${t.telegramUserId}`;
+}
+
 function renderFeedbackTodos(todos) {
   const root = el("feedback-list");
   if (!root) return;
   if (!todos.length) {
-    root.innerHTML = `<p class="empty">No alpha feedback in this filter yet. Testers can text or send a voice note anytime.</p>`;
+    root.innerHTML = `<p class="empty">No feedback in this filter yet. Testers can text, send a voice note, or use the contact form.</p>`;
     return;
   }
   root.innerHTML = todos
@@ -209,15 +235,11 @@ function renderFeedbackTodos(todos) {
         t.status === "open"
           ? `<button type="button" data-feedback-id="${t.id}" data-status="done">Mark done</button>`
           : `<button type="button" data-feedback-id="${t.id}" data-status="open">Reopen</button>`;
-      const source =
-        t.source === "voice"
-          ? `voice${t.transcriptStatus ? ` · ${t.transcriptStatus}` : ""}`
-          : "text";
       return `<article class="finding" data-feedback="${t.id}">
         <div class="finding-head">
-          <span class="badge badge-cat">${escapeHtml(source)}</span>
+          <span class="badge badge-cat">${escapeHtml(feedbackSourceLabel(t))}</span>
           <span class="badge badge-source">${escapeHtml(t.step)}</span>
-          <h3>User ${t.telegramUserId}</h3>
+          <h3>${escapeHtml(feedbackWhoLabel(t))}</h3>
         </div>
         <p>${escapeHtml(t.text)}</p>
         <div class="finding-meta">
@@ -315,12 +337,121 @@ async function logout() {
   location.href = "/dev/login.html";
 }
 
+function renderFunnel(funnel) {
+  const stages = funnel?.stages ?? [];
+  const tbody = el("funnel-rows");
+  const callout = el("funnel-callout");
+  if (!tbody || !callout) return;
+
+  if (!stages.length) {
+    tbody.innerHTML = `<tr><td colspan="4">No funnel data yet.</td></tr>`;
+    return;
+  }
+
+  const maxDropPct = Math.max(...stages.map((s) => s.dropPct), 0);
+
+  tbody.innerHTML = stages
+    .map((s) => {
+      const dropCell =
+        s.dropOff > 0
+          ? `<span class="${s.dropPct === maxDropPct && maxDropPct > 0 ? "drop-bad" : ""}">−${number.format(s.dropOff)} (${s.dropPct}%)</span>`
+          : "—";
+      return `<tr>
+        <td>${escapeHtml(s.label)}<span class="stage-detail">${escapeHtml(s.detail)}</span></td>
+        <td class="num">${number.format(s.count)}</td>
+        <td class="num">${dropCell}</td>
+        <td class="num">${s.retentionPct}%</td>
+      </tr>`;
+    })
+    .join("");
+
+  if (funnel.biggestDropFrom && funnel.biggestDropTo && funnel.biggestDropCount > 0) {
+    const from = stages.find((s) => s.id === funnel.biggestDropFrom);
+    const to = stages.find((s) => s.id === funnel.biggestDropTo);
+    callout.hidden = false;
+    callout.textContent = `Largest drop: ${from?.label ?? funnel.biggestDropFrom} → ${to?.label ?? funnel.biggestDropTo} (−${number.format(funnel.biggestDropCount)} users, ${funnel.biggestDropPct}%).`;
+  } else {
+    callout.hidden = true;
+  }
+
+  const canvas = el("chart-funnel");
+  if (!canvas || typeof Chart === "undefined") return;
+
+  if (canvas._funnelChart) {
+    canvas._funnelChart.destroy();
+  }
+
+  const labels = stages.map((s) => s.label);
+  const values = stages.map((s) => s.count);
+  const colors = stages.map((s) =>
+    s.dropPct === maxDropPct && maxDropPct > 0
+      ? "rgba(180, 70, 50, 0.75)"
+      : "rgba(13, 122, 95, 0.75)",
+  );
+
+  canvas._funnelChart = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Users at stage",
+          data: values,
+          backgroundColor: colors,
+          borderRadius: 6,
+          maxBarThickness: 42,
+        },
+      ],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            afterLabel(ctx) {
+              const s = stages[ctx.dataIndex];
+              if (!s || s.dropOff <= 0) return `Still in: ${s?.retentionPct ?? 0}% of reach`;
+              return [
+                `Drop from prior: −${s.dropOff} (${s.dropPct}%)`,
+                `Still in: ${s.retentionPct}% of reach`,
+              ];
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: { precision: 0 },
+          grid: { color: "rgba(16, 36, 31, 0.08)" },
+        },
+        y: {
+          grid: { display: false },
+        },
+      },
+    },
+  });
+}
+
+async function loadFunnel() {
+  const res = await fetch("/api/stats");
+  if (!res.ok) throw new Error("Failed to load funnel stats");
+  const stats = await res.json();
+  if (typeof Chart !== "undefined") {
+    Chart.defaults.font.family = "Figtree, system-ui, sans-serif";
+    Chart.defaults.color = "#3a5550";
+  }
+  renderFunnel(stats.funnel);
+}
+
 async function main() {
   el("btn-scan").addEventListener("click", () => void startScan());
   el("finding-filter").addEventListener("change", () => void refreshFindings());
   el("feedback-filter")?.addEventListener("change", () => void refreshFeedbackTodos());
   el("btn-logout")?.addEventListener("click", () => void logout());
-  await refreshStatus(true);
+  await Promise.all([refreshStatus(true), loadFunnel()]);
 }
 
 main().catch((err) => {

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="96" viewBox="0 0 320 96" role="img" aria-label="Mission District Community Board">
+  <rect width="320" height="96" rx="12" fill="#f4f7f5"/>
+  <circle cx="28" cy="48" r="10" fill="#2a6f8f"/>
+  <text x="48" y="42" font-family="Georgia, serif" font-size="16" font-weight="700" fill="#1a3f52">Mission District</text>
+  <text x="48" y="66" font-family="Georgia, serif" font-size="16" font-weight="700" fill="#1a3f52">Community Board</text>
+</svg>

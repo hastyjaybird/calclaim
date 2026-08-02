@@ -28,7 +28,9 @@ function passesIncomeGate(
 }
 
 function includeInBranch(program: Program, branch: Branch): boolean {
-  if (branch === "tax_only") return program.id === "tax_credits";
+  // Tax-credits card removed from offers (user feedback: drop-off / confusion).
+  if (program.id === "tax_credits") return false;
+  if (branch === "tax_only") return false;
   return program.branches.includes(branch);
 }
 
@@ -50,13 +52,24 @@ export function buildQueue(session: SessionState): string[] {
     if (p.requiresChildInHousehold && session.hasChildInHousehold !== true) {
       return false;
     }
+    if (
+      p.requiresAgedBlindOrDisabled &&
+      session.hasAgedBlindOrDisabled !== true
+    ) {
+      return false;
+    }
     if (notMyBillIds?.has(p.id)) return false;
     if (!passesIncomeGate(p, session.incomeBand, branch)) return false;
     if (session.alreadyOn.includes(p.id)) return false;
+    if (
+      p.excludeIfAlreadyOn?.some((id) => session.alreadyOn.includes(id))
+    ) {
+      return false;
+    }
     return true;
   });
 
-  // FERA on NO+careBand: exclude (CARE covers); on feraBand only FERA incomeGate passes
+  // FERA on NO+careBand: exclude (CARE covers the lower band).
   const filtered =
     branch === "no" && session.incomeBand === "careBand"
       ? programs.filter((p) => p.id !== "fera")
@@ -88,9 +101,28 @@ export function currentProgram(session: SessionState): Program | undefined {
 /** True when a child-gated program would enter the queue if the user said yes. */
 export function queueNeedsChildGate(session: SessionState): boolean {
   if (session.hasChildInHousehold !== null) return false;
-  const probe: SessionState = { ...session, hasChildInHousehold: true };
+  const probe: SessionState = {
+    ...session,
+    hasChildInHousehold: true,
+    // Assume ABD yes so SSI/CAPI don't block the child-gate probe.
+    hasAgedBlindOrDisabled: session.hasAgedBlindOrDisabled ?? true,
+  };
   return buildQueue(probe).some(
     (id) => getProgram(id)?.requiresChildInHousehold === true,
+  );
+}
+
+/** True when an ABD-gated program would enter the queue if the user said yes. */
+export function queueNeedsAbdGate(session: SessionState): boolean {
+  if (session.hasAgedBlindOrDisabled !== null) return false;
+  const probe: SessionState = {
+    ...session,
+    hasAgedBlindOrDisabled: true,
+    // Use answered child gate, or assume yes so CalWORKs/WIC don't block probe.
+    hasChildInHousehold: session.hasChildInHousehold ?? true,
+  };
+  return buildQueue(probe).some(
+    (id) => getProgram(id)?.requiresAgedBlindOrDisabled === true,
   );
 }
 
