@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CalClaim — Sign up to be a partner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/partners/styles.css" />
+  <link rel="stylesheet" href="/partners/signup/styles.css" />
+</head>
+<body data-page="partnerSignup">
+  <div class="banner" role="banner">
+    <div class="banner-inner">
+      <a class="banner-brand" href="/impact" data-i18n-aria="nav.homeAria" aria-label="CalClaim home">
+        <img
+          class="banner-mark"
+          src="/brand/calclaim-logo-horizontal-v2-fraunces.png"
+          alt="CalClaim"
+          width="180"
+          height="120"
+        />
+      </a>
+      <span class="banner-sep" aria-hidden="true"></span>
+      <nav class="site-nav" data-i18n-aria="nav.site" aria-label="Site">
+        <a href="/impact" data-i18n="nav.impact">Impact</a>
+        <a href="/impact#partners" data-i18n="nav.partners">Leaderboard</a>
+        <a href="/impact#contact" data-i18n="nav.contact">Contact</a>
+        <a href="/impact#privacy" data-i18n="nav.privacy">Privacy</a>
+      </nav>
+      <div id="lang-switch" class="lang-switch"></div>
+    </div>
+  </div>
+
+  <main class="signup-shell">
+    <section class="signup-hero" id="signup-form-panel">
+      <p class="signup-eyebrow" data-i18n="signup.eyebrow">Community partners</p>
+      <h1>
+        <img
+          class="signup-logo"
+          src="/brand/calclaim-logo-horizontal-v2-fraunces.png"
+          alt="CalClaim"
+          width="320"
+          height="213"
+        />
+      </h1>
+      <p class="signup-lede" data-i18n="signup.lede">
+        Share CalClaim at your booth with a unique QR code. Every scan credits your organization on the leaderboard.
+      </p>
+
+      <form id="partner-signup-form" class="signup-form" novalidate>
+        <label class="field">
+          <span data-i18n="signup.nameLabel">Organization name</span>
+          <input
+            id="signup-name"
+            name="name"
+            type="text"
+            autocomplete="organization"
+            required
+            maxlength="120"
+            data-i18n-aria="signup.nameLabel"
+          />
+        </label>
+        <label class="field">
+          <span data-i18n="signup.emailLabel">Work email</span>
+          <input
+            id="signup-email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            required
+            maxlength="200"
+            data-i18n-aria="signup.emailLabel"
+          />
+        </label>
+        <label class="field">
+          <span data-i18n="signup.cityLabel">City (optional)</span>
+          <input
+            id="signup-city"
+            name="city"
+            type="text"
+            autocomplete="address-level2"
+            maxlength="80"
+            data-i18n-aria="signup.cityLabel"
+          />
+        </label>
+        <p class="signup-hint" data-i18n="signup.hint">
+          We’ll email your unique partner ID, QR code, status page link, and a printable booth banner with your company name.
+        </p>
+        <div class="cta-row">
+          <button type="submit" class="cta" id="signup-submit" data-i18n="signup.submit">
+            Sign up &amp; get my QR
+          </button>
+        </div>
+        <p id="signup-status" class="signup-status" role="status" aria-live="polite" hidden></p>
+      </form>
+    </section>
+
+    <section class="signup-success" id="signup-success-panel" hidden>
+      <p class="signup-eyebrow" data-i18n="signup.successEyebrow">You’re in</p>
+      <h2 data-i18n="signup.successHeading">Check your email</h2>
+      <p class="signup-lede" data-i18n="signup.successBody">
+        We sent a welcome kit with your QR code, partner status page, and a printable booth banner.
+      </p>
+      <dl class="signup-kit">
+        <div>
+          <dt data-i18n="signup.partnerIdLabel">Your partner ID</dt>
+          <dd id="success-partner-id">—</dd>
+        </div>
+        <div>
+          <dt data-i18n="signup.statusLinkLabel">Status page</dt>
+          <dd><a id="success-status-link" href="#">—</a></dd>
+        </div>
+      </dl>
+      <div class="signup-success-actions">
+        <a class="cta" id="success-banner-link" href="#" data-i18n="signup.downloadBanner">
+          Download booth banner
+        </a>
+        <a class="cta cta-ghost" id="success-qr-link" href="#" data-i18n="signup.downloadQr">
+          Download QR
+        </a>
+      </div>
+      <p class="signup-outbox-note" id="success-outbox-note" hidden data-i18n="signup.outboxNote">
+        Email delivery isn’t configured on this server yet — your kit links above still work.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p data-i18n="signup.footer" data-i18n-html>
+      CalClaim demo · Community outreach partners ·
+      <a href="/impact#contact">Contact</a> ·
+      <a href="/impact#privacy">Privacy policy</a>
+    </p>
+  </footer>
+
+  <script src="/i18n/messages.js"></script>
+  <script src="/i18n/lang.js"></script>
+  <script src="/partners/signup/app.js"></script>
+</body>
+</html>

@@ -47,6 +47,7 @@ npm run seed-impact
 | `BOT_MODE` | `long_polling` (default) or `webhook` |
 | `WEBHOOK_URL` / `WEBHOOK_SECRET` / `PORT` | Webhook deploy |
 | `DATABASE_PATH` | SQLite file (default `./data/calclaim.sqlite`) |
+| `SMTP_HOST` / `SMTP_FROM` (+ optional `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`) | Optional — partner signup welcome emails; otherwise kits go to `data/mail-outbox/` |
 | `TZ` | `America/Los_Angeles` |
 | `OPENROUTER_API_KEY` / `OPENAI_API_KEY` | Optional — deeper LLM review on `/dev` corpus scans |
 
@@ -55,6 +56,8 @@ npm run seed-impact
 ## Funder impact site
 
 Public page at `/impact` shows people reached (QR + links), program apply-page opens, follow-throughs, estimated aid unlocked, a coarse map, and charts. Details: [`docs/funder-dashboard.md`](docs/funder-dashboard.md).
+
+Partner signup at `/partners/signup` creates a unique partner ID, status page, QR, and printable booth banner; a welcome email delivers the kit (or `data/mail-outbox/` when SMTP is unset).
 
 Print QR codes to `/go/<campaignId>` (see `corpus/campaigns.json`). Apply buttons in Telegram go through `/r/<programId>` so clicks are countable.
 

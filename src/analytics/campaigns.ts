@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { CORPUS_DIR } from "../config.js";
+import { getSignedUpPartnerByCampaignId } from "../partners/db.js";
 import type { AnalyticsSource } from "./db.js";
 
 export interface Campaign {
@@ -31,7 +32,19 @@ export function loadCampaignsFile(): CampaignsFile {
 }
 
 export function getCampaign(id: string): Campaign | undefined {
-  return loadCampaignsFile().campaigns.find((c) => c.id === id);
+  const fromFile = loadCampaignsFile().campaigns.find((c) => c.id === id);
+  if (fromFile) return fromFile;
+  const signed = getSignedUpPartnerByCampaignId(id);
+  if (!signed) return undefined;
+  return {
+    id: signed.campaignId,
+    name: signed.name,
+    kind: "qr",
+    lat: null,
+    lng: null,
+    label: signed.city || signed.name,
+    zip: null,
+  };
 }
 
 export function campaignSource(campaign: Campaign | undefined): AnalyticsSource {

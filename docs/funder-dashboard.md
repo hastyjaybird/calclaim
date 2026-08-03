@@ -1,7 +1,8 @@
 # Funder impact dashboard
 
 **URL (local):** `http://localhost:3000/impact`  
-**API:** `GET /api/stats` · `GET /api/partners` · `GET /api/partners/:slug`  
+**Partner signup:** `http://localhost:3000/partners/signup`  
+**API:** `GET /api/stats` · `GET /api/partners` · `GET /api/partners/:slug` · `POST /api/partners/signup` · `GET /api/partners/:slug/banner`  
 **Nav:** Impact · Partners · [Developer](developer-corpus-watch.md) (`/dev`)
 
 ## What funders see
@@ -30,7 +31,7 @@ Each partner page is a standalone “deck slide” for funders:
 - KPIs (people reached, bot starts, follow-throughs, est. aid)  
 - Map + users/day + cumulative charts for their campaign  
 
-Partners are defined in [`corpus/partners.json`](../corpus/partners.json) and linked to QR campaigns in [`corpus/campaigns.json`](../corpus/campaigns.json). Framing is **community outreach partners** — not official agency affiliation.
+Demo partners live in [`corpus/partners.json`](../corpus/partners.json) (linked to [`corpus/campaigns.json`](../corpus/campaigns.json)). Live signups are stored in SQLite (`partner_signups`) via `/partners/signup` — each gets a unique ID, status page, QR, welcome email, and printable booth banner PDF. Framing is **community outreach partners** — not official agency affiliation.
 
 **Ranking:** people reached (`awareness` events on the partner’s `campaignId`). Secondary stats: bot starts and follow-throughs (session-attributed via sticky `campaignId` from `/start`).
 

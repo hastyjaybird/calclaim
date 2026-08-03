@@ -4,6 +4,7 @@ import path from "node:path";
 import { initAnalytics } from "../analytics/db.js";
 import type { SessionState } from "../corpus/types.js";
 import { initFeedbackTodos } from "../feedback/todos.js";
+import { initPartnerSignup } from "../partners/db.js";
 import { eraseTelegramUserData, initTelegramCapture } from "./telegramCapture.js";
 import { initWatchdog } from "../watchdog/db.js";
 
@@ -23,6 +24,7 @@ export function initDb(databasePath: string): void {
   initWatchdog(db);
   initTelegramCapture(db);
   initFeedbackTodos(db);
+  initPartnerSignup(db);
 }
 
 function getDb(): Database.Database {

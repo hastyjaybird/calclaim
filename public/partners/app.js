@@ -130,8 +130,20 @@ function renderPartner(stats) {
   document.title = `CalClaim × ${p.name}`;
 
   const logo = el("partner-logo");
-  logo.src = p.logo;
-  logo.alt = p.name;
+  const logoName = el("partner-logo-name");
+  if (p.logo) {
+    logo.hidden = false;
+    logo.src = p.logo;
+    logo.alt = p.name;
+    if (logoName) logoName.hidden = true;
+  } else {
+    logo.hidden = true;
+    logo.removeAttribute("src");
+    if (logoName) {
+      logoName.hidden = false;
+      logoName.textContent = p.name;
+    }
+  }
 
   el("partner-name").textContent = p.name;
   el("partner-city").textContent = p.city;

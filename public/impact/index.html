@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <link rel="stylesheet" href="/impact/styles.css" />
+  <link rel="stylesheet" href="/impact/styles.css?v=rank-gap" />
 </head>
 <body data-page="impact">
   <div class="banner" role="banner">
@@ -28,7 +28,6 @@
         <a href="#partners" data-i18n="nav.partners">Leaderboard</a>
         <a href="#contact" data-i18n="nav.contact">Contact</a>
         <a href="#privacy" data-i18n="nav.privacy">Privacy</a>
-        <a href="/dev" data-i18n="nav.developer">Partner login</a>
       </nav>
       <div id="lang-switch" class="lang-switch"></div>
     </div>
@@ -51,7 +50,10 @@
           A California financial aid navigator — food, health, phone discounts, energy bill help, and more.
         </p>
         <p class="hero-actions">
-          <a class="cta cta-ghost" href="#contact" data-i18n="impact.partnerSignupCta">Sign up to be a partner</a>
+          <a class="cta" href="/partners/signup" data-i18n="impact.partnerSignupCta">Sign up to be a partner</a>
+        </p>
+        <p class="partner-signup-note" data-i18n="impact.partnerSignupBody">
+          Partners are community organizations that share CalClaim with a unique QR code — every scan credits them on the leaderboard.
         </p>
       </div>
       <aside class="try-card" data-i18n-aria="impact.openCta" aria-label="Open CalClaim">
@@ -229,6 +231,7 @@
         <li data-i18n="privacy.collect4">Aggregate impact events: QR scans, shared-link clicks, apply-page opens, follow-throughs</li>
         <li data-i18n="privacy.collect5">Coarse location only (poster sites and city-level IP for the map — never street addresses)</li>
         <li data-i18n="privacy.collect6">Optional phone, email, and comments you submit on the contact form</li>
+        <li data-i18n="privacy.collect7">Organization name, work email, and optional city if you sign up as a community partner (to send your QR kit and show your status page)</li>
       </ul>
 
       <h3 data-i18n="privacy.notCollectHeading">What we do not collect</h3>
@@ -249,7 +252,7 @@
       <h3 data-i18n="privacy.choicesHeading">Your choices</h3>
       <ul>
         <li data-i18n="privacy.choiceStop">Type 'stop' — pause deadline reminders (keeps your data for your reference)</li>
-        <li data-i18n="privacy.choiceErase">Type 'erase' — delete your CalClaim session data from your session</li>
+        <li data-i18n="privacy.choiceErase">Type 'erase' — delete your CalClaim session data</li>
       </ul>
 
       <p>
@@ -272,6 +275,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="/i18n/messages.js"></script>
   <script src="/i18n/lang.js"></script>
-  <script src="/impact/app.js"></script>
+  <script src="/impact/app.js?v=trophy-star"></script>
 </body>
 </html>

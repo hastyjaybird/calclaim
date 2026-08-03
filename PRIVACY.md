@@ -26,6 +26,7 @@ Tables: `telegram_users`, `telegram_messages` in the demo database.
 - Free-form text or voice notes you send that are not a recognized button/command (alpha feedback / developer quality control)
 - Voice notes are transcribed to text (when transcription is configured) and stored as feedback for the developer to-do list
 - Optional phone, email, and comments submitted on the public contact form (stored in the developer feedback to-do list in SQLite)
+- Partner signup: organization name, work email, and optional city (stored in SQLite `partner_signups`; used to email the QR kit and power the partner status page)
 
 ### Impact analytics (aggregate funder dashboard)
 
@@ -38,7 +39,7 @@ Tables: `telegram_users`, `telegram_messages` in the demo database.
 
 - Document uploads as a required product step (ID, pay stubs, bills) — if you send a file anyway, file metadata may be logged as above
 - Payment information
-- Marketing email lists (optional email on the contact form is for replies only; “Email report to my computer” opens your own Mail app with a download link and does not send us the address)
+- Marketing email lists (optional email on the contact form is for replies only; partner signup email is only for delivering that partner’s QR kit; “Email report to my computer” opens your own Mail app with a download link and does not send us the address)
 - Phone numbers unless you tap Telegram’s share-contact control or optionally enter one on the contact form
 - Precise GPS unless you share a location
 - Raw IP addresses stored long-term (looked up briefly for city-level map dots, then discarded)

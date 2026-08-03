@@ -4,6 +4,7 @@ window.CALCLAIM_I18N = {
     meta: {
       impactTitle: "CalClaim — Demo",
       partnerTitle: "CalClaim — Partner impact",
+      partnerSignupTitle: "CalClaim — Sign up to be a partner",
       privacyTitle: "CalClaim — Privacy policy",
       contactTitle: "CalClaim — Contact",
     },
@@ -48,9 +49,37 @@ window.CALCLAIM_I18N = {
       footer:
         'CalClaim demo · Community outreach partner stats · <a href="__CONTACT__">Contact</a> · <a href="__PRIVACY__">Privacy policy</a>',
     },
+    signup: {
+      eyebrow: "Community partners",
+      lede: "Share CalClaim at your booth with a unique QR code. Every scan credits your organization on the leaderboard.",
+      nameLabel: "Organization name",
+      emailLabel: "Work email",
+      cityLabel: "City (optional)",
+      hint: "We’ll email your unique partner ID, QR code, status page link, and a printable booth banner with your company name.",
+      submit: "Sign up & get my QR",
+      sending: "Creating your partner kit…",
+      successEyebrow: "You’re in",
+      successHeading: "Check your email",
+      successBody:
+        "We sent a welcome kit with your QR code, partner status page, and a printable booth banner.",
+      partnerIdLabel: "Your partner ID",
+      statusLinkLabel: "Status page",
+      downloadBanner: "Download booth banner",
+      downloadQr: "Download QR",
+      outboxNote:
+        "Email delivery isn’t configured on this server yet — your kit links above still work.",
+      errorName: "Add your organization name.",
+      errorEmail: "Add your work email.",
+      errorEmailInvalid: "Enter a valid email address.",
+      error: "Could not sign up. Try again.",
+      footer:
+        'CalClaim demo · Community outreach partners · <a href="__CONTACT__">Contact</a> · <a href="__PRIVACY__">Privacy policy</a>',
+    },
     impact: {
       eyebrow: "Demo",
       lede: "A California financial aid navigator — food, health, phone discounts, energy bill help, and more.",
+      partnerSignupBody:
+        "Partners are community organizations that share CalClaim with a unique QR code — every scan credits them on the leaderboard.",
       partnerSignupCta: "Sign up to be a partner",
       openCta: "Open CalClaim",
       tryBody: "Scan the code or tap Open CalClaim to start.",
@@ -109,6 +138,7 @@ window.CALCLAIM_I18N = {
       collect4: "Aggregate impact events: QR scans, shared-link clicks, apply-page opens, follow-throughs",
       collect5: "Coarse location only (poster sites and city-level IP for the map — never street addresses)",
       collect6: "Optional phone, email, and comments you submit on the contact form",
+      collect7: "Organization name, work email, and optional city if you sign up as a community partner (to send your QR kit and show your status page)",
       notCollectHeading: "What we do not collect",
       not1: "Required document uploads (ID, pay stubs, bills)",
       not2: "Payment information",
@@ -116,10 +146,10 @@ window.CALCLAIM_I18N = {
       not4: "Precise GPS unless you choose to share a location",
       useHeading: "How we use data",
       useBody:
-        "We use your data anonymously to run your session, send next-steps and reminders, improve the demo UX, and publish aggregate impact metrics on the public dashboard. We do not give or sell your data.",
+        "We use your data anonymously to run your session, send next-steps and reminders, improve the demo UX, and publish aggregate impact metrics on the public dashboard. Partner signup details are used to email your QR kit and credit scans on your status page. We do not give or sell your data.",
       choicesHeading: "Your choices",
       choiceStop: "Type 'stop' — pause deadline reminders (keeps your data for your reference)",
-      choiceErase: "Type 'erase' — delete your CalClaim session data from your session",
+      choiceErase: "Type 'erase' — delete your CalClaim session data",
       fullCta: "Read the full privacy policy",
       footer:
         'CalClaim demo · Not affiliated with any agency · <a href="__PRIVACY__">Privacy policy</a> · <a href="__CONTACT__">Contact</a>',
@@ -147,6 +177,7 @@ window.CALCLAIM_I18N = {
     meta: {
       impactTitle: "CalClaim — Demo",
       partnerTitle: "CalClaim — Impacto del socio",
+      partnerSignupTitle: "CalClaim — Regístrate como socio",
       privacyTitle: "CalClaim — Política de privacidad",
       contactTitle: "CalClaim — Contacto",
     },
@@ -191,9 +222,37 @@ window.CALCLAIM_I18N = {
       footer:
         'Demo de CalClaim · Estadísticas de socio comunitario · <a href="__CONTACT__">Contacto</a> · <a href="__PRIVACY__">Política de privacidad</a>',
     },
+    signup: {
+      eyebrow: "Socios comunitarios",
+      lede: "Comparte CalClaim en tu stand con un código QR único. Cada escaneo acredita a tu organización en la clasificación.",
+      nameLabel: "Nombre de la organización",
+      emailLabel: "Correo de trabajo",
+      cityLabel: "Ciudad (opcional)",
+      hint: "Te enviaremos por correo tu ID único de socio, código QR, enlace a tu página de estado y un banner imprimible con el nombre de tu organización.",
+      submit: "Regístrate y obtén tu QR",
+      sending: "Creando tu kit de socio…",
+      successEyebrow: "Listo",
+      successHeading: "Revisa tu correo",
+      successBody:
+        "Enviamos un kit de bienvenida con tu código QR, página de estado y un banner imprimible para tu stand.",
+      partnerIdLabel: "Tu ID de socio",
+      statusLinkLabel: "Página de estado",
+      downloadBanner: "Descargar banner del stand",
+      downloadQr: "Descargar QR",
+      outboxNote:
+        "El envío de correo aún no está configurado en este servidor — los enlaces de tu kit arriba siguen funcionando.",
+      errorName: "Agrega el nombre de tu organización.",
+      errorEmail: "Agrega tu correo de trabajo.",
+      errorEmailInvalid: "Ingresa un correo válido.",
+      error: "No se pudo registrar. Inténtalo de nuevo.",
+      footer:
+        'Demo de CalClaim · Socios de difusión comunitaria · <a href="__CONTACT__">Contacto</a> · <a href="__PRIVACY__">Política de privacidad</a>',
+    },
     impact: {
       eyebrow: "Demo",
       lede: "Un navegador de ayuda financiera en California: comida, salud, descuentos de teléfono, ayuda con la factura de energía y más.",
+      partnerSignupBody:
+        "Los socios son organizaciones comunitarias que comparten CalClaim con un código QR único — cada escaneo les acredita en la clasificación.",
       partnerSignupCta: "Regístrate como socio",
       openCta: "Abrir CalClaim",
       tryBody: "Escanea el código o toca Abrir CalClaim para empezar.",
@@ -252,6 +311,7 @@ window.CALCLAIM_I18N = {
       collect4: "Eventos de impacto agregados: escaneos QR, clics en enlaces compartidos, aperturas de solicitud, seguimientos",
       collect5: "Solo ubicación aproximada (sitios de carteles e IP a nivel de ciudad para el mapa — nunca direcciones)",
       collect6: "Teléfono, correo y comentarios opcionales que envías en el formulario de contacto",
+      collect7: "Nombre de la organización, correo de trabajo y ciudad opcional si te registras como socio comunitario (para enviarte el kit QR y mostrar tu página de estado)",
       notCollectHeading: "Qué no recopilamos",
       not1: "Cargas de documentos obligatorias (ID, recibos de pago, facturas)",
       not2: "Información de pago",
@@ -259,10 +319,10 @@ window.CALCLAIM_I18N = {
       not4: "GPS preciso a menos que elijas compartir una ubicación",
       useHeading: "Cómo usamos los datos",
       useBody:
-        "Usamos tus datos de forma anónima para ejecutar tu sesión, enviar siguientes pasos y recordatorios, mejorar la demo y publicar métricas de impacto agregadas en el panel público. No damos ni vendemos tus datos.",
+        "Usamos tus datos de forma anónima para ejecutar tu sesión, enviar siguientes pasos y recordatorios, mejorar la demo y publicar métricas de impacto agregadas en el panel público. Los datos de registro de socios se usan para enviarte el kit QR y acreditar escaneos en tu página de estado. No damos ni vendemos tus datos.",
       choicesHeading: "Tus opciones",
       choiceStop: "Escribe 'stop' — pausar recordatorios de plazos (conserva tus datos para tu referencia)",
-      choiceErase: "Escribe 'erase' — eliminar tus datos de sesión de CalClaim de tu sesión",
+      choiceErase: "Escribe 'erase' — eliminar tus datos de sesión de CalClaim",
       fullCta: "Leer la política de privacidad completa",
       footer:
         'Demo de CalClaim · Sin afiliación con ninguna agencia · <a href="__PRIVACY__">Política de privacidad</a> · <a href="__CONTACT__">Contacto</a>',
@@ -290,6 +350,7 @@ window.CALCLAIM_I18N = {
     meta: {
       impactTitle: "CalClaim — 演示",
       partnerTitle: "CalClaim — 合作伙伴影响",
+      partnerSignupTitle: "CalClaim — 注册成为合作伙伴",
       privacyTitle: "CalClaim — 隐私政策",
       contactTitle: "CalClaim — 联系我们",
     },
@@ -334,9 +395,35 @@ window.CALCLAIM_I18N = {
       footer:
         'CalClaim 演示 · 社区推广合作伙伴统计 · <a href="__CONTACT__">联系我们</a> · <a href="__PRIVACY__">隐私政策</a>',
     },
+    signup: {
+      eyebrow: "社区合作伙伴",
+      lede: "用专属二维码在展位分享 CalClaim。每次扫描都会记入贵组织的排行榜。",
+      nameLabel: "组织名称",
+      emailLabel: "工作邮箱",
+      cityLabel: "城市（可选）",
+      hint: "我们会把您的专属合作伙伴 ID、二维码、状态页链接，以及印有贵公司名称的可打印展位横幅发到邮箱。",
+      submit: "注册并获取二维码",
+      sending: "正在创建您的合作伙伴资料包…",
+      successEyebrow: "注册成功",
+      successHeading: "请查收邮件",
+      successBody: "我们已发送欢迎资料包，内含二维码、合作伙伴状态页和可打印展位横幅。",
+      partnerIdLabel: "您的合作伙伴 ID",
+      statusLinkLabel: "状态页",
+      downloadBanner: "下载展位横幅",
+      downloadQr: "下载二维码",
+      outboxNote: "此服务器尚未配置邮件发送——上方资料包链接仍可使用。",
+      errorName: "请填写组织名称。",
+      errorEmail: "请填写工作邮箱。",
+      errorEmailInvalid: "请输入有效的邮箱地址。",
+      error: "注册失败，请重试。",
+      footer:
+        'CalClaim 演示 · 社区推广合作伙伴 · <a href="__CONTACT__">联系我们</a> · <a href="__PRIVACY__">隐私政策</a>',
+    },
     impact: {
       eyebrow: "演示",
       lede: "加州经济援助导航——食品、医疗、电话优惠、能源账单援助等。",
+      partnerSignupBody:
+        "合作伙伴是用专属二维码分享 CalClaim 的社区组织——每次扫描都会记入他们的排行榜。",
       partnerSignupCta: "注册成为合作伙伴",
       openCta: "打开 CalClaim",
       tryBody: "扫描二维码或点击“打开 CalClaim”即可开始。",
@@ -394,6 +481,7 @@ window.CALCLAIM_I18N = {
       collect4: "汇总影响事件：二维码扫描、分享链接点击、申请页打开、跟进",
       collect5: "仅粗略位置（海报地点与地图用的城市级 IP——从不显示街道地址）",
       collect6: "您在联系表单中提交的可选电话、邮箱与评论",
+      collect7: "若注册成为社区合作伙伴：组织名称、工作邮箱与可选城市（用于发送二维码资料包并展示状态页）",
       notCollectHeading: "我们不收集什么",
       not1: "必需的文件上传（身份证、工资单、账单）",
       not2: "支付信息",
@@ -401,7 +489,7 @@ window.CALCLAIM_I18N = {
       not4: "精确 GPS（除非您选择分享位置）",
       useHeading: "我们如何使用数据",
       useBody:
-        "我们以匿名方式使用您的数据来运行您的会话、发送后续步骤与提醒、改进演示体验，并在公开面板发布汇总影响指标。我们不会提供或出售您的数据。",
+        "我们以匿名方式使用您的数据来运行您的会话、发送后续步骤与提醒、改进演示体验，并在公开面板发布汇总影响指标。合作伙伴注册信息用于发送二维码资料包，并将扫描计入您的状态页。我们不会提供或出售您的数据。",
       choicesHeading: "您的选择",
       choiceStop: "输入 'stop' — 暂停截止日期提醒（保留您的数据供您查阅）",
       choiceErase: "输入 'erase' — 删除您会话中的 CalClaim 数据",

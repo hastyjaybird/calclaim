@@ -165,8 +165,16 @@ body {
   min-width: 0;
 }
 
+.partner-signup-note {
+  margin: 0.85rem 0 0;
+  max-width: 34rem;
+  font-size: 0.98rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
 .hero-actions {
-  margin: 1.25rem 0 0;
+  margin: 1rem 0 0;
 }
 
 .try-card {
@@ -478,8 +486,11 @@ main {
 
 .partner-row {
   display: grid;
-  grid-template-columns: 1.1rem 1.75rem 3rem minmax(0, 1fr) auto auto;
-  gap: 0.85rem;
+  /* Star column sized to the icon; gap after it matches row padding so
+     left-border→star and star→rank stay the same distance. */
+  grid-template-columns: 1.7rem 1.75rem 3rem minmax(0, 1fr) auto auto;
+  column-gap: 1rem;
+  row-gap: 0.85rem;
   align-items: center;
   padding: 0.85rem 1rem;
   border-radius: 0.9rem;
@@ -508,25 +519,20 @@ a.partner-row:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Keep layout width fixed so rank numbers stay aligned */
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 1.7rem;
+  height: 1.7rem;
   overflow: visible;
 }
 
 .partner-trophy-spacer {
-  width: 1rem;
-  height: 1rem;
+  width: 1.7rem;
+  height: 1.7rem;
   flex-shrink: 0;
 }
 
 .partner-trophy {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 1.45rem;
-  height: 1.45rem;
-  transform: translate(-50%, -50%);
+  width: 1.7rem;
+  height: 1.7rem;
   flex-shrink: 0;
   filter:
     drop-shadow(0 0 2px rgba(255, 230, 140, 0.85))
@@ -605,14 +611,27 @@ a.partner-row:hover {
 
 @media (max-width: 720px) {
   .partner-row {
-    grid-template-columns: 1rem 1.5rem 2.5rem minmax(0, 1fr);
+    grid-template-columns: 1.5rem 1.5rem 2.5rem minmax(0, 1fr);
     grid-template-areas:
       "trophy rank logo meta"
       "trophy rank logo stats"
       ". . . link";
-    gap: 0.35rem 0.55rem;
+    column-gap: 0.75rem;
+    row-gap: 0.35rem;
+    padding: 0.85rem 0.75rem;
   }
-  .partner-trophy-slot { grid-area: trophy; align-self: start; padding-top: 0.4rem; }
+  .partner-trophy-slot {
+    grid-area: trophy;
+    align-self: start;
+    padding-top: 0.25rem;
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  .partner-trophy,
+  .partner-trophy-spacer {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
   .partner-rank { grid-area: rank; align-self: start; padding-top: 0.3rem; }
   .partner-logo { grid-area: logo; width: 2.5rem; height: 2.5rem; }
   .partner-meta { grid-area: meta; }

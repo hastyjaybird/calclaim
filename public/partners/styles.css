@@ -166,6 +166,22 @@ body {
   padding: 0.55rem 0.75rem;
 }
 
+.co-brand-partner-name {
+  display: inline-flex;
+  align-items: center;
+  max-width: min(100%, 16rem);
+  padding: 0.7rem 1rem;
+  border-radius: 0.75rem;
+  background: #f7f3ea;
+  box-shadow: 0 2px 12px rgba(8, 40, 32, 0.08);
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+  font-weight: 700;
+  color: var(--leaf-deep);
+  line-height: 1.2;
+  text-align: center;
+}
+
 .co-brand-with {
   font-family: var(--font-display);
   font-size: 1.15rem;

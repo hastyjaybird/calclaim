@@ -33,6 +33,9 @@ import { buildDevStatus } from "../watchdog/overview.js";
 import { startCorpusScan } from "../watchdog/runner.js";
 import type { FindingStatus } from "../watchdog/types.js";
 import { appendContactMessage } from "../contact/messages.js";
+import { renderPartnerBoothBannerPdf } from "../partners/banner.js";
+import { RESERVED_PARTNER_SLUGS } from "../partners/db.js";
+import { parsePartnerSignup, registerPartnerSignup } from "../partners/signup.js";
 import {
   createCaptchaChallenge,
   createSession,
@@ -55,6 +58,7 @@ const MIME: Record<string, string> = {
   ".json": "application/json; charset=utf-8",
   ".svg": "image/svg+xml",
   ".png": "image/png",
+  ".pdf": "application/pdf",
   ".ico": "image/x-icon",
   ".txt": "text/plain; charset=utf-8",
 };
@@ -126,7 +130,10 @@ function serveStatic(
   if (rel === "/" || rel === "/impact" || rel === "/impact/") rel = "/impact/index.html";
   if (rel === "/dev" || rel === "/dev/") rel = "/dev/index.html";
   // Partner deck template: /partners and /partners/:slug → partners/index.html
-  if (rel === "/partners" || rel === "/partners/") {
+  // Signup form lives at /partners/signup
+  if (rel === "/partners/signup" || rel === "/partners/signup/") {
+    rel = "/partners/signup/index.html";
+  } else if (rel === "/partners" || rel === "/partners/") {
     rel = "/partners/index.html";
   } else if (/^\/partners\/[A-Za-z0-9_-]+\/?$/.test(rel)) {
     rel = "/partners/index.html";
@@ -661,10 +668,73 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
         return;
       }
 
+      if (pathname === "/api/partners/signup" && req.method === "POST") {
+        try {
+          const body = (await readJsonBody(req, 16_384)) as {
+            name?: unknown;
+            email?: unknown;
+            city?: unknown;
+          };
+          const parsed = parsePartnerSignup(body);
+          if ("error" in parsed) {
+            send(
+              res,
+              400,
+              JSON.stringify({ error: parsed.error }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          const result = await registerPartnerSignup(config, parsed);
+          send(
+            res,
+            200,
+            JSON.stringify({
+              ok: true,
+              partnerId: result.partner.id,
+              slug: result.partner.slug,
+              statusUrl: result.statusUrl,
+              qrUrl: result.qrUrl,
+              bannerUrl: result.bannerUrl,
+              emailMode: result.email.mode,
+            }),
+            "application/json; charset=utf-8",
+          );
+        } catch (err) {
+          console.error("Partner signup failed:", err);
+          send(
+            res,
+            500,
+            JSON.stringify({ error: "signup_failed" }),
+            "application/json; charset=utf-8",
+          );
+        }
+        return;
+      }
+
       if (pathname.startsWith("/api/partners/")) {
-        const slug = decodeURIComponent(
-          pathname.slice("/api/partners/".length).split("/")[0] ?? "",
-        );
+        const rest = pathname.slice("/api/partners/".length);
+        const parts = rest.split("/").filter(Boolean);
+        const slug = decodeURIComponent(parts[0] ?? "");
+        if (parts[1] === "banner" && req.method === "GET") {
+          const partner = getPartnerBySlug(slug);
+          if (!partner) {
+            send(res, 404, "Partner not found", "text/plain; charset=utf-8");
+            return;
+          }
+          const target = campaignLandingUrl(config.publicBaseUrl, partner.campaignId);
+          const pdf = await renderPartnerBoothBannerPdf({
+            partnerName: partner.name,
+            partnerId: partner.id,
+            qrTargetUrl: target,
+          });
+          const safeName = partner.slug.replace(/[^a-z0-9_-]+/gi, "-");
+          send(res, 200, pdf, "application/pdf", {
+            "Cache-Control": "private, max-age=300",
+            "Content-Disposition": `attachment; filename="calclaim-booth-banner-${safeName}.pdf"`,
+          });
+          return;
+        }
         const stats = buildPartnerStats(slug);
         if (!stats) {
           send(
@@ -813,11 +883,18 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             serveStatic(res, publicPath);
             return;
           }
+          if (
+            publicPath === "/partners/signup" ||
+            publicPath === "/partners/signup/"
+          ) {
+            serveStatic(res, "/partners/signup");
+            return;
+          }
           const slug = publicPath
             .slice("/partners/".length)
             .replace(/\/$/, "")
             .split("/")[0] ?? "";
-          if (!getPartnerBySlug(slug)) {
+          if (RESERVED_PARTNER_SLUGS.has(slug) || !getPartnerBySlug(slug)) {
             send(res, 404, "Not found", "text/plain; charset=utf-8");
             return;
           }
@@ -854,13 +931,17 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
         return;
       }
       if (pathname.startsWith("/partners/")) {
-        // Static assets: /partners/styles.css, /partners/app.js
+        // Static assets: /partners/styles.css, /partners/app.js, /partners/signup/*
         if (/\.(css|js|map|svg|png|ico)$/i.test(pathname)) {
           serveStatic(res, pathname);
           return;
         }
+        if (pathname === "/partners/signup" || pathname === "/partners/signup/") {
+          serveStatic(res, "/partners/signup");
+          return;
+        }
         const slug = pathname.slice("/partners/".length).replace(/\/$/, "").split("/")[0] ?? "";
-        if (!getPartnerBySlug(slug)) {
+        if (RESERVED_PARTNER_SLUGS.has(slug) || !getPartnerBySlug(slug)) {
           send(res, 404, "Not found", "text/plain; charset=utf-8");
           return;
         }
@@ -906,6 +987,7 @@ export function startWebServer(
     console.log(`CalClaim web listening on :${config.port}`);
     console.log(`  Impact dashboard: ${config.publicBaseUrl}/impact`);
     console.log(`  Partner leaderboard: ${config.publicBaseUrl}/impact#partners`);
+    console.log(`  Partner signup: ${config.publicBaseUrl}/partners/signup`);
     console.log(`  Developer (password + CAPTCHA): ${config.publicBaseUrl}/dev`);
     console.log(`  Sample QR landing: ${config.publicBaseUrl}/go/qr_oakland_library`);
     if (!config.developerPassword) {

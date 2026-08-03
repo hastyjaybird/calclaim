@@ -159,16 +159,17 @@ function renderCharts(series) {
   );
 }
 
+// Bold star (not a cup) — reads clearly at leaderboard size
 const TROPHY_SVG = `<svg class="partner-trophy" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
   <defs>
-    <linearGradient id="trophy-shine" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ffe9a8"/>
-      <stop offset="38%" stop-color="#f0c14b"/>
-      <stop offset="72%" stop-color="#c4921a"/>
-      <stop offset="100%" stop-color="#f6d978"/>
+    <linearGradient id="trophy-shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff1b0"/>
+      <stop offset="55%" stop-color="#e8b923"/>
+      <stop offset="100%" stop-color="#9a6b08"/>
     </linearGradient>
   </defs>
-  <path fill="url(#trophy-shine)" d="M7 3h10v2h3v3c0 2.2-1.5 4-3.5 4.5A5.5 5.5 0 0 1 13 16.9V18h3v2H8v-2h3v-1.1A5.5 5.5 0 0 1 7.5 12.5C5.5 12 4 10.2 4 8V5h3V3zm0 4H6v1c0 1 .6 1.8 1.5 2.1V7zm11 0h-1v3.1c.9-.3 1.5-1.1 1.5-2.1V7z"/>
+  <path fill="url(#trophy-shine)" stroke="#8a5f06" stroke-width="0.6" stroke-linejoin="round"
+    d="M12 2.2l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 15.4 6.7 18.4l1.1-5.9-4.3-4.1 5.9-.8z"/>
 </svg>`;
 
 function withLangPath(path) {
