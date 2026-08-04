@@ -657,8 +657,12 @@ async function handleGo(
   campaignIdRaw: string,
   config: AppConfig,
 ): Promise<void> {
-  const campaignId = sanitizeStartPayload(decodeURIComponent(campaignIdRaw)) ?? "link_share";
-  const campaign = getCampaign(campaignId);
+  const requestedId =
+    sanitizeStartPayload(decodeURIComponent(campaignIdRaw)) ?? "link_share";
+  const campaign = getCampaign(requestedId);
+  // Prefer the partner's canonical campaign id (e.g. qr_p_…) when an older
+  // hyphenated QR (qr-p-…) still resolves to that partner.
+  const campaignId = campaign?.id ?? requestedId;
   const source = campaignSource(campaign);
   const pin = fromCampaignPin({
     lat: campaign?.lat ?? null,
@@ -1014,7 +1018,7 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
       }
 
       if (pathname === "/api/qr/try") {
-        const target = campaignLandingUrl(config.publicBaseUrl, "link_website");
+        const target = campaignLandingUrl(config.publicBaseUrl, "qr_website");
         const png = await renderShareQrPng(target);
         send(res, 200, png, "image/png", {
           "Cache-Control": "public, max-age=3600",

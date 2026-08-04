@@ -63,11 +63,160 @@ export interface ImpactStats {
   programOpens: number;
   followThroughs: number;
   estDollarsUnlocked: number;
+  /** Series shown on the charts (sample or live, per USE_SAMPLE_CHART_SERIES). */
   usersPerDay: DailyCount[];
+  /** Always the live analytics series — kept so we can flip charts back later. */
+  usersPerDayLive: DailyCount[];
+  chartSeriesSource: "sample" | "live";
   programs: ProgramStat[];
   mapPoints: MapPoint[];
   funnel: FunnelStats;
   disclaimer: string;
+}
+
+/**
+ * When true, Users-per-day / Total-users charts use staged sample data
+ * (≈3 months of partner outreach). Metric cards and other stats stay live.
+ * Flip to false (or say "switch to the actual numbers") to show live charts.
+ */
+export const USE_SAMPLE_CHART_SERIES = true;
+
+const SAMPLE_CHART_DAYS = 90;
+
+/** Relative activity profiles for known partners (matches leaderboard feel). */
+const PARTNER_SAMPLE_PROFILES: Record<
+  string,
+  { base: number; growth: number; startOffsetDays: number }
+> = {
+  "fresno-food-bank": { base: 14, growth: 0.11, startOffsetDays: 0 },
+  "oakland-library": { base: 10, growth: 0.08, startOffsetDays: 10 },
+  "la-family-resource": { base: 8, growth: 0.06, startOffsetDays: 18 },
+  "mission-community": { base: 6, growth: 0.05, startOffsetDays: 28 },
+  website: { base: 4, growth: 0.04, startOffsetDays: 12 },
+};
+
+function hashSeed(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function mulberry32(seed: number): () => number {
+  let a = seed || 1;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function localDayKey(daysAgo: number): string {
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  d.setDate(d.getDate() - daysAgo);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function sampleProfileForSlug(slug: string): {
+  base: number;
+  growth: number;
+  startOffsetDays: number;
+} {
+  const known = PARTNER_SAMPLE_PROFILES[slug];
+  if (known) return known;
+  const rnd = mulberry32(hashSeed(`partner:${slug}`));
+  return {
+    base: 3 + Math.floor(rnd() * 5),
+    growth: 0.03 + rnd() * 0.04,
+    startOffsetDays: 20 + Math.floor(rnd() * 40),
+  };
+}
+
+/** Deterministic daily series for one partner over SAMPLE_CHART_DAYS. */
+export function buildSamplePartnerUsersPerDay(slug: string): DailyCount[] {
+  const profile = sampleProfileForSlug(slug);
+  const rnd = mulberry32(hashSeed(`series:${slug}`));
+  const out: DailyCount[] = [];
+  let cumulative = 0;
+
+  for (let ago = SAMPLE_CHART_DAYS - 1; ago >= 0; ago--) {
+    const dayIndex = SAMPLE_CHART_DAYS - 1 - ago;
+    const date = localDayKey(ago);
+    if (dayIndex < profile.startOffsetDays) {
+      out.push({ date, users: 0, cumulative });
+      continue;
+    }
+    const activeDay = dayIndex - profile.startOffsetDays;
+    const weekday = new Date(`${date}T12:00:00`).getDay();
+    const weekendFactor = weekday === 0 || weekday === 6 ? 0.55 : 1;
+    const ramp = 1 + profile.growth * Math.sqrt(activeDay);
+    const noise = 0.75 + rnd() * 0.5;
+    // Gentle mid-period dip, stronger late growth (outreach events)
+    const wave = 1 + 0.15 * Math.sin(activeDay / 11);
+    const eventBoost =
+      activeDay > 0 && activeDay % 23 === 0 ? 1.8 + rnd() * 0.6 : 1;
+    const users = Math.max(
+      0,
+      Math.round(profile.base * ramp * weekendFactor * noise * wave * eventBoost),
+    );
+    cumulative += users;
+    out.push({ date, users, cumulative });
+  }
+  return out;
+}
+
+/** Site-wide sample: sum of partner series + modest non-partner link traffic. */
+export function buildSampleImpactUsersPerDay(): DailyCount[] {
+  const partners = listPartners();
+  const seriesList = partners.map((p) => buildSamplePartnerUsersPerDay(p.slug));
+  const linkRnd = mulberry32(hashSeed("link-traffic"));
+  const byDate = new Map<string, number>();
+
+  for (const series of seriesList) {
+    for (const d of series) {
+      byDate.set(d.date, (byDate.get(d.date) ?? 0) + d.users);
+    }
+  }
+
+  // Shared date spine even if there are no partners yet
+  for (let ago = SAMPLE_CHART_DAYS - 1; ago >= 0; ago--) {
+    const date = localDayKey(ago);
+    if (!byDate.has(date)) byDate.set(date, 0);
+  }
+
+  const days = [...byDate.keys()].sort();
+  let cumulative = 0;
+  return days.map((date, i) => {
+    const weekday = new Date(`${date}T12:00:00`).getDay();
+    const weekendFactor = weekday === 0 || weekday === 6 ? 0.6 : 1;
+    const linkUsers = Math.max(
+      0,
+      Math.round((2 + i * 0.04) * weekendFactor * (0.7 + linkRnd() * 0.6)),
+    );
+    const users = (byDate.get(date) ?? 0) + linkUsers;
+    cumulative += users;
+    return { date, users, cumulative };
+  });
+}
+
+function chartUsersPerDay(live: DailyCount[], sample: DailyCount[]): {
+  usersPerDay: DailyCount[];
+  usersPerDayLive: DailyCount[];
+  chartSeriesSource: "sample" | "live";
+} {
+  return {
+    usersPerDay: USE_SAMPLE_CHART_SERIES ? sample : live,
+    usersPerDayLive: live,
+    chartSeriesSource: USE_SAMPLE_CHART_SERIES ? "sample" : "live",
+  };
 }
 
 function dayKey(iso: string): string {
@@ -93,7 +242,8 @@ export function buildImpactStats(): ImpactStats {
     if (e.program_id) estDollarsUnlocked += estForProgram(e.program_id);
   }
 
-  const usersPerDay = buildUsersPerDay(awareness);
+  const usersPerDayLive = buildUsersPerDay(awareness);
+  const chart = chartUsersPerDay(usersPerDayLive, buildSampleImpactUsersPerDay());
   const programs = buildProgramStats(events);
   const mapPoints = buildMapPoints(awareness);
   const funnel = buildFunnel(events);
@@ -107,7 +257,7 @@ export function buildImpactStats(): ImpactStats {
     programOpens,
     followThroughs: followThroughs.length,
     estDollarsUnlocked,
-    usersPerDay,
+    ...chart,
     programs,
     mapPoints,
     funnel,
@@ -347,6 +497,8 @@ export interface PartnerStats {
   followThroughs: number;
   estDollarsUnlocked: number;
   usersPerDay: DailyCount[];
+  usersPerDayLive: DailyCount[];
+  chartSeriesSource: "sample" | "live";
   mapPoints: MapPoint[];
   programs: ProgramStat[];
   disclaimer: string;
@@ -469,6 +621,12 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
     });
   }
 
+  const usersPerDayLive = buildUsersPerDay(awareness);
+  const chart = chartUsersPerDay(
+    usersPerDayLive,
+    buildSamplePartnerUsersPerDay(partner.slug),
+  );
+
   return {
     generatedAt: new Date().toISOString(),
     partner: {
@@ -485,7 +643,7 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
     programOpens: programOpens.length,
     followThroughs: summary.followThroughs,
     estDollarsUnlocked: summary.estDollarsUnlocked,
-    usersPerDay: buildUsersPerDay(awareness),
+    ...chart,
     mapPoints,
     programs: buildProgramStats(attributed).filter(
       (p) => p.opens > 0 || p.followThroughs > 0,

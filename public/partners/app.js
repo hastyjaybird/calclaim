@@ -52,12 +52,20 @@ function chartDefaults() {
   Chart.defaults.color = "#3a5550";
 }
 
+function formatChartLabel(dateStr) {
+  if (!dateStr || dateStr === "—") return dateStr;
+  const d = new Date(`${dateStr}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 function lineChart(canvasId, labels, values) {
   const ctx = el(canvasId);
+  const dense = labels.length > 40;
   return new Chart(ctx, {
     type: "line",
     data: {
-      labels,
+      labels: labels.map(formatChartLabel),
       datasets: [
         {
           data: values,
@@ -65,7 +73,8 @@ function lineChart(canvasId, labels, values) {
           backgroundColor: "rgba(13, 122, 95, 0.12)",
           fill: true,
           tension: 0.3,
-          pointRadius: 3,
+          pointRadius: dense ? 0 : 3,
+          pointHoverRadius: 4,
           pointBackgroundColor: "#084d3d",
         },
       ],
@@ -74,7 +83,14 @@ function lineChart(canvasId, labels, values) {
       responsive: true,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { display: false } },
+        x: {
+          grid: { display: false },
+          ticks: {
+            maxTicksLimit: dense ? 8 : 12,
+            maxRotation: 0,
+            autoSkip: true,
+          },
+        },
         y: {
           beginAtZero: true,
           ticks: { precision: 0 },
@@ -85,15 +101,18 @@ function lineChart(canvasId, labels, values) {
   });
 }
 
+// Statewide California view — keep as default for all map loads.
+const CA_CENTER = [37.2, -119.5];
+const CA_ZOOM = 6;
+
 function renderMap(points) {
-  const map = L.map("map", { scrollWheelZoom: false }).setView([36.7, -119.7], 6);
+  const map = L.map("map", { scrollWheelZoom: false }).setView(CA_CENTER, CA_ZOOM);
   L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
     maxZoom: 12,
   }).addTo(map);
 
-  const bounds = [];
   for (const p of points) {
     const radius = p.count === 0 ? 10 : Math.min(30, 12 + p.count * 3);
     const marker = L.circleMarker([p.lat, p.lng], {
@@ -108,11 +127,7 @@ function renderMap(points) {
         p.count === 1 ? "" : "s"
       }`,
     );
-    bounds.push([p.lat, p.lng]);
   }
-
-  if (bounds.length >= 2) map.fitBounds(bounds, { padding: [40, 40] });
-  else if (bounds.length === 1) map.setView(bounds[0], 10);
 }
 
 function showError(message) {

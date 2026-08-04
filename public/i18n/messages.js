@@ -24,7 +24,6 @@ window.CALCLAIM_I18N = {
       aria: "Choose language",
     },
     partners: {
-      with: "with",
       blurbFallback: "Community outreach partner",
       qrHeading: "{name}'s unique QR code",
       qrBody: "Print or share this code — every scan credits this partner on the leaderboard.",
@@ -85,7 +84,7 @@ window.CALCLAIM_I18N = {
       eyebrow: "Demo",
       lede: "A California financial aid navigator — food, health, phone discounts, energy bill help, and more.",
       partnerSignupBody:
-        "Partners are community organizations that share CalClaim with a unique QR code — every scan credits them on the leaderboard.",
+        "Partner community organizations — Get your own CalClaim QR code to share. Each scan will credit you in the leaderboard and access to your statistics page.",
       partnerSignupCta: "Sign up to be a partner",
       openCta: "Open CalClaim",
       tryBody: "Scan the code or tap Open CalClaim to start.",
@@ -204,7 +203,6 @@ window.CALCLAIM_I18N = {
       aria: "Elegir idioma",
     },
     partners: {
-      with: "con",
       blurbFallback: "Socio de difusión comunitaria",
       qrHeading: "Código QR único de {name}",
       qrBody: "Imprima o comparta este código — cada escaneo acredita a este socio en la clasificación.",
@@ -265,7 +263,7 @@ window.CALCLAIM_I18N = {
       eyebrow: "Demo",
       lede: "Un navegador de ayuda financiera en California: comida, salud, descuentos de teléfono, ayuda con la factura de energía y más.",
       partnerSignupBody:
-        "Los socios son organizaciones comunitarias que comparten CalClaim con un código QR único — cada escaneo les acredita en la clasificación.",
+        "Organizaciones comunitarias asociadas: obtén tu propio código QR de CalClaim para compartir. Cada escaneo te acreditará en la clasificación y te dará acceso a tu página de estadísticas.",
       partnerSignupCta: "Regístrate como socio",
       openCta: "Abrir CalClaim",
       tryBody: "Escanea el código o toca Abrir CalClaim para empezar.",
@@ -384,7 +382,6 @@ window.CALCLAIM_I18N = {
       aria: "选择语言",
     },
     partners: {
-      with: "与",
       blurbFallback: "社区推广合作伙伴",
       qrHeading: "{name} 的专属二维码",
       qrBody: "打印或分享此二维码——每次扫描都会计入该合作伙伴的排行榜。",
@@ -444,7 +441,7 @@ window.CALCLAIM_I18N = {
       eyebrow: "演示",
       lede: "加州经济援助导航——食品、医疗、电话优惠、能源账单援助等。",
       partnerSignupBody:
-        "合作伙伴是用专属二维码分享 CalClaim 的社区组织——每次扫描都会记入他们的排行榜。",
+        "合作社区组织——获取您专属的 CalClaim 二维码进行分享。每次扫描都会记入您的排行榜，并解锁您的统计页面。",
       partnerSignupCta: "注册成为合作伙伴",
       openCta: "打开 CalClaim",
       tryBody: "扫描二维码或点击“打开 CalClaim”即可开始。",

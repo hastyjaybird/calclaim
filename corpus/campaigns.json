@@ -64,6 +64,15 @@
       "lng": null,
       "label": "Website",
       "zip": null
+    },
+    {
+      "id": "qr_website",
+      "name": "Website QR",
+      "kind": "qr",
+      "lat": null,
+      "lng": null,
+      "label": "CalClaim website",
+      "zip": null
     }
   ]
 }

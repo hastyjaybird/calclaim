@@ -79,7 +79,11 @@ export function getPartnerBySlug(slug: string): Partner | undefined {
 export function getPartnerByCampaignId(campaignId: string): Partner | undefined {
   const fromCorpus = corpusPartners().find((p) => p.campaignId === campaignId);
   if (fromCorpus) return fromCorpus;
-  const signed = getSignedUpPartnerByCampaignId(campaignId);
+  const signed =
+    getSignedUpPartnerByCampaignId(campaignId) ??
+    (campaignId.includes("-")
+      ? getSignedUpPartnerByCampaignId(campaignId.replaceAll("-", "_"))
+      : undefined);
   return signed ? asPartner(signed) : undefined;
 }
 

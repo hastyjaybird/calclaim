@@ -183,15 +183,6 @@ body {
   text-align: center;
 }
 
-.co-brand-with {
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-weight: 500;
-  color: var(--ink-soft);
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
-}
-
 .partner-title {
   margin: 0;
   font-family: var(--font-display);
@@ -409,9 +400,5 @@ body {
 @media (max-width: 520px) {
   .metrics {
     grid-template-columns: 1fr;
-  }
-
-  .co-brand-with {
-    width: 100%;
   }
 }

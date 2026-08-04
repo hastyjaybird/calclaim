@@ -28,7 +28,8 @@ const campaignWeights: { id: string; weight: number }[] = [
   { id: "qr_la_family_resource", weight: 16 },
   { id: "qr_sf_mission", weight: 12 },
   { id: "link_share", weight: 6 },
-  { id: "link_website", weight: 4 },
+  { id: "link_website", weight: 2 },
+  { id: "qr_website", weight: 5 },
 ];
 const weightTotal = campaignWeights.reduce((s, c) => s + c.weight, 0);
 

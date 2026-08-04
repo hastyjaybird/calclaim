@@ -131,14 +131,24 @@ function telegramSafeUrl(url: string): boolean {
   }
 }
 
+/** Public site shown first in the opt-in message (Telegram auto-linkifies https). */
+const CALCLAIM_SITE_FALLBACK = "https://calclaim.jayhasty.com";
+
 export async function sendOptIn(
   ctx: Context,
   session: SessionState,
 ): Promise<void> {
+  const configured = appConfig?.publicBaseUrl;
+  const siteUrl =
+    configured && telegramSafeUrl(configured)
+      ? configured
+      : CALCLAIM_SITE_FALLBACK;
   await replyTracked(
     ctx,
     session,
-    `CalClaim helps you find California benefits and bill help — food, health, phone discounts, energy bill programs, and more.
+    `${siteUrl}
+
+CalClaim helps you find California benefits and bill help — food, health, phone discounts, energy bill programs, and more.
 
 Estimates only. Not affiliated with any agency.
 Type 'help' for more options.

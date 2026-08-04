@@ -59,14 +59,15 @@ export async function registerPartnerSignup(
   },
 ): Promise<PartnerSignupResult> {
   const token = randomPartnerToken(4);
-  const id = `p-${token}`;
+  // Underscores only — must match Telegram /start alphabet and corpus campaign style.
+  const id = `p_${token}`;
   const slug = allocateUniqueSlug(fields.name);
   // Ensure we didn't collide with a corpus partner slug
   let finalSlug = slug;
   if (getPartnerBySlug(finalSlug)) {
     finalSlug = allocateUniqueSlug(`${fields.name}-${token}`);
   }
-  const campaignId = `qr-p-${token}`;
+  const campaignId = `qr_p_${token}`;
 
   let logoPath = "";
   if (fields.logo) {

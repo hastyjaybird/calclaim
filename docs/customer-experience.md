@@ -113,6 +113,8 @@ GLOBAL anytime: Help | STOP | free-form QC fallback
 ### OPT_IN
 
 ```text
+https://calclaim.jayhasty.com   (or PUBLIC_BASE_URL when it is https-safe)
+
 CalClaim helps you find California benefits and bill help —
 food, health, phone discounts, energy bill programs, tax credits, and more.
 Estimates only. Not affiliated with any agency or utility.

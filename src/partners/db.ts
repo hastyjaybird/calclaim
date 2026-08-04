@@ -35,6 +35,29 @@ export function initPartnerSignup(database: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_partner_signups_email
       ON partner_signups(email);
   `);
+  // Repair ids that used hyphens (invalid for some Telegram clients / older sanitizer).
+  // Canonical form is p_<hex> / qr_p_<hex>.
+  const broken = db
+    .prepare(
+      `SELECT id, campaign_id FROM partner_signups
+       WHERE id LIKE 'p-%' OR campaign_id LIKE 'qr-p-%'`,
+    )
+    .all() as Array<{ id: string; campaign_id: string }>;
+  const update = db.prepare(
+    `UPDATE partner_signups SET id = ?, campaign_id = ? WHERE id = ?`,
+  );
+  for (const row of broken) {
+    const nextId = row.id.startsWith("p-") ? `p_${row.id.slice(2)}` : row.id;
+    const nextCampaign = row.campaign_id.startsWith("qr-p-")
+      ? `qr_p_${row.campaign_id.slice(5)}`
+      : row.campaign_id;
+    if (nextId === row.id && nextCampaign === row.campaign_id) continue;
+    try {
+      update.run(nextId, nextCampaign, row.id);
+    } catch {
+      // Skip collisions rather than failing startup.
+    }
+  }
 }
 
 function getDb(): Database.Database {
@@ -189,7 +212,7 @@ export function insertSignedUpPartner(input: {
   };
 }
 
-/** Short hex token for partner / campaign ids (combined with a `p-` prefix). */
+/** Short hex token for partner / campaign ids (combined with a `p_` / `qr_p_` prefix). */
 export function randomPartnerToken(bytes = 4): string {
   return randomBytes(bytes).toString("hex");
 }

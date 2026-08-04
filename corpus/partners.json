@@ -37,6 +37,15 @@
       "campaignId": "qr_la_family_resource",
       "logo": "/brand/partners/la-family-resource.svg",
       "blurb": "Community outreach partner"
+    },
+    {
+      "id": "website",
+      "slug": "website",
+      "name": "CalClaim website",
+      "city": "Online",
+      "campaignId": "qr_website",
+      "logo": "/brand/calclaim-logo-icon-cropped.png",
+      "blurb": "QR on the public impact page"
     }
   ]
 }
