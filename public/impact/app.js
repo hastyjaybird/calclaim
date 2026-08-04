@@ -63,19 +63,17 @@ function escapeHtml(s) {
     .replaceAll('"', "&quot;");
 }
 
-/** Default map frame: California (SW → NE). */
-const CA_BOUNDS = [
-  [32.5, -124.5],
-  [42.0, -114.1],
-];
+/** Geographic center of California. */
+const CA_CENTER = [36.7783, -119.4179];
+/** Zoom that frames the state in the impact map (not the wider western US). */
+const CA_ZOOM = 7;
 
 function renderMap(points) {
-  const map = L.map("map", { scrollWheelZoom: false });
+  const map = L.map("map", { scrollWheelZoom: false }).setView(CA_CENTER, CA_ZOOM);
   L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
     maxZoom: 12,
   }).addTo(map);
-  map.fitBounds(CA_BOUNDS, { padding: [28, 28], maxZoom: 7 });
 
   for (const p of points) {
     const radius = p.count === 0 ? 8 : Math.min(28, 10 + p.count * 3);
