@@ -7,6 +7,7 @@ import {
   listPartners,
   type Partner,
 } from "./partners.js";
+import { getSignedUpPartnerBySlug } from "../partners/db.js";
 
 export interface DailyCount {
   date: string;
@@ -491,6 +492,8 @@ export interface PartnerStats {
     blurb: string;
     campaignId: string;
   };
+  /** True for live signups (editable profile); false for corpus demo partners. */
+  editable: boolean;
   peopleReached: number;
   botStarts: number;
   programOpens: number;
@@ -638,6 +641,7 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
       blurb: partner.blurb,
       campaignId: partner.campaignId,
     },
+    editable: Boolean(getSignedUpPartnerBySlug(partner.slug)),
     peopleReached: summary.peopleReached,
     botStarts: summary.botStarts,
     programOpens: programOpens.length,

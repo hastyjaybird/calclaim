@@ -4,8 +4,10 @@ import { getPartnerBySlug } from "../analytics/partners.js";
 import { renderPartnerBoothBannerPdf } from "./banner.js";
 import {
   allocateUniqueSlug,
+  getSignedUpPartnerBySlug,
   insertSignedUpPartner,
   randomPartnerToken,
+  updateSignedUpPartner,
   type SignedUpPartner,
 } from "./db.js";
 import { sendPartnerWelcomeEmail, type SendPartnerEmailResult } from "./email.js";
@@ -15,6 +17,7 @@ export interface PartnerSignupInput {
   name?: unknown;
   email?: unknown;
   city?: unknown;
+  partnerId?: unknown;
 }
 
 export interface PartnerSignupResult {
@@ -110,4 +113,55 @@ export async function registerPartnerSignup(
   });
 
   return { partner, statusUrl, qrUrl, bannerUrl, email };
+}
+
+export function parsePartnerProfileUpdate(input: PartnerSignupInput): {
+  name: string;
+  email: string;
+  city: string;
+  partnerId: string;
+} | { error: string } {
+  const parsed = parsePartnerSignup(input);
+  if ("error" in parsed) return parsed;
+  const partnerId = trimField(input.partnerId, 40).toLowerCase();
+  if (!partnerId) return { error: "partner_id_required" };
+  return { ...parsed, partnerId };
+}
+
+export async function updatePartnerProfile(
+  slug: string,
+  fields: {
+    name: string;
+    email: string;
+    city: string;
+    partnerId: string;
+    logo?: { buffer: Buffer; mime: string; filename: string };
+  },
+): Promise<
+  | { partner: SignedUpPartner; bannerUrl: string }
+  | { error: string }
+> {
+  const existing = getSignedUpPartnerBySlug(slug);
+  if (!existing) return { error: "not_found" };
+  if (existing.id.toLowerCase() !== fields.partnerId.toLowerCase()) {
+    return { error: "partner_id_mismatch" };
+  }
+
+  let logoPath: string | undefined;
+  if (fields.logo) {
+    logoPath = savePartnerLogoUpload(existing.id, fields.logo);
+  }
+
+  const partner = updateSignedUpPartner(existing.slug, {
+    name: fields.name,
+    email: fields.email,
+    city: fields.city || "California",
+    logo: logoPath,
+  });
+  if (!partner) return { error: "not_found" };
+
+  return {
+    partner,
+    bannerUrl: `/api/partners/${encodeURIComponent(partner.slug)}/banner`,
+  };
 }

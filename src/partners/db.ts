@@ -212,6 +212,34 @@ export function insertSignedUpPartner(input: {
   };
 }
 
+export function updateSignedUpPartner(
+  slug: string,
+  patch: {
+    name: string;
+    email: string;
+    city: string;
+    logo?: string;
+  },
+): SignedUpPartner | undefined {
+  const existing = getSignedUpPartnerBySlug(slug);
+  if (!existing) return undefined;
+  const logo = patch.logo !== undefined ? patch.logo : existing.logo;
+  getDb()
+    .prepare(
+      `UPDATE partner_signups
+       SET name = ?, email = ?, city = ?, logo = ?
+       WHERE slug = ?`,
+    )
+    .run(patch.name, patch.email, patch.city, logo, existing.slug);
+  return {
+    ...existing,
+    name: patch.name,
+    email: patch.email,
+    city: patch.city,
+    logo,
+  };
+}
+
 /** Short hex token for partner / campaign ids (combined with a `p_` / `qr_p_` prefix). */
 export function randomPartnerToken(bytes = 4): string {
   return randomBytes(bytes).toString("hex");

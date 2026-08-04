@@ -9,7 +9,7 @@ Jay will describe website changes against the **English** public pages. Apply th
 
 ## Scope
 
-- **Mirror:** `/impact`, `/privacy`, `/contact` (and their `/es/…`, `/zh/…` URLs)
+- **Mirror:** `/impact`, `/about`, `/privacy`, `/contact` (and their `/es/…`, `/zh/…` URLs)
 - **Do not localize:** `/dev`, developer login, or other developer-only UI
 
 ## How copy is stored

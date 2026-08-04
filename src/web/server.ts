@@ -50,7 +50,12 @@ import { appendContactMessage } from "../contact/messages.js";
 import { renderPartnerBoothBannerPdf } from "../partners/banner.js";
 import { RESERVED_PARTNER_SLUGS } from "../partners/db.js";
 import { readPartnerSignupMultipart } from "../partners/logoUpload.js";
-import { parsePartnerSignup, registerPartnerSignup } from "../partners/signup.js";
+import {
+  parsePartnerProfileUpdate,
+  parsePartnerSignup,
+  registerPartnerSignup,
+  updatePartnerProfile,
+} from "../partners/signup.js";
 import {
   createCaptchaChallenge,
   createSession,
@@ -92,9 +97,17 @@ function send(
   contentType: string,
   extraHeaders?: Record<string, string | string[]>,
 ): void {
+  const isJson = contentType.includes("json");
+  const isScriptOrCss =
+    contentType.includes("javascript") || contentType.includes("css");
   const headers: Record<string, string | string[]> = {
     "Content-Type": contentType,
-    "Cache-Control": contentType.includes("json") ? "no-store" : "public, max-age=60",
+    // JS/CSS: short TTL + revalidate so i18n/copy updates aren't stuck behind CDN/browser cache.
+    "Cache-Control": isJson
+      ? "no-store"
+      : isScriptOrCss
+        ? "public, max-age=60, must-revalidate"
+        : "public, max-age=60",
     ...extraHeaders,
   };
   res.writeHead(status, headers);
@@ -954,7 +967,11 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
         const rest = pathname.slice("/api/partners/".length);
         const parts = rest.split("/").filter(Boolean);
         const slug = decodeURIComponent(parts[0] ?? "");
-        if (parts[1] === "banner" && req.method === "GET") {
+        if (parts[1] === "banner") {
+          if (req.method !== "GET") {
+            send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
+            return;
+          }
           const partner = getPartnerBySlug(slug);
           if (!partner) {
             send(res, 404, "Partner not found", "text/plain; charset=utf-8");
@@ -972,6 +989,123 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             "Cache-Control": "private, max-age=300",
             "Content-Disposition": `attachment; filename="calclaim-booth-banner-${safeName}.pdf"`,
           });
+          return;
+        }
+        if (parts[1] === "profile") {
+          if (req.method !== "PATCH" && req.method !== "POST") {
+            send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
+            return;
+          }
+          try {
+            const contentType = String(req.headers["content-type"] || "");
+            let name = "";
+            let email = "";
+            let city = "";
+            let partnerId = "";
+            let logo: { buffer: Buffer; mime: string; filename: string } | undefined;
+
+            if (contentType.includes("multipart/form-data")) {
+              const multi = await readPartnerSignupMultipart(req);
+              name = multi.name;
+              email = multi.email;
+              city = multi.city;
+              partnerId = multi.partnerId;
+              logo = multi.logo;
+            } else {
+              const body = (await readJsonBody(req, 16_384)) as {
+                name?: unknown;
+                email?: unknown;
+                city?: unknown;
+                partnerId?: unknown;
+              };
+              name = typeof body.name === "string" ? body.name : "";
+              email = typeof body.email === "string" ? body.email : "";
+              city = typeof body.city === "string" ? body.city : "";
+              partnerId =
+                typeof body.partnerId === "string" ? body.partnerId : "";
+            }
+
+            const parsed = parsePartnerProfileUpdate({
+              name,
+              email,
+              city,
+              partnerId,
+            });
+            if ("error" in parsed) {
+              send(
+                res,
+                400,
+                JSON.stringify({ error: parsed.error }),
+                "application/json; charset=utf-8",
+              );
+              return;
+            }
+            const result = await updatePartnerProfile(slug, {
+              ...parsed,
+              logo,
+            });
+            if ("error" in result) {
+              const status =
+                result.error === "not_found"
+                  ? 404
+                  : result.error === "partner_id_mismatch"
+                    ? 403
+                    : 400;
+              send(
+                res,
+                status,
+                JSON.stringify({ error: result.error }),
+                "application/json; charset=utf-8",
+              );
+              return;
+            }
+            send(
+              res,
+              200,
+              JSON.stringify({
+                ok: true,
+                slug: result.partner.slug,
+                name: result.partner.name,
+                city: result.partner.city,
+                email: result.partner.email,
+                logo: result.partner.logo || "",
+                bannerUrl: result.bannerUrl,
+              }),
+              "application/json; charset=utf-8",
+            );
+          } catch (err) {
+            const code = err instanceof Error ? err.message : "";
+            if (
+              code === "logo_type" ||
+              code === "logo_too_large" ||
+              code === "body_too_large" ||
+              code === "multipart_boundary"
+            ) {
+              send(
+                res,
+                400,
+                JSON.stringify({ error: code }),
+                "application/json; charset=utf-8",
+              );
+              return;
+            }
+            console.error("Partner profile update failed:", err);
+            send(
+              res,
+              500,
+              JSON.stringify({ error: "update_failed" }),
+              "application/json; charset=utf-8",
+            );
+          }
+          return;
+        }
+        if (parts.length !== 1 || req.method !== "GET") {
+          send(
+            res,
+            req.method === "GET" ? 404 : 405,
+            req.method === "GET" ? "Not found" : "Method not allowed",
+            "text/plain; charset=utf-8",
+          );
           return;
         }
         const stats = buildPartnerStats(slug);
@@ -1101,6 +1235,10 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
         }
         const publicPath =
           localized.path === "/" ? "/impact" : localized.path;
+        if (publicPath === "/about" || publicPath.startsWith("/about/")) {
+          redirect(res, `/${localized.lang}/impact#about`);
+          return;
+        }
         if (publicPath === "/privacy" || publicPath.startsWith("/privacy/")) {
           redirect(res, `/${localized.lang}/impact#privacy`);
           return;
@@ -1156,6 +1294,10 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
         return;
       }
 
+      if (pathname === "/about" || pathname.startsWith("/about/")) {
+        redirect(res, "/impact#about");
+        return;
+      }
       if (pathname === "/privacy" || pathname.startsWith("/privacy/")) {
         redirect(res, "/impact#privacy");
         return;

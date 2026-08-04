@@ -298,7 +298,7 @@ function initNavScrollSpy() {
   const nav = document.querySelector(".site-nav");
   if (!nav) return;
 
-  const sectionIds = ["impact", "partners", "contact", "privacy"];
+  const sectionIds = ["impact", "partners", "about", "contact", "privacy"];
   const sections = sectionIds
     .map((id) => document.getElementById(id))
     .filter(Boolean);

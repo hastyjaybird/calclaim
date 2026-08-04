@@ -21,7 +21,7 @@ function ensureUploadDir(): void {
   fs.mkdirSync(PARTNER_LOGO_UPLOAD_DIR, { recursive: true });
 }
 
-/** Parse a multipart/form-data body for partner signup (fields + optional logo). */
+/** Parse a multipart/form-data body for partner signup/profile (fields + optional logo). */
 export async function readPartnerSignupMultipart(
   req: IncomingMessage,
   maxBytes = 2_500_000,
@@ -29,6 +29,7 @@ export async function readPartnerSignupMultipart(
   name: string;
   email: string;
   city: string;
+  partnerId: string;
   logo?: { buffer: Buffer; mime: string; filename: string };
 }> {
   const contentType = String(req.headers["content-type"] || "");
@@ -43,6 +44,7 @@ export async function readPartnerSignupMultipart(
   let name = "";
   let email = "";
   let city = "";
+  let partnerId = "";
   let logo: { buffer: Buffer; mime: string; filename: string } | undefined;
 
   for (const part of parts) {
@@ -80,9 +82,12 @@ export async function readPartnerSignupMultipart(
     if (field === "name") name = text.slice(0, 120);
     else if (field === "email") email = text.slice(0, 200).toLowerCase();
     else if (field === "city") city = text.slice(0, 80);
+    else if (field === "partnerId" || field === "partner_id") {
+      partnerId = text.slice(0, 40).toLowerCase();
+    }
   }
 
-  return { name, email, city, logo };
+  return { name, email, city, partnerId, logo };
 }
 
 export function savePartnerLogoUpload(

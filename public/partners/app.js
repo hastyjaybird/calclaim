@@ -8,6 +8,9 @@ const money = new Intl.NumberFormat("en-US", {
 
 const number = new Intl.NumberFormat("en-US");
 
+/** @type {{ slug: string, name: string, city: string, logo: string } | null} */
+let currentPartner = null;
+
 function el(id) {
   return document.getElementById(id);
 }
@@ -140,10 +143,7 @@ function showError(message) {
   }
 }
 
-function renderPartner(stats) {
-  const p = stats.partner;
-  document.title = `CalClaim × ${p.name}`;
-
+function applyPartnerHeader(p) {
   const logo = el("partner-logo");
   const logoName = el("partner-logo-name");
   if (p.logo) {
@@ -162,7 +162,8 @@ function renderPartner(stats) {
 
   el("partner-name").textContent = p.name;
   el("partner-city").textContent = p.city;
-  el("partner-blurb").textContent = p.blurb || txt("partners.blurbFallback", "Community outreach partner");
+  el("partner-blurb").textContent =
+    p.blurb || txt("partners.blurbFallback", "Community outreach partner");
 
   const qrHeading = el("partner-qr-heading");
   if (qrHeading) qrHeading.textContent = qrHeadingFor(p.name);
@@ -170,6 +171,29 @@ function renderPartner(stats) {
   const qr = el("partner-qr");
   qr.src = `/api/qr/partner/${encodeURIComponent(p.slug)}`;
   qr.alt = fillName(txt("partners.qrAlt", "{name} QR code for CalClaim"), p.name);
+
+  document.title = `CalClaim × ${p.name}`;
+}
+
+function renderPartner(stats) {
+  const p = stats.partner;
+  currentPartner = {
+    slug: p.slug,
+    name: p.name,
+    city: p.city,
+    logo: p.logo || "",
+    blurb: p.blurb || "",
+  };
+
+  applyPartnerHeader(currentPartner);
+
+  const banner = el("download-banner");
+  if (banner) {
+    banner.href = `/api/partners/${encodeURIComponent(p.slug)}/banner`;
+  }
+
+  const editBtn = el("edit-partner");
+  if (editBtn) editBtn.hidden = !stats.editable;
 
   el("m-reached").textContent = number.format(stats.peopleReached);
   el("m-starts").textContent = number.format(stats.botStarts);
@@ -187,8 +211,179 @@ function renderPartner(stats) {
   lineChart("chart-cumulative", labels, cum);
 }
 
+function showEditStatus(message, isError) {
+  const status = el("edit-status");
+  if (!status) return;
+  status.hidden = !message;
+  status.textContent = message || "";
+  status.classList.toggle("is-error", Boolean(isError));
+}
+
+function openEditDialog() {
+  if (!currentPartner) return;
+  const dialog = el("partner-edit-dialog");
+  if (!dialog) return;
+
+  el("edit-name").value = currentPartner.name || "";
+  el("edit-city").value = currentPartner.city || "";
+  el("edit-email").value = "";
+  let storedId = "";
+  try {
+    storedId = localStorage.getItem(`calclaim-partner-id:${currentPartner.slug}`) || "";
+  } catch {
+    storedId = "";
+  }
+  el("edit-partner-id").value = storedId;
+  const logoInput = el("edit-logo");
+  if (logoInput) logoInput.value = "";
+  showEditStatus("", false);
+
+  if (typeof dialog.showModal === "function") {
+    dialog.showModal();
+  } else {
+    dialog.setAttribute("open", "");
+  }
+  el("edit-name")?.focus();
+}
+
+function closeEditDialog() {
+  const dialog = el("partner-edit-dialog");
+  if (!dialog) return;
+  if (typeof dialog.close === "function") {
+    dialog.close();
+  } else {
+    dialog.removeAttribute("open");
+  }
+}
+
+function bindEditUi() {
+  const editBtn = el("edit-partner");
+  const dialog = el("partner-edit-dialog");
+  const form = el("partner-edit-form");
+  if (!editBtn || !dialog || !form) return;
+
+  editBtn.addEventListener("click", openEditDialog);
+  el("edit-dialog-close")?.addEventListener("click", closeEditDialog);
+  el("edit-cancel")?.addEventListener("click", closeEditDialog);
+
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) closeEditDialog();
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!currentPartner) return;
+
+    const name = String(el("edit-name")?.value || "").trim();
+    const email = String(el("edit-email")?.value || "").trim();
+    const city = String(el("edit-city")?.value || "").trim();
+    const partnerId = String(el("edit-partner-id")?.value || "").trim();
+    const logoFile = el("edit-logo")?.files?.[0] || null;
+    const submit = el("edit-submit");
+
+    if (!name) {
+      showEditStatus(txt("signup.errorName", "Add your organization name."), true);
+      return;
+    }
+    if (!email) {
+      showEditStatus(txt("signup.errorEmail", "Add your work email."), true);
+      return;
+    }
+    if (!partnerId) {
+      showEditStatus(
+        txt("partners.errorPartnerId", "Enter your partner ID from the welcome email."),
+        true,
+      );
+      return;
+    }
+    if (logoFile && logoFile.size > 2_000_000) {
+      showEditStatus(
+        txt("signup.errorLogoSize", "Logo must be 2 MB or smaller."),
+        true,
+      );
+      return;
+    }
+
+    if (submit) submit.disabled = true;
+    showEditStatus(txt("partners.editSaving", "Saving changes…"), false);
+
+    try {
+      const body = new FormData();
+      body.set("name", name);
+      body.set("email", email);
+      body.set("city", city);
+      body.set("partnerId", partnerId);
+      if (logoFile) body.set("logo", logoFile);
+
+      const res = await fetch(
+        `/api/partners/${encodeURIComponent(currentPartner.slug)}/profile`,
+        { method: "POST", body },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const code = data.error || "update_failed";
+        const map = {
+          name_required: txt("signup.errorName", "Add your organization name."),
+          email_required: txt("signup.errorEmail", "Add your work email."),
+          email_invalid: txt(
+            "signup.errorEmailInvalid",
+            "Enter a valid email address.",
+          ),
+          partner_id_required: txt(
+            "partners.errorPartnerId",
+            "Enter your partner ID from the welcome email.",
+          ),
+          partner_id_mismatch: txt(
+            "partners.errorPartnerIdMismatch",
+            "That partner ID doesn’t match this page.",
+          ),
+          logo_type: txt(
+            "signup.errorLogoType",
+            "Use a PNG, JPG, WebP, or GIF logo.",
+          ),
+          logo_too_large: txt(
+            "signup.errorLogoSize",
+            "Logo must be 2 MB or smaller.",
+          ),
+          not_found: txt("partners.notFound", "Partner not found."),
+        };
+        showEditStatus(
+          map[code] || txt("partners.editError", "Could not save changes. Try again."),
+          true,
+        );
+        return;
+      }
+
+      currentPartner = {
+        ...currentPartner,
+        name: data.name || name,
+        city: data.city || city || currentPartner.city,
+        logo: data.logo != null ? data.logo : currentPartner.logo,
+      };
+      try {
+        localStorage.setItem(
+          `calclaim-partner-id:${currentPartner.slug}`,
+          partnerId,
+        );
+      } catch {
+        // Ignore quota / private-mode failures.
+      }
+      applyPartnerHeader(currentPartner);
+      closeEditDialog();
+    } catch {
+      showEditStatus(
+        txt("partners.editError", "Could not save changes. Try again."),
+        true,
+      );
+    } finally {
+      if (submit) submit.disabled = false;
+    }
+  });
+}
+
 async function main() {
   chartDefaults();
+  bindEditUi();
   const slug = partnerSlugFromPath();
   if (!slug) {
     showError(txt("partners.notFound", "Partner not found."));

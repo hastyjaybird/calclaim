@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/partners/styles.css" />
-  <link rel="stylesheet" href="/partners/signup/styles.css" />
+  <link rel="stylesheet" href="/partners/styles.css?v=20260804-qr" />
+  <link rel="stylesheet" href="/partners/signup/styles.css?v=20260804-qr" />
 </head>
 <body data-page="partnerSignup">
   <div class="banner" role="banner">
@@ -26,6 +26,7 @@
       <nav class="site-nav" data-i18n-aria="nav.site" aria-label="Site">
         <a href="/impact" data-i18n="nav.impact">Impact</a>
         <a href="/impact#partners" data-i18n="nav.partners">Leaderboard</a>
+        <a href="/impact#about" data-i18n="nav.about">About</a>
         <a href="/impact#contact" data-i18n="nav.contact">Contact</a>
         <a href="/impact#privacy" data-i18n="nav.privacy">Privacy</a>
       </nav>
@@ -33,9 +34,10 @@
     </div>
   </div>
 
-  <main class="signup-shell">
+  <div class="signup-deck">
     <a class="back-link" href="/impact#partners" data-i18n="partners.backLink">← Back to partner leaderboard</a>
 
+    <main class="signup-shell">
     <section class="signup-hero" id="signup-form-panel">
       <p class="signup-eyebrow" data-i18n="signup.eyebrow">Community partners</p>
       <h1>
@@ -77,7 +79,7 @@
           />
         </label>
         <label class="field">
-          <span data-i18n="signup.cityLabel">City (optional)</span>
+          <span data-i18n="signup.cityLabel">City</span>
           <input
             id="signup-city"
             name="city"
@@ -101,7 +103,7 @@
           </span>
         </label>
         <p class="signup-hint" data-i18n="signup.hint">
-          We’ll email your unique partner ID, QR code, status page link, and a printable booth banner with your company name.
+          You’ll get your QR code, status page, and a printable booth banner right away — and a copy by email.
         </p>
         <div class="cta-row">
           <button type="submit" class="cta" id="signup-submit" data-i18n="signup.submit">
@@ -118,14 +120,21 @@
       <p class="signup-lede" data-i18n="signup.successBody">
         Here is your unique QR code. Print out the booth banner for your next event.
       </p>
+      <figure class="signup-qr-hero">
+        <img
+          id="success-qr"
+          class="signup-qr-hero__img"
+          alt=""
+          width="280"
+          height="280"
+          data-i18n-alt="signup.qrAlt"
+        />
+        <figcaption data-i18n="signup.bannerPreviewScan">Scan with your phone</figcaption>
+      </figure>
       <dl class="signup-kit">
         <div>
           <dt data-i18n="signup.statusLinkLabel">Status page</dt>
           <dd><a id="success-status-link" href="#">—</a></dd>
-        </div>
-        <div>
-          <dt data-i18n="signup.partnerIdLabel">Your partner ID</dt>
-          <dd id="success-partner-id">—</dd>
         </div>
       </dl>
       <div class="signup-banner-kit">
@@ -137,18 +146,20 @@
             data-i18n-aria="signup.bannerPreviewAlt"
             aria-label="Preview of your printable booth banner"
           >
-            <div class="booth-banner-preview__bar" aria-hidden="true"></div>
-            <img
-              class="booth-banner-preview__mark"
-              src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
-              alt=""
-              width="160"
-              height="56"
-            />
-            <div class="booth-banner-preview__logo-wrap" id="success-banner-logo-wrap" hidden>
-              <img class="booth-banner-preview__logo" id="success-banner-logo" alt="" />
+            <div class="booth-banner-preview__brand" id="success-banner-brand">
+              <div class="booth-banner-preview__partner" id="success-banner-logo-wrap" hidden>
+                <img class="booth-banner-preview__logo" id="success-banner-logo" alt="" />
+                <p class="booth-banner-preview__name" id="success-banner-name"></p>
+              </div>
+              <img
+                class="booth-banner-preview__mark"
+                src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
+                alt=""
+                width="160"
+                height="56"
+              />
+              <p class="booth-banner-preview__name booth-banner-preview__name--solo" id="success-banner-name-solo"></p>
             </div>
-            <p class="booth-banner-preview__name" id="success-banner-name"></p>
             <p class="booth-banner-preview__tag" data-i18n="signup.bannerPreviewTag">
               Scan to find California benefits help — food, health, phone discounts, energy bill aid, and more.
             </p>
@@ -156,7 +167,6 @@
               <img class="booth-banner-preview__qr" id="success-banner-qr" alt="" width="120" height="120" />
               <span data-i18n="signup.bannerPreviewScan">Scan with your phone</span>
             </div>
-            <p class="booth-banner-preview__id" id="success-banner-footer-id"></p>
           </div>
           <figcaption>
             <a class="cta" id="success-banner-link" href="#" data-i18n="signup.downloadBanner">
@@ -164,12 +174,10 @@
             </a>
           </figcaption>
         </figure>
-        <a class="cta cta-ghost" id="success-qr-link" href="#" data-i18n="signup.downloadQr">
-          Download QR
-        </a>
       </div>
     </section>
-  </main>
+    </main>
+  </div>
 
   <footer class="site-footer">
     <p data-i18n="signup.footer" data-i18n-html>
@@ -179,8 +187,8 @@
     </p>
   </footer>
 
-  <script src="/i18n/messages.js"></script>
-  <script src="/i18n/lang.js"></script>
-  <script src="/partners/signup/app.js"></script>
+  <script src="/i18n/messages.js?v=20260804-qr"></script>
+  <script src="/i18n/lang.js?v=20260804-qr"></script>
+  <script src="/partners/signup/app.js?v=20260804-qr"></script>
 </body>
 </html>

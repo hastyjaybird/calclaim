@@ -24,8 +24,16 @@ function showSuccess(payload) {
   if (formPanel) formPanel.hidden = true;
   if (successPanel) successPanel.hidden = false;
 
-  const idEl = el("success-partner-id");
-  if (idEl) idEl.textContent = payload.partnerId;
+  if (payload.partnerId && payload.slug) {
+    try {
+      localStorage.setItem(
+        `calclaim-partner-id:${payload.slug}`,
+        payload.partnerId,
+      );
+    } catch {
+      // Ignore quota / private-mode failures.
+    }
+  }
 
   const statusLink = el("success-status-link");
   if (statusLink) {
@@ -38,12 +46,13 @@ function showSuccess(payload) {
 
   const bannerName = el("success-banner-name");
   if (bannerName) bannerName.textContent = payload.name || "";
+  const bannerNameSolo = el("success-banner-name-solo");
+  if (bannerNameSolo) bannerNameSolo.textContent = payload.name || "";
 
-  const bannerFooterId = el("success-banner-footer-id");
-  if (bannerFooterId) {
-    bannerFooterId.textContent = payload.partnerId
-      ? `Partner ID: ${payload.partnerId}`
-      : "";
+  const qrHero = el("success-qr");
+  if (qrHero && payload.qrUrl) {
+    qrHero.src = payload.qrUrl;
+    qrHero.alt = txt("signup.qrAlt", "Your unique partner QR code");
   }
 
   const bannerQr = el("success-banner-qr");
@@ -58,14 +67,13 @@ function showSuccess(payload) {
     if (payload.logo) {
       logoImg.src = payload.logo;
       logoWrap.hidden = false;
+      if (bannerNameSolo) bannerNameSolo.hidden = true;
     } else {
       logoImg.removeAttribute("src");
       logoWrap.hidden = true;
+      if (bannerNameSolo) bannerNameSolo.hidden = false;
     }
   }
-
-  const qrLink = el("success-qr-link");
-  if (qrLink) qrLink.href = payload.qrUrl;
 
   successPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
