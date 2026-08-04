@@ -63,15 +63,19 @@ function escapeHtml(s) {
     .replaceAll('"', "&quot;");
 }
 
+/** Default map frame: California (SW → NE). */
+const CA_BOUNDS = [
+  [32.5, -124.5],
+  [42.0, -114.1],
+];
+
 function renderMap(points) {
-  const map = L.map("map", { scrollWheelZoom: false }).setView([36.7, -119.7], 6);
+  const map = L.map("map", { scrollWheelZoom: false });
   L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
     maxZoom: 12,
   }).addTo(map);
-
-  const withScans = points.filter((p) => p.count > 0);
-  const bounds = [];
+  map.fitBounds(CA_BOUNDS, { padding: [28, 28], maxZoom: 7 });
 
   for (const p of points) {
     const radius = p.count === 0 ? 8 : Math.min(28, 10 + p.count * 3);
@@ -85,16 +89,6 @@ function renderMap(points) {
     }).addTo(map);
     marker.bindPopup(
       `<strong>${escapeHtml(p.label)}</strong><br>${p.count} awareness event${p.count === 1 ? "" : "s"}`,
-    );
-    if (p.count > 0) bounds.push([p.lat, p.lng]);
-  }
-
-  if (bounds.length >= 2) map.fitBounds(bounds, { padding: [36, 36] });
-  else if (bounds.length === 1) map.setView(bounds[0], 9);
-  else if (withScans.length === 0 && points.length) {
-    map.fitBounds(
-      points.map((p) => [p.lat, p.lng]),
-      { padding: [36, 36] },
     );
   }
 }
