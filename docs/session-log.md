@@ -248,3 +248,17 @@ Wired into `guidelines.md`, `PROMPT.md`, README, competitive research target pat
 **Gap:** Corpus had Medi-Cal, CalFresh, CalWORKs only from BenefitsCal’s set. Missing CAPI, GA/GR, CMSP, Disaster CalFresh. GROW / WtW are nested employment services (noted under GA/GR + CalWORKs apply steps, not separate offer cards).
 
 **Outcome:** Added corpus rows + gate toggles for CAPI / GA/GR / CMSP; Disaster CalFresh as seasonal offer; `excludeIfAlreadyOn` in ranker; CX / expansion-watchlist updated.
+
+---
+
+## Turn — Partner self-signup + QR kit (2026-08-02)
+
+**User:** Let community organizations sign themselves up as partners instead of hand-editing `corpus/partners.json`.
+
+**Outcome:** Shipped `/partners/signup`:
+
+- `POST /api/partners/signup` → unique partner ID + slug, stored in SQLite `partner_signups` (demo partners stay in `corpus/partners.json`)
+- Each signup gets a status page (`/partners/<slug>`), a tracked QR (`/api/qr/partner/<slug>` → `/go/<campaignId>`), and a printable booth banner PDF (`/api/partners/<slug>/banner`)
+- Welcome email delivers the kit via optional `SMTP_*` (nodemailer); with SMTP unset it writes to `data/mail-outbox/` so the demo works offline
+- Impact hero CTA now points at the signup page; `nav.developer` ("Partner login") removed from public nav
+- EN/ES/ZH message keys added per the public-site i18n rule; PRIVACY / README / funder-dashboard updated for the new fields
