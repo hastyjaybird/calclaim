@@ -184,7 +184,7 @@ Wired into `guidelines.md`, `PROMPT.md`, README, competitive research target pat
 
 - Node/TS + grammy + SQLite + PDFKit + node-cron  
 - Multi-category corpus (`corpus/programs.json`)  
-- Gate → YES/NO queues → offer cards → one to-do list / benefits report PDF → reminders  
+- Gate → YES/NO queues → offer cards → one To Do List / benefits report PDF → reminders  
 - Help / STOP / erase + free-form QC log  
 - `npm run dev` after `.env` with `TELEGRAM_BOT_TOKEN`  
 - Sample PDF at `docs/samples/calclaim-todo-list-sample.pdf`
@@ -223,7 +223,7 @@ Wired into `guidelines.md`, `PROMPT.md`, README, competitive research target pat
 
 ## Turn — Alpha UX feedback (2026-08-01)
 
-**User feedback:** Roommate vs household still confusing; remove tax card; no report if no tasks (push share); finish with restart / share / email report / more info; “You may qualify for X” on cards; buttons I’m already enrolled / Add to my to do list / Skip program; remove Open apply page (drop-off); finish = abbreviated text summary (docs→$, total, program URLs) then PDF; email PDF; report first line total $ this year + form-fill minutes; drop “open programs total” row.
+**User feedback:** Roommate vs household still confusing; remove tax card; no report if no tasks (push share); finish with restart / share / email report / more info; “You may qualify for X” on cards; buttons I’m already enrolled / Add to my To Do List / Skip program; remove Open apply page (drop-off); finish = abbreviated text summary (docs→$, total, program URLs) then PDF; email PDF; report first line total $ this year + form-fill minutes; drop “open programs total” row.
 
 **Outcome:** Wired into bot + PDF + CX/finish-line docs. Email via optional `SMTP_*` env (nodemailer).
 

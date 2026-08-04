@@ -444,6 +444,92 @@ function interpretStepAnswer(
     if (yn === "no") return { kind: "step_answer", callback: "abd:no" };
   }
 
+  if (step === "has_work_disruption") {
+    if (
+      /\b(lost|laid off|layoff|fired|unemployed|job loss|no job)\b/.test(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "work:job_loss" };
+    }
+    if (
+      /\b(sick|ill|illness|injury|injured|pregnant|pregnancy|disability|disabled|can't work|cant work)\b/.test(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "work:health" };
+    }
+    if (
+      /\b(caring|caregiver|caregiving|family care|new baby|bonding|take care)\b/.test(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "work:family_care" };
+    }
+    if (
+      yn === "no" ||
+      ["none", "nothing", "none of these", "no change"].includes(normalized)
+    ) {
+      return { kind: "step_answer", callback: "work:none" };
+    }
+  }
+
+  if (step === "has_disaster_area") {
+    if (
+      yn === "yes" ||
+      /\b(lived|live|lives|worked|work|works|both|evacuated|my job|my house|my home)\b/.test(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "disaster:yes" };
+    }
+    if (
+      yn === "no" ||
+      ["none", "nope", "nothing", "neither", "none of these"].includes(normalized)
+    ) {
+      return { kind: "step_answer", callback: "disaster:no" };
+    }
+  }
+
+  if (step === "has_immigration_status") {
+    if (
+      yn === "yes" ||
+      /\b(citizen|citizenship|eligible immigrant|green card|permanent resident|lpr)\b/.test(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "status:eligible" };
+    }
+    if (
+      yn === "no" ||
+      /\b(undocumented|not a citizen|non-?citizen|no status)\b/.test(normalized)
+    ) {
+      return { kind: "step_answer", callback: "status:ineligible" };
+    }
+    if (
+      /\b(prefer not|rather not|skip|private|decline|dont want|don't want|no thanks)\b/.test(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "status:declined" };
+    }
+  }
+
+  if (step === "has_zip") {
+    if (
+      ["skip", "not sure", "unsure", "dont know", "don't know", "idk"].includes(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "zip:skip" };
+    }
+    // Digits may still have spaces/dashes before normalize — use raw-ish digits.
+    const digits = normalized.replace(/\D/g, "");
+    if (digits.length === 5 || digits.length === 9) {
+      return { kind: "step_answer", callback: `zip:${digits.slice(0, 5)}` };
+    }
+  }
+
   if (step === "offer") {
     const programId = session.queue[session.queueIndex];
     if (!programId) return null;
@@ -573,8 +659,16 @@ export function stepNudge(step: StepId): string {
       return "Tap Yes or No — kids under 18 or pregnancy in the household.";
     case "has_abd":
       return "Tap Yes or No — anyone 65+, blind, or disabled in the household.";
+    case "has_work_disruption":
+      return "Tap the option that fits — lost a job, can't work for health reasons, caring for family, or none of these.";
+    case "has_disaster_area":
+      return "Tap Yes or No — did anyone in the household live or work in the disaster area?";
+    case "has_immigration_status":
+      return "Tap Yes (citizen or eligible immigrant), No, or Prefer not to say — your answer is not stored.";
+    case "has_zip":
+      return "Type your 5-digit home ZIP code, or tap Skip if you're not sure.";
     case "offer":
-      return "Use the buttons — add to your to-do list, say you're already enrolled, or skip.";
+      return "Use the buttons — add to your To Do List, say you're already enrolled, or skip.";
     case "idle":
       return "You're all set for now. Restart, share with a friend, email your report to a computer, or more info.";
     case "confirm_stop":

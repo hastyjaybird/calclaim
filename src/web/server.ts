@@ -17,6 +17,12 @@ import {
 import type { AppConfig } from "../config.js";
 import { campaignLandingUrl, getBotUsername, ROOT } from "../config.js";
 import { getProgram } from "../corpus/load.js";
+import {
+  buildProgramMatrix,
+  updateProgramRequirements,
+  type AvailabilityContext,
+  type RequirementsPatch,
+} from "../corpus/requirements.js";
 import { renderShareQrPng } from "../bot/share.js";
 import {
   getReportPdf,
@@ -28,13 +34,22 @@ import {
   setFeedbackTodoStatus,
   type FeedbackTodoStatus,
 } from "../feedback/todos.js";
+import {
+  getWindow as getDisasterWindow,
+  listWindows,
+  setWindowStatus,
+  updateWindowPeriods,
+  type DisasterWindowStatus,
+} from "../disaster/db.js";
+import { lastApplyDay, offerableDisasterWindows } from "../disaster/liveWindow.js";
 import { getScan, listFindings, setFindingStatus } from "../watchdog/db.js";
-import { buildDevStatus } from "../watchdog/overview.js";
+import { buildDevStatus, buildDisasterStatus } from "../watchdog/overview.js";
 import { startCorpusScan } from "../watchdog/runner.js";
 import type { FindingStatus } from "../watchdog/types.js";
 import { appendContactMessage } from "../contact/messages.js";
 import { renderPartnerBoothBannerPdf } from "../partners/banner.js";
 import { RESERVED_PARTNER_SLUGS } from "../partners/db.js";
+import { readPartnerSignupMultipart } from "../partners/logoUpload.js";
 import { parsePartnerSignup, registerPartnerSignup } from "../partners/signup.js";
 import {
   createCaptchaChallenge,
@@ -299,6 +314,20 @@ function requireDeveloperAuth(
   return false;
 }
 
+/**
+ * Live disaster windows for the requirements matrix. Passed in rather than
+ * imported by the corpus module so the corpus layer stays free of DB access.
+ */
+function availabilityContext(): AvailabilityContext {
+  return {
+    disasterWindows: offerableDisasterWindows().map((w) => ({
+      label: w.label,
+      counties: w.counties,
+      lastApplyDay: lastApplyDay(w),
+    })),
+  };
+}
+
 async function handleDevApi(
   req: http.IncomingMessage,
   res: http.ServerResponse,
@@ -395,6 +424,168 @@ async function handleDevApi(
         return true;
       }
       send(res, 200, JSON.stringify({ finding }), "application/json; charset=utf-8", noIndex);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      send(res, 400, JSON.stringify({ error: message }), "application/json; charset=utf-8", noIndex);
+    }
+    return true;
+  }
+
+  if (pathname === "/api/dev/program-matrix" && req.method === "GET") {
+    send(
+      res,
+      200,
+      JSON.stringify(buildProgramMatrix(availabilityContext())),
+      "application/json; charset=utf-8",
+      noIndex,
+    );
+    return true;
+  }
+
+  const matrixMatch = pathname.match(/^\/api\/dev\/program-matrix\/([a-z0-9_]+)$/);
+  if (matrixMatch && req.method === "PATCH") {
+    try {
+      const patch = (await readJsonBody(req, 32_768)) as RequirementsPatch;
+      const ctx = availabilityContext();
+      const row = updateProgramRequirements(matrixMatch[1], patch, ctx);
+      // The whole matrix comes back so the client can refresh derived columns
+      // (rank, tier counts, reverse unlocks) that an edit here can change elsewhere.
+      const matrix = buildProgramMatrix(ctx);
+      send(
+        res,
+        200,
+        JSON.stringify({ row, rows: matrix.rows, summary: matrix.summary }),
+        "application/json; charset=utf-8",
+        noIndex,
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      send(res, 400, JSON.stringify({ error: message }), "application/json; charset=utf-8", noIndex);
+    }
+    return true;
+  }
+
+  if (pathname === "/api/dev/disaster-windows" && req.method === "GET") {
+    const host = req.headers.host ?? "localhost";
+    const url = new URL(req.url ?? "/", `http://${host}`);
+    const statusParam = url.searchParams.get("status") ?? "all";
+    const status: DisasterWindowStatus | "all" =
+      statusParam === "pending" ||
+      statusParam === "active" ||
+      statusParam === "expired" ||
+      statusParam === "dismissed"
+        ? statusParam
+        : "all";
+    send(
+      res,
+      200,
+      JSON.stringify({
+        windows: listWindows(status, 200),
+        disaster: buildDisasterStatus(),
+      }),
+      "application/json; charset=utf-8",
+      noIndex,
+    );
+    return true;
+  }
+
+  const windowMatch = pathname.match(/^\/api\/dev\/disaster-windows\/(\d+)$/);
+  if (windowMatch && req.method === "PATCH") {
+    try {
+      const body = (await readJsonBody(req)) as {
+        status?: string;
+        applyPeriods?: Array<{ start?: unknown; end?: unknown }>;
+      };
+      const id = Number(windowMatch[1]);
+      let window = getDisasterWindow(id);
+      if (!window) {
+        send(
+          res,
+          404,
+          JSON.stringify({ error: "Disaster window not found" }),
+          "application/json; charset=utf-8",
+          noIndex,
+        );
+        return true;
+      }
+
+      if (body.applyPeriods !== undefined) {
+        if (!Array.isArray(body.applyPeriods)) {
+          send(
+            res,
+            400,
+            JSON.stringify({ error: "applyPeriods must be an array" }),
+            "application/json; charset=utf-8",
+            noIndex,
+          );
+          return true;
+        }
+        const periods = body.applyPeriods.map((p) => ({
+          start: String(p.start ?? ""),
+          end: String(p.end ?? ""),
+        }));
+        const valid = periods.every(
+          (p) =>
+            /^\d{4}-\d{2}-\d{2}$/.test(p.start) &&
+            /^\d{4}-\d{2}-\d{2}$/.test(p.end) &&
+            p.end >= p.start,
+        );
+        if (!valid) {
+          send(
+            res,
+            400,
+            JSON.stringify({
+              error: "Each applyPeriod needs YYYY-MM-DD start and end, end >= start",
+            }),
+            "application/json; charset=utf-8",
+            noIndex,
+          );
+          return true;
+        }
+        window = updateWindowPeriods(id, periods) ?? window;
+      }
+
+      if (body.status !== undefined) {
+        const allowed: DisasterWindowStatus[] = [
+          "pending",
+          "active",
+          "expired",
+          "dismissed",
+        ];
+        if (!allowed.includes(body.status as DisasterWindowStatus)) {
+          send(
+            res,
+            400,
+            JSON.stringify({ error: "status must be pending|active|expired|dismissed" }),
+            "application/json; charset=utf-8",
+            noIndex,
+          );
+          return true;
+        }
+        // Activating with no dates would publish a card nobody can act on.
+        if (
+          body.status === "active" &&
+          (window?.applyPeriods.length ?? 0) === 0
+        ) {
+          send(
+            res,
+            400,
+            JSON.stringify({
+              error: "Cannot activate a window with no application period dates",
+            }),
+            "application/json; charset=utf-8",
+            noIndex,
+          );
+          return true;
+        }
+        // Record that a person overrode the automated decision, so the audit
+        // view does not read as though the scan published this.
+        window =
+          setWindowStatus(id, body.status as DisasterWindowStatus, "manual") ??
+          window;
+      }
+
+      send(res, 200, JSON.stringify({ window }), "application/json; charset=utf-8", noIndex);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       send(res, 400, JSON.stringify({ error: message }), "application/json; charset=utf-8", noIndex);
@@ -650,6 +841,11 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
         return;
       }
 
+      if (pathname === "/llms.txt" || pathname === "/.well-known/llms.txt") {
+        serveStatic(res, "/llms.txt");
+        return;
+      }
+
       if (pathname === "/api/stats") {
         send(res, 200, JSON.stringify(buildImpactStats()), "application/json; charset=utf-8");
         return;
@@ -670,12 +866,30 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
 
       if (pathname === "/api/partners/signup" && req.method === "POST") {
         try {
-          const body = (await readJsonBody(req, 16_384)) as {
-            name?: unknown;
-            email?: unknown;
-            city?: unknown;
-          };
-          const parsed = parsePartnerSignup(body);
+          const contentType = String(req.headers["content-type"] || "");
+          let name = "";
+          let email = "";
+          let city = "";
+          let logo: { buffer: Buffer; mime: string; filename: string } | undefined;
+
+          if (contentType.includes("multipart/form-data")) {
+            const multi = await readPartnerSignupMultipart(req);
+            name = multi.name;
+            email = multi.email;
+            city = multi.city;
+            logo = multi.logo;
+          } else {
+            const body = (await readJsonBody(req, 16_384)) as {
+              name?: unknown;
+              email?: unknown;
+              city?: unknown;
+            };
+            name = typeof body.name === "string" ? body.name : "";
+            email = typeof body.email === "string" ? body.email : "";
+            city = typeof body.city === "string" ? body.city : "";
+          }
+
+          const parsed = parsePartnerSignup({ name, email, city });
           if ("error" in parsed) {
             send(
               res,
@@ -685,7 +899,10 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             );
             return;
           }
-          const result = await registerPartnerSignup(config, parsed);
+          const result = await registerPartnerSignup(config, {
+            ...parsed,
+            logo,
+          });
           send(
             res,
             200,
@@ -693,6 +910,8 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               ok: true,
               partnerId: result.partner.id,
               slug: result.partner.slug,
+              name: result.partner.name,
+              logo: result.partner.logo || "",
               statusUrl: result.statusUrl,
               qrUrl: result.qrUrl,
               bannerUrl: result.bannerUrl,
@@ -701,6 +920,21 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             "application/json; charset=utf-8",
           );
         } catch (err) {
+          const code = err instanceof Error ? err.message : "";
+          if (
+            code === "logo_type" ||
+            code === "logo_too_large" ||
+            code === "body_too_large" ||
+            code === "multipart_boundary"
+          ) {
+            send(
+              res,
+              400,
+              JSON.stringify({ error: code }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
           console.error("Partner signup failed:", err);
           send(
             res,
@@ -727,6 +961,7 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             partnerName: partner.name,
             partnerId: partner.id,
             qrTargetUrl: target,
+            partnerLogoPath: partner.logo || null,
           });
           const safeName = partner.slug.replace(/[^a-z0-9_-]+/gi, "-");
           send(res, 200, pdf, "application/pdf", {

@@ -10,7 +10,7 @@
 1. **Banner** — CalClaim + one-line demo framing  
 2. **People reached** — QR scans + shared-link clicks (`/go/:campaign`)  
 3. **Programs accessed** — clicks from chat → official apply sites via `/r/:programId`  
-4. **Follow-throughs** — “Add to my to do list” taps  
+4. **Follow-throughs** — “Add to my To Do List” taps  
 5. **Est. aid unlocked** — sum of corpus `estAnnualUsd` × follow-throughs  
 6. **Map** — QR placement pins + coarse city-level IP (never street address)  
 7. **Community partners leaderboard** — orgs ranked by people reached via their unique QR; #1 gets a subtle trophy; each row links to a partner stats slide  
@@ -56,7 +56,7 @@ Demo partners live in [`corpus/partners.json`](../corpus/partners.json) (linked 
 | `GET /go/:campaignId` | `awareness` (qr or link) | 302 → `t.me/<bot>?start=<campaignId>` |
 | `GET /r/:programId` | `program_open` | 302 → official `applyUrl` |
 | Telegram `/start <payload>` | `bot_start` + session `campaignId` | opt-in flow |
-| Offer “Add to my to do list” | `follow_through` (with session campaign) | next-steps PDF |
+| Offer “Add to my To Do List” | `follow_through` (with session campaign) | next-steps PDF |
 
 Campaign pins live in [`corpus/campaigns.json`](../corpus/campaigns.json). Print partner QRs from `/api/qr/partner/:slug` or point posters at `/go/<id>`.
 

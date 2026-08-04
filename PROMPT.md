@@ -53,11 +53,11 @@ A reviewer runs this end-to-end in under 10 minutes:
 3. YES arm: doc-reuse-ranked offer queue (CARE, LifeLine, CalFresh, ESA, … as corpus defines).  
 4. NO arm: income × household band → FERA-only / CARE-band queue / tax-only as corpus defines.  
 5. Every offer card: Sign up · Already enrolled · Remind me later · Skip (+ Help / STOP).  
-6. After each meaningful action: regenerate and **send** living to-do list PDF (todos + deadlines).  
-7. End of queue: re-send the **same** to-do list / benefits report PDF (not a second document).  
+6. After each meaningful action: regenerate and **send** living To Do List PDF (todos + deadlines).  
+7. End of queue: re-send the **same** To Do List / benefits report PDF (not a second document).  
 8. Reminders armed: Tue noon closest deadline; T-3 and T-1 (America/Los_Angeles).  
 9. Free-form/gibberish → quiet QC log + thanks/redirect; no state advance.  
-10. README + demo script + sample to-do list PDF.  
+10. README + demo script + sample To Do List PDF.  
 
 **Out of scope v2:** National coverage, auto-submit to agencies, live scraping as source of truth, legal/tax advice claims, document uploads, in-chat multi-field utility form coach (future), PR locale.
 
@@ -78,7 +78,7 @@ Follow [`docs/customer-experience.md`](docs/customer-experience.md) exactly.
 1. **Opt-in** — disclaimer + start.  
 2. **Gate** — categorical programs already in household?  
 3. **YES queue / NO queue** — rank by newDocs ASC → timeToMoney ASC; Skip cascades per corpus.  
-4. **Living to-do list / benefits report** — one PDF; update + re-send after Sign up / Already / Remind / Skip / income selection.  
+4. **Living To Do List / benefits report** — one PDF; update + re-send after Sign up / Already / Remind / Skip / income selection.  
 5. **Same PDF** re-sent when queue empties (no second report).  
 6. **Reminders** — Tue noon + T-3 / T-1.  
 7. **Stuck / Help** — privacy, erase, about, STOP.
@@ -124,7 +124,7 @@ Cite corpus docs internally; document sources in README. Never invent $ or deadl
 
 - [ ] Working Telegram bot  
 - [ ] Frozen multi-category corpus with sources  
-- [ ] Living to-do list PDF after actions (= benefits report; one file)  
+- [ ] Living To Do List PDF after actions (= benefits report; one file)  
 - [ ] Reminders (Tue + T-3/T-1 PT)  
 - [ ] Help / STOP / erase (+ QC wipe)  
 - [ ] Free-form QC log behavior  
@@ -139,11 +139,11 @@ Cite corpus docs internally; document sources in README. Never invent $ or deadl
 
 **Gate:** “Is anyone in your household already on Medi-Cal, CalFresh, SSI, CalWORKs, CAPI, GA/GR, CMSP, or WIC?” (multiselect + Done / None)
 
-**Offer card (example — not energy-special):** “CalFresh — grocery help. Est. up to ~$X/mo if eligible. [ Sign up ] [ Already enrolled ] [ Remind me later ] [ Skip ]”
+**Offer card (example — not energy-special):** “CalFresh — grocery help. Est. up to ~$X/mo (~$Y/person) if eligible. [ Sign up ] [ Already enrolled ] [ Remind me later ] [ Skip ]”
 
 **Offer card (energy as peer):** “CARE — PG&E bill discount if you’re a PG&E customer. Est. ~30–35% off electric. [ Sign up ] …”
 
-**After action:** “Updated your to-do list (benefits report) ↓” + document.
+**After action:** “Updated your To Do List (benefits report) ↓” + document.
 
 ---
 

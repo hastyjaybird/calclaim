@@ -11,29 +11,36 @@ Disallow: /api/dev
 Disallow: /api/dev/
 
 User-agent: GPTBot
+Allow: /
 Disallow: /dev
 Disallow: /api/dev
 
 User-agent: ChatGPT-User
+Allow: /
 Disallow: /dev
 Disallow: /api/dev
 
 User-agent: Google-Extended
+Allow: /
 Disallow: /dev
 Disallow: /api/dev
 
 User-agent: CCBot
+Allow: /
 Disallow: /dev
 Disallow: /api/dev
 
 User-agent: anthropic-ai
+Allow: /
 Disallow: /dev
 Disallow: /api/dev
 
 User-agent: ClaudeBot
+Allow: /
 Disallow: /dev
 Disallow: /api/dev
 
 User-agent: Bytespider
+Allow: /
 Disallow: /dev
 Disallow: /api/dev

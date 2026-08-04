@@ -93,7 +93,7 @@ Telegram /start
   → Gate: already on Medi-Cal / CalFresh / SSI / CalWORKs / WIC?
   → YES or NO queue (doc-reuse ranked)
   → Offer cards (Sign up / Already / Remind / Skip)
-  → Living to-do list / benefits report PDF after each action (+ same file at end)
+  → Living To Do List / benefits report PDF after each action (+ same file at end)
   → Reminders
 ```
 

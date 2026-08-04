@@ -1,0 +1,866 @@
+{
+  "version": "2026-08-03",
+  "notes": "Operational requirements matrix for the /dev page. The bot does not read this file — it exists so a human can rank programs by how hard they actually are to finish, track what has been verified, and see which programs open the door to others. Every row started as a draft assembled from the official pages listed in reviewRefs and is marked needs_review until a person confirms it. Edited through /dev, so changes land here as a git diff.",
+  "programs": {
+    "medi_cal": {
+      "eligibility": [
+        "ca_residency",
+        "income_limit"
+      ],
+      "documents": [
+        "photoId",
+        "ssnProof",
+        "incomeProof",
+        "residencyProof"
+      ],
+      "interview": "none",
+      "unlocks": [
+        "wic",
+        "lifeline",
+        "care",
+        "esa",
+        "liheap",
+        "ihss"
+      ],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 80,
+      "reviewRefs": [
+        {
+          "label": "DHCS — do you qualify for Medi-Cal",
+          "url": "https://www.dhcs.ca.gov/services/medi-cal/Pages/DoYouQualifyForMedi-Cal.aspx"
+        },
+        {
+          "label": "BenefitsCal program descriptions",
+          "url": "https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en"
+        }
+      ],
+      "notes": "No interview for MAGI Medi-Cal, though the county can request verification after you apply. Since January 2024 all income-eligible Californians qualify regardless of immigration status. Medi-Cal enrollment is the categorical door into WIC, CARE, ESA, LIHEAP, and CA LifeLine, and it is a prerequisite for IHSS. It is NOT a CalFresh categorical-eligibility path in California — that runs through CalWORKs, GA/GR, or SSI.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "calfresh": {
+      "eligibility": [
+        "ca_residency",
+        "income_limit",
+        "categorical_or_income",
+        "citizen_or_eligible_immigrant",
+        "ssn_or_itin"
+      ],
+      "documents": [
+        "photoId",
+        "ssnProof",
+        "incomeProof",
+        "residencyProof"
+      ],
+      "interview": "phone_required",
+      "unlocks": [
+        "care",
+        "esa",
+        "lifeline",
+        "liheap",
+        "wic"
+      ],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 85,
+      "reviewRefs": [
+        {
+          "label": "CDSS — CalFresh eligibility and issuance requirements",
+          "url": "https://www.cdss.ca.gov/inforesources/calfresh/eligibility-and-issuance-requirements"
+        },
+        {
+          "label": "GetCalFresh",
+          "url": "https://www.getcalfresh.org/"
+        }
+      ],
+      "notes": "An interview is required on every initial application — usually by phone, and it is the single most common reason applications stall. California has no asset test for most households (one still applies to some over-200%-FPL elderly and disabled households). Expedited service can issue benefits within 3 days for very low income or resources.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "wic": {
+      "eligibility": [
+        "ca_residency",
+        "income_limit",
+        "categorical_or_income",
+        "pregnant_or_postpartum",
+        "child_under_5",
+        "nutrition_risk"
+      ],
+      "documents": [
+        "photoId",
+        "incomeProof",
+        "residencyProof",
+        "birthOrPregnancyProof",
+        "categoricalProof"
+      ],
+      "interview": "appointment_required",
+      "unlocks": [
+        "care",
+        "esa",
+        "liheap",
+        "lifeline"
+      ],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 70,
+      "reviewRefs": [
+        {
+          "label": "CDPH — California WIC program",
+          "url": "https://www.cdph.ca.gov/Programs/CFH/DWICSN/Pages/Program-Landing1.aspx"
+        },
+        {
+          "label": "USDA — WIC eligibility requirements",
+          "url": "https://www.fns.usda.gov/wic/wic-eligibility-requirements"
+        }
+      ],
+      "notes": "Adjunctive eligibility: Medi-Cal, CalFresh, or CalWORKs enrollment satisfies the income test outright. Every certification includes an appointment with a health and nutrition screening, which is what pushes this past a paperwork-only program. Confirm whether WIC is currently on the CA LifeLine qualifying-program list before relying on that unlock.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "ssi": {
+      "eligibility": [
+        "age_65_plus",
+        "blind_or_disabled",
+        "income_limit",
+        "asset_limit",
+        "citizen_or_eligible_immigrant",
+        "ssn_or_itin"
+      ],
+      "documents": [
+        "photoId",
+        "ssnProof",
+        "birthOrPregnancyProof",
+        "incomeProof",
+        "assetStatements",
+        "disabilityRecords"
+      ],
+      "interview": "appointment_required",
+      "unlocks": [
+        "medi_cal",
+        "calfresh",
+        "care",
+        "esa",
+        "lifeline",
+        "liheap",
+        "ihss"
+      ],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 80,
+      "reviewRefs": [
+        {
+          "label": "SSA — SSI eligibility",
+          "url": "https://www.ssa.gov/ssi/text-eligibility-ussi.htm"
+        },
+        {
+          "label": "SSA — applying for SSI",
+          "url": "https://www.ssa.gov/ssi/text-apply-ussi.htm"
+        }
+      ],
+      "notes": "SSA schedules an interview (phone or field office) for every SSI claim, and disability claims add a medical review that commonly runs months. The $2,000 / $3,000 resource limit is a hard gate. In California SSI recipients get automatic Medi-Cal, and since June 2019 they can also receive CalFresh.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "calworks": {
+      "eligibility": [
+        "ca_residency",
+        "county_residency",
+        "income_limit",
+        "asset_limit",
+        "child_under_18",
+        "citizen_or_eligible_immigrant",
+        "work_registration"
+      ],
+      "documents": [
+        "photoId",
+        "ssnProof",
+        "incomeProof",
+        "residencyProof",
+        "householdProof",
+        "assetStatements"
+      ],
+      "interview": "phone_required",
+      "unlocks": [
+        "medi_cal",
+        "calfresh",
+        "care",
+        "esa",
+        "lifeline",
+        "liheap",
+        "wic"
+      ],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 80,
+      "reviewRefs": [
+        {
+          "label": "CDSS — CalWORKs",
+          "url": "https://www.cdss.ca.gov/calworks"
+        },
+        {
+          "label": "CDSS — CalWORKs MAP grant levels",
+          "url": "https://www.cdss.ca.gov/shd/res/pdf/map.pdf"
+        }
+      ],
+      "notes": "County interview required, and approval usually triggers Welfare-to-Work participation, which is ongoing obligation rather than one-time paperwork. CalWORKs cash aid confers CalFresh categorical eligibility and satisfies WIC's income test. Grant amounts are county MAP levels, not a statewide number.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "capi": {
+      "eligibility": [
+        "ca_residency",
+        "county_residency",
+        "age_65_plus",
+        "blind_or_disabled",
+        "income_limit",
+        "asset_limit",
+        "ssi_denied_for_status"
+      ],
+      "documents": [
+        "photoId",
+        "immigrationDocs",
+        "ssiDenialLetter",
+        "incomeProof",
+        "assetStatements",
+        "residencyProof"
+      ],
+      "interview": "phone_required",
+      "unlocks": [
+        "medi_cal",
+        "calfresh"
+      ],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 65,
+      "reviewRefs": [
+        {
+          "label": "CDSS — CAPI",
+          "url": "https://www.cdss.ca.gov/capi"
+        },
+        {
+          "label": "CDSS — cash assistance for immigrants",
+          "url": "https://cdss.ca.gov/inforesources/cash-assistance-for-immigrants"
+        }
+      ],
+      "notes": "The gate is proving SSI/SSP ineligibility based on immigration status alone, which normally means applying to SSA first and bringing the denial to the county on form SOC 814. CAPI recipients get Medi-Cal and CFAP/CalFresh food benefits. Whether CAPI itself counts as a qualifying program for CARE or CA LifeLine is unverified — check before relying on it.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "ga_gr": {
+      "eligibility": [
+        "county_residency",
+        "income_limit",
+        "asset_limit",
+        "no_other_coverage",
+        "work_registration"
+      ],
+      "documents": [
+        "photoId",
+        "incomeProof",
+        "residencyProof",
+        "assetStatements"
+      ],
+      "interview": "in_person_required",
+      "unlocks": [
+        "calfresh",
+        "medi_cal"
+      ],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 55,
+      "reviewRefs": [
+        {
+          "label": "CDSS — General Assistance",
+          "url": "https://www.cdss.ca.gov/general-assistance"
+        },
+        {
+          "label": "LA County DPSS — General Relief",
+          "url": "https://dpss.lacounty.gov/en/cash/gr.html"
+        }
+      ],
+      "notes": "Lowest-confidence row in the matrix: eligibility rules, grant amounts, interview format, and work requirements are all set county by county, and the LA County GR process is the reference used here. GA/GR cash aid generally confers CalFresh categorical eligibility. Note that CARE's qualifying-program list names Bureau of Indian Affairs General Assistance, not county General Relief.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "cmsp": {
+      "eligibility": [
+        "county_residency",
+        "age_21_to_64",
+        "income_limit",
+        "asset_limit",
+        "no_other_coverage",
+        "citizen_or_eligible_immigrant"
+      ],
+      "documents": [
+        "photoId",
+        "incomeProof",
+        "residencyProof"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 60,
+      "reviewRefs": [
+        {
+          "label": "CMSP — apply now",
+          "url": "https://cmspcounties.org/apply-now/"
+        },
+        {
+          "label": "CMSP — healthcare within reach",
+          "url": "https://cmspcounties.org/healthcare-within-reach/"
+        }
+      ],
+      "notes": "Only exists in the 35 participating CMSP counties (see corpus/cmsp-counties.json), and only for adults who are not eligible for Medi-Cal. The bot asks for home ZIP only when CMSP would otherwise enter the offer queue, then maps ZIP → county. Counties screen Medi-Cal and CMSP together off one BenefitsCal application, so there is rarely a separate process. Coverage is time-limited, which the offer copy should keep saying.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "disaster_calfresh": {
+      "eligibility": [
+        "open_application_window",
+        "declared_disaster_area",
+        "disaster_related_loss",
+        "income_limit",
+        "not_enrolled_elsewhere"
+      ],
+      "documents": [
+        "photoId",
+        "residencyProof",
+        "incomeProof"
+      ],
+      "interview": "phone_required",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 70,
+      "reviewRefs": [
+        {
+          "label": "CDSS — Disaster CalFresh",
+          "url": "https://www.cdss.ca.gov/inforesources/calfresh/disaster-calfresh"
+        }
+      ],
+      "notes": "Only exists while a county's application window is open, which is why the offer card stays hidden until a window is activated on this page. Applications are taken by interview, phone or in person, on a compressed timeline — benefits are usually issued within 3 days. Households already receiving ongoing CalFresh get a supplement instead of applying, and receiving D-CalFresh does not enroll anyone in ongoing CalFresh. Unlike ongoing CalFresh, Disaster CalFresh is available regardless of immigration status.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "lifeline": {
+      "eligibility": [
+        "ca_residency",
+        "categorical_or_income",
+        "income_limit",
+        "one_per_household"
+      ],
+      "documents": [
+        "photoId",
+        "categoricalProof",
+        "incomeProof"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 75,
+      "reviewRefs": [
+        {
+          "label": "CA LifeLine — eligibility requirements",
+          "url": "https://www.californialifeline.com/en/eligibility_requirements"
+        },
+        {
+          "label": "CA LifeLine",
+          "url": "https://www.californialifeline.com/"
+        }
+      ],
+      "notes": "Apply through your phone or internet provider; the LifeLine administrator then mails a form with a PIN that has to be returned by a deadline, and missing that mailing is the usual failure point. Qualifying programs include Medi-Cal, CalFresh, SSI, CalWORKs/TANF, LIHEAP, and Federal Public Housing Assistance. One discount per household, and annual renewal is required.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "care": {
+      "eligibility": [
+        "participating_utility",
+        "account_in_your_name",
+        "categorical_or_income",
+        "income_limit",
+        "one_per_household"
+      ],
+      "documents": [
+        "utilityBill",
+        "utilityAccountNumber"
+      ],
+      "interview": "none",
+      "unlocks": [
+        "esa",
+        "amp"
+      ],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 85,
+      "reviewRefs": [
+        {
+          "label": "PG&E — CARE program",
+          "url": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/california-alternate-rates-for-energy-program.html"
+        },
+        {
+          "label": "PG&E tariff — CARE/FERA income limits",
+          "url": "https://www.pge.com/tariffs/assets/pdf/tariffbook/ELEC_FORMS_62-1477.pdf"
+        }
+      ],
+      "notes": "The easiest real win in the corpus: self-certified online in a few minutes with no documents uploaded up front, though the utility can ask for post-enrollment verification later. Enrollment in Medi-Cal, CalFresh, WIC, SSI, CalWORKs, or LIHEAP qualifies you without any income test. CARE (or FERA) enrollment is what makes AMP available and is a qualifying path into ESA. Re-certification comes every 2 or 4 years.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "fera": {
+      "eligibility": [
+        "participating_utility",
+        "account_in_your_name",
+        "fera_household_3_plus",
+        "income_limit"
+      ],
+      "documents": [
+        "utilityBill",
+        "utilityAccountNumber"
+      ],
+      "interview": "none",
+      "unlocks": [
+        "amp"
+      ],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 80,
+      "reviewRefs": [
+        {
+          "label": "PG&E — FERA program",
+          "url": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/family-electric-rate-assistance-program-fera.html"
+        }
+      ],
+      "notes": "FERA is income-only — there is no categorical program path — and it requires a household of three or more, which is the rule most often missed. FERA income sits above the CARE limit, so a FERA household does not automatically meet ESA's income guidelines. Electric discount only, no gas.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "esa": {
+      "eligibility": [
+        "participating_utility",
+        "categorical_or_income",
+        "income_limit",
+        "dwelling_eligibility",
+        "renter_landlord_permission"
+      ],
+      "documents": [
+        "utilityBill",
+        "incomeProof",
+        "categoricalProof",
+        "landlordConsent"
+      ],
+      "interview": "home_assessment",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 70,
+      "reviewRefs": [
+        {
+          "label": "PG&E — Energy Savings Assistance program",
+          "url": "https://www.pge.com/en/save-energy-and-money/energy-saving-programs/energy-savings-assistance-program.html"
+        }
+      ],
+      "notes": "Short form, long process: a contractor assesses the home before any work happens, so this is a multi-visit program with scheduling as the real cost. Renters need the property owner's signature, and the dwelling itself has to qualify (some homes are excluded for prior participation or type). CARE enrollment or income at or below the ESA guideline satisfies the income test.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "liheap": {
+      "eligibility": [
+        "ca_residency",
+        "county_residency",
+        "income_limit",
+        "seasonal_window",
+        "account_in_your_name"
+      ],
+      "documents": [
+        "photoId",
+        "incomeProof",
+        "utilityBill",
+        "residencyProof",
+        "householdProof"
+      ],
+      "interview": "appointment_required",
+      "unlocks": [
+        "care",
+        "esa",
+        "lifeline"
+      ],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 65,
+      "reviewRefs": [
+        {
+          "label": "CSD — LIHEAP",
+          "url": "https://www.csd.ca.gov/Pages/LIHEAP.aspx"
+        },
+        {
+          "label": "CSD — find a local service provider",
+          "url": "https://www.csd.ca.gov/Pages/Find-Services-in-My-County.aspx"
+        }
+      ],
+      "notes": "Delivered by local providers who each set their own appointment process, document list, and funding window, so intake varies widely by county — treat this row as a generalization. Funding runs out mid-season in many counties, which matters more than the eligibility rules. LIHEAP receipt is a qualifying program for CARE, ESA, and CA LifeLine.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "amp": {
+      "eligibility": [
+        "participating_utility",
+        "account_in_your_name",
+        "enrolled_care_or_fera",
+        "past_due_balance",
+        "payment_plan_compliance"
+      ],
+      "documents": [
+        "utilityBill",
+        "pastDueNotice"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [
+        "care",
+        "fera"
+      ],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 75,
+      "reviewRefs": [
+        {
+          "label": "PG&E — Arrearage Management Plan",
+          "url": "https://help.pge.com/s/article/Arrearage-Management-Plan-AMP"
+        },
+        {
+          "label": "PG&E — will PG&E forgive my balance",
+          "url": "https://help.pge.com/s/article/Will-PGE-forgive-all-or-a-portion-of-my-owed-balance"
+        }
+      ],
+      "notes": "Prerequisite is CARE or FERA — either one, not both — plus a qualifying past-due balance that is generally at least 90 days old. Signing up is quick; the hard part is the 12 months of on-time payments on current charges, since debt is forgiven in monthly increments and missed payments can drop you from the plan.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "medical_baseline": {
+      "eligibility": [
+        "participating_utility",
+        "account_in_your_name",
+        "medical_device_or_condition",
+        "practitioner_certification"
+      ],
+      "documents": [
+        "utilityAccountNumber",
+        "medicalCertification"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 80,
+      "reviewRefs": [
+        {
+          "label": "PG&E — Medical Baseline program",
+          "url": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/medical-baseline-program.html"
+        }
+      ],
+      "notes": "No income test at all — the only real gate is a licensed practitioner signing the certification form, which is why this ranks harder than its short form suggests. Renewal certification is required periodically (PG&E asks every one to two years depending on the condition). Stacks with CARE rather than competing with it.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "tax_credits": {
+      "eligibility": [
+        "must_file_tax_return",
+        "ssn_or_itin",
+        "income_limit"
+      ],
+      "documents": [
+        "photoId",
+        "ssnProof",
+        "taxForms",
+        "incomeProof"
+      ],
+      "interview": "appointment_required",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 50,
+      "reviewRefs": [
+        {
+          "label": "IRS — credits and deductions for individuals",
+          "url": "https://www.irs.gov/credits-and-deductions-for-individuals"
+        },
+        {
+          "label": "IRS — free tax prep (VITA)",
+          "url": "https://www.irs.gov/individuals/free-tax-return-preparation-for-qualifying-taxpayers"
+        }
+      ],
+      "notes": "Lowest confidence in the matrix because this is an informational card covering several federal credits with different rules, not one program. The practical path is a VITA appointment or free filing software, and CalClaim does not file taxes. Consider splitting into specific credits before anyone signs off on this row.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "unemployment": {
+      "eligibility": [
+        "job_loss_no_fault",
+        "base_period_wages",
+        "able_available_seeking_work",
+        "biweekly_certification",
+        "citizen_or_eligible_immigrant",
+        "ssn_or_itin"
+      ],
+      "documents": [
+        "photoId",
+        "ssnProof",
+        "employerInfo",
+        "incomeProof"
+      ],
+      "interview": "phone_optional",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 80,
+      "reviewRefs": [
+        {
+          "label": "EDD — UI eligibility",
+          "url": "https://edd.ca.gov/en/unemployment/eligibility/"
+        },
+        {
+          "label": "EDD — unemployment",
+          "url": "https://edd.ca.gov/en/unemployment/"
+        }
+      ],
+      "notes": "No interview on a clean claim, but EDD schedules a phone eligibility interview whenever the separation is contested (quit or discharge) or availability is in question. Certifying every two weeks is what keeps payments coming and is the most common reason benefits stop. UI income counts against CalFresh and Medi-Cal budgets, so approval here can reduce those.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "sdi": {
+      "eligibility": [
+        "unable_to_work_8_days",
+        "base_period_wages",
+        "practitioner_certification",
+        "ssn_or_itin"
+      ],
+      "documents": [
+        "photoId",
+        "ssnProof",
+        "medicalCertification",
+        "employerInfo"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 85,
+      "reviewRefs": [
+        {
+          "label": "EDD — am I eligible for DI benefits",
+          "url": "https://edd.ca.gov/en/disability/Am_I_Eligible_for_DI_Benefits/"
+        },
+        {
+          "label": "EDD — disability insurance",
+          "url": "https://edd.ca.gov/en/disability/disability_insurance/"
+        }
+      ],
+      "notes": "The friction is the practitioner's certification, not an interview — the claim sits unpaid until the provider submits it. Requires SDI-covered wages in the base period, so some self-employed and public-sector workers are excluded unless they carry Elective Coverage. Pays faster than most cash programs once certified.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "pfl": {
+      "eligibility": [
+        "qualifying_family_event",
+        "base_period_wages",
+        "ssn_or_itin"
+      ],
+      "documents": [
+        "photoId",
+        "ssnProof",
+        "birthOrPregnancyProof",
+        "medicalCertification",
+        "employerInfo"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 80,
+      "reviewRefs": [
+        {
+          "label": "EDD — am I eligible for PFL benefits",
+          "url": "https://edd.ca.gov/en/disability/Am_I_Eligible_for_PFL_Benefits/"
+        },
+        {
+          "label": "EDD — Paid Family Leave",
+          "url": "https://edd.ca.gov/en/disability/paid-family-leave/"
+        }
+      ],
+      "notes": "Bonding claims need proof of the child's relationship; care claims need the family member's practitioner certification, so which document you chase depends on the reason. Same base-period wage requirement as SDI. Wage replacement is a separate question from job protection — PFL does not by itself protect the job.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "ihss": {
+      "eligibility": [
+        "medi_cal_eligible",
+        "age_65_plus",
+        "blind_or_disabled",
+        "lives_at_home",
+        "care_needs_assessment",
+        "county_residency"
+      ],
+      "documents": [
+        "photoId",
+        "categoricalProof",
+        "medicalCertification",
+        "residencyProof"
+      ],
+      "interview": "home_assessment",
+      "unlocks": [],
+      "prerequisites": [
+        "medi_cal"
+      ],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 75,
+      "reviewRefs": [
+        {
+          "label": "CDSS — In-Home Supportive Services",
+          "url": "https://www.cdss.ca.gov/in-home-supportive-services"
+        },
+        {
+          "label": "IHSS pay rates by county",
+          "url": "https://ihssconnect.com/ihss-pay-rates-by-county/"
+        }
+      ],
+      "notes": "Requires Medi-Cal eligibility plus a county social worker's in-home assessment that sets the authorized hours, so it is the slowest intake in the corpus. The applicant is the recipient; the paid provider is often a family member, which confuses people about who applies. Assessed hours and the county wage rate drive the dollar estimate, so a statewide average is only a rough figure.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "caleitc": {
+      "eligibility": [
+        "ca_residency",
+        "must_file_tax_return",
+        "earned_income_required",
+        "income_limit",
+        "ssn_or_itin"
+      ],
+      "documents": [
+        "ssnProof",
+        "taxForms",
+        "taxReturn"
+      ],
+      "interview": "none",
+      "unlocks": [
+        "young_child_tax_credit"
+      ],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 85,
+      "reviewRefs": [
+        {
+          "label": "FTB — California Earned Income Tax Credit",
+          "url": "https://www.ftb.ca.gov/file/personal/credits/california-earned-income-tax-credit.html"
+        },
+        {
+          "label": "FTB Form 3514",
+          "url": "https://www.ftb.ca.gov/forms/2024/2024-3514.pdf"
+        }
+      ],
+      "notes": "Claimed on FTB Form 3514 with a California return, and ITIN filers qualify. No interview and no agency contact, but it only pays out at filing time, so the wait is months rather than weeks. Income limits and maximum credits are indexed annually — these figures need a refresh every January. Qualifying for CalEITC is the gate for YCTC and the Foster Youth Tax Credit.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "young_child_tax_credit": {
+      "eligibility": [
+        "qualifies_for_caleitc",
+        "child_under_6",
+        "must_file_tax_return",
+        "ca_residency"
+      ],
+      "documents": [
+        "ssnProof",
+        "taxForms",
+        "taxReturn",
+        "householdProof"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [
+        "caleitc"
+      ],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 85,
+      "reviewRefs": [
+        {
+          "label": "FTB — Young Child Tax Credit",
+          "url": "https://www.ftb.ca.gov/file/personal/credits/young-child-tax-credit.html"
+        }
+      ],
+      "notes": "Rides on the CalEITC claim — same Form 3514, plus a qualifying child under 6 at year end — so it costs almost nothing extra once CalEITC is being claimed. Since 2022 households with zero earned income can still qualify if they otherwise meet CalEITC rules, which is easy to get wrong in copy.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    }
+  }
+}

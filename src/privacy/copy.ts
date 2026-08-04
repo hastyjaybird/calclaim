@@ -5,10 +5,10 @@ export const PRIVACY_POLICY_URL =
 export const HELP_MENU_TEXT = `Help — type one of these anytime:
 
 • stop — pause deadline reminders (keeps your data; message again to resume)
-• to do — resend your to-do list / benefits report
+• to do — resend your To Do List / benefits report
 • email — open your email app with a link to your report (for your computer)
 • share — get a link or QR code for someone else
-• restart — start over from the beginning (clears your to-do list)
+• restart — start over from the beginning (clears your To Do List)
 • erase — delete all your CalClaim data from this session
 
 We store Telegram profile info and messages to run this demo. We do not sell your data or send it to third-party marketers.
@@ -18,6 +18,8 @@ Or pick a button below:`;
 
 export const PRIVACY_SHORT = `Privacy (short):
 • We store Telegram user id, name, username, language, and your messages/taps in our demo database.
+• Home ZIP only when needed to check a county-specific program (e.g. CMSP).
+• Immigration status is asked only when needed for later programs — your answer is not stored and is not connected to your phone number.
 • Phone/location only if you share them in Telegram.
 • We do not sell your data or send it to third-party marketers.
 • Type STOP to pause reminders (keeps your data). Type erase to delete your data.

@@ -1,3 +1,4 @@
+import { missingDocs } from "./docs.js";
 import type { DocId, Program } from "./types.js";
 
 /**
@@ -15,7 +16,7 @@ export function estimateFormFillMinutes(
   const needed = program.docsNeeded;
   if (needed.length === 0) return niceMinutes(cold);
 
-  const newDocs = needed.filter((d) => !docsInHand.includes(d)).length;
+  const newDocs = missingDocs(needed, docsInHand).length;
   const haveRatio = (needed.length - newDocs) / needed.length;
   const raw = cold * (1 - 0.45 * haveRatio);
   return niceMinutes(raw);

@@ -62,7 +62,8 @@ body {
   display: block;
   height: 2.4rem;
   width: auto;
-  border-radius: 0.4rem;
+  border-radius: 0.35rem;
+  padding: 0.2rem 0.35rem;
   background: #f7f3ea;
   box-shadow: 0 1px 0 rgba(16, 36, 31, 0.08);
 }

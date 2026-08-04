@@ -41,6 +41,7 @@ export function maxBenefitAmountUsd(
 }
 
 function periodLabel(period: MaxBenefitUsd["period"]): string {
+  if (period === "week") return "/wk";
   if (period === "month") return "/mo";
   if (period === "year") return "/yr";
   return " one-time";
@@ -65,11 +66,16 @@ export function formatMaxBenefitEstimate(
   }
   const n = clampHouseholdSize(householdSize);
   const period = periodLabel(program.maxBenefitUsd.period);
-  const hhNote =
-    program.maxBenefitUsd.byHouseholdSize || program.maxBenefitUsd.perPerson
-      ? ` for a household of ${n}`
+  const scalesWithHh =
+    Boolean(program.maxBenefitUsd.byHouseholdSize) ||
+    program.maxBenefitUsd.perPerson != null;
+  // Household size is already known from triage — don't restate it. Show
+  // $/person when the max scales with size (skip for a solo household).
+  const perPersonNote =
+    scalesWithHh && n > 1
+      ? ` (~${formatUsd(Math.round(amount / n))}/person)`
       : "";
-  return `Est. up to ~${formatUsd(amount)}${period}${hhNote}`;
+  return `Est. up to ~${formatUsd(amount)}${period}${perPersonNote}`;
 }
 
 /** Annualize max for funder-style math (household of `size`, default 4). */
@@ -82,5 +88,6 @@ export function annualizeMaxBenefitUsd(
   const { period } = program.maxBenefitUsd;
   if (period === "month") return amount * 12;
   if (period === "year") return amount;
+  if (period === "week") return amount * (program.maxBenefitUsd.maxWeeks ?? 52);
   return amount; // one-time counts once in a year window
 }

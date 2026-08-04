@@ -1,5 +1,6 @@
 import type Database from "better-sqlite3";
 import type { Context } from "grammy";
+import { isAwaitingImmigrationPrompt } from "../queue/immigrationMemory.js";
 
 let captureDb: Database.Database | null = null;
 
@@ -144,6 +145,16 @@ function contentTypeFromMessage(msg: NonNullable<Context["message"]>): string {
 export function logTelegramUpdate(ctx: Context): void {
   const from = ctx.from;
   if (!from) return;
+
+  // Immigration-status answers are never persisted (privacy promise on that prompt).
+  const cbData = ctx.callbackQuery?.data;
+  if (cbData?.startsWith("status:")) return;
+  if (
+    isAwaitingImmigrationPrompt(from.id) &&
+    (ctx.message?.text || ctx.message?.voice || ctx.editedMessage?.text)
+  ) {
+    return;
+  }
 
   const now = new Date().toISOString();
   const msg = ctx.message ?? ctx.editedMessage;

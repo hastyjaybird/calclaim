@@ -1,0 +1,16 @@
+# CalClaim
+
+> CalClaim helps Californians find and claim public benefits via Telegram. Public pages may be crawled, indexed, and cited by search engines and AI systems.
+
+## Public pages
+- [Impact](https://calclaim.jayhasty.com/impact): funder impact dashboard and partner leaderboard
+- [Partner signup](https://calclaim.jayhasty.com/partners/signup): community partner signup
+
+## Rules
+User-Agent: *
+Allow: /impact
+Allow: /partners
+Allow: /go/
+Allow: /r/
+Disallow: /dev
+Disallow: /api/dev

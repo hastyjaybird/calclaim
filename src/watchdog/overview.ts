@@ -1,4 +1,13 @@
 import { getCorpusMeta, loadIncomeBands, loadPrograms } from "../corpus/load.js";
+import {
+  daysSinceSuccess,
+  getScanState,
+  listApprovedWindows,
+  listLiveWindows,
+  listWindows,
+  STALE_AFTER_DAYS,
+} from "../disaster/db.js";
+import { todayYmd } from "../disaster/format.js";
 import { WATCH_CHECKLIST } from "./checklist.js";
 import { countOpenFindingsByProgram, latestScan, listFindings, listScans } from "./db.js";
 import { llmAvailable } from "./llm.js";
@@ -43,6 +52,35 @@ export function buildCorpusOverview(): CorpusOverview {
   };
 }
 
+export function buildDisasterStatus() {
+  const today = todayYmd();
+  const sources = (["fns", "fema", "cdss"] as const).map((source) => {
+    const state = getScanState(source);
+    const days = daysSinceSuccess(source);
+    return {
+      source,
+      lastSuccessAt: state?.lastSuccessAt ?? null,
+      lastAttemptAt: state?.lastAttemptAt ?? null,
+      lastError: state?.lastError ?? null,
+      daysSinceSuccess: days,
+      staleAfterDays: STALE_AFTER_DAYS[source],
+      stale: days == null || days >= STALE_AFTER_DAYS[source],
+    };
+  });
+  const approved = listApprovedWindows(today);
+  return {
+    today,
+    staleAfterDays: STALE_AFTER_DAYS,
+    sources,
+    // Held windows failed a mechanical check, so the card stayed hidden.
+    heldCount: listWindows("pending", 200).length,
+    liveCount: listLiveWindows(today).length,
+    // Published and waiting for the application period to start.
+    upcomingCount: approved.length - listLiveWindows(today).length,
+    windows: listWindows("all", 25),
+  };
+}
+
 export function buildDevStatus() {
   const overview = buildCorpusOverview();
   const scan = latestScan();
@@ -59,5 +97,6 @@ export function buildDevStatus() {
       critical: openFindings.filter((f) => f.severity === "critical").length,
       high: openFindings.filter((f) => f.severity === "high").length,
     },
+    disaster: buildDisasterStatus(),
   };
 }

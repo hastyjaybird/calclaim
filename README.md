@@ -7,7 +7,7 @@ Food, health, cash, telecom, energy bill help, and more — **not** a PG&E-only 
 
 ## One-line job
 
-User opens CalClaim → short gate → ranked multi-category offers → living to-do list PDF (benefits report) + reminders → apply on official sites.
+User opens CalClaim → short gate → ranked multi-category offers → living To Do List PDF (benefits report) + reminders → apply on official sites.
 
 ## Quick start
 
@@ -70,11 +70,11 @@ Page at `/dev` (password + CAPTCHA; **humans only**) runs an advisory agent over
 1. **Opt-in** — multi-category disclaimer  
 2. **Gate** — already on Medi-Cal / CalFresh / SSI / CalWORKs / WIC?  
 3. **YES / NO queues** — ranked by new docs + time-to-money (CARE is not hard-coded first for “energy” reasons)  
-4. **Offer cards** — I'm already enrolled · Add to my to do list · Skip program (apply links stay in the report, not on the card)  
-5. **Finish** — abbreviated text summary + to-do list PDF when there are open tasks; if none, nudge to share with a friend  
+4. **Offer cards** — I'm already enrolled · Add to my To Do List · Skip program (apply links stay in the report, not on the card)  
+5. **Finish** — abbreviated text summary + To Do List PDF when there are open tasks; if none, nudge to share with a friend  
 6. **Finish** — summary + PDF, then email-to-computer (Mail app auto-opens with a download link). Idle: Email · Share · Restart · More info  
 7. **Reminders** — daily 12:00 PT scan (Tue closest + T-3 + T-1)  
-8. **Help / Share / STOP / erase** + alpha feedback (text/voice → QC log + `/dev` to-do list; voice transcribed with Whisper when `OPENAI_API_KEY` is set)
+8. **Help / Share / STOP / erase** + alpha feedback (text/voice → QC log + `/dev` To Do List; voice transcribed with Whisper when `OPENAI_API_KEY` is set)
 
 ## Demo script (~5 min)
 

@@ -1,15 +1,15 @@
 {
-  "version": "2026-07-31",
-  "notes": "Illustrative CARE/FERA-style annual income bands for demo routing. Verify against current PG&E published guidelines before production claims. Estimates only.",
-  "source": "PG&E CARE/FERA public income guidelines (freeze for demo; re-check periodically)",
+  "version": "2026-08-03",
+  "notes": "CARE/FERA annual income bands for demo routing, taken from PG&E Electric Form 62-1477 (CARE/FERA Program Income Guidelines), effective 2026-06-01 through 2027-05-31. FERA max = top of the published FERA range per household size. Re-check when PG&E republishes (annually, typically each June).",
+  "source": "https://www.pge.com/tariffs/assets/pdf/tariffbook/ELEC_FORMS_62-1477.pdf",
   "bandsByHouseholdSize": {
-    "1": { "careMax": 40340, "feraMax": 50425 },
-    "2": { "careMax": 40340, "feraMax": 50425 },
-    "3": { "careMax": 50880, "feraMax": 63600 },
-    "4": { "careMax": 61400, "feraMax": 76750 },
-    "5": { "careMax": 71940, "feraMax": 89925 },
-    "6": { "careMax": 82460, "feraMax": 103100 },
-    "7": { "careMax": 92980, "feraMax": 116225 },
-    "8": { "careMax": 103500, "feraMax": 129400 }
+    "1": { "careMax": 43280, "feraMax": 54100 },
+    "2": { "careMax": 43280, "feraMax": 54100 },
+    "3": { "careMax": 54640, "feraMax": 68300 },
+    "4": { "careMax": 66000, "feraMax": 82500 },
+    "5": { "careMax": 77360, "feraMax": 96700 },
+    "6": { "careMax": 88720, "feraMax": 110900 },
+    "7": { "careMax": 100080, "feraMax": 125100 },
+    "8": { "careMax": 111440, "feraMax": 139300 }
   }
 }

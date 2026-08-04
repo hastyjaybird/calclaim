@@ -189,7 +189,7 @@ export function insertSignedUpPartner(input: {
   };
 }
 
-/** Telegram-safe short id: A-Z a-z 0-9 _ */
+/** Short hex token for partner / campaign ids (combined with a `p-` prefix). */
 export function randomPartnerToken(bytes = 4): string {
   return randomBytes(bytes).toString("hex");
 }

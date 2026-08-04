@@ -4,6 +4,7 @@ import { createBot } from "./bot/createBot.js";
 import { setFlowConfig } from "./bot/flow.js";
 import { DATA_DIR, loadConfig, loadDotEnv, setBotUsername } from "./config.js";
 import { initDb } from "./db/session.js";
+import { startDisasterScanCron } from "./disaster/cron.js";
 import { startReminderCron } from "./reminders/cron.js";
 import { startWebServer } from "./web/server.js";
 
@@ -16,6 +17,7 @@ async function main(): Promise<void> {
 
   const bot = createBot(config.token);
   startReminderCron(bot, config.tz);
+  startDisasterScanCron(bot, config.tz, config.publicBaseUrl);
 
   const me = await bot.api.getMe();
   setBotUsername(me.username ?? config.botUsername);

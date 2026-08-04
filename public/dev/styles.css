@@ -147,6 +147,23 @@ button.cta:disabled {
   align-items: center;
 }
 
+.window-checks {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.window-checks summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.window-checks ul {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  line-height: 1.5;
+}
+
 .badge {
   display: inline-block;
   padding: 0.12rem 0.5rem;
@@ -254,6 +271,460 @@ button.cta:disabled {
   font-size: 0.8rem;
   color: var(--ink-soft);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ---------- Program requirements matrix ---------- */
+
+/* The matrix is 12 columns wide, so this panel breaks out past main's 1100px. */
+#matrix {
+  width: min(1600px, calc(100vw - 2.5rem));
+  margin-left: calc((100% - min(1600px, 100vw - 2.5rem)) / 2);
+  scroll-margin-top: 5rem;
+}
+
+.matrix-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.matrix-controls input[type="search"] {
+  font: inherit;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line);
+  background: rgba(248, 252, 250, 0.95);
+  color: var(--ink);
+  width: 10rem;
+}
+
+.matrix-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.matrix-actions button {
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 61, 44, 0.28);
+  background: transparent;
+  color: var(--leaf-deep);
+  cursor: pointer;
+}
+
+.matrix-actions button:hover:not(:disabled) {
+  background: rgba(31, 107, 74, 0.08);
+}
+
+.matrix-actions button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.matrix-summary {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.table-wrap-matrix {
+  max-height: 80vh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.matrix-table {
+  font-size: 0.85rem;
+}
+
+.matrix-table th,
+.matrix-table td {
+  padding: 0.5rem 0.45rem;
+  vertical-align: top;
+}
+
+.matrix-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #eaf2ee;
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+
+.matrix-table tbody tr:hover {
+  background: rgba(31, 107, 74, 0.04);
+}
+
+.cell-program {
+  min-width: 6.5rem;
+  max-width: 8.5rem;
+}
+
+.cell-program strong {
+  display: block;
+  color: var(--leaf-deep);
+  font-size: 0.92rem;
+}
+
+.cell-program .cat {
+  font-size: 0.7rem;
+  margin-top: 0.15rem;
+}
+
+.cell-meta {
+  display: block;
+  margin: 0.2rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  color: var(--ink-soft);
+}
+
+.cell-select,
+.cell-number {
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.3rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--ink);
+  max-width: 100%;
+}
+
+.cell-select:focus,
+.cell-number:focus,
+.multi-menu textarea:focus {
+  outline: 2px solid rgba(13, 122, 95, 0.45);
+  outline-offset: 1px;
+}
+
+.cell-number {
+  width: 4.25rem;
+  text-align: right;
+}
+
+.cell-difficulty,
+.cell-review {
+  display: grid;
+  gap: 0.25rem;
+  justify-items: start;
+}
+
+.cell-review .cell-select {
+  max-width: 8rem;
+}
+
+.cell-difficulty .score {
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  cursor: help;
+}
+
+.badge-tier-easy {
+  background: rgba(31, 107, 74, 0.16);
+  color: var(--leaf-deep);
+}
+
+.badge-tier-moderate {
+  background: rgba(180, 100, 20, 0.16);
+  color: #8a4a10;
+}
+
+.badge-tier-hard {
+  background: rgba(160, 40, 40, 0.14);
+  color: #8a1f1f;
+}
+
+.badge-review-needs_review {
+  background: rgba(180, 100, 20, 0.16);
+  color: #8a4a10;
+}
+
+.badge-review-verified_online {
+  background: rgba(42, 111, 143, 0.14);
+  color: #1e4f66;
+}
+
+.badge-review-signed_off_by_program {
+  background: rgba(31, 107, 74, 0.16);
+  color: var(--leaf-deep);
+}
+
+.cell-review .conf-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+}
+
+.cell-review .cell-number {
+  width: 3.4rem;
+}
+
+/* Open now? — green when someone can apply today, grey when merely dormant
+   (the normal disaster-program state), amber/red when it needs a human. */
+.badge-avail-open,
+.badge-avail-window_open {
+  background: rgba(31, 107, 74, 0.16);
+  color: var(--leaf-deep);
+}
+
+.badge-avail-seasonal,
+.badge-avail-deadline_soon,
+.badge-avail-paused {
+  background: rgba(180, 100, 20, 0.16);
+  color: #8a4a10;
+}
+
+.badge-avail-deadline_passed,
+.badge-avail-closed {
+  background: rgba(160, 40, 40, 0.14);
+  color: #8a1f1f;
+}
+
+.badge-avail-dormant {
+  background: rgba(60, 70, 80, 0.12);
+  color: #47535e;
+}
+
+.cell-availability {
+  display: grid;
+  gap: 0.2rem;
+  justify-items: start;
+}
+
+.avail-detail {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 8rem;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  color: var(--ink-soft);
+}
+
+.cell-status {
+  max-width: 8.5rem;
+}
+
+.matrix-table .multi[data-kind="status"] {
+  min-width: 6.5rem;
+  max-width: 8rem;
+}
+
+.matrix-table .multi[data-kind="status"][open] {
+  min-width: 13rem;
+  max-width: 13rem;
+}
+
+.matrix-table .multi {
+  min-width: 7.5rem;
+}
+
+.matrix-table .multi[data-field="eligibility"],
+.matrix-table .multi[data-field="documents"] {
+  min-width: 8.75rem;
+}
+
+.matrix-table .multi[open] {
+  min-width: 15rem;
+}
+
+.multi > summary {
+  cursor: pointer;
+  list-style: none;
+  border-radius: 0.5rem;
+  padding: 0.15rem 0.2rem;
+}
+
+.multi > summary::-webkit-details-marker {
+  display: none;
+}
+
+.multi > summary:hover,
+.multi[open] > summary {
+  background: rgba(31, 107, 74, 0.08);
+}
+
+.chips,
+.ref-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.chip {
+  padding: 0.1rem 0.42rem;
+  border-radius: 999px;
+  background: rgba(31, 107, 74, 0.1);
+  color: var(--leaf-deep);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.chip-empty {
+  background: rgba(16, 36, 31, 0.05);
+  color: var(--ink-soft);
+  font-weight: 500;
+  font-style: italic;
+}
+
+.chip-or {
+  background: rgba(11, 92, 46, 0.12);
+  color: #0b5c2e;
+  font-weight: 700;
+}
+
+.chip-more {
+  background: rgba(42, 111, 143, 0.14);
+  color: #1e4f66;
+}
+
+.ref-links {
+  min-width: 6.5rem;
+}
+
+.ref-links a {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--leaf-deep);
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(8, 77, 61, 0.5);
+  max-width: 7.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notes-peek {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-width: 7.5rem;
+  max-width: 10rem;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  line-height: 1.35;
+}
+
+.multi-menu {
+  margin-top: 0.35rem;
+  max-height: 16rem;
+  overflow-y: auto;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.multi-group {
+  border: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+}
+
+.multi-group:last-child {
+  margin-bottom: 0;
+}
+
+.multi-group legend {
+  padding: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+.multi-group label {
+  display: flex;
+  gap: 0.35rem;
+  align-items: flex-start;
+  padding: 0.12rem 0;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.multi-group label:hover {
+  color: var(--leaf-deep);
+}
+
+.multi-group input[type="checkbox"] {
+  margin: 0.2rem 0 0;
+  accent-color: var(--leaf);
+}
+
+.multi-menu textarea {
+  width: 100%;
+  min-width: 16rem;
+  font: inherit;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--ink);
+  resize: vertical;
+}
+
+.multi-hint {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+.multi-hint code {
+  font-size: 0.95em;
+}
+
+button.ref-add {
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  margin: 0.1rem 0.1rem 0 0;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 61, 44, 0.28);
+  background: transparent;
+  color: var(--leaf-deep);
+  cursor: pointer;
+}
+
+button.ref-add:hover {
+  background: rgba(31, 107, 74, 0.08);
+}
+
+.matrix-legend {
+  margin-top: 0.9rem;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.matrix-legend summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--leaf-deep);
+}
+
+.matrix-legend p {
+  margin: 0.5rem 0 0;
+  line-height: 1.5;
 }
 
 .url-cell {

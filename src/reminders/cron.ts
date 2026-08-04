@@ -75,7 +75,7 @@ export function startReminderCron(bot: Bot, tz: string): void {
           await send(
             bot,
             session.telegramUserId,
-            `${messages.join("\n\n")}\n\nSay 'to do' anytime for your to-do list. Say STOP to pause reminders, or erase to delete your data.`,
+            `${messages.join("\n\n")}\n\nSay 'to do' anytime for your To Do List. Say STOP to pause reminders, or erase to delete your data.`,
           );
         }
       }

@@ -66,12 +66,42 @@ export function abdHouseholdKeyboard(): InlineKeyboard {
     .text("No", "abd:no");
 }
 
+export function disasterAreaKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text("Yes", "disaster:yes")
+    .text("No", "disaster:no");
+}
+
+export function zipKeyboard(): InlineKeyboard {
+  return new InlineKeyboard().text("Skip — not sure", "zip:skip");
+}
+
+export function workDisruptionKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text("Lost my job", "work:job_loss")
+    .row()
+    .text("Can't work — illness, injury, or pregnancy", "work:health")
+    .row()
+    .text("Caring for a sick family member / new baby", "work:family_care")
+    .row()
+    .text("None of these", "work:none");
+}
+
+export function immigrationStatusKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text("Yes — citizen or eligible immigrant", "status:eligible")
+    .row()
+    .text("No", "status:ineligible")
+    .row()
+    .text("Prefer not to say", "status:declined");
+}
+
 /** Offer actions stay in-chat — no outbound apply URL (reduces drop-off). */
 export function offerKeyboard(programId: string): InlineKeyboard {
   return new InlineKeyboard()
     .text("I'm already enrolled", `offer:already:${programId}`)
     .row()
-    .text("Add to my to do list", `offer:signup:${programId}`)
+    .text("Add to my To Do List", `offer:signup:${programId}`)
     .row()
     .text("Skip program", `offer:skip:${programId}`);
 }

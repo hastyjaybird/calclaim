@@ -1,5 +1,6 @@
 import PDFDocument from "pdfkit";
 import { formatUsd } from "../corpus/benefitEstimate.js";
+import { docLabel, hasDoc } from "../corpus/docs.js";
 import { estimateFormFillMinutes } from "../corpus/formFill.js";
 import { getDisclaimer, getProgram } from "../corpus/load.js";
 import type { NextStepsItem, SessionState, TodoStatus } from "../corpus/types.js";
@@ -78,7 +79,7 @@ function drawFindYourDocumentsTable(
     .fontSize(9)
     .fillColor("#444")
     .text(
-      "Pull these together first — each one unlocks estimated aid on your open applications (estimates only).",
+      "Pull these together first — each one unlocks estimated aid on your open applications (estimates only). Where a program accepts an award letter or pay stubs, that counts as one choice.",
     );
   doc.moveDown(0.4);
 
@@ -201,10 +202,35 @@ function drawTodoItem(
     .text(hostLabel(item.link), { link: item.link, width: usable });
 
   doc.fillColor("#222").fontSize(10).text(`Deadline: ${deadlineLine(item)}`, { width: usable });
+
+  const stillNeeded = item.docs.filter((d) => !hasDoc(session.docsInHand, d));
+  if (stillNeeded.length > 0) {
+    doc
+      .fillColor("#444")
+      .fontSize(9)
+      .text(
+        `Documents needed: ${stillNeeded.map((d) => docLabel(d)).join("; ")}`,
+        { width: usable },
+      );
+  }
+
+  // Disaster CalFresh is short-lived and unusual: spell out how it usually works
+  // so the PDF alone is enough to apply when a county window is open.
+  if (program?.requiresActiveDisasterWindow && program.applySteps.length) {
+    doc.moveDown(0.15);
+    doc
+      .fillColor("#444")
+      .fontSize(9)
+      .text("How Disaster CalFresh usually works:", { width: usable });
+    for (const step of program.applySteps) {
+      doc.text(`• ${step}`, { width: usable });
+    }
+  }
+
   doc.moveDown(0.45);
 }
 
-/** One living PDF: the benefits report and the to-do list are the same document. */
+/** One living PDF: the benefits report and the To Do List are the same document. */
 export async function renderNextStepsPdf(session: SessionState): Promise<Buffer> {
   const doc = new PDFDocument({ margin: 48, size: "LETTER" });
   const done = collectPdf(doc);
@@ -214,7 +240,7 @@ export async function renderNextStepsPdf(session: SessionState): Promise<Buffer>
     .fillColor("#000")
     .font("Helvetica-Bold")
     .fontSize(18)
-    .text("CalClaim — Your to-do list");
+    .text("CalClaim — Your To Do List");
   doc
     .font("Helvetica")
     .fontSize(10)

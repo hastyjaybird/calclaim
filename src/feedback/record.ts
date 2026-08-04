@@ -5,7 +5,7 @@ import {
   type FeedbackSource,
 } from "./todos.js";
 
-/** Persist alpha-user feedback: QC log + developer todo list. */
+/** Persist alpha-user feedback: QC log + developer To Do List. */
 export function recordAlphaFeedback(input: {
   session: SessionState;
   text: string;

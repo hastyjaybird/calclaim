@@ -16,10 +16,10 @@
       <a class="banner-brand" href="/impact" data-i18n-aria="nav.homeAria" aria-label="CalClaim home">
         <img
           class="banner-mark"
-          src="/brand/calclaim-logo-horizontal-v2-fraunces.png"
+          src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
           alt="CalClaim"
           width="180"
-          height="120"
+          height="59"
         />
       </a>
       <span class="banner-sep" aria-hidden="true"></span>
@@ -39,10 +39,10 @@
       <h1>
         <img
           class="signup-logo"
-          src="/brand/calclaim-logo-horizontal-v2-fraunces.png"
+          src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
           alt="CalClaim"
           width="320"
-          height="213"
+          height="104"
         />
       </h1>
       <p class="signup-lede" data-i18n="signup.lede">
@@ -85,6 +85,19 @@
             data-i18n-aria="signup.cityLabel"
           />
         </label>
+        <label class="field">
+          <span data-i18n="signup.logoLabel">Organization logo (optional)</span>
+          <input
+            id="signup-logo"
+            name="logo"
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            data-i18n-aria="signup.logoLabel"
+          />
+          <span class="field-help" data-i18n="signup.logoHelp">
+            Shown on your printable booth banner. PNG or JPG, up to 2&nbsp;MB.
+          </span>
+        </label>
         <p class="signup-hint" data-i18n="signup.hint">
           We’ll email your unique partner ID, QR code, status page link, and a printable booth banner with your company name.
         </p>
@@ -99,31 +112,60 @@
 
     <section class="signup-success" id="signup-success-panel" hidden>
       <p class="signup-eyebrow" data-i18n="signup.successEyebrow">You’re in</p>
-      <h2 data-i18n="signup.successHeading">Check your email</h2>
+      <h2 data-i18n="signup.successHeading">Thanks for partnering with us.</h2>
       <p class="signup-lede" data-i18n="signup.successBody">
-        We sent a welcome kit with your QR code, partner status page, and a printable booth banner.
+        Here is your unique QR code. Print out the booth banner for your next event.
       </p>
       <dl class="signup-kit">
-        <div>
-          <dt data-i18n="signup.partnerIdLabel">Your partner ID</dt>
-          <dd id="success-partner-id">—</dd>
-        </div>
         <div>
           <dt data-i18n="signup.statusLinkLabel">Status page</dt>
           <dd><a id="success-status-link" href="#">—</a></dd>
         </div>
+        <div>
+          <dt data-i18n="signup.partnerIdLabel">Your partner ID</dt>
+          <dd id="success-partner-id">—</dd>
+        </div>
       </dl>
-      <div class="signup-success-actions">
-        <a class="cta" id="success-banner-link" href="#" data-i18n="signup.downloadBanner">
-          Download booth banner
-        </a>
+      <div class="signup-banner-kit">
+        <figure class="signup-banner-thumb">
+          <div
+            class="booth-banner-preview"
+            id="success-banner-preview"
+            role="img"
+            data-i18n-aria="signup.bannerPreviewAlt"
+            aria-label="Preview of your printable booth banner"
+          >
+            <div class="booth-banner-preview__bar" aria-hidden="true"></div>
+            <img
+              class="booth-banner-preview__mark"
+              src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
+              alt=""
+              width="160"
+              height="52"
+            />
+            <div class="booth-banner-preview__logo-wrap" id="success-banner-logo-wrap" hidden>
+              <img class="booth-banner-preview__logo" id="success-banner-logo" alt="" />
+            </div>
+            <p class="booth-banner-preview__name" id="success-banner-name"></p>
+            <p class="booth-banner-preview__tag" data-i18n="signup.bannerPreviewTag">
+              Scan to find California benefits help — food, health, phone discounts, energy bill aid, and more.
+            </p>
+            <div class="booth-banner-preview__qr-wrap">
+              <img class="booth-banner-preview__qr" id="success-banner-qr" alt="" width="120" height="120" />
+              <span data-i18n="signup.bannerPreviewScan">Scan with your phone</span>
+            </div>
+            <p class="booth-banner-preview__id" id="success-banner-footer-id"></p>
+          </div>
+          <figcaption>
+            <a class="cta" id="success-banner-link" href="#" data-i18n="signup.downloadBanner">
+              Download booth banner
+            </a>
+          </figcaption>
+        </figure>
         <a class="cta cta-ghost" id="success-qr-link" href="#" data-i18n="signup.downloadQr">
           Download QR
         </a>
       </div>
-      <p class="signup-outbox-note" id="success-outbox-note" hidden data-i18n="signup.outboxNote">
-        Email delivery isn’t configured on this server yet — your kit links above still work.
-      </p>
     </section>
   </main>
 

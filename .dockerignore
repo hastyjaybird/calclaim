@@ -1,0 +1,17 @@
+node_modules
+.git
+.cursor
+.tools
+data
+.env
+.env.*
+!.env.example
+docs
+scripts
+*.md
+!PRIVACY.md
+.claude
+agent-tools
+**/*.sqlite
+**/*.sqlite-*
+**/tmp-*

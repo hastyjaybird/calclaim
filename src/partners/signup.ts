@@ -9,6 +9,7 @@ import {
   type SignedUpPartner,
 } from "./db.js";
 import { sendPartnerWelcomeEmail, type SendPartnerEmailResult } from "./email.js";
+import { savePartnerLogoUpload } from "./logoUpload.js";
 
 export interface PartnerSignupInput {
   name?: unknown;
@@ -50,17 +51,27 @@ export function parsePartnerSignup(input: PartnerSignupInput): {
 
 export async function registerPartnerSignup(
   config: AppConfig,
-  fields: { name: string; email: string; city: string },
+  fields: {
+    name: string;
+    email: string;
+    city: string;
+    logo?: { buffer: Buffer; mime: string; filename: string };
+  },
 ): Promise<PartnerSignupResult> {
   const token = randomPartnerToken(4);
-  const id = `p_${token}`;
+  const id = `p-${token}`;
   const slug = allocateUniqueSlug(fields.name);
   // Ensure we didn't collide with a corpus partner slug
   let finalSlug = slug;
   if (getPartnerBySlug(finalSlug)) {
     finalSlug = allocateUniqueSlug(`${fields.name}-${token}`);
   }
-  const campaignId = `qr_p_${token}`;
+  const campaignId = `qr-p-${token}`;
+
+  let logoPath = "";
+  if (fields.logo) {
+    logoPath = savePartnerLogoUpload(id, fields.logo);
+  }
 
   const partner = insertSignedUpPartner({
     id,
@@ -69,7 +80,7 @@ export async function registerPartnerSignup(
     email: fields.email,
     city: fields.city || "California",
     campaignId,
-    logo: "",
+    logo: logoPath,
     blurb: "Community outreach partner",
   });
 
@@ -84,6 +95,7 @@ export async function registerPartnerSignup(
       partnerName: partner.name,
       partnerId: partner.id,
       qrTargetUrl: qrTarget,
+      partnerLogoPath: partner.logo || null,
     }),
   ]);
 

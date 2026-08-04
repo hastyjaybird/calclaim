@@ -1,5 +1,5 @@
 {
-  "version": "2026-08-01",
+  "version": "2026-08-03",
   "market": "California",
   "disclaimer": "Estimates only. Not affiliated with any agency or utility. Official agencies decide eligibility.",
   "programs": [
@@ -81,7 +81,7 @@
       "skipCascades": [],
       "skipReasons": [],
       "sources": [
-        "https://www.cdss.ca.gov/calfresh",
+        "https://www.cdss.ca.gov/inforesources/calfresh",
         "https://www.getcalfresh.org/",
         "https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en"
       ],
@@ -99,14 +99,15 @@
           "8": 1789
         },
         "eachAdditional": 218
-      }
+      },
+      "requiresCitizenOrEligibleImmigrant": true
     },
     {
       "id": "wic",
       "name": "WIC",
       "category": "food",
       "oneLiner": "Food and nutrition support for pregnancy / young kids",
-      "maxBenefit": "Up to ~$80/mo food benefits (estimate; package varies)",
+      "maxBenefit": "Up to ~$52/mo cash-value food voucher (estimate; full food package value is often higher and varies by category)",
       "applyUrl": "https://www.cdph.ca.gov/Programs/CFH/DWICSN/Pages/Program-Landing1.aspx",
       "deadlines": [],
       "applySteps": [
@@ -116,11 +117,12 @@
       ],
       "docsNeeded": [
         "photoId",
-        "incomeProof"
+        "incomeOrCategorical"
       ],
       "docsReusableFromGate": [
         "categoricalProof",
-        "photoId"
+        "photoId",
+        "incomeOrCategorical"
       ],
       "timeToMoneyDays": 21,
       "formFillMinutes": 20,
@@ -136,12 +138,13 @@
       "skipCascades": [],
       "skipReasons": [],
       "sources": [
-        "https://www.cdph.ca.gov/Programs/CFH/DWICSN"
+        "https://www.cdph.ca.gov/Programs/CFH/DWICSN",
+        "https://www.fns.usda.gov/wic/agency/cvvb-fy26"
       ],
-      "estAnnualUsd": 960,
+      "estAnnualUsd": 624,
       "maxBenefitUsd": {
         "period": "month",
-        "amount": 80
+        "amount": 52
       }
     },
     {
@@ -186,7 +189,8 @@
         "period": "month",
         "perPerson": 994,
         "maxHousehold": 1491
-      }
+      },
+      "requiresCitizenOrEligibleImmigrant": true
     },
     {
       "id": "calworks",
@@ -225,23 +229,25 @@
       "skipReasons": [],
       "sources": [
         "https://www.cdss.ca.gov/calworks",
+        "https://www.cdss.ca.gov/shd/res/pdf/map.pdf",
         "https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en"
       ],
-      "estAnnualUsd": 16344,
+      "estAnnualUsd": 16152,
       "maxBenefitUsd": {
         "period": "month",
         "byHouseholdSize": {
-          "1": 735,
-          "2": 928,
-          "3": 1148,
-          "4": 1362,
-          "5": 1552,
-          "6": 1743,
-          "7": 1915,
-          "8": 2084
+          "1": 695,
+          "2": 884,
+          "3": 1115,
+          "4": 1346,
+          "5": 1578,
+          "6": 1808,
+          "7": 2039,
+          "8": 2271
         },
-        "eachAdditional": 170
-      }
+        "eachAdditional": 232
+      },
+      "requiresCitizenOrEligibleImmigrant": true
     },
     {
       "id": "capi",
@@ -291,7 +297,8 @@
         "period": "month",
         "perPerson": 1234,
         "maxHousehold": 2099
-      }
+      },
+      "requiresIneligibleImmigrantStatus": true
     },
     {
       "id": "ga_gr",
@@ -353,7 +360,6 @@
       "deadlines": [],
       "applySteps": [
         "Apply for health benefits via BenefitsCal or your county — they screen Medi-Cal and CMSP together",
-        "Confirm you live in a participating CMSP county (35 counties)",
         "Provide residency, income, and resource verification if asked"
       ],
       "docsNeeded": [
@@ -374,6 +380,7 @@
       "noOrder": 11,
       "gateFeeder": true,
       "incomeGate": "careOrFeraBand",
+      "requiresCmspCounty": true,
       "excludeIfAlreadyOn": [
         "medi_cal"
       ],
@@ -388,7 +395,8 @@
       "maxBenefitUsd": {
         "period": "month",
         "amount": 400
-      }
+      },
+      "requiresCitizenOrEligibleImmigrant": true
     },
     {
       "id": "disaster_calfresh",
@@ -396,7 +404,7 @@
       "category": "food",
       "oneLiner": "Temporary food benefits after a federally declared disaster — only when your county opens a D-CalFresh application window",
       "maxBenefit": "Up to one month at the CalFresh max allotment for household size (estimate; disaster window only)",
-      "applyUrl": "https://benefitscal.com/ApplyForBenefits/begin/ABOVR?lang=en",
+      "applyUrl": "https://www.cdss.ca.gov/inforesources/calfresh/disaster-calfresh",
       "deadlines": [
         {
           "label": "Only during county Disaster CalFresh application windows after a declared disaster",
@@ -404,9 +412,9 @@
         }
       ],
       "applySteps": [
-        "Check CDSS / your county for an open Disaster CalFresh window",
-        "Apply on BenefitsCal during that window only",
-        "Show you lived or worked in the disaster area and had a disaster-related loss (food, income, damage, or expenses)"
+        "Apply during your county's Disaster CalFresh window only — by phone or in person, as your county announced",
+        "Show you lived or worked in the disaster area at the time of the disaster",
+        "Report a disaster-related loss (food, income, inaccessible resources, or disaster expenses)"
       ],
       "docsNeeded": [
         "photoId",
@@ -425,14 +433,11 @@
       "yesOrder": 12,
       "noOrder": 12,
       "gateFeeder": false,
-      "excludeIfAlreadyOn": [
-        "calfresh"
-      ],
+      "requiresActiveDisasterWindow": true,
       "skipCascades": [],
       "skipReasons": [],
       "sources": [
         "https://www.cdss.ca.gov/inforesources/calfresh/disaster-calfresh",
-        "https://cdss.ca.gov/disastercalfresh1",
         "https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en"
       ],
       "estAnnualUsd": 298,
@@ -466,11 +471,12 @@
       ],
       "docsNeeded": [
         "photoId",
-        "incomeProof"
+        "incomeOrCategorical"
       ],
       "docsReusableFromGate": [
         "categoricalProof",
-        "photoId"
+        "photoId",
+        "incomeOrCategorical"
       ],
       "timeToMoneyDays": 21,
       "formFillMinutes": 12,
@@ -497,7 +503,7 @@
       "name": "CARE",
       "category": "energy",
       "oneLiner": "Utility bill discount if you are with a participating CA utility (e.g. PG&E)",
-      "maxBenefit": "Up to ~$70/mo off electric (\u224835% of ~$200 bill; estimate)",
+      "maxBenefit": "Up to ~$70/mo off electric (≈35% of ~$200 bill; estimate)",
       "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/california-alternate-rates-for-energy-program.html",
       "deadlines": [],
       "applySteps": [
@@ -549,7 +555,7 @@
       "name": "FERA",
       "category": "energy",
       "oneLiner": "Utility bill discount if you are with a participating CA utility (e.g. PG&E)",
-      "maxBenefit": "Up to ~$36/mo off electric (\u224818% of ~$200 bill; estimate)",
+      "maxBenefit": "Up to ~$36/mo off electric (≈18% of ~$200 bill; estimate)",
       "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/family-electric-rate-assistance-program-fera.html",
       "deadlines": [],
       "applySteps": [
@@ -600,11 +606,12 @@
       ],
       "docsNeeded": [
         "utilityBill",
-        "incomeProof"
+        "incomeOrCategorical"
       ],
       "docsReusableFromGate": [
         "categoricalProof",
-        "utilityBill"
+        "utilityBill",
+        "incomeOrCategorical"
       ],
       "timeToMoneyDays": 60,
       "formFillMinutes": 15,
@@ -632,11 +639,11 @@
       "name": "LIHEAP",
       "category": "energy",
       "oneLiner": "Help with heating/cooling bills (seasonal; county-run)",
-      "maxBenefit": "Up to ~$1,000 one-time bill help (estimate; county/season)",
+      "maxBenefit": "Up to ~$1,500 one-time bill help (estimate; county/season/benefit type)",
       "applyUrl": "https://www.csd.ca.gov/Pages/LIHEAP.aspx",
       "deadlines": [
         {
-          "label": "Seasonal windows \u2014 check your county",
+          "label": "Seasonal windows — check your county",
           "date": null
         }
       ],
@@ -669,10 +676,10 @@
       "sources": [
         "https://www.csd.ca.gov/Pages/LIHEAP.aspx"
       ],
-      "estAnnualUsd": 1000,
+      "estAnnualUsd": 1500,
       "maxBenefitUsd": {
         "period": "once",
-        "amount": 1000
+        "amount": 1500
       }
     },
     {
@@ -680,7 +687,7 @@
       "name": "AMP (Arrearage Management)",
       "category": "energy",
       "oneLiner": "Forgiveness path for past-due utility balances",
-      "maxBenefit": "Up to ~$2,000 debt forgiveness path (estimate; utility-specific)",
+      "maxBenefit": "Up to ~$8,000 debt forgiveness over 12 months of on-time payments (estimate; utility-specific)",
       "applyUrl": "https://help.pge.com/s/article/Arrearage-Management-Plan-AMP",
       "deadlines": [],
       "applySteps": [
@@ -708,12 +715,13 @@
       "skipReasons": [],
       "sources": [
         "https://help.pge.com/s/article/Arrearage-Management-Plan-AMP",
+        "https://help.pge.com/s/article/Will-PGE-forgive-all-or-a-portion-of-my-owed-balance",
         "https://www.pge.com/en/account/billing-and-assistance/financial-assistance.html"
       ],
-      "estAnnualUsd": 2000,
+      "estAnnualUsd": 8000,
       "maxBenefitUsd": {
         "period": "once",
-        "amount": 2000
+        "amount": 8000
       }
     },
     {
@@ -721,7 +729,7 @@
       "name": "Medical Baseline",
       "category": "energy",
       "oneLiner": "Extra utility allowance for medical needs",
-      "maxBenefit": "Up to ~$25/mo extra baseline allowance (estimate)",
+      "maxBenefit": "Extra ~500 kWh / 25 therms per month at the lowest baseline rate — worth roughly $50/mo (estimate; varies widely by rate plan and usage)",
       "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/medical-baseline-program.html",
       "deadlines": [],
       "applySteps": [
@@ -738,7 +746,10 @@
       ],
       "timeToMoneyDays": 21,
       "formFillMinutes": 20,
-      "branches": [],
+      "branches": [
+        "yes",
+        "no"
+      ],
       "yesOrder": 96,
       "noOrder": 96,
       "gateFeeder": false,
@@ -747,10 +758,10 @@
       "sources": [
         "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/medical-baseline-program.html"
       ],
-      "estAnnualUsd": 300,
+      "estAnnualUsd": 600,
       "maxBenefitUsd": {
         "period": "month",
-        "amount": 25
+        "amount": 50
       }
     },
     {
@@ -759,7 +770,7 @@
       "category": "tax",
       "oneLiner": "Federal/state credits you may claim at tax time (info path)",
       "maxBenefit": "Up to ~$4,000/yr combined credits for some households (estimate)",
-      "applyUrl": "https://www.irs.gov/credits-deductions",
+      "applyUrl": "https://www.irs.gov/credits-and-deductions-for-individuals",
       "deadlines": [
         {
           "label": "Tax year 2026 federal filing deadline",
@@ -768,14 +779,16 @@
       ],
       "applySteps": [
         "Gather income records and receipts (W-2s, 1099s, award letters)",
-        "Book a VITA / tax-preparer appointment \u2014 this usually means a real meeting",
+        "Book a VITA / tax-preparer appointment — this usually means a real meeting",
         "CalClaim does not file taxes"
       ],
       "docsNeeded": [
-        "incomeProof"
+        "taxForms",
+        "taxReturn"
       ],
       "docsReusableFromGate": [
-        "incomeProof"
+        "taxForms",
+        "taxReturn"
       ],
       "timeToMoneyDays": 120,
       "formFillMinutes": 90,
@@ -790,12 +803,273 @@
       "skipCascades": [],
       "skipReasons": [],
       "sources": [
-        "https://www.irs.gov/credits-deductions"
+        "https://www.irs.gov/credits-and-deductions-for-individuals"
       ],
       "estAnnualUsd": 4000,
       "maxBenefitUsd": {
         "period": "year",
         "amount": 4000
+      }
+    },
+    {
+      "id": "unemployment",
+      "name": "Unemployment Insurance",
+      "category": "cash",
+      "oneLiner": "Weekly cash benefit (up to $450/wk) if you lost your job through no fault of your own",
+      "maxBenefit": "Up to $450/wk for up to 26 weeks (2026; weekly cap unchanged since 2005)",
+      "applyUrl": "https://edd.ca.gov/en/unemployment/",
+      "deadlines": [],
+      "applySteps": [
+        "File a claim online at UI Online (edd.ca.gov)",
+        "Certify for benefits every two weeks",
+        "Show you're able, available, and actively looking for work"
+      ],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "photoId"
+      ],
+      "timeToMoneyDays": 21,
+      "formFillMinutes": 30,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 14,
+      "noOrder": 14,
+      "gateFeeder": false,
+      "requiresWorkDisruption": "job_loss",
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://edd.ca.gov/en/unemployment/",
+        "https://edd.ca.gov/en/unemployment/eligibility/"
+      ],
+      "estAnnualUsd": 11700,
+      "maxBenefitUsd": {
+        "period": "week",
+        "amount": 450,
+        "maxWeeks": 26
+      },
+      "requiresCitizenOrEligibleImmigrant": true
+    },
+    {
+      "id": "sdi",
+      "name": "State Disability Insurance (SDI)",
+      "category": "cash",
+      "oneLiner": "Weekly wage-replacement benefit if illness, injury, or pregnancy keeps you from working",
+      "maxBenefit": "Up to $1,765/wk for up to 52 weeks (2026)",
+      "applyUrl": "https://edd.ca.gov/en/disability/",
+      "deadlines": [],
+      "applySteps": [
+        "File a Disability Insurance claim online (edd.ca.gov)",
+        "Have your doctor or practitioner certify your disability",
+        "Must be unable to work for at least 8 days and have SDI wages in your base period"
+      ],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "photoId"
+      ],
+      "timeToMoneyDays": 14,
+      "formFillMinutes": 30,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 15,
+      "noOrder": 15,
+      "gateFeeder": false,
+      "requiresWorkDisruption": "health",
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://edd.ca.gov/en/disability/disability_insurance/",
+        "https://edd.ca.gov/en/disability/faqs-benefits-payments/"
+      ],
+      "estAnnualUsd": 91780,
+      "maxBenefitUsd": {
+        "period": "week",
+        "amount": 1765,
+        "maxWeeks": 52
+      }
+    },
+    {
+      "id": "pfl",
+      "name": "Paid Family Leave (PFL)",
+      "category": "cash",
+      "oneLiner": "Weekly wage-replacement benefit to bond with a new child or care for a seriously ill family member",
+      "maxBenefit": "Up to $1,765/wk for up to 8 weeks in a 12-month period (2026)",
+      "applyUrl": "https://edd.ca.gov/en/disability/paid-family-leave/",
+      "deadlines": [],
+      "applySteps": [
+        "File a Paid Family Leave claim online (edd.ca.gov)",
+        "Provide proof of the qualifying family event (birth, adoption, or a family member's serious illness)",
+        "Must have SDI wages in your base period"
+      ],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "photoId"
+      ],
+      "timeToMoneyDays": 14,
+      "formFillMinutes": 30,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 16,
+      "noOrder": 16,
+      "gateFeeder": false,
+      "requiresWorkDisruption": "family_care",
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://edd.ca.gov/en/disability/paid-family-leave/",
+        "https://edd.ca.gov/en/disability/Calculating_PFL_Benefit_Payment_Amounts/"
+      ],
+      "estAnnualUsd": 14120,
+      "maxBenefitUsd": {
+        "period": "week",
+        "amount": 1765,
+        "maxWeeks": 8
+      }
+    },
+    {
+      "id": "ihss",
+      "name": "In-Home Supportive Services (IHSS)",
+      "category": "cash",
+      "oneLiner": "Pays a caregiver (often a family member) to help an aged, blind, or disabled person stay safely at home",
+      "maxBenefit": "Averages about 100 hrs/mo of paid care statewide, at your county's hourly rate ($16.90-$23.00/hr) — roughly $1,700-$2,300/mo (estimate; depends on your assessed hours and county wage)",
+      "applyUrl": "https://www.cdss.ca.gov/in-home-supportive-services",
+      "deadlines": [],
+      "applySteps": [
+        "Contact your county IHSS office to request an assessment",
+        "Usually requires (or is applied for alongside) Medi-Cal eligibility",
+        "A social worker assesses hours of care needed; you or a hired provider get paid for approved hours"
+      ],
+      "docsNeeded": [
+        "photoId",
+        "categoricalProof"
+      ],
+      "docsReusableFromGate": [
+        "categoricalProof",
+        "photoId"
+      ],
+      "timeToMoneyDays": 45,
+      "formFillMinutes": 30,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 17,
+      "noOrder": 17,
+      "gateFeeder": false,
+      "requiresAgedBlindOrDisabled": true,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.cdss.ca.gov/in-home-supportive-services",
+        "https://ihssconnect.com/ihss-pay-rates-by-county/"
+      ],
+      "estAnnualUsd": 20400,
+      "maxBenefitUsd": {
+        "period": "month"
+      }
+    },
+    {
+      "id": "caleitc",
+      "name": "CalEITC",
+      "category": "tax",
+      "oneLiner": "Cash-back state tax credit for working Californians with low to moderate income",
+      "maxBenefit": "Up to $3,756 for tax year 2025 (3+ kids); up to $302 with no kids (income limit ~$32,900; figures adjust yearly)",
+      "applyUrl": "https://www.ftb.ca.gov/file/personal/credits/california-earned-income-tax-credit.html",
+      "deadlines": [
+        {
+          "label": "Tax year 2026 California filing deadline (2025 figures shown; amounts adjust annually)",
+          "date": "2027-04-15"
+        }
+      ],
+      "applySteps": [
+        "File a California state tax return (free help via VITA or CalEITC4Me)",
+        "Complete FTB Form 3514 with your return",
+        "Must have earned income (wages or self-employment) at or below the published limit"
+      ],
+      "docsNeeded": [
+        "taxReturn"
+      ],
+      "docsReusableFromGate": [
+        "taxReturn"
+      ],
+      "timeToMoneyDays": 120,
+      "formFillMinutes": 45,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 18,
+      "noOrder": 18,
+      "gateFeeder": false,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.ftb.ca.gov/file/personal/credits/california-earned-income-tax-credit.html"
+      ],
+      "estAnnualUsd": 3756,
+      "maxBenefitUsd": {
+        "period": "year",
+        "amount": 3756
+      }
+    },
+    {
+      "id": "young_child_tax_credit",
+      "name": "Young Child Tax Credit (YCTC)",
+      "category": "tax",
+      "oneLiner": "Extra state tax credit for families with a child under 6, on top of CalEITC",
+      "maxBenefit": "Up to $1,189 for tax year 2025 (must also qualify for CalEITC; figures adjust yearly)",
+      "applyUrl": "https://www.ftb.ca.gov/file/personal/credits/young-child-tax-credit.html",
+      "deadlines": [
+        {
+          "label": "Tax year 2026 California filing deadline (2025 figures shown; amounts adjust annually)",
+          "date": "2027-04-15"
+        }
+      ],
+      "applySteps": [
+        "File a California state tax return and qualify for CalEITC",
+        "Complete FTB Form 3514 with your return",
+        "Must have a qualifying child under age 6 at year end"
+      ],
+      "docsNeeded": [
+        "taxReturn"
+      ],
+      "docsReusableFromGate": [
+        "taxReturn"
+      ],
+      "timeToMoneyDays": 120,
+      "formFillMinutes": 20,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 19,
+      "noOrder": 19,
+      "gateFeeder": false,
+      "requiresChildInHousehold": true,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.ftb.ca.gov/file/personal/credits/young-child-tax-credit.html"
+      ],
+      "estAnnualUsd": 1189,
+      "maxBenefitUsd": {
+        "period": "year",
+        "amount": 1189
       }
     }
   ]

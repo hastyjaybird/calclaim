@@ -34,9 +34,20 @@
   width: min(100%, 18rem);
   height: auto;
   margin: 0 0 1rem;
-  border-radius: 0.75rem;
-  background: #f7f3ea;
-  box-shadow: 0 10px 28px rgba(8, 40, 32, 0.08);
+}
+
+.signup-form .field-help {
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+.signup-form input[type="file"] {
+  padding: 0.65rem 0.75rem;
+  background: rgba(255, 255, 255, 0.85);
 }
 
 .signup-hero h1 {
@@ -187,18 +198,136 @@
   color: var(--leaf-deep);
 }
 
-.signup-success-actions {
+.signup-banner-kit {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  align-items: flex-end;
+  gap: 1.25rem 1.5rem;
   margin-bottom: 1rem;
 }
 
-.signup-outbox-note {
+.signup-banner-thumb {
   margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.45;
+  display: grid;
+  gap: 0.85rem;
+  justify-items: start;
+}
+
+.booth-banner-preview {
+  width: 13rem;
+  aspect-ratio: 8.5 / 11;
+  padding: 0.65rem 0.7rem 0.55rem;
+  border-radius: 0.55rem;
+  background: #eef4f1;
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 28px rgba(8, 40, 32, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.booth-banner-preview__bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0.28rem;
+  background: var(--leaf);
+}
+
+.booth-banner-preview__mark {
+  display: block;
+  width: 72%;
+  height: auto;
+  margin-top: 0.2rem;
+}
+
+.booth-banner-preview__logo-wrap {
+  width: 2.6rem;
+  height: 2.6rem;
+  padding: 0.2rem;
+  border-radius: 0.4rem;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.booth-banner-preview__logo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.booth-banner-preview__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--ink);
+  max-width: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.booth-banner-preview__tag {
+  margin: 0;
+  font-size: 0.42rem;
+  line-height: 1.25;
+  text-align: center;
   color: var(--ink-soft);
+  max-width: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.booth-banner-preview__qr-wrap {
+  margin-top: auto;
+  padding: 0.35rem 0.4rem 0.3rem;
+  border-radius: 0.45rem;
+  background: #fff;
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+}
+
+.booth-banner-preview__qr {
+  display: block;
+  width: 4.4rem;
+  height: 4.4rem;
+  object-fit: contain;
+}
+
+.booth-banner-preview__qr-wrap span {
+  font-size: 0.4rem;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: center;
+}
+
+.booth-banner-preview__id {
+  margin: 0.1rem 0 0;
+  font-size: 0.38rem;
+  color: var(--leaf-deep);
+  text-align: center;
+}
+
+.signup-banner-thumb .cta {
+  font-size: 0.95rem;
+  padding: 0.7rem 1rem;
+}
+
+.signup-banner-kit > .cta-ghost {
+  align-self: center;
 }
 
 .site-footer {
@@ -218,7 +347,21 @@
     padding-top: 1.75rem;
   }
 
-  .signup-success-actions .cta,
+  .signup-banner-kit {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .signup-banner-thumb {
+    justify-items: center;
+  }
+
+  .booth-banner-preview {
+    width: min(12.5rem, 70vw);
+  }
+
+  .signup-banner-thumb .cta,
+  .signup-banner-kit > .cta-ghost,
   .signup-form button.cta {
     width: 100%;
     text-align: center;

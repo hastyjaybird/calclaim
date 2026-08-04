@@ -11,7 +11,12 @@ export type DocId =
   | "categoricalProof"
   | "photoId"
   | "utilityBill"
-  | "incomeProof";
+  | "incomeProof"
+  /** Award letter from a qualifying program, or pay stubs / benefit letter. */
+  | "incomeOrCategorical"
+  /** Filed return — CalEITC / YCTC path (not a substitute for incomeProof). */
+  | "taxReturn"
+  | "taxForms";
 
 export type IncomeBand = "careBand" | "feraBand" | "aboveFera";
 
@@ -32,11 +37,18 @@ export type StepId =
   | "past_due"
   | "has_child"
   | "has_abd"
+  | "has_work_disruption"
+  | "has_disaster_area"
+  | "has_zip"
+  | "has_immigration_status"
   | "offer"
   | "idle"
   | "confirm_stop"
   | "confirm_erase"
   | "help_menu";
+
+/** Why work/earnings stopped or dropped recently — gates EDD wage-replacement programs. */
+export type WorkDisruption = "job_loss" | "health" | "family_care" | "none";
 
 export interface Deadline {
   label: string;
@@ -44,7 +56,7 @@ export interface Deadline {
 }
 
 /** Structured max aid used to compute offer-card $ estimates. */
-export type BenefitPeriod = "month" | "year" | "once";
+export type BenefitPeriod = "week" | "month" | "year" | "once";
 
 export interface MaxBenefitUsd {
   period: BenefitPeriod;
@@ -63,6 +75,8 @@ export interface MaxBenefitUsd {
    */
   percentOff?: number;
   referenceBillUsd?: number;
+  /** For period "week": statutory max weeks used when annualizing (defaults to 52). */
+  maxWeeks?: number;
 }
 
 export interface Program {
@@ -93,6 +107,30 @@ export interface Program {
   requiresChildInHousehold?: boolean;
   /** SSI / CAPI-style: needs someone aged 65+, blind, or disabled. */
   requiresAgedBlindOrDisabled?: boolean;
+  /** UI/SDI/PFL-style: gated by the single-select work-disruption reason. */
+  requiresWorkDisruption?: Exclude<WorkDisruption, "none">;
+  /**
+   * Disaster CalFresh-style: needs a county application window open today AND
+   * the user confirming they lived or worked in the declared area. Dormant most
+   * of the year, so these programs stay out of the queue entirely by default.
+   */
+  requiresActiveDisasterWindow?: boolean;
+  /**
+   * CMSP-style: only offered when residenceCounty is one of the participating
+   * CMSP counties. ZIP is asked only when this would otherwise enter the queue.
+   */
+  requiresCmspCounty?: boolean;
+  /**
+   * Needs U.S. citizen or eligible-immigrant status (CalFresh, SSI, CalWORKs,
+   * CMSP, UI). Held until after status-blind offers, then a private one-shot
+   * question — the answer is not persisted on the session.
+   */
+  requiresCitizenOrEligibleImmigrant?: boolean;
+  /**
+   * CAPI-style: for non-citizens denied SSI solely due to immigration status.
+   * Offered only when the user answers “No” on the immigration-status question.
+   */
+  requiresIneligibleImmigrantStatus?: boolean;
   /**
    * Drop from queue when user already marked one of these at the gate
    * (e.g. Disaster CalFresh if already on CalFresh; CMSP if already on Medi-Cal).
@@ -135,6 +173,21 @@ export interface SessionState {
   hasChildInHousehold: boolean | null;
   /** Aged 65+ / blind / disabled — gates requiresAgedBlindOrDisabled programs. */
   hasAgedBlindOrDisabled: boolean | null;
+  /** Job loss / health / family-care / none — gates requiresWorkDisruption programs. */
+  workDisruption: WorkDisruption | null;
+  /**
+   * Lived or worked in a declared disaster area during an open D-CalFresh
+   * window. Only asked while a window is live; no ZIP or county is stored
+   * because eligibility turns on home *or* work location for any member.
+   */
+  inDisasterArea: boolean | null;
+  /**
+   * Home ZIP — asked only when a county-gated program (CMSP) would enter the
+   * queue. null = not asked; "" = skipped; otherwise a 5-digit ZIP.
+   */
+  residenceZip: string | null;
+  /** County resolved from residenceZip (null if skipped / unknown). */
+  residenceCounty: string | null;
   docsInHand: DocId[];
   queue: string[];
   queueIndex: number;

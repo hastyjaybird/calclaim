@@ -3,10 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { initAnalytics } from "../analytics/db.js";
 import type { SessionState } from "../corpus/types.js";
+import { initDisasterWindows } from "../disaster/db.js";
 import { initFeedbackTodos } from "../feedback/todos.js";
 import { initPartnerSignup } from "../partners/db.js";
 import { eraseTelegramUserData, initTelegramCapture } from "./telegramCapture.js";
 import { initWatchdog } from "../watchdog/db.js";
+import { eraseSessionProgramLog, writeSessionProgramLog } from "./sessionLog.js";
 
 let db: Database.Database | null = null;
 
@@ -25,6 +27,7 @@ export function initDb(databasePath: string): void {
   initTelegramCapture(db);
   initFeedbackTodos(db);
   initPartnerSignup(db);
+  initDisasterWindows(db);
 }
 
 function getDb(): Database.Database {
@@ -45,6 +48,10 @@ export function emptySession(telegramUserId: number): SessionState {
     billNotInMyName: false,
     hasChildInHousehold: null,
     hasAgedBlindOrDisabled: null,
+    workDisruption: null,
+    inDisasterArea: null,
+    residenceZip: null,
+    residenceCounty: null,
     docsInHand: [],
     queue: [],
     queueIndex: 0,
@@ -71,6 +78,10 @@ export function loadSession(telegramUserId: number): SessionState | null {
   if (state.hasAgedBlindOrDisabled === undefined) {
     state.hasAgedBlindOrDisabled = null;
   }
+  if (state.workDisruption === undefined) state.workDisruption = null;
+  if (state.inDisasterArea === undefined) state.inDisasterArea = null;
+  if (state.residenceZip === undefined) state.residenceZip = null;
+  if (state.residenceCounty === undefined) state.residenceCounty = null;
   if (state.remindersStopped === undefined) state.remindersStopped = false;
   if (state.campaignId === undefined) state.campaignId = null;
   return state;
@@ -87,10 +98,12 @@ export function saveSession(state: SessionState): void {
          updated_at = excluded.updated_at`,
     )
     .run(state.telegramUserId, JSON.stringify(state), state.updatedAt);
+  writeSessionProgramLog(state);
 }
 
 export function deleteSession(telegramUserId: number): void {
   eraseTelegramUserData(telegramUserId);
+  eraseSessionProgramLog(telegramUserId);
   getDb()
     .prepare("DELETE FROM sessions WHERE telegram_user_id = ?")
     .run(telegramUserId);

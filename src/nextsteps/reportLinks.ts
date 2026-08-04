@@ -52,7 +52,7 @@ export function reportSharePageUrl(publicBaseUrl: string, token: string): string
 }
 
 export function mailtoWithReportLink(pdfUrl: string): string {
-  const subject = "Your CalClaim to-do list";
+  const subject = "Your CalClaim To Do List";
   const body = `Open this link on your computer to download your CalClaim report:
 
 ${pdfUrl}

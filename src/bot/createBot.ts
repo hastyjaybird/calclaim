@@ -133,12 +133,15 @@ async function handleInterpretedText(
   }
 
   // Unknown — log as alpha feedback, stay on the same step
-  recordAlphaFeedback({
-    session,
-    text: rawText,
-    source,
-    transcriptStatus: source === "voice" ? "ok" : undefined,
-  });
+  // Never store free-text while asking immigration status (privacy promise).
+  if (session.step !== "has_immigration_status") {
+    recordAlphaFeedback({
+      session,
+      text: rawText,
+      source,
+      transcriptStatus: source === "voice" ? "ok" : undefined,
+    });
+  }
   await reorient(ctx, session, unknownAck(session.step));
   return true;
 }

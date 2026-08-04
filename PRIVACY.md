@@ -21,18 +21,19 @@ Tables: `telegram_users`, `telegram_messages` in the demo database.
 
 ### Session & product data
 
-- Answers you tap (gate, household size, income band, offer actions)
+- Answers you tap (gate, household size, income band, ZIP when needed for county-specific programs, offer actions)
+- Immigration status (citizen / eligible immigrant / no / prefer not to say) is asked only when needed for later programs. **That answer is not stored** in your session, QC logs, or Telegram message capture, and is cleared from memory when your queue finishes, you restart, or you erase data.
 - Next-steps todo items and deadlines derived from our frozen program corpus
 - Free-form text or voice notes you send that are not a recognized button/command (alpha feedback / developer quality control)
-- Voice notes are transcribed to text (when transcription is configured) and stored as feedback for the developer to-do list
-- Optional phone, email, and comments submitted on the public contact form (stored in the developer feedback to-do list in SQLite)
+- Voice notes are transcribed to text (when transcription is configured) and stored as feedback for the developer To Do List
+- Optional phone, email, and comments submitted on the public contact form (stored in the developer feedback To Do List in SQLite)
 - Partner signup: organization name, work email, and optional city (stored in SQLite `partner_signups`; used to email the QR kit and power the partner status page)
 
 ### Impact analytics (aggregate funder dashboard)
 
 - QR scans and shared-link clicks (campaign id, timestamp)
 - Clicks from the bot to official program apply pages (program id, timestamp)
-- “Add to my to do list” follow-through taps
+- “Add to my To Do List” follow-through taps
 - Coarse location only: QR poster placement coordinates, and optionally city-level IP geolocation (rounded; never street address)
 
 ## What we do **not** collect (v2)
@@ -47,7 +48,7 @@ Tables: `telegram_users`, `telegram_messages` in the demo database.
 ## How we use data
 
 - To run your session and send next-steps / reminder messages
-- To improve the demo UX via quiet QC logs (`data/responses.jsonl`) and the developer feedback to-do list
+- To improve the demo UX via quiet QC logs (`data/responses.jsonl`) and the developer feedback To Do List
 - To transcribe alpha voice feedback to text (OpenAI Whisper when `OPENAI_API_KEY` is configured)
 - To operate the demo and inspect Telegram-visible profile/message fields in SQLite
 - To publish **aggregate** impact metrics on the public funder dashboard (`/impact`)
@@ -56,7 +57,7 @@ We do not sell your data. This demo does not send your Telegram profile or messa
 
 ## Retention & deletion
 
-- Message **STOP** to pause deadline reminders only (your session and to-do list stay; message again to resume reminders).
+- Message **STOP** to pause deadline reminders only (your session and To Do List stay; message again to resume reminders).
 - Use **Help → Erase all my data** / type **erase** to delete your session, Telegram user/message rows, todos, reminder flags, your QC log rows, and your alpha feedback to-do rows.
 - Aggregate impact counts (anonymized event totals) may remain on the funder dashboard after you erase your session.
 - Hosting operators may wipe the demo database when the demo ends.

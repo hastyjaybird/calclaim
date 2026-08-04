@@ -27,7 +27,7 @@ CalClaim deliberately mirrors these **user-visible mechanisms**, not Anthropic�
 | Staff / user HITL messaging | Signpost AI | Draft → human approve in high stakes | Optional later; demo auto if grounded |
 | Meet-them-where-they-are | Farmer.Chat, Signpost, GetCalFresh | WhatsApp / Telegram / SMS | **Telegram primary** |
 | Nudges / reminders | GetCalFresh | SMS/email → doc submission lift | Tue noon + T-3/T-1 deadline reminders |
-| Living checklist | Benefits / assister tools | Durable todo list | **To-do list PDF** (= benefits report) re-sent after actions |
+| Living checklist | Benefits / assister tools | Durable To Do List | **To Do List PDF** (= benefits report) re-sent after actions |
 | CBO / assister portals | GetCalFresh legacy | Helper completes with client | Future optional field coach — not v2 default |
 | Evals / public goods | Gates, Signpost research | Benchmarks | Demo scripts + sample PDFs |
 

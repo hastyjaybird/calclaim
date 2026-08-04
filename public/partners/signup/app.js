@@ -36,11 +36,36 @@ function showSuccess(payload) {
   const bannerLink = el("success-banner-link");
   if (bannerLink) bannerLink.href = payload.bannerUrl;
 
+  const bannerName = el("success-banner-name");
+  if (bannerName) bannerName.textContent = payload.name || "";
+
+  const bannerFooterId = el("success-banner-footer-id");
+  if (bannerFooterId) {
+    bannerFooterId.textContent = payload.partnerId
+      ? `Partner ID: ${payload.partnerId}`
+      : "";
+  }
+
+  const bannerQr = el("success-banner-qr");
+  if (bannerQr && payload.qrUrl) {
+    bannerQr.src = payload.qrUrl;
+    bannerQr.alt = "";
+  }
+
+  const logoWrap = el("success-banner-logo-wrap");
+  const logoImg = el("success-banner-logo");
+  if (logoWrap && logoImg) {
+    if (payload.logo) {
+      logoImg.src = payload.logo;
+      logoWrap.hidden = false;
+    } else {
+      logoImg.removeAttribute("src");
+      logoWrap.hidden = true;
+    }
+  }
+
   const qrLink = el("success-qr-link");
   if (qrLink) qrLink.href = payload.qrUrl;
-
-  const outbox = el("success-outbox-note");
-  if (outbox) outbox.hidden = payload.emailMode !== "outbox";
 
   successPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -55,6 +80,8 @@ function bindForm() {
     const name = String(el("signup-name")?.value || "").trim();
     const email = String(el("signup-email")?.value || "").trim();
     const city = String(el("signup-city")?.value || "").trim();
+    const logoInput = el("signup-logo");
+    const logoFile = logoInput?.files?.[0] || null;
 
     if (!name) {
       showStatus(txt("signup.errorName", "Add your organization name."), true);
@@ -64,15 +91,27 @@ function bindForm() {
       showStatus(txt("signup.errorEmail", "Add your work email."), true);
       return;
     }
+    if (logoFile && logoFile.size > 2_000_000) {
+      showStatus(
+        txt("signup.errorLogoSize", "Logo must be 2 MB or smaller."),
+        true,
+      );
+      return;
+    }
 
     if (submit) submit.disabled = true;
     showStatus(txt("signup.sending", "Creating your partner kit…"), false);
 
     try {
+      const body = new FormData();
+      body.set("name", name);
+      body.set("email", email);
+      body.set("city", city);
+      if (logoFile) body.set("logo", logoFile);
+
       const res = await fetch("/api/partners/signup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, city }),
+        body,
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -80,7 +119,18 @@ function bindForm() {
         const map = {
           name_required: txt("signup.errorName", "Add your organization name."),
           email_required: txt("signup.errorEmail", "Add your work email."),
-          email_invalid: txt("signup.errorEmailInvalid", "Enter a valid email address."),
+          email_invalid: txt(
+            "signup.errorEmailInvalid",
+            "Enter a valid email address.",
+          ),
+          logo_type: txt(
+            "signup.errorLogoType",
+            "Use a PNG, JPG, WebP, or GIF logo.",
+          ),
+          logo_too_large: txt(
+            "signup.errorLogoSize",
+            "Logo must be 2 MB or smaller.",
+          ),
         };
         showStatus(
           map[code] || txt("signup.error", "Could not sign up. Try again."),

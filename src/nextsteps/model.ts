@@ -1,18 +1,32 @@
 import { annualizeMaxBenefitUsd } from "../corpus/benefitEstimate.js";
-import { docLabel } from "../corpus/docs.js";
+import { docLabel, hasDoc } from "../corpus/docs.js";
 import { getProgram } from "../corpus/load.js";
+import { programDifficulty } from "../corpus/requirements.js";
 import type {
   DocId,
   NextStepsItem,
   SessionState,
   TodoStatus,
 } from "../corpus/types.js";
+import { formatApplyPeriods } from "../disaster/format.js";
+import { lastApplyDay, windowForProgram } from "../disaster/liveWindow.js";
 
 function deadlineFields(programId: string): {
   deadlineLabel: string;
   deadlineDate: string | null;
 } {
   const p = getProgram(programId);
+  if (p) {
+    // An approved disaster window has real dates; the corpus row only has the
+    // "windows only" caveat, which reminders cannot act on.
+    const window = windowForProgram(p);
+    if (window) {
+      return {
+        deadlineLabel: `Apply ${formatApplyPeriods(window.applyPeriods)} only`,
+        deadlineDate: lastApplyDay(window),
+      };
+    }
+  }
   const d = p?.deadlines?.[0];
   if (!d) {
     return { deadlineLabel: "", deadlineDate: null };
@@ -21,6 +35,14 @@ function deadlineFields(programId: string): {
     deadlineLabel: d.label,
     deadlineDate: d.date,
   };
+}
+
+/** Per-event phone or URL beats the corpus apply link during a window. */
+function applyLink(programId: string): string {
+  const p = getProgram(programId);
+  if (!p) return "";
+  const window = windowForProgram(p);
+  return window?.applyUrl ?? p.applyUrl;
 }
 
 export function upsertItem(
@@ -32,6 +54,13 @@ export function upsertItem(
   const program = getProgram(programId);
   if (!program) return;
   const { deadlineLabel, deadlineDate } = deadlineFields(programId);
+  const window = windowForProgram(program);
+  // Phone-only D-CalFresh operations have no apply URL, so the phone number has
+  // to travel in the action text or it never reaches the To Do List PDF.
+  const applyAction =
+    window?.applyPhone && !window.applyUrl
+      ? `Apply for ${program.name} by phone at ${window.applyPhone}`
+      : `Apply for ${program.name}`;
   const action =
     actionOverride ??
     (status === "done"
@@ -40,12 +69,13 @@ export function upsertItem(
         ? `Skipped ${program.name}`
         : status === "snoozed"
           ? `Remind later: ${program.name}`
-          : `Apply for ${program.name}`);
+          : applyAction);
 
   const existing = session.items.find((i) => i.programId === programId);
   if (existing) {
     existing.status = status;
     existing.action = action;
+    existing.link = applyLink(programId);
     existing.deadlineLabel = deadlineLabel;
     existing.deadlineDate = deadlineDate;
     return;
@@ -56,7 +86,7 @@ export function upsertItem(
     programName: program.name,
     category: program.category,
     action,
-    link: program.applyUrl,
+    link: applyLink(programId),
     deadlineLabel,
     deadlineDate,
     status,
@@ -78,7 +108,7 @@ export function docsToGather(session: SessionState): string[] {
   const set = new Set<string>();
   for (const item of open) {
     for (const d of item.docs) {
-      if (!session.docsInHand.includes(d)) set.add(d);
+      if (!hasDoc(session.docsInHand, d)) set.add(d);
     }
   }
   return [...set];
@@ -106,7 +136,7 @@ export function docsSavingsTable(session: SessionState): DocSavingsRow[] {
       ? annualizeMaxBenefitUsd(program, session.householdSize)
       : 0;
     for (const d of item.docs) {
-      if (session.docsInHand.includes(d)) continue;
+      if (hasDoc(session.docsInHand, d)) continue;
       const row = byDoc.get(d) ?? { annualUsd: 0, programNames: [] };
       row.annualUsd += annual;
       if (!row.programNames.includes(item.programName)) {
@@ -148,10 +178,20 @@ export function closestDeadline(session: SessionState): NextStepsItem | null {
 }
 
 export function openTodos(session: SessionState): NextStepsItem[] {
-  return session.items.filter(
+  const open = session.items.filter(
     (i) =>
       i.status === "todo" ||
       i.status === "in_progress" ||
       i.status === "snoozed",
   );
+  const tierOrder = { easy: 0, moderate: 1, hard: 2 } as const;
+  return [...open].sort((a, b) => {
+    const da = programDifficulty(a.programId);
+    const db = programDifficulty(b.programId);
+    if (tierOrder[da.tier] !== tierOrder[db.tier]) {
+      return tierOrder[da.tier] - tierOrder[db.tier];
+    }
+    if (da.score !== db.score) return da.score - db.score;
+    return a.programName.localeCompare(b.programName);
+  });
 }
