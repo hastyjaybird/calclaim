@@ -650,6 +650,16 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
         return;
       }
 
+      if (pathname === "/favicon.svg") {
+        serveStatic(res, "/favicon.svg", { "Cache-Control": "public, max-age=86400" });
+        return;
+      }
+      // Browsers and crawlers still probe /favicon.ico even with a link tag.
+      if (pathname === "/favicon.ico") {
+        redirect(res, "/favicon.svg");
+        return;
+      }
+
       if (pathname === "/api/stats") {
         send(res, 200, JSON.stringify(buildImpactStats()), "application/json; charset=utf-8");
         return;

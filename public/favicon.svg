@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="CalClaim">
+  <rect width="64" height="64" rx="14" fill="#0d7a5f" />
+  <path
+    d="M41.6 20.5A15 15 0 1 0 41.6 43.5"
+    fill="none"
+    stroke="#eef4f1"
+    stroke-width="7"
+    stroke-linecap="round"
+  />
+</svg>
