@@ -11,7 +11,7 @@
 
 ## Job
 
-Get the user from “you might qualify for several kinds of help” to “I have a clear To Do List with links and deadlines – and I’ll get nudged” with **almost no thinking**.
+Get the user from “you might qualify for several kinds of help” to “I have a clear Application Guide with links and deadlines – and I’ll get nudged” with **almost no thinking**.
 
 We do **not** auto-submit to agencies. We do **not** make energy/PG&E the only finish path.
 
@@ -20,8 +20,8 @@ We do **not** auto-submit to agencies. We do **not** make energy/PG&E the only f
 ## Hard rules (non-negotiable)
 
 1. **One job per screen** in chat – usually one offer card or one confirm.  
-2. **The file is the durable finish line** – one To Do List / benefits report PDF is updated and re-sent after meaningful actions.  
-3. **Same button shapes** on every offer: I'm already enrolled · Add to my To Do List · Skip program.  
+2. **The file is the durable finish line** – one Application Guide PDF is updated and re-sent after meaningful actions.  
+3. **Same button shapes** on every offer: I'm already enrolled · Add to My Application Guide · Skip program.  
 4. **Official apply links live in the finish summary + PDF** – not on offer cards (keeps people in chat).  
 5. **No auto-submit** (v2).  
 6. **Forgiving STOP / erase** – user can wipe everything.  
@@ -34,22 +34,22 @@ We do **not** auto-submit to agencies. We do **not** make energy/PG&E the only f
 
 ### Phase 1 – Offer → action
 
-User sees one program card (any category). They tap Already enrolled / Add to my To Do List / Skip program.
+User sees one program card (any category). They tap Already enrolled / Add to My Application Guide / Skip program.
 
-### Phase 2 – Finish summary + living To Do List (= benefits report)
+### Phase 2 – Finish summary + living Application Guide
 
 When the queue ends **and** there is at least one open to-do:
 
 1. Abbreviated chat summary (total $, docs → $, programs + signup URLs)  
-2. Send `calclaim-todo-list.pdf`:
+2. Send `calclaim-application-guide.pdf` (caption: “Click to download your Application Guide”):
    - Header + “You may qualify for a total of ~$X this year”  
    - **Step 1 – Find your documents** (deduped, with est. $ unlocked)  
    - **Step 2 – Open applications** (program, est. minutes, **clickable** apply link, deadline, status)  
    - Closest deadline · Already on · disclaimer  
 
-If there are **no** open to-dos: skip the report; nudge share-with-a-friend.
+If there are **no** open to-dos: skip the guide; nudge share-with-a-friend.
 
-After the PDF: auto-prompt email-to-computer (Send link to my email). Idle actions: Email report to my computer · Share · Restart · More info.
+After the PDF: auto-prompt email-to-computer (Send link to my email). Idle actions: Email Application Guide to my computer · Share · Restart · More info.
 
 ### Phase 3 – Reminders
 
@@ -59,7 +59,7 @@ After the PDF: auto-prompt email-to-computer (Send link to my email). Idle actio
 | T-3 | 3 days before any dated todo at 12:00 |
 | T-1 | 1 day before at 12:00 |
 
-Reminder message: closest/due item + deep link or “open your latest To Do List” + Mark done · Snooze · Help · STOP.
+Reminder message: closest/due item + deep link or “open your latest Application Guide” + Mark done · Snooze · Help · STOP.
 
 ---
 
@@ -77,7 +77,7 @@ Reminder message: closest/due item + deep link or “open your latest To Do List
 
 ## Add-to-list handoff
 
-Stay in chat. Ack briefly (“Added to your To Do List.”) and advance. Official URLs appear in the finish summary + PDF.
+Stay in chat. Ack briefly (“Added to your Application Guide.”) and advance. Official URLs appear in the finish summary + PDF.
 
 ---
 
@@ -86,7 +86,7 @@ Stay in chat. Ack briefly (“Added to your To Do List.”) and advance. Officia
 Triggers: Help, “I’m lost”, idle re-entry / More info.
 
 ```text
-[ Email report to my computer ]   ← only if open to-dos exist (primary)
+[ Email Application Guide to my computer ]   ← only if open to-dos exist (primary)
 [ Share CalClaim with friends ]
 [ Restart ]
 [ More info ]         ← help menu
@@ -111,7 +111,7 @@ A later version may add, **for a single chosen program**, the retired pattern: o
 A reviewer who is **not** carefully reading:
 
 1. Completes gate + at least two offer actions across **different categories** (e.g. LifeLine + CARE, or CalFresh + CARE).  
-2. Receives an updated To Do List PDF (the benefits report) they can open on phone.  
+2. Receives an updated Application Guide PDF they can open on phone.  
 3. Sees deadlines (or honest “check site”) without hunting.  
 4. Can STOP and erase.
 
@@ -121,7 +121,7 @@ If the finish-line still feels like “only PG&E links,” it fails the v2 bar i
 
 ## Implementation notes
 
-- `NextSteps` model in DB is source of truth; PDF is the user-facing view (report ≡ To Do List).  
+- `NextSteps` model in DB is source of truth; PDF is the user-facing Application Guide.  
 - Phone → computer: finish auto-prompts email handoff. One tap opens a short-lived page that auto-launches Mail with a 7-day PDF download link (phones can’t attach files to `mailto:`; Telegram URL buttons can’t be `mailto:`). No Telegram Desktop assumption.  
 - Track: file opens; Add-to-list taps by category; reminder engagement.
 

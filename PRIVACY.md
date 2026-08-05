@@ -33,14 +33,14 @@ Tables: `telegram_users`, `telegram_messages` in the demo database.
 
 - QR scans and shared-link clicks (campaign id, timestamp)
 - Clicks from the bot to official program apply pages (program id, timestamp)
-- “Add to my To Do List” follow-through taps
+- “Add to My Application Guide” follow-through taps
 - Coarse location only: QR poster placement coordinates, and optionally city-level IP geolocation (rounded; never street address)
 
 ## What we do **not** collect (v2)
 
 - Document uploads as a required product step (ID, pay stubs, bills) – if you send a file anyway, file metadata may be logged as above
 - Payment information
-- Marketing email lists (optional email on the contact form is for replies only; partner signup email is only for delivering that partner’s QR kit; “Email report to my computer” opens your own Mail app with a download link and does not send us the address)
+- Marketing email lists (optional email on the contact form is for replies only; partner signup email is only for delivering that partner’s QR kit; “Email Application Guide to my computer” opens your own Mail app with a download link and does not send us the address)
 - Phone numbers unless you tap Telegram’s share-contact control
 - Precise GPS unless you share a location
 - Raw IP addresses stored long-term (looked up briefly for city-level map dots, then discarded)
@@ -57,7 +57,7 @@ We do not sell your data. This demo does not send your Telegram profile or messa
 
 ## Retention & deletion
 
-- Message **STOP** to pause deadline reminders only (your session and To Do List stay; message again to resume reminders).
+- Message **STOP** to pause deadline reminders only (your session and Application Guide stay; message again to resume reminders).
 - Use **Help → Erase all my data** / type **erase** to delete your session, Telegram user/message rows, todos, reminder flags, your QC log rows, and your alpha feedback to-do rows.
 - Aggregate impact counts (anonymized event totals) may remain on the funder dashboard after you erase your session.
 - Hosting operators may wipe the demo database when the demo ends.

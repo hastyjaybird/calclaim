@@ -230,7 +230,7 @@ function drawTodoItem(
   doc.moveDown(0.45);
 }
 
-/** One living PDF: the benefits report and the To Do List are the same document. */
+/** One living PDF: the Application Guide (programs to apply for + how). */
 export async function renderNextStepsPdf(session: SessionState): Promise<Buffer> {
   const doc = new PDFDocument({ margin: 48, size: "LETTER" });
   const done = collectPdf(doc);
@@ -240,12 +240,12 @@ export async function renderNextStepsPdf(session: SessionState): Promise<Buffer>
     .fillColor("#000")
     .font("Helvetica-Bold")
     .fontSize(18)
-    .text("CalClaim – Your To Do List");
+    .text("CalClaim – Your Application Guide");
   doc
     .font("Helvetica")
     .fontSize(10)
     .fillColor("#444")
-    .text("Your benefits report · same file · estimates only");
+    .text("Programs you may qualify for · how to apply · estimates only");
   doc.text(
     `Generated: ${new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" })} PT`,
   );
@@ -300,7 +300,7 @@ export async function renderNextStepsPdf(session: SessionState): Promise<Buffer>
   doc.moveDown();
 
   doc.fontSize(9).fillColor("#555").text(getDisclaimer());
-  doc.text("In Telegram: say “to do” to resend this file · STOP pauses reminders · erase deletes your data.");
+  doc.text("In Telegram: say “guide” to resend this file · STOP pauses reminders · erase deletes your data.");
   doc.moveDown(0.6);
   doc
     .fontSize(9)

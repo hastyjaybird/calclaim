@@ -7,7 +7,7 @@ import type { Program, ProgramCategory } from "./types.js";
 /**
  * Requirements matrix: the operational "what does it actually take to finish
  * this application" layer that sits beside programs.json. The bot uses
- * difficulty scores to order the To Do List / PDF; the rest of the matrix
+ * difficulty scores to order the Application Guide PDF; the rest of the matrix
  * (eligibility tags, unlock graph, review status) is for the developer page.
  */
 

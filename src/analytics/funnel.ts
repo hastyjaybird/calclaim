@@ -45,7 +45,7 @@ export const FUNNEL_STAGES = [
   {
     id: "finished",
     label: "Finished queue",
-    detail: "Got To Do List / benefits report",
+    detail: "Got Application Guide",
   },
 ] as const;
 

@@ -5,10 +5,10 @@ export const PRIVACY_POLICY_URL =
 export const HELP_MENU_TEXT = `Help – type one of these anytime:
 
 • stop – pause deadline reminders (keeps your data; message again to resume)
-• to do – resend your To Do List / benefits report
-• email – open your email app with a link to your report (for your computer)
+• guide – resend your Application Guide
+• email – open your email app with a link to your Application Guide (for your computer)
 • share – get a link or QR code for someone else
-• restart – start over from the beginning (clears your To Do List)
+• restart – start over from the beginning (clears your Application Guide)
 • erase – delete all your CalClaim data from this session
 
 We store Telegram profile info and messages to run this demo. We do not sell your data or send it to third-party marketers.
@@ -26,7 +26,7 @@ export const PRIVACY_SHORT = `Privacy (short):
 
 Full policy: ${PRIVACY_POLICY_URL}`;
 
-export const ABOUT_TEXT = `CalClaim helps California people find financial aid and benefits – food, health, phone discounts, energy bill help, and more.
+export const ABOUT_TEXT = `CalClaim finds California programs you might be eligible for – food, health, phone discounts, energy bill help, and more – and gives you an Application Guide so you can apply.
 
 Estimates only. Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, or any agency. Not tax, legal, or benefits advice. Official agencies decide eligibility.
 
@@ -36,8 +36,8 @@ Energy / utility programs (CARE, ESA, etc.) are just some of the programs in the
 export const THANKS_FEEDBACK = "Thanks for your feedback!";
 
 /** Shared household vs roommate blurb – reuse on every screen that says “household”. */
-export const HOUSEHOLD_EXPLAIN = `Your household = people who share money with you (buy food together, share bills, or depend on each other).
-Not your household = roommates who keep their rent/food money separate.`;
+export const HOUSEHOLD_EXPLAIN =
+  "Your household = people who share money with you (buy food together, share bills, or depend on each other). Not roommates who keep their rent/food money separate.";
 
 /** @deprecated use THANKS_FEEDBACK – kept for older docs references */
 export const THANKS_REDIRECT = THANKS_FEEDBACK;

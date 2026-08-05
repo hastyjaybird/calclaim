@@ -84,6 +84,6 @@ const sample: SessionState = {
 const outDir = path.join(root, "docs", "samples");
 fs.mkdirSync(outDir, { recursive: true });
 const buf = await renderNextStepsPdf(sample);
-const out = path.join(outDir, "calclaim-todo-list-sample.pdf");
+const out = path.join(outDir, "calclaim-application-guide-sample.pdf");
 fs.writeFileSync(out, buf);
 console.log("Wrote", out);

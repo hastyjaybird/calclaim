@@ -131,7 +131,7 @@ function telegramSafeUrl(url: string): boolean {
   }
 }
 
-/** Public site shown first in the opt-in message (Telegram auto-linkifies https). */
+/** Public site linked from the opt-in message (Telegram HTML <a>). */
 const CALCLAIM_SITE_FALLBACK = "https://calclaim.jayhasty.com";
 
 export async function sendOptIn(
@@ -146,15 +146,13 @@ export async function sendOptIn(
   await replyTracked(
     ctx,
     session,
-    `${siteUrl}
+    `<a href="${siteUrl}">CalClaim</a> finds California programs you might be eligible for – help with bills, food, health, phone discounts, energy bills, and more – and gives you an Application Guide so you can apply.
 
-CalClaim helps you find California benefits and bill help – food, health, phone discounts, energy bill programs, and more.
+At any time, text or send a voice message to report an issue or suggest an improvement ✨
 
 Estimates only. Not affiliated with any agency.
-Type 'help' for more options.
-
-At any time, you can text or send a voice message describing any issue that comes up or suggest an improvement ✨`,
-    { reply_markup: optInKeyboard() },
+Type 'help' for more options.`,
+    { reply_markup: optInKeyboard(), parse_mode: "HTML" },
   );
 }
 
@@ -197,8 +195,8 @@ async function continueAfterGateNo(ctx: Context, session: SessionState): Promise
 async function sendNextStepsFile(ctx: Context, session: SessionState): Promise<void> {
   const buf = await renderNextStepsPdf(session);
   await ctx.replyWithDocument(
-    new InputFile(buf, "calclaim-todo-list.pdf"),
-    { caption: "Your To Do List (benefits report) ↓" },
+    new InputFile(buf, "calclaim-application-guide.pdf"),
+    { caption: "Click to download your Application Guide" },
   );
 }
 
@@ -261,29 +259,32 @@ function formatReportSummary(session: SessionState): string {
   }
 
   if (todos.length > 0) {
-    lines.push("", "Programs on your To Do List:");
+    lines.push("", "Programs on your Application Guide:");
     for (const item of todos) {
       lines.push(`• ${item.programName}`);
     }
   }
 
-  lines.push(
-    "",
-    "Full report PDF coming next ↓",
-    "",
-    "We'd really appreciate any feedback – just send a text or voice message anytime.",
-    "",
-    "For more help, visit BenefitsCal at https://benefitscal.com/",
-  );
+  lines.push("", "Your Application Guide PDF coming next ↓");
   return lines.join("\n");
 }
 
+function formatFinishClosingMessage(): string {
+  return `We'd really appreciate any feedback – just send a text or voice message anytime.
+
+For more help, visit BenefitsCal at https://benefitscal.com/`;
+}
+
+function formatStopOptOutMessage(): string {
+  return "Say STOP if you do not want any infrequent updates for benefit updates and changes.";
+}
+
 function formatEmptyQueueMessage(): string {
-  return `You're through the list – nothing to add to a To Do List right now.
+  return `You're through the list – nothing to add to an Application Guide right now.
 
 Know someone who might need benefits help? Share CalClaim with a friend.
 
-We'd really appreciate any feedback – just send a text or voice message anytime.`;
+${formatFinishClosingMessage()}`;
 }
 
 /** Pause deadline reminders only – keeps session, todos, and data. */
@@ -301,7 +302,7 @@ export async function stopRemindersOnly(
   await replyTracked(
     ctx,
     session,
-    "Reminders stopped. Your To Do List and data stay. Message me anytime to turn reminders back on – or say 'to do' for your report, help for more info.",
+    "Reminders stopped. Your Application Guide and data stay. Message me anytime to turn reminders back on – or say 'guide' for your guide, help for more info.",
     { reply_markup: idleKeyboard(hasOpenReport(session)) },
   );
 }
@@ -325,15 +326,18 @@ async function finishQueue(ctx: Context, session: SessionState): Promise<void> {
 
   const open = openTodos(session);
   if (open.length === 0) {
-    await replyTracked(ctx, session, formatEmptyQueueMessage(), {
+    await replyTracked(ctx, session, formatEmptyQueueMessage());
+    await replyTracked(ctx, session, formatStopOptOutMessage(), {
       reply_markup: idleKeyboard(false),
     });
     return;
   }
 
   await sendReportBundle(ctx, session);
-  // Primary job after apply links: get the PDF onto a computer (nobody has Telegram Desktop).
-  await promptEmailToComputer(ctx, session);
+  await replyTracked(ctx, session, formatFinishClosingMessage());
+  await replyTracked(ctx, session, formatStopOptOutMessage(), {
+    reply_markup: idleKeyboard(true),
+  });
 }
 
 export async function presentOffer(ctx: Context, session: SessionState): Promise<void> {
@@ -520,7 +524,7 @@ async function askImmigrationStatus(
   await replyTracked(
     ctx,
     session,
-    `A few more programs check immigration status.
+    `A few more programs check immigration status. There may also be California programs available specifically for non-citizens.
 
 Are you (or the person applying) a U.S. citizen or an eligible immigrant?
 
@@ -648,17 +652,17 @@ async function promptEmailToComputer(
     await replyTracked(
       ctx,
       session,
-      "There's no to-do report to email right now. Share CalClaim with a friend who might need help?",
+      "There's no Application Guide to email right now. Share CalClaim with a friend who might need help?",
       { reply_markup: idleKeyboard(false) },
     );
     return;
   }
 
   const forwardFallback =
-    "To open this report on a computer: forward the PDF above to your own email (Telegram → Share), then open the attachment on your laptop.";
+    "To open your Application Guide on a computer: forward the PDF above to your own email (Telegram → Share), then open the attachment on your laptop.";
 
   const emailCopy =
-    "To open this report on a computer: tap below – your email app opens with a download link. Send it to yourself, then open the link on your laptop.\n\n" +
+    "To open your Application Guide on a computer: tap below – your email app opens with a download link. Send it to yourself, then open the link on your laptop.\n\n" +
     "(Phones can't attach the PDF to email automatically.)";
 
   if (!appConfig?.publicBaseUrl) {
@@ -954,7 +958,7 @@ Add up income for everyone you just counted.`,
     upsertItem(session, id, "in_progress");
     advanceQueue(session);
     saveSession(session);
-    await ctx.reply("Added to your To Do List.");
+    await ctx.reply("Added to your Application Guide.");
     await presentOffer(ctx, session);
     return;
   }
@@ -1025,7 +1029,7 @@ Add up income for everyone you just counted.`,
       await replyTracked(
         ctx,
         session,
-        "There's no to-do report right now. Share CalClaim with a friend who might need help?",
+        "There's no Application Guide right now. Share CalClaim with a friend who might need help?",
         { reply_markup: idleKeyboard(false) },
       );
       return;

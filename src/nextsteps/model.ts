@@ -56,7 +56,7 @@ export function upsertItem(
   const { deadlineLabel, deadlineDate } = deadlineFields(programId);
   const window = windowForProgram(program);
   // Phone-only D-CalFresh operations have no apply URL, so the phone number has
-  // to travel in the action text or it never reaches the To Do List PDF.
+  // to travel in the action text or it never reaches the Application Guide PDF.
   const applyAction =
     window?.applyPhone && !window.applyUrl
       ? `Apply for ${program.name} by phone at ${window.applyPhone}`

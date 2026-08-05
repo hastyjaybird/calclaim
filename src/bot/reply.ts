@@ -22,9 +22,15 @@ export async function replyTracked(
   extra?: ReplyExtra,
 ): Promise<void> {
   await ctx.reply(text, extra);
+  const parseMode = extra?.parse_mode;
   session.lastBotMessage = {
     text,
     replyMarkup: serializeMarkup(extra?.reply_markup),
+    ...(parseMode === "HTML" ||
+    parseMode === "Markdown" ||
+    parseMode === "MarkdownV2"
+      ? { parseMode }
+      : {}),
   };
   saveSession(session);
 }
@@ -35,11 +41,11 @@ export async function repeatLastMessage(
 ): Promise<boolean> {
   const last = session.lastBotMessage;
   if (!last?.text) return false;
-  await ctx.reply(
-    last.text,
-    last.replyMarkup
+  await ctx.reply(last.text, {
+    ...(last.replyMarkup
       ? { reply_markup: last.replyMarkup as never }
-      : undefined,
-  );
+      : {}),
+    ...(last.parseMode ? { parse_mode: last.parseMode } : {}),
+  });
   return true;
 }

@@ -101,7 +101,7 @@ export function offerKeyboard(programId: string): InlineKeyboard {
   return new InlineKeyboard()
     .text("I'm already enrolled", `offer:already:${programId}`)
     .row()
-    .text("Add to my To Do List", `offer:signup:${programId}`)
+    .text("Add to My Application Guide", `offer:signup:${programId}`)
     .row()
     .text("Skip program", `offer:skip:${programId}`);
 }
@@ -142,10 +142,10 @@ export function confirmKeyboard(kind: "stop" | "erase"): InlineKeyboard {
     .text("No – keep going", "erase:no");
 }
 
-/** End-of-flow actions. Email only when there is an open to-do report. */
+/** End-of-flow actions. Email only when there is an open Application Guide. */
 export function idleKeyboard(hasReport = true): InlineKeyboard {
   const kb = new InlineKeyboard();
-  // No report → lead with share (primary nudge when nothing to apply for).
+  // No guide → lead with share (primary nudge when nothing to apply for).
   if (!hasReport) {
     kb.text("Share CalClaim with friends", "idle:share")
       .row()
@@ -154,9 +154,9 @@ export function idleKeyboard(hasReport = true): InlineKeyboard {
       .text("More info", "idle:more_info");
     return kb;
   }
-  // Report ready → email-to-computer is the primary next job.
+  // Guide ready → email-to-computer is the primary next job.
   return kb
-    .text("Email report to my computer", "idle:email")
+    .text("Email Application Guide to my computer", "idle:email")
     .row()
     .text("Share CalClaim with friends", "idle:share")
     .row()

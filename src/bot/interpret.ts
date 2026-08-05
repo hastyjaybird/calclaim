@@ -86,10 +86,16 @@ const COMMAND_ALIASES: Record<CommandName, string[]> = {
     "email me",
     "email report",
     "email my report",
+    "email guide",
+    "email my guide",
     "mail",
     "send email",
   ],
   todo: [
+    "guide",
+    "application guide",
+    "my guide",
+    "my application guide",
     "todo",
     "to do",
     "to-do",
@@ -256,7 +262,7 @@ function containsCommand(normalized: string): CommandName | null {
   if (/\b(erase|delete|forget|wipe)\b/.test(joined)) return "erase";
   if (/\b(restart|reset|start over)\b/.test(joined)) return "restart";
   if (
-    /\b(to do|todo|to-do)\b/.test(joined) ||
+    /\b(guide|application guide|to do|todo|to-do)\b/.test(joined) ||
     (words.includes("list") &&
       (words.includes("my") || words.includes("send") || words.includes("resend")))
   ) {
@@ -270,7 +276,11 @@ function containsCommand(normalized: string): CommandName | null {
   ) {
     return "share";
   }
-  if (/\b(email (me|report|my report)|send (by )?email)\b/.test(joined)) {
+  if (
+    /\b(email (me|report|my report|guide|my guide)|send (by )?email)\b/.test(
+      joined,
+    )
+  ) {
     return "email";
   }
   if (joined === "start" || /^(please )?start$/.test(joined)) return "start";
@@ -567,7 +577,7 @@ function interpretStepAnswer(
       return { kind: "step_answer", callback: "idle:more_info" };
     }
     if (
-      /\b(list|todo|to do|report|pdf|again|resend|send)\b/.test(normalized)
+      /\b(list|todo|to do|guide|report|pdf|again|resend|send)\b/.test(normalized)
     ) {
       return { kind: "step_answer", callback: "idle:resend" };
     }
@@ -582,7 +592,7 @@ const COMMAND_DISPLAY: Record<CommandName, string> = {
   erase: "erase",
   start: "start",
   restart: "restart",
-  todo: "to do",
+  todo: "guide",
   share: "share",
   email: "email",
 };
@@ -668,15 +678,15 @@ export function stepNudge(step: StepId): string {
     case "has_zip":
       return "Type your 5-digit home ZIP code, or tap Skip if you're not sure.";
     case "offer":
-      return "Use the buttons – add to your To Do List, say you're already enrolled, or skip.";
+      return "Use the buttons – add to your Application Guide, say you're already enrolled, or skip.";
     case "idle":
-      return "You're all set for now. Restart, share with a friend, email your report to a computer, or more info.";
+      return "You're all set for now. Restart, share with a friend, email your Application Guide to a computer, or more info.";
     case "confirm_stop":
       return "Want me to pause reminders? Tap Yes or No below.";
     case "confirm_erase":
       return "This would delete your CalClaim data. Tap Yes or No below.";
     case "help_menu":
-      return "Pick a button below, or type stop, to do, share, restart, or erase.";
+      return "Pick a button below, or type stop, guide, share, restart, or erase.";
     default:
       return "Tap a button below to keep going – or type help if you're stuck.";
   }

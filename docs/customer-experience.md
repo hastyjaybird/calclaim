@@ -3,14 +3,14 @@
 **Status:** Settled **v2** build contract (2026-07-31)  
 **Product version:** CalClaim v2 – California financial aid / benefits navigator (Telegram)  
 **Applies before code:** Implement this tree. Do not invent a PG&E-only funnel.  
-**Companion law:** [`finish-line-ux.md`](finish-line-ux.md) for living To Do List / benefits report + reminders.  
+**Companion law:** [`finish-line-ux.md`](finish-line-ux.md) for living Application Guide + reminders.  
 **Supersedes:** Retired v1 energy-only triage (language → PG&E zip → CARE-first field coach).
 
 ---
 
 ## Job
 
-Household opens CalClaim on Telegram → short gate → ranked **financial-aid offers across categories** → each action updates a **living To Do List / benefits report** (one PDF) → end-of-queue re-sends that same file → reminders until they act or STOP.
+Household opens CalClaim on Telegram → short gate → ranked **financial-aid offers across categories** → each action updates a **living Application Guide** (one PDF) → end-of-queue re-sends that same file → reminders until they act or STOP.
 
 Energy / utility programs (CARE, FERA, ESA, LIHEAP, AMP, …) are **offers in the queue**, not the product center.
 
@@ -21,7 +21,7 @@ Energy / utility programs (CARE, FERA, ESA, LIHEAP, AMP, …) are **offers in th
 | Bin | When we ask | Examples |
 |---|---|---|
 | **Memorized / known** | Gate + income band (NO arm) | Already on Medi-Cal/CalFresh/…; rough income × HH band |
-| **Look up / official** | Inside To Do List PDF + offer “Sign up” | Account #, award letters, pay stubs – listed in **file**, not a mega triage quiz |
+| **Look up / official** | Inside Application Guide PDF + offer “Sign up” | Account #, award letters, pay stubs – listed in **file**, not a mega triage quiz |
 | **Apply** | Official site via Sign up URL | User applies; we do not auto-submit |
 
 **Rules:**
@@ -30,7 +30,7 @@ Energy / utility programs (CARE, FERA, ESA, LIHEAP, AMP, …) are **offers in th
 - Rank offer waves by fewest remaining triage questions, then `newDocs` → `timeToMoney` inside a wave.  
 - Report / PDF lists open programs **easiest → hardest** (requirements-matrix difficulty).  
 - Never a mega-checklist of all programs in chat.  
-- Docs to gather live in the **To Do List PDF** (deduped union of open todos) as Step 1.
+- Docs to gather live in the **Application Guide PDF** (deduped union of open todos) as Step 1.
 
 ---
 
@@ -73,7 +73,7 @@ Library is source of truth. Every program that enters a user’s queue must reso
 | Taps to first offer card | **2–3** (opt-in → gate → card; income/past-due deferred) |
 | Buttons per offer card | Fixed set: Sign up · Already · Remind later · Skip |
 | Docs uploaded in chat | **0** |
-| To Do List PDF (= benefits report) | Re-sent after each meaningful action and when queue empties |
+| Application Guide PDF | Re-sent after each meaningful action and when queue empties |
 
 ---
 
@@ -87,10 +87,10 @@ START (/start or first message)
        └─ No  → NO_SEED docsInHand → OFFER waves (0-question programs first; income later)
   → OFFER_CARD (loop)
        Sign up | Already enrolled | Remind me later | Skip (| CARE Skip sub-branch)
-       → UPDATE To Do List PDF + sendDocument
+       → UPDATE Application Guide PDF + sendDocument
        → more in this wave? → next card
        → else ask next cheapest gate (income / past_due / child / ABD / work / disaster / ZIP) if it unlocks more → new wave
-       → else re-send To Do List PDF → ARM_REMINDERS → IDLE
+       → else re-send Application Guide PDF → ARM_REMINDERS → IDLE
   → IDLE: Help | STOP | reminder callbacks | /start (confirm if active)
 
 GLOBAL anytime: Help | STOP | free-form QC fallback
@@ -113,15 +113,15 @@ GLOBAL anytime: Help | STOP | free-form QC fallback
 ### OPT_IN
 
 ```text
-https://calclaim.jayhasty.com   (or PUBLIC_BASE_URL when it is https-safe)
+CalClaim finds California programs you might be eligible for – help with bills,
+food, health, phone discounts, energy bills, and more – and gives you an
+Application Guide so you can apply.
+(CalClaim is a link to the public site / PUBLIC_BASE_URL when https-safe.)
 
-CalClaim helps you find California benefits and bill help –
-food, health, phone discounts, energy bill programs, tax credits, and more.
-Estimates only. Not affiliated with any agency or utility.
+At any time, text or send a voice message to report an issue or suggest an
+improvement ✨
 
-At any time, you can text or send a voice message describing any issue
-that comes up or suggest an improvement ✨
-
+Estimates only. Not affiliated with any agency.
 Type 'help' for more options.
 
 [ Start ]
@@ -137,8 +137,7 @@ Type 'help' for more options.
 ```text
 Is anyone in your household already on any of these?
 
-Your household = people who share money with you (buy food together, share bills, or depend on each other).
-Not your household = roommates who keep their rent/food money separate.
+Your household = people who share money with you (buy food together, share bills, or depend on each other). Not roommates who keep their rent/food money separate.
 
 [ tap programs… ] [ Done ] / [ None ]
 ```
@@ -153,8 +152,7 @@ Not your household = roommates who keep their rent/food money separate.
 ```text
 How many people are in your household?
 
-Your household = people who share money with you (buy food together, share bills, or depend on each other).
-Not your household = roommates who keep their rent/food money separate.
+Your household = people who share money with you (buy food together, share bills, or depend on each other). Not roommates who keep their rent/food money separate.
 
 Tap a number:
 ```
@@ -164,8 +162,7 @@ Tap a number:
 ```text
 About how much is your household's total yearly income before taxes?
 
-Your household = people who share money with you (buy food together, share bills, or depend on each other).
-Not your household = roommates who keep their rent/food money separate.
+Your household = people who share money with you (buy food together, share bills, or depend on each other). Not roommates who keep their rent/food money separate.
 
 Add up income for everyone you just counted.
 ```
@@ -195,8 +192,7 @@ Gates AMP only – asked in the offer loop when past-due is the cheapest remaini
 ```text
 Any kids under 18 (or a pregnancy) in the household?
 
-Your household = people who share money with you (buy food together, share bills, or depend on each other).
-Not your household = roommates who keep their rent/food money separate.
+Your household = people who share money with you (buy food together, share bills, or depend on each other). Not roommates who keep their rent/food money separate.
 
 [ Yes ] [ No ]
 ```
@@ -213,8 +209,7 @@ Same pattern as past-due for AMP: ask once, only when it gates an optional offer
 ```text
 Is anyone in the household 65 or older, blind, or disabled?
 
-Your household = people who share money with you (buy food together, share bills, or depend on each other).
-Not your household = roommates who keep their rent/food money separate.
+Your household = people who share money with you (buy food together, share bills, or depend on each other). Not roommates who keep their rent/food money separate.
 
 [ Yes ] [ No ]
 ```
@@ -272,13 +267,13 @@ Est. up to ~${max from maxBenefitUsd for this household} (~$/person when size>1)
 [If timeToMoneyDays ≥ 21:] Docs / numbers you'll likely need: • …
 
 [ I'm already enrolled ]
-[ Add to my To Do List ]
+[ Add to My Application Guide ]
 [ Skip program ]
 ```
 
 | Control | Logic |
 |---|---|
-| Add to my To Do List | Mark `in_progress` → next offer (apply URL lives in the finish summary + PDF only) |
+| Add to My Application Guide | Mark `in_progress` → next offer (apply URL lives in the finish summary + PDF only) |
 | Already enrolled | Mark done → next offer |
 | Skip program | Apply skip cascade if any → next offer |
 | Help / STOP | Global handlers |
@@ -302,7 +297,7 @@ Est. up to ~${max from maxBenefitUsd for this household} (~$/person when size>1)
 | 2+ | NO-arm Medi-Cal / CalFresh / CARE / FERA (household + income); then WIC / CalWORKs (child); SSI / CAPI / IHSS (ABD) | Income block, then child / ABD as needed |
 
 Inside a wave: `newDocs ASC` → `timeToMoney ASC` → library order.  
-On the report / PDF: open programs sorted **easy → hard** via `programDifficulty`.
+On the Application Guide / PDF: open programs sorted **easy → hard** via `programDifficulty`.
 
 **Rule:** Every gate feeder the user did **not** mark at GATE must remain eligible to enter a later wave (subject to income / child / ABD / excludeIfAlreadyOn). Never drop unsigned gate programs by hardcoding a short queue.
 
@@ -316,13 +311,13 @@ Zero-question programs (LifeLine, LIHEAP, …) are offered **before** household/
 
 **If open to-do items exist:**
 1. Abbreviated text summary – total $ this year · docs that unlock $ · program list with signup URLs  
-2. Send `calclaim-todo-list.pdf`  
+2. Send `calclaim-application-guide.pdf`  
 3. Auto-prompt email-to-computer (Mail app + 7-day download link). Idle: Email · Share · Restart · More info
 
-**If no open to-do items:** do **not** generate a report. Push share-with-a-friend. Idle without Email.
+**If no open to-do items:** do **not** generate an Application Guide. Push share-with-a-friend. Idle without Email.
 
 PDF contents: first line total (“You may qualify for a total of ~$X this year”) · **Step 1 find your docs** · **Step 2 open applications** (program, est. minutes, clickable link, deadline, status) · closest deadline · already on · disclaimer.  
-Filename: `calclaim-todo-list.pdf`.
+Filename: `calclaim-application-guide.pdf`.
 
 ---
 
@@ -333,7 +328,7 @@ Filename: `calclaim-todo-list.pdf`.
 - [ ] Queue includes **non-energy** programs (e.g. LifeLine and/or CalFresh) in the demo path  
 - [ ] CARE/ESA appear as normal cards, not a separate product mode  
 - [ ] Ranking uses library scores (doc reuse / time-to-money), not hard-coded energy-first  
-- [ ] To Do List PDF (benefits report) sent after an action  
+- [ ] Application Guide PDF sent after an action  
 - [ ] Help / STOP / free-form QC behave per guidelines  
 - [ ] Every button on OPT_IN, GATE, INCOME, OFFER maps to a transition above  
 
@@ -343,7 +338,7 @@ Filename: `calclaim-todo-list.pdf`.
 
 ### Path A – YES arm (categorical)
 
-Start → Yes → CARE card → Sign up → To Do List PDF → LifeLine → … → same To Do List PDF at end → reminders armed.
+Start → Yes → CARE card → Sign up → Application Guide PDF → LifeLine → … → same Application Guide PDF at end → reminders armed.
 
 ### Path B – NO arm, CARE band
 

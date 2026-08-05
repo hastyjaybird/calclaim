@@ -157,6 +157,8 @@ export interface NextStepsItem {
 export interface LastBotMessage {
   text: string;
   replyMarkup: { inline_keyboard: unknown } | null;
+  /** When set, replay must use the same parse mode (e.g. HTML links). */
+  parseMode?: "HTML" | "Markdown" | "MarkdownV2";
 }
 
 export interface SessionState {

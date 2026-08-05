@@ -920,7 +920,7 @@ function handleReportSharePage(
     send(
       res,
       404,
-      "This report link expired. In Telegram, tap Email report to my computer again.",
+      "This Application Guide link expired. In Telegram, tap Email Application Guide to my computer again.",
       "text/plain; charset=utf-8",
     );
     return;
@@ -935,7 +935,7 @@ function handleReportSharePage(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="refresh" content="0;url=${safeMail}" />
-  <title>Email your CalClaim report</title>
+  <title>Email your CalClaim Application Guide</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 28rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.45; color: #122; }
     h1 { font-size: 1.25rem; margin: 0 0 0.75rem; }
@@ -953,7 +953,7 @@ function handleReportSharePage(
   <h1>Opening your email app…</h1>
   <p>Send the email to yourself, then open the download link on your laptop.</p>
   <a class="btn primary" href="${safeMail}">Open email app with link</a>
-  <a class="btn secondary" href="${safePdf}">Download PDF on this phone</a>
+  <a class="btn secondary" href="${safePdf}">Click to download Application Guide</a>
   <p class="note">Link works for 7 days. If Mail didn’t open, tap the green button.</p>
 </body>
 </html>`;
@@ -971,13 +971,13 @@ function handleReportDownload(
     send(
       res,
       404,
-      "This report link expired. In Telegram, tap Email report to my computer again.",
+      "This Application Guide link expired. In Telegram, tap Email Application Guide to my computer again.",
       "text/plain; charset=utf-8",
     );
     return;
   }
   send(res, 200, pdf, "application/pdf", {
-    "Content-Disposition": 'attachment; filename="calclaim-todo-list.pdf"',
+    "Content-Disposition": 'attachment; filename="calclaim-application-guide.pdf"',
     "Cache-Control": "no-store",
   });
 }
