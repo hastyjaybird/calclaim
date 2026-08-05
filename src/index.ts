@@ -6,6 +6,7 @@ import { DATA_DIR, loadConfig, loadDotEnv, setBotUsername } from "./config.js";
 import { initDb } from "./db/session.js";
 import { startDisasterScanCron } from "./disaster/cron.js";
 import { startReminderCron } from "./reminders/cron.js";
+import { impactStatsMode } from "./analytics/stats.js";
 import { startWebServer } from "./web/server.js";
 
 async function main(): Promise<void> {
@@ -37,6 +38,7 @@ async function main(): Promise<void> {
       secret_token: config.webhookSecret,
     });
     console.log(`CalClaim v2 webhook + impact site on :${config.port}`);
+    console.log(`Impact stats mode: ${impactStatsMode()}`);
     return;
   }
 
@@ -49,6 +51,7 @@ async function main(): Promise<void> {
       console.log(`Bot @${info.username} online (v2 financial aid navigator)`);
       console.log(`Impact: ${config.publicBaseUrl}/impact`);
       console.log(`Developer: ${config.publicBaseUrl}/dev`);
+      console.log(`Impact stats mode: ${impactStatsMode()}`);
     },
   });
 }

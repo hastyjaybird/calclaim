@@ -55,8 +55,12 @@ export interface FunnelStats {
   biggestDropPct: number;
 }
 
+export type StatsSource = "demo" | "live";
+
 export interface ImpactStats {
   generatedAt: string;
+  /** Which dataset the public site is currently serving. */
+  statsSource: StatsSource;
   peopleReached: number;
   qrScans: number;
   linkClicks: number;
@@ -64,10 +68,11 @@ export interface ImpactStats {
   programOpens: number;
   followThroughs: number;
   estDollarsUnlocked: number;
-  /** Series shown on the charts (sample or live, per USE_SAMPLE_CHART_SERIES). */
+  /** Series shown on the charts (demo sample or live). */
   usersPerDay: DailyCount[];
-  /** Always the live analytics series — kept so we can flip charts back later. */
+  /** Always the live analytics series — kept so we can flip back later. */
   usersPerDayLive: DailyCount[];
+  /** @deprecated Use statsSource — "sample" means demo charts. */
   chartSeriesSource: "sample" | "live";
   programs: ProgramStat[];
   mapPoints: MapPoint[];
@@ -76,11 +81,45 @@ export interface ImpactStats {
 }
 
 /**
- * When true, Users-per-day / Total-users charts use staged sample data
- * (≈3 months of partner outreach). Metric cards and other stats stay live.
- * Flip to false (or say "switch to the actual numbers") to show live charts.
+ * Default public-site stats mode. Env `IMPACT_STATS_MODE=demo|live` overrides.
+ * Demo = staged “fully running” numbers for funders; live = collected events
+ * (operator Telegram ids excluded). Say “switch website to live data” to flip.
  */
-export const USE_SAMPLE_CHART_SERIES = true;
+export const DEFAULT_IMPACT_STATS_MODE: StatsSource = "demo";
+
+/** @deprecated Use DEFAULT_IMPACT_STATS_MODE / impactStatsMode(). */
+export const USE_SAMPLE_CHART_SERIES = DEFAULT_IMPACT_STATS_MODE === "demo";
+
+export function impactStatsMode(): StatsSource {
+  const env = process.env.IMPACT_STATS_MODE?.trim().toLowerCase();
+  if (env === "live" || env === "demo") return env;
+  return DEFAULT_IMPACT_STATS_MODE;
+}
+
+/** Telegram user ids excluded from live rollups (comma/space-separated). */
+export function operatorTelegramUserIds(): Set<number> {
+  const ids = new Set<number>();
+  const raw = process.env.OPERATOR_TELEGRAM_USER_IDS ?? "";
+  for (const part of raw.split(/[,\s]+/)) {
+    if (!part) continue;
+    const n = Number(part);
+    if (Number.isFinite(n) && n > 0) ids.add(Math.trunc(n));
+  }
+  // Private chats: chat id === user id
+  const devChat = Number(process.env.DEVELOPER_TELEGRAM_CHAT_ID ?? "");
+  if (Number.isFinite(devChat) && devChat > 0) ids.add(Math.trunc(devChat));
+  return ids;
+}
+
+/** Live events with operator Telegram traffic stripped. */
+export function listEventsForStats(): AnalyticsEventRow[] {
+  const exclude = operatorTelegramUserIds();
+  const all = listEvents();
+  if (exclude.size === 0) return all;
+  return all.filter(
+    (e) => e.telegram_user_id == null || !exclude.has(e.telegram_user_id),
+  );
+}
 
 const SAMPLE_CHART_DAYS = 90;
 
@@ -89,12 +128,25 @@ const PARTNER_SAMPLE_PROFILES: Record<
   string,
   { base: number; growth: number; startOffsetDays: number }
 > = {
-  "fresno-food-bank": { base: 14, growth: 0.11, startOffsetDays: 0 },
-  "oakland-library": { base: 10, growth: 0.08, startOffsetDays: 10 },
-  "la-family-resource": { base: 8, growth: 0.06, startOffsetDays: 18 },
-  "mission-community": { base: 6, growth: 0.05, startOffsetDays: 28 },
-  website: { base: 4, growth: 0.04, startOffsetDays: 12 },
+  "fresno-food-bank": { base: 18, growth: 0.12, startOffsetDays: 0 },
+  "oakland-library": { base: 13, growth: 0.09, startOffsetDays: 8 },
+  "la-family-resource": { base: 11, growth: 0.07, startOffsetDays: 14 },
+  "mission-community": { base: 8, growth: 0.06, startOffsetDays: 22 },
+  website: { base: 5, growth: 0.045, startOffsetDays: 10 },
 };
+
+/** Demo program mix — weighted opens once the funnel is “at scale”. */
+const DEMO_PROGRAM_WEIGHTS: { id: string; weight: number }[] = [
+  { id: "calfresh", weight: 22 },
+  { id: "medi_cal", weight: 18 },
+  { id: "lifeline", weight: 14 },
+  { id: "care", weight: 12 },
+  { id: "liheap", weight: 10 },
+  { id: "wic", weight: 8 },
+  { id: "tax_credits", weight: 7 },
+  { id: "esa", weight: 5 },
+  { id: "caleitc", weight: 4 },
+];
 
 function hashSeed(s: string): number {
   let h = 2166136261;
@@ -208,18 +260,6 @@ export function buildSampleImpactUsersPerDay(): DailyCount[] {
   });
 }
 
-function chartUsersPerDay(live: DailyCount[], sample: DailyCount[]): {
-  usersPerDay: DailyCount[];
-  usersPerDayLive: DailyCount[];
-  chartSeriesSource: "sample" | "live";
-} {
-  return {
-    usersPerDay: USE_SAMPLE_CHART_SERIES ? sample : live,
-    usersPerDayLive: live,
-    chartSeriesSource: USE_SAMPLE_CHART_SERIES ? "sample" : "live",
-  };
-}
-
 function dayKey(iso: string): string {
   return iso.slice(0, 10);
 }
@@ -228,8 +268,179 @@ function estForProgram(programId: string): number {
   return getProgram(programId)?.estAnnualUsd ?? 0;
 }
 
-export function buildImpactStats(): ImpactStats {
-  const events = listEvents();
+const IMPACT_DISCLAIMER =
+  "Estimates only. Dollar totals use corpus annual benefit estimates × follow-through taps — not verified agency payouts. Map shows QR placement sites and coarse city-level IP when available; never street addresses. Funnel counts unique people per stage (QR/link reach is event count).";
+
+function seriesTotal(series: DailyCount[]): number {
+  return series.length ? series[series.length - 1]!.cumulative : 0;
+}
+
+function funnelFromStageCounts(counts: Map<FunnelStageId, number>): FunnelStats {
+  const stages: FunnelStep[] = [];
+  let prev = 0;
+  let top = 0;
+  let biggestDropFrom: FunnelStageId | null = null;
+  let biggestDropTo: FunnelStageId | null = null;
+  let biggestDropCount = 0;
+  let biggestDropPct = 0;
+
+  for (let i = 0; i < FUNNEL_STAGES.length; i++) {
+    const meta = FUNNEL_STAGES[i]!;
+    const count = counts.get(meta.id) ?? 0;
+    if (i === 0) top = count;
+    const dropOff = i === 0 ? 0 : Math.max(0, prev - count);
+    const dropPct = i === 0 || prev === 0 ? 0 : Math.round((dropOff / prev) * 1000) / 10;
+    const retentionPct = top === 0 ? 0 : Math.round((count / top) * 1000) / 10;
+
+    if (
+      i > 0 &&
+      dropOff > 0 &&
+      (dropPct > biggestDropPct ||
+        (dropPct === biggestDropPct && dropOff > biggestDropCount))
+    ) {
+      biggestDropCount = dropOff;
+      biggestDropPct = dropPct;
+      biggestDropFrom = FUNNEL_STAGES[i - 1]!.id;
+      biggestDropTo = meta.id;
+    }
+
+    stages.push({
+      id: meta.id,
+      label: meta.label,
+      detail: meta.detail,
+      count,
+      dropOff,
+      dropPct,
+      retentionPct,
+    });
+    prev = count;
+  }
+
+  return {
+    stages,
+    biggestDropFrom,
+    biggestDropTo,
+    biggestDropCount,
+    biggestDropPct,
+  };
+}
+
+function buildDemoProgramStats(programOpens: number, followThroughs: number): ProgramStat[] {
+  const weightTotal = DEMO_PROGRAM_WEIGHTS.reduce((s, p) => s + p.weight, 0);
+  const rnd = mulberry32(hashSeed("demo-programs"));
+  const rows: ProgramStat[] = [];
+  let opensLeft = programOpens;
+  let followsLeft = followThroughs;
+
+  for (let i = 0; i < DEMO_PROGRAM_WEIGHTS.length; i++) {
+    const { id, weight } = DEMO_PROGRAM_WEIGHTS[i]!;
+    const program = getProgram(id);
+    const share = weight / weightTotal;
+    const isLast = i === DEMO_PROGRAM_WEIGHTS.length - 1;
+    const opens = isLast
+      ? opensLeft
+      : Math.max(0, Math.round(programOpens * share * (0.85 + rnd() * 0.3)));
+    const follows = isLast
+      ? followsLeft
+      : Math.min(
+          opens,
+          Math.max(0, Math.round(followThroughs * share * (0.85 + rnd() * 0.3))),
+        );
+    opensLeft = Math.max(0, opensLeft - opens);
+    followsLeft = Math.max(0, followsLeft - follows);
+    const estAnnualUsd = program?.estAnnualUsd ?? 0;
+    rows.push({
+      programId: id,
+      name: program?.name ?? id,
+      category: program?.category ?? "other",
+      opens,
+      followThroughs: follows,
+      estAnnualUsd,
+      estDollarsUnlocked: follows * estAnnualUsd,
+    });
+  }
+
+  rows.sort(
+    (a, b) =>
+      b.opens - a.opens ||
+      b.followThroughs - a.followThroughs ||
+      a.name.localeCompare(b.name),
+  );
+  return rows;
+}
+
+function buildDemoMapPoints(): MapPoint[] {
+  const points: MapPoint[] = [];
+  for (const partner of listPartners()) {
+    const campaign = getCampaign(partner.campaignId);
+    if (campaign?.lat == null || campaign.lng == null) continue;
+    const reached = seriesTotal(buildSamplePartnerUsersPerDay(partner.slug));
+    points.push({
+      lat: campaign.lat,
+      lng: campaign.lng,
+      label: campaign.label ?? partner.name,
+      count: reached,
+      kind: campaign.kind === "qr" ? "qr" : "link",
+    });
+  }
+  // A few coarse city IP dots so the map looks lived-in beyond poster pins
+  const ipDots: MapPoint[] = [
+    { lat: 38.58, lng: -121.49, label: "Sacramento, CA", count: 42, kind: "ip" },
+    { lat: 32.72, lng: -117.16, label: "San Diego, CA", count: 31, kind: "ip" },
+    { lat: 37.34, lng: -121.89, label: "San Jose, CA", count: 27, kind: "ip" },
+  ];
+  points.push(...ipDots);
+  return points.sort((a, b) => b.count - a.count);
+}
+
+function buildDemoFunnel(peopleReached: number, botStarts: number, programOpens: number, followThroughs: number): FunnelStats {
+  const counts = new Map<FunnelStageId, number>();
+  counts.set("reached", peopleReached);
+  counts.set("bot_start", botStarts);
+  counts.set("started", Math.round(botStarts * 0.86));
+  counts.set("gate_done", Math.round(botStarts * 0.74));
+  counts.set("triage_done", Math.round(botStarts * 0.62));
+  // Intentionally steep drop into apply (matches /dev funnel story)
+  const firstOffer = Math.max(programOpens, Math.round(botStarts * 0.56));
+  counts.set("first_offer", firstOffer);
+  counts.set("apply_open", programOpens);
+  counts.set("follow_through", followThroughs);
+  counts.set("finished", Math.round(followThroughs * 0.72));
+  return funnelFromStageCounts(counts);
+}
+
+function buildDemoImpactStats(usersPerDayLive: DailyCount[]): ImpactStats {
+  const usersPerDay = buildSampleImpactUsersPerDay();
+  const peopleReached = seriesTotal(usersPerDay);
+  const qrScans = Math.round(peopleReached * 0.84);
+  const linkClicks = Math.max(0, peopleReached - qrScans);
+  const botStarts = Math.round(peopleReached * 0.68);
+  const programOpens = Math.round(botStarts * 0.4);
+  const followThroughs = Math.round(programOpens * 0.58);
+  const programs = buildDemoProgramStats(programOpens, followThroughs);
+  const estDollarsUnlocked = programs.reduce((s, p) => s + p.estDollarsUnlocked, 0);
+
+  return {
+    generatedAt: new Date().toISOString(),
+    statsSource: "demo",
+    peopleReached,
+    qrScans,
+    linkClicks,
+    botStarts,
+    programOpens,
+    followThroughs,
+    estDollarsUnlocked,
+    usersPerDay,
+    usersPerDayLive,
+    chartSeriesSource: "sample",
+    programs,
+    mapPoints: buildDemoMapPoints(),
+    funnel: buildDemoFunnel(peopleReached, botStarts, programOpens, followThroughs),
+    disclaimer: IMPACT_DISCLAIMER,
+  };
+}
+
+function buildLiveImpactStats(events: AnalyticsEventRow[]): ImpactStats {
   const awareness = events.filter((e) => e.event_type === "awareness");
   const qrScans = awareness.filter((e) => e.source === "qr").length;
   const linkClicks = awareness.filter((e) => e.source === "link").length;
@@ -244,13 +455,10 @@ export function buildImpactStats(): ImpactStats {
   }
 
   const usersPerDayLive = buildUsersPerDay(awareness);
-  const chart = chartUsersPerDay(usersPerDayLive, buildSampleImpactUsersPerDay());
-  const programs = buildProgramStats(events);
-  const mapPoints = buildMapPoints(awareness);
-  const funnel = buildFunnel(events);
 
   return {
     generatedAt: new Date().toISOString(),
+    statsSource: "live",
     peopleReached,
     qrScans,
     linkClicks,
@@ -258,13 +466,24 @@ export function buildImpactStats(): ImpactStats {
     programOpens,
     followThroughs: followThroughs.length,
     estDollarsUnlocked,
-    ...chart,
-    programs,
-    mapPoints,
-    funnel,
-    disclaimer:
-      "Estimates only. Dollar totals use corpus annual benefit estimates × follow-through taps — not verified agency payouts. Map shows QR placement sites and coarse city-level IP when available; never street addresses. Funnel counts unique people per stage (QR/link reach is event count).",
+    usersPerDay: usersPerDayLive,
+    usersPerDayLive,
+    chartSeriesSource: "live",
+    programs: buildProgramStats(events),
+    mapPoints: buildMapPoints(awareness),
+    funnel: buildFunnel(events),
+    disclaimer: IMPACT_DISCLAIMER,
   };
+}
+
+export function buildImpactStats(): ImpactStats {
+  const events = listEventsForStats();
+  const awareness = events.filter((e) => e.event_type === "awareness");
+  const usersPerDayLive = buildUsersPerDay(awareness);
+  if (impactStatsMode() === "demo") {
+    return buildDemoImpactStats(usersPerDayLive);
+  }
+  return buildLiveImpactStats(events);
 }
 
 function uniqueUsers(events: AnalyticsEventRow[]): number {
@@ -313,54 +532,7 @@ function buildFunnel(events: AnalyticsEventRow[]): FunnelStats {
     );
   }
 
-  const stages: FunnelStep[] = [];
-  let prev = 0;
-  let top = 0;
-  let biggestDropFrom: FunnelStageId | null = null;
-  let biggestDropTo: FunnelStageId | null = null;
-  let biggestDropCount = 0;
-  let biggestDropPct = 0;
-
-  for (let i = 0; i < FUNNEL_STAGES.length; i++) {
-    const meta = FUNNEL_STAGES[i]!;
-    const count = byStage.get(meta.id) ?? 0;
-    if (i === 0) top = count;
-    const dropOff = i === 0 ? 0 : Math.max(0, prev - count);
-    const dropPct = i === 0 || prev === 0 ? 0 : Math.round((dropOff / prev) * 1000) / 10;
-    const retentionPct = top === 0 ? 0 : Math.round((count / top) * 1000) / 10;
-
-    // Prefer steepest % drop (where the tree leaks); break ties by absolute count
-    if (
-      i > 0 &&
-      dropOff > 0 &&
-      (dropPct > biggestDropPct ||
-        (dropPct === biggestDropPct && dropOff > biggestDropCount))
-    ) {
-      biggestDropCount = dropOff;
-      biggestDropPct = dropPct;
-      biggestDropFrom = FUNNEL_STAGES[i - 1]!.id;
-      biggestDropTo = meta.id;
-    }
-
-    stages.push({
-      id: meta.id,
-      label: meta.label,
-      detail: meta.detail,
-      count,
-      dropOff,
-      dropPct,
-      retentionPct,
-    });
-    prev = count;
-  }
-
-  return {
-    stages,
-    biggestDropFrom,
-    biggestDropTo,
-    biggestDropCount,
-    biggestDropPct,
-  };
+  return funnelFromStageCounts(byStage);
 }
 
 function buildUsersPerDay(awareness: AnalyticsEventRow[]): DailyCount[] {
@@ -483,6 +655,7 @@ export interface PartnerLeaderboardRow {
 
 export interface PartnerStats {
   generatedAt: string;
+  statsSource: StatsSource;
   partner: {
     id: string;
     slug: string;
@@ -501,11 +674,15 @@ export interface PartnerStats {
   estDollarsUnlocked: number;
   usersPerDay: DailyCount[];
   usersPerDayLive: DailyCount[];
+  /** @deprecated Use statsSource — "sample" means demo charts. */
   chartSeriesSource: "sample" | "live";
   mapPoints: MapPoint[];
   programs: ProgramStat[];
   disclaimer: string;
 }
+
+const PARTNER_DISCLAIMER =
+  "Partner stats credit people reached via this partner’s unique QR code. Downstream metrics use session attribution from that QR. Estimates only — not verified agency payouts.";
 
 /** Map telegram users → first bot_start campaign (sticky attribution fallback). */
 function firstBotStartCampaignByUser(
@@ -573,8 +750,44 @@ function rollupPartner(
   };
 }
 
+function demoPartnerRollup(partner: Partner): Omit<PartnerLeaderboardRow, "rank"> {
+  const series = buildSamplePartnerUsersPerDay(partner.slug);
+  const peopleReached = seriesTotal(series);
+  const botStarts = Math.round(peopleReached * 0.7);
+  const followThroughs = Math.round(botStarts * 0.22);
+  const programs = buildDemoProgramStats(
+    Math.round(botStarts * 0.38),
+    followThroughs,
+  );
+  const estDollarsUnlocked = programs.reduce((s, p) => s + p.estDollarsUnlocked, 0);
+  return {
+    id: partner.id,
+    slug: partner.slug,
+    name: partner.name,
+    city: partner.city,
+    logo: partner.logo,
+    blurb: partner.blurb,
+    campaignId: partner.campaignId,
+    peopleReached,
+    botStarts,
+    followThroughs,
+    estDollarsUnlocked,
+  };
+}
+
 export function buildPartnerLeaderboard(): PartnerLeaderboardRow[] {
-  const events = listEvents();
+  if (impactStatsMode() === "demo") {
+    const rows = listPartners().map((p) => demoPartnerRollup(p));
+    rows.sort(
+      (a, b) =>
+        b.peopleReached - a.peopleReached ||
+        b.botStarts - a.botStarts ||
+        a.name.localeCompare(b.name),
+    );
+    return rows.map((row, i) => ({ ...row, rank: i + 1 }));
+  }
+
+  const events = listEventsForStats();
   const userCampaign = firstBotStartCampaignByUser(events);
   const rows = listPartners().map((p) => rollupPartner(p, events, userCampaign));
   rows.sort(
@@ -590,22 +803,64 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
   const partner = getPartnerBySlug(slug);
   if (!partner) return null;
 
-  const events = listEvents();
+  const events = listEventsForStats();
   const userCampaign = firstBotStartCampaignByUser(events);
   const cid = partner.campaignId;
-  const summary = rollupPartner(partner, events, userCampaign);
-
-  const awareness = events.filter(
+  const awarenessLive = events.filter(
     (e) => e.event_type === "awareness" && e.campaign_id === cid,
   );
+  const usersPerDayLive = buildUsersPerDay(awarenessLive);
+  const campaign = getCampaign(cid);
+
+  if (impactStatsMode() === "demo") {
+    const summary = demoPartnerRollup(partner);
+    const usersPerDay = buildSamplePartnerUsersPerDay(partner.slug);
+    const programOpens = Math.round(summary.botStarts * 0.38);
+    const programs = buildDemoProgramStats(programOpens, summary.followThroughs);
+    const mapPoints: MapPoint[] = [];
+    if (campaign?.lat != null && campaign.lng != null) {
+      mapPoints.push({
+        lat: campaign.lat,
+        lng: campaign.lng,
+        label: campaign.label ?? partner.name,
+        count: summary.peopleReached,
+        kind: "qr",
+      });
+    }
+    return {
+      generatedAt: new Date().toISOString(),
+      statsSource: "demo",
+      partner: {
+        id: partner.id,
+        slug: partner.slug,
+        name: partner.name,
+        city: partner.city,
+        logo: partner.logo,
+        blurb: partner.blurb,
+        campaignId: partner.campaignId,
+      },
+      editable: Boolean(getSignedUpPartnerBySlug(partner.slug)),
+      peopleReached: summary.peopleReached,
+      botStarts: summary.botStarts,
+      programOpens,
+      followThroughs: summary.followThroughs,
+      estDollarsUnlocked: summary.estDollarsUnlocked,
+      usersPerDay,
+      usersPerDayLive,
+      chartSeriesSource: "sample",
+      mapPoints,
+      programs: programs.filter((p) => p.opens > 0 || p.followThroughs > 0),
+      disclaimer: PARTNER_DISCLAIMER,
+    };
+  }
+
+  const summary = rollupPartner(partner, events, userCampaign);
   const attributed = events.filter((e) =>
     eventMatchesCampaign(e, cid, userCampaign),
   );
   const programOpens = attributed.filter((e) => e.event_type === "program_open");
 
-  const campaign = getCampaign(cid);
-  const mapPoints = buildMapPoints(awareness);
-  // Always show the partner's placement pin
+  const mapPoints = buildMapPoints(awarenessLive);
   if (
     campaign?.lat != null &&
     campaign.lng != null &&
@@ -619,19 +874,14 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
       lat: campaign.lat,
       lng: campaign.lng,
       label: campaign.label ?? partner.name,
-      count: awareness.length,
+      count: awarenessLive.length,
       kind: "qr",
     });
   }
 
-  const usersPerDayLive = buildUsersPerDay(awareness);
-  const chart = chartUsersPerDay(
-    usersPerDayLive,
-    buildSamplePartnerUsersPerDay(partner.slug),
-  );
-
   return {
     generatedAt: new Date().toISOString(),
+    statsSource: "live",
     partner: {
       id: partner.id,
       slug: partner.slug,
@@ -647,12 +897,13 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
     programOpens: programOpens.length,
     followThroughs: summary.followThroughs,
     estDollarsUnlocked: summary.estDollarsUnlocked,
-    ...chart,
+    usersPerDay: usersPerDayLive,
+    usersPerDayLive,
+    chartSeriesSource: "live",
     mapPoints,
     programs: buildProgramStats(attributed).filter(
       (p) => p.opens > 0 || p.followThroughs > 0,
     ),
-    disclaimer:
-      "Partner stats credit people reached via this partner’s unique QR code. Downstream metrics use session attribution from that QR. Estimates only — not verified agency payouts.",
+    disclaimer: PARTNER_DISCLAIMER,
   };
 }

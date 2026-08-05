@@ -85,7 +85,7 @@ function bindForm() {
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submit = el("signup-submit");
-    const name = String(el("signup-name")?.value || "").trim();
+    const name = String(el("signup-organization")?.value || "").trim();
     const email = String(el("signup-email")?.value || "").trim();
     const city = String(el("signup-city")?.value || "").trim();
     const logoInput = el("signup-logo");

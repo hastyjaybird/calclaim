@@ -12,6 +12,7 @@ import { getPartnerBySlug } from "../analytics/partners.js";
 import {
   buildImpactStats,
   buildPartnerLeaderboard,
+  impactStatsMode,
   buildPartnerStats,
 } from "../analytics/stats.js";
 import type { AppConfig } from "../config.js";
@@ -874,6 +875,7 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
           200,
           JSON.stringify({
             generatedAt: new Date().toISOString(),
+            statsSource: impactStatsMode(),
             partners: buildPartnerLeaderboard(),
           }),
           "application/json; charset=utf-8",

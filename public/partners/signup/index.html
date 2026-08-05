@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/partners/styles.css?v=20260804-qr" />
-  <link rel="stylesheet" href="/partners/signup/styles.css?v=20260804-qr" />
+  <link rel="stylesheet" href="/partners/styles.css?v=20260804-pm" />
+  <link rel="stylesheet" href="/partners/signup/styles.css?v=20260804-pm" />
 </head>
 <body data-page="partnerSignup">
   <div class="banner" role="banner">
@@ -57,8 +57,8 @@
         <label class="field">
           <span data-i18n="signup.nameLabel">Organization name</span>
           <input
-            id="signup-name"
-            name="name"
+            id="signup-organization"
+            name="organization"
             type="text"
             autocomplete="organization"
             required
@@ -73,6 +73,7 @@
             name="email"
             type="email"
             autocomplete="email"
+            inputmode="email"
             required
             maxlength="200"
             data-i18n-aria="signup.emailLabel"
@@ -96,6 +97,7 @@
             name="logo"
             type="file"
             accept="image/png,image/jpeg,image/webp,image/gif"
+            autocomplete="off"
             data-i18n-aria="signup.logoLabel"
           />
           <span class="field-help" data-i18n="signup.logoHelp">
@@ -189,6 +191,6 @@
 
   <script src="/i18n/messages.js?v=20260804-qr"></script>
   <script src="/i18n/lang.js?v=20260804-qr"></script>
-  <script src="/partners/signup/app.js?v=20260804-qr"></script>
+  <script src="/partners/signup/app.js?v=20260804-pm"></script>
 </body>
 </html>

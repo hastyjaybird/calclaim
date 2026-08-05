@@ -44,6 +44,8 @@ npm run seed-impact
 | `TELEGRAM_BOT_TOKEN` | Required |
 | `TELEGRAM_BOT_USERNAME` | Optional; auto from Telegram at boot |
 | `PUBLIC_BASE_URL` | Origin for QR landings + apply redirects (default `http://localhost:3000`) |
+| `IMPACT_STATS_MODE` | `demo` (default) or `live` — what `/impact` and partner pages display |
+| `OPERATOR_TELEGRAM_USER_IDS` | Optional — your Telegram id(s), excluded from live stats rollups |
 | `BOT_MODE` | `long_polling` (default) or `webhook` |
 | `WEBHOOK_URL` / `WEBHOOK_SECRET` / `PORT` | Webhook deploy |
 | `DATABASE_PATH` | SQLite file (default `./data/calclaim.sqlite`) |
@@ -55,7 +57,7 @@ npm run seed-impact
 
 ## Funder impact site
 
-Public page at `/impact` shows people reached (QR + links), program apply-page opens, follow-throughs, estimated aid unlocked, a coarse map, and charts. Details: [`docs/funder-dashboard.md`](docs/funder-dashboard.md).
+Public page at `/impact` shows people reached (QR + links), program apply-page opens, follow-throughs, estimated aid unlocked, a coarse map, and charts. By default it serves **demo** (staged at-scale) numbers while real Telegram/QR events keep collecting; set `IMPACT_STATS_MODE=live` to show collected data. Details: [`docs/funder-dashboard.md`](docs/funder-dashboard.md).
 
 Partner signup at `/partners/signup` creates a unique partner ID, status page, QR, and printable booth banner; a welcome email delivers the kit (or `data/mail-outbox/` when SMTP is unset).
 

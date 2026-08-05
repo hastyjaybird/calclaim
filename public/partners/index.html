@@ -97,7 +97,14 @@
         </p>
         <label class="field">
           <span data-i18n="signup.nameLabel">Organization name</span>
-          <input id="edit-name" name="name" type="text" required maxlength="120" autocomplete="organization" />
+          <input
+            id="edit-organization"
+            name="organization"
+            type="text"
+            required
+            maxlength="120"
+            autocomplete="organization"
+          />
         </label>
         <label class="field">
           <span data-i18n="signup.cityLabel">City</span>
@@ -105,7 +112,15 @@
         </label>
         <label class="field">
           <span data-i18n="signup.emailLabel">Work email</span>
-          <input id="edit-email" name="email" type="email" required maxlength="200" autocomplete="email" />
+          <input
+            id="edit-email"
+            name="email"
+            type="email"
+            inputmode="email"
+            required
+            maxlength="200"
+            autocomplete="email"
+          />
         </label>
         <label class="field">
           <span data-i18n="signup.logoLabel">Organization logo (optional)</span>
@@ -114,6 +129,7 @@
             name="logo"
             type="file"
             accept="image/png,image/jpeg,image/webp,image/gif"
+            autocomplete="off"
           />
           <span class="field-help" data-i18n="partners.editLogoHelp">
             Leave empty to keep your current logo. PNG or JPG, up to 2&nbsp;MB.
@@ -129,6 +145,9 @@
             maxlength="40"
             autocomplete="off"
             spellcheck="false"
+            data-bwignore
+            data-1p-ignore
+            data-lpignore="true"
             data-i18n-aria="partners.partnerIdLabel"
           />
           <span class="field-help" data-i18n="partners.partnerIdHelp">

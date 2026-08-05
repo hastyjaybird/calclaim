@@ -67,16 +67,39 @@ Campaign pins live in [`corpus/campaigns.json`](../corpus/campaigns.json). Print
 - Preferred map story: **QR poster sites** (known lat/lng).  
 - Never store typed street addresses on the impact map.
 
-## Seed demo data
+## Demo vs live stats
+
+The public site (`/impact`, `/partners/…`) can show either:
+
+| Mode | What you see | Env / code |
+|---|---|---|
+| **demo** (default) | Staged ~90-day “fully running” metrics, map, charts, program table, partner leaderboard | `IMPACT_STATS_MODE=demo` or default in `DEFAULT_IMPACT_STATS_MODE` |
+| **live** | Real `analytics_events` (operator Telegram ids excluded) | `IMPACT_STATS_MODE=live` |
+
+**Recording always continues** — QR landings (`/go/…`), Telegram funnel steps, and apply redirects (`/r/…`) keep writing to SQLite regardless of display mode. Flip the site by setting `IMPACT_STATS_MODE=live` (or ask to “switch website to live data”).
+
+Exclude your own phone from live rollups:
+
+```bash
+OPERATOR_TELEGRAM_USER_IDS=123456789
+# optional alias — private chat id equals user id
+# DEVELOPER_TELEGRAM_CHAT_ID=123456789
+```
+
+API payloads include `statsSource: "demo" | "live"` and always attach `usersPerDayLive` so a flip is one config change.
+
+### Seed into the live DB (local only)
 
 ```bash
 npm run seed-impact
 ```
 
-Seed weights partner campaigns unevenly so the leaderboard has a clear #1 for demos.
+Writes fake rows into `analytics_events` (clears prior events). Prefer the **demo display mode** for funder screenshots; use seed when you want `/dev` funnel charts against SQLite without real traffic.
 
 ## Env
 
 - `PUBLIC_BASE_URL` — required in production so Telegram buttons hit *your* redirects  
 - `TELEGRAM_BOT_USERNAME` — optional; resolved via `getMe()` at boot  
 - `PORT` — web + (webhook) Telegram share the same listener  
+- `IMPACT_STATS_MODE` — `demo` (default) or `live` for public dashboards  
+- `OPERATOR_TELEGRAM_USER_IDS` — comma-separated Telegram user ids omitted from live rollups  

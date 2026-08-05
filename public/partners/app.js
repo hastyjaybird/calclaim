@@ -224,7 +224,7 @@ function openEditDialog() {
   const dialog = el("partner-edit-dialog");
   if (!dialog) return;
 
-  el("edit-name").value = currentPartner.name || "";
+  el("edit-organization").value = currentPartner.name || "";
   el("edit-city").value = currentPartner.city || "";
   el("edit-email").value = "";
   let storedId = "";
@@ -243,7 +243,7 @@ function openEditDialog() {
   } else {
     dialog.setAttribute("open", "");
   }
-  el("edit-name")?.focus();
+  el("edit-organization")?.focus();
 }
 
 function closeEditDialog() {
@@ -274,7 +274,7 @@ function bindEditUi() {
     event.preventDefault();
     if (!currentPartner) return;
 
-    const name = String(el("edit-name")?.value || "").trim();
+    const name = String(el("edit-organization")?.value || "").trim();
     const email = String(el("edit-email")?.value || "").trim();
     const city = String(el("edit-city")?.value || "").trim();
     const partnerId = String(el("edit-partner-id")?.value || "").trim();
