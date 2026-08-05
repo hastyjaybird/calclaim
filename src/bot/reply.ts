@@ -1,5 +1,5 @@
 import type { Context } from "grammy";
-import type { LastBotMessage, SessionState } from "../corpus/types.js";
+import type { LastBotMessage, SessionState } from "../library/types.js";
 import { saveSession } from "../db/session.js";
 
 type ReplyExtra = Parameters<Context["reply"]>[1];

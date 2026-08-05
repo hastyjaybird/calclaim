@@ -37,6 +37,11 @@ async function main(): Promise<void> {
     await bot.api.setWebhook(config.webhookUrl, {
       secret_token: config.webhookSecret,
     });
+    // #region agent log
+    console.log(
+      `[agent-debug] D index.ts:boot mode=webhook url=${config.webhookUrl}`,
+    );
+    // #endregion
     console.log(`CalClaim v2 webhook + impact site on :${config.port}`);
     console.log(`Impact stats mode: ${impactStatsMode()}`);
     return;
@@ -45,6 +50,9 @@ async function main(): Promise<void> {
   // Long polling still serves the funder site + tracking redirects
   startWebServer(config);
   await bot.api.deleteWebhook({ drop_pending_updates: false });
+  // #region agent log
+  console.log("[agent-debug] D index.ts:boot mode=long_polling");
+  // #endregion
   console.log("CalClaim v2 starting long polling…");
   await bot.start({
     onStart: (info) => {
@@ -52,6 +60,11 @@ async function main(): Promise<void> {
       console.log(`Impact: ${config.publicBaseUrl}/impact`);
       console.log(`Developer: ${config.publicBaseUrl}/dev`);
       console.log(`Impact stats mode: ${impactStatsMode()}`);
+      // #region agent log
+      console.log(
+        `[agent-debug] D index.ts:onStart bot=@${info.username} polling=true`,
+      );
+      // #endregion
     },
   });
 }

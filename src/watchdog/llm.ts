@@ -1,4 +1,4 @@
-import type { Program } from "../corpus/types.js";
+import type { Program } from "../library/types.js";
 import type { DraftFinding, FindingCategory, FindingSeverity } from "./types.js";
 
 export interface LlmConfig {
@@ -40,7 +40,7 @@ interface LlmFindingJson {
   title?: string;
   detail?: string;
   suggestedAction?: string;
-  corpusField?: string;
+  libraryField?: string;
   evidenceQuote?: string;
 }
 
@@ -75,7 +75,7 @@ export async function analyzeProgramWithLlm(
   const cfg = resolveLlmConfig();
   if (!cfg || !pageTexts.length) return [];
 
-  const corpusSnapshot = {
+  const librarySnapshot = {
     id: program.id,
     name: program.name,
     oneLiner: program.oneLiner,
@@ -96,17 +96,17 @@ export async function analyzeProgramWithLlm(
     text: p.text.slice(0, 10_000),
   }));
 
-  const system = `You are a careful benefits-program corpus auditor for CalClaim, a California financial-aid navigator chatbot.
-Compare the frozen corpus JSON against live official page text.
-ONLY report concrete, evidence-backed mismatches or risks that would require a human developer to edit the corpus.
+  const system = `You are a careful benefits-program library auditor for CalClaim, a California financial-aid navigator chatbot.
+Compare the frozen library JSON against live official page text.
+ONLY report concrete, evidence-backed mismatches or risks that would require a human developer to edit the library.
 Do NOT invent eligibility rules. If unsure, omit the finding or mark severity "info".
 Never suggest auto-applying changes — findings are advisory only.
-Return JSON only: {"findings":[{category,severity,title,detail,suggestedAction,corpusField,evidenceQuote}]}
+Return JSON only: {"findings":[{category,severity,title,detail,suggestedAction,libraryField,evidenceQuote}]}
 Categories: deadline, eligibility, apply_process, funding_status, max_benefit, apply_url, docs_needed, program_status, branding, est_annual, other
 Severities: critical, high, medium, low, info
 Max 6 findings. Empty findings array is fine.`;
 
-  const user = JSON.stringify({ corpus: corpusSnapshot, livePages: pages });
+  const user = JSON.stringify({ library: librarySnapshot, livePages: pages });
 
   try {
     const res = await fetch(`${cfg.baseUrl}/chat/completions`, {
@@ -115,7 +115,7 @@ Max 6 findings. Empty findings array is fine.`;
         "Content-Type": "application/json",
         Authorization: `Bearer ${cfg.apiKey}`,
         "HTTP-Referer": process.env.PUBLIC_BASE_URL ?? "http://localhost:3000",
-        "X-Title": "CalClaim Corpus Watcher",
+        "X-Title": "CalClaim Library Watcher",
       },
       body: JSON.stringify({
         model: cfg.model,
@@ -169,8 +169,8 @@ Max 6 findings. Empty findings array is fine.`;
           evidenceUrl: pages[0]?.url ?? program.applyUrl,
           suggestedAction: f.suggestedAction
             ? String(f.suggestedAction).slice(0, 500)
-            : "Review official page and update corpus/programs.json if needed.",
-          corpusField: f.corpusField ? String(f.corpusField).slice(0, 120) : null,
+            : "Review official page and update library/programs.json if needed.",
+          libraryField: f.libraryField ? String(f.libraryField).slice(0, 120) : null,
           source: "llm",
         };
       })

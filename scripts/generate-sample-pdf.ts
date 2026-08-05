@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { SessionState } from "../src/corpus/types.js";
+import type { SessionState } from "../src/library/types.js";
 import { renderNextStepsPdf } from "../src/nextsteps/pdf.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");

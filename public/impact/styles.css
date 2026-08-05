@@ -237,9 +237,37 @@ body {
 }
 
 #impact,
+#about,
 #contact,
 #privacy {
   scroll-margin-top: 5rem;
+}
+
+.privacy-details {
+  margin-top: 1.35rem;
+}
+
+.privacy-details > summary {
+  list-style: none;
+}
+
+.privacy-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.privacy-details[open] > summary {
+  background: rgba(31, 107, 74, 0.08);
+  border-color: rgba(13, 122, 95, 0.45);
+}
+
+.privacy-full {
+  margin-top: 1.1rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--line);
+}
+
+.privacy-full > h3:first-child {
+  margin-top: 0.85rem;
 }
 
 .prose p,
@@ -687,6 +715,33 @@ a.partner-row:hover {
   overflow-x: auto;
 }
 
+.list-expand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba(15, 61, 44, 0.28);
+  background: transparent;
+  color: var(--leaf-deep);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.list-expand:hover {
+  background: rgba(31, 107, 74, 0.08);
+  border-color: rgba(13, 122, 95, 0.45);
+  transform: translateY(-1px);
+}
+
+.list-expand[hidden] {
+  display: none;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -744,6 +799,24 @@ footer {
   padding: 0 1.25rem 2.5rem;
   color: var(--ink-soft);
   font-size: 0.88rem;
+}
+
+.site-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+.site-footer-inner > p {
+  margin: 0;
+}
+
+.footer-dev-login {
+  margin-left: auto;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 footer a {

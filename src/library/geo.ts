@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { CORPUS_DIR } from "../config.js";
+import { LIBRARY_DIR } from "../config.js";
 
 interface CmspCountiesFile {
   counties: string[];
@@ -16,7 +16,7 @@ let zipToCounty: Record<string, string> | null = null;
 function loadCmspCounties(): Set<string> {
   if (!cmspCounties) {
     const raw = JSON.parse(
-      readFileSync(path.join(CORPUS_DIR, "cmsp-counties.json"), "utf8"),
+      readFileSync(path.join(LIBRARY_DIR, "cmsp-counties.json"), "utf8"),
     ) as CmspCountiesFile;
     cmspCounties = new Set(raw.counties.map((c) => c.toLowerCase()));
   }
@@ -26,7 +26,7 @@ function loadCmspCounties(): Set<string> {
 function loadZipToCounty(): Record<string, string> {
   if (!zipToCounty) {
     const raw = JSON.parse(
-      readFileSync(path.join(CORPUS_DIR, "ca-zip-to-county.json"), "utf8"),
+      readFileSync(path.join(LIBRARY_DIR, "ca-zip-to-county.json"), "utf8"),
     ) as ZipToCountyFile;
     zipToCounty = raw.zipToCounty;
   }

@@ -1,5 +1,5 @@
-import { loadIncomeBands, loadPrograms } from "../corpus/load.js";
-import type { Program } from "../corpus/types.js";
+import { loadIncomeBands, loadPrograms } from "../library/load.js";
+import type { Program } from "../library/types.js";
 import {
   createScan,
   finishScan,
@@ -17,7 +17,7 @@ import {
 import { analyzeProgramWithLlm, llmAvailable } from "./llm.js";
 import type { DraftFinding, ScanRun } from "./types.js";
 
-/** Prefer CARE/FERA page already in corpus for income-band checks. */
+/** Prefer CARE/FERA page already in library for income-band checks. */
 const INCOME_BAND_URL =
   "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/california-alternate-rates-for-energy-program.html";
 
@@ -52,7 +52,7 @@ async function checkProgram(program: Program, useLlm: boolean): Promise<DraftFin
           detail: page.error ?? "Empty body",
           evidenceUrl: url,
           suggestedAction: "Open the URL manually; some agency sites block automated fetches.",
-          corpusField: "applyUrl",
+          libraryField: "applyUrl",
           source: "heuristic",
         });
       }
@@ -81,12 +81,12 @@ function dedupeFindings(items: DraftFinding[]): DraftFinding[] {
 }
 
 /**
- * Start a corpus freshness scan. Rejects if one is already running.
+ * Start a library freshness scan. Rejects if one is already running.
  * Returns the scan row immediately; await `done` for completion.
  */
-export function startCorpusScan(): { scan: ScanRun; done: Promise<ScanRun> } {
+export function startLibraryScan(): { scan: ScanRun; done: Promise<ScanRun> } {
   if (hasRunningScan() || activePromise) {
-    throw new Error("A corpus scan is already running");
+    throw new Error("A library scan is already running");
   }
 
   const programs = loadPrograms();
@@ -121,7 +121,7 @@ export function startCorpusScan(): { scan: ScanRun; done: Promise<ScanRun> } {
           evidenceUrl: INCOME_BAND_URL,
           suggestedAction:
             "Find the current published CARE/FERA income table and update income-bands.json.",
-          corpusField: "income-bands.json",
+          libraryField: "income-bands.json",
           source: "link_check",
         });
       }

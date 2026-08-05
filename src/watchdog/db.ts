@@ -34,7 +34,7 @@ export function initWatchdog(db: Database.Database): void {
       detail TEXT NOT NULL,
       evidence_url TEXT,
       suggested_action TEXT,
-      corpus_field TEXT,
+      library_field TEXT,
       status TEXT NOT NULL DEFAULT 'open',
       source TEXT NOT NULL,
       created_at TEXT NOT NULL,
@@ -44,6 +44,22 @@ export function initWatchdog(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_watchdog_findings_status ON watchdog_findings(status);
     CREATE INDEX IF NOT EXISTS idx_watchdog_findings_program ON watchdog_findings(program_id);
   `);
+  // Rename legacy column names → library_field on existing DBs.
+  const cols = db
+    .prepare(`PRAGMA table_info(watchdog_findings)`)
+    .all() as Array<{ name: string }>;
+  const names = new Set(cols.map((c) => c.name));
+  if (!names.has("library_field")) {
+    if (names.has("catalog_field")) {
+      db.exec(
+        `ALTER TABLE watchdog_findings RENAME COLUMN catalog_field TO library_field`,
+      );
+    } else if (names.has("corpus_field")) {
+      db.exec(
+        `ALTER TABLE watchdog_findings RENAME COLUMN corpus_field TO library_field`,
+      );
+    }
+  }
 }
 
 function getDb(): Database.Database {
@@ -77,7 +93,7 @@ function rowToFinding(row: Record<string, unknown>): Finding {
     detail: row.detail as string,
     evidenceUrl: (row.evidence_url as string | null) ?? null,
     suggestedAction: (row.suggested_action as string | null) ?? null,
-    corpusField: (row.corpus_field as string | null) ?? null,
+    libraryField: (row.library_field as string | null) ?? null,
     status: row.status as FindingStatus,
     source: row.source as Finding["source"],
     createdAt: row.created_at as string,
@@ -129,7 +145,7 @@ export function insertFindings(scanId: number, drafts: DraftFinding[]): number {
   const stmt = getDb().prepare(
     `INSERT INTO watchdog_findings
       (scan_id, program_id, category, severity, title, detail, evidence_url,
-       suggested_action, corpus_field, status, source, created_at)
+       suggested_action, library_field, status, source, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', ?, ?)`,
   );
   const insertMany = getDb().transaction((items: DraftFinding[]) => {
@@ -143,7 +159,7 @@ export function insertFindings(scanId: number, drafts: DraftFinding[]): number {
         f.detail,
         f.evidenceUrl ?? null,
         f.suggestedAction ?? null,
-        f.corpusField ?? null,
+        f.libraryField ?? null,
         f.source,
         createdAt,
       );

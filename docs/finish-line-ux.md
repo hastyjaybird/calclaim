@@ -25,7 +25,7 @@ We do **not** auto-submit to agencies. We do **not** make energy/PG&E the only f
 4. **Official apply links live in the finish summary + PDF** — not on offer cards (keeps people in chat).  
 5. **No auto-submit** (v2).  
 6. **Forgiving STOP / erase** — user can wipe everything.  
-7. **Reminders never invent deadlines** — only corpus/session dates.  
+7. **Reminders never invent deadlines** — only library/session dates.  
 8. **Multi-category** — a “finished” demo must not look like a PG&E-only checklist.
 
 ---

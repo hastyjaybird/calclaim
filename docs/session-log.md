@@ -56,7 +56,7 @@ Yes for a demo if the path ends in a filled packet. Spanish alone insufficient (
 
 **User:** Create a kickoff prompt; include Spanish/English and Puerto Rican Spanish.
 
-**Outcome:** Prompt written (originally under portfolio `products/demos/donewatt/PROMPT.md`). Requirements: bilingual, PR Spanish mode, frozen corpus, finish-line, demo bar.
+**Outcome:** Prompt written (originally under portfolio `products/demos/donewatt/PROMPT.md`). Requirements: bilingual, PR Spanish mode, frozen library, finish-line, demo bar.
 
 ---
 
@@ -165,7 +165,7 @@ Wired into `guidelines.md`, `PROMPT.md`, README, competitive research target pat
 | Differentiator | Living next-steps file + reminders + multi-category queue — not a calculator or PG&E silo |
 | CX tree | [`customer-experience.md`](customer-experience.md) — gate, YES/NO queues |
 | Finish-line UX | Next-steps PDF + Sign up URLs + reminders ([`finish-line-ux.md`](finish-line-ux.md)) |
-| Energy / PG&E programs | **One cluster among many** in corpus |
+| Energy / PG&E programs | **One cluster among many** in library |
 | Ranking | Doc reuse → time-to-money (not energy-first) |
 | Free-form / gibberish | Quiet log + thanks/redirect; no state advance |
 | Languages (ship) | **English**; Spanish = expansion |
@@ -183,7 +183,7 @@ Wired into `guidelines.md`, `PROMPT.md`, README, competitive research target pat
 **Outcome:** Implemented runnable CalClaim v2 in-repo:
 
 - Node/TS + grammy + SQLite + PDFKit + node-cron  
-- Multi-category corpus (`corpus/programs.json`)  
+- Multi-category library (`library/programs.json`)  
 - Gate → YES/NO queues → offer cards → one To Do List / benefits report PDF → reminders  
 - Help / STOP / erase + free-form QC log  
 - `npm run dev` after `.env` with `TELEGRAM_BOT_TOKEN`  
@@ -245,6 +245,6 @@ Wired into `guidelines.md`, `PROMPT.md`, README, competitive research target pat
 
 **User:** Ensure we address all programs on BenefitsCal program descriptions (HCPRD); research quals and put in the tree per guidelines.
 
-**Gap:** Corpus had Medi-Cal, CalFresh, CalWORKs only from BenefitsCal’s set. Missing CAPI, GA/GR, CMSP, Disaster CalFresh. GROW / WtW are nested employment services (noted under GA/GR + CalWORKs apply steps, not separate offer cards).
+**Gap:** Library had Medi-Cal, CalFresh, CalWORKs only from BenefitsCal’s set. Missing CAPI, GA/GR, CMSP, Disaster CalFresh. GROW / WtW are nested employment services (noted under GA/GR + CalWORKs apply steps, not separate offer cards).
 
-**Outcome:** Added corpus rows + gate toggles for CAPI / GA/GR / CMSP; Disaster CalFresh as seasonal offer; `excludeIfAlreadyOn` in ranker; CX / expansion-watchlist updated.
+**Outcome:** Added library rows + gate toggles for CAPI / GA/GR / CMSP; Disaster CalFresh as seasonal offer; `excludeIfAlreadyOn` in ranker; CX / expansion-watchlist updated.

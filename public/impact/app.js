@@ -31,8 +31,12 @@ function renderMetrics(stats) {
   el("disclaimer").textContent = txt("impact.disclaimer", stats.disclaimer);
 }
 
+const PROGRAMS_PREVIEW = 10;
+const PARTNERS_PREVIEW = 8;
+
 function renderTable(programs) {
   const tbody = el("program-rows");
+  const expandBtn = el("programs-expand");
   if (!programs.length) {
     tbody.innerHTML = `<tr><td colspan="5">${escapeHtml(
       txt(
@@ -40,19 +44,49 @@ function renderTable(programs) {
         "No program opens yet. Share a QR or open an apply link from CalClaim.",
       ),
     )}</td></tr>`;
+    if (expandBtn) expandBtn.hidden = true;
     return;
   }
-  tbody.innerHTML = programs
-    .map(
-      (p) => `<tr>
+
+  let expanded = false;
+
+  function paint() {
+    const visible =
+      expanded || programs.length <= PROGRAMS_PREVIEW
+        ? programs
+        : programs.slice(0, PROGRAMS_PREVIEW);
+    tbody.innerHTML = visible
+      .map(
+        (p) => `<tr>
         <td>${escapeHtml(p.name)}</td>
         <td><span class="cat">${escapeHtml(p.category)}</span></td>
         <td class="num">${number.format(p.opens)}</td>
         <td class="num">${number.format(p.followThroughs)}</td>
         <td class="num">${money.format(p.estDollarsUnlocked)}</td>
       </tr>`,
-    )
-    .join("");
+      )
+      .join("");
+
+    if (!expandBtn) return;
+    if (programs.length <= PROGRAMS_PREVIEW) {
+      expandBtn.hidden = true;
+      return;
+    }
+    expandBtn.hidden = false;
+    expandBtn.textContent = expanded
+      ? txt("impact.showLess", "Show less")
+      : txt("impact.showAllPrograms", "Show all");
+    expandBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+  }
+
+  if (expandBtn && !expandBtn.dataset.wired) {
+    expandBtn.dataset.wired = "1";
+    expandBtn.addEventListener("click", () => {
+      expanded = !expanded;
+      paint();
+    });
+  }
+  paint();
 }
 
 function escapeHtml(s) {
@@ -65,7 +99,7 @@ function escapeHtml(s) {
 
 // Statewide California view — keep as default for all map loads.
 const CA_CENTER = [37.2, -119.5];
-const CA_ZOOM = 6;
+const CA_ZOOM = 5;
 
 function renderMap(points) {
   const map = L.map("map", { scrollWheelZoom: false }).setView(CA_CENTER, CA_ZOOM);
@@ -181,51 +215,82 @@ function withLangPath(path) {
   return window.CalClaimLang?.withLang?.(path) || path;
 }
 
+function partnerRowHtml(p) {
+  const href = withLangPath(`/partners/${encodeURIComponent(p.slug)}`);
+  const trophy =
+    p.rank === 1
+      ? TROPHY_SVG
+      : `<span class="partner-trophy-spacer" aria-hidden="true"></span>`;
+  const secondary = `${number.format(p.botStarts)} ${txt(
+    "impact.partnersBotStarts",
+    "started",
+  )} · ${number.format(p.followThroughs)} ${txt(
+    "impact.partnersFollows",
+    "follow-throughs",
+  )}`;
+  return `<li>
+    <a class="partner-row" href="${escapeHtml(href)}">
+      <span class="partner-trophy-slot">${trophy}</span>
+      <span class="partner-rank">${p.rank}</span>
+      <img class="partner-logo" src="${escapeHtml(p.logo)}" alt="" width="48" height="48" />
+      <div class="partner-meta">
+        <p class="partner-name">${escapeHtml(p.name)}</p>
+        <p class="partner-city">${escapeHtml(p.city)} · ${escapeHtml(secondary)}</p>
+      </div>
+      <div class="partner-stat">
+        <p class="partner-stat-value">${number.format(p.peopleReached)}</p>
+        <p class="partner-stat-label">${escapeHtml(
+          txt("impact.partnersReached", "People reached"),
+        )}</p>
+      </div>
+      <span class="partner-link">${escapeHtml(
+        txt("impact.partnersViewStats", "View stats →"),
+      )}</span>
+    </a>
+  </li>`;
+}
+
 function renderPartnerBoard(partners) {
   const board = el("partner-board");
+  const expandBtn = el("partners-expand");
   if (!board) return;
   if (!partners?.length) {
     board.innerHTML = `<li class="partner-row partner-row-empty">${escapeHtml(
       txt("impact.partnersEmpty", "No partner outreach yet."),
     )}</li>`;
+    if (expandBtn) expandBtn.hidden = true;
     return;
   }
-  board.innerHTML = partners
-    .map((p) => {
-      const href = withLangPath(`/partners/${encodeURIComponent(p.slug)}`);
-      const trophy =
-        p.rank === 1
-          ? TROPHY_SVG
-          : `<span class="partner-trophy-spacer" aria-hidden="true"></span>`;
-      const secondary = `${number.format(p.botStarts)} ${txt(
-        "impact.partnersBotStarts",
-        "started",
-      )} · ${number.format(p.followThroughs)} ${txt(
-        "impact.partnersFollows",
-        "follow-throughs",
-      )}`;
-      return `<li>
-        <a class="partner-row" href="${escapeHtml(href)}">
-          <span class="partner-trophy-slot">${trophy}</span>
-          <span class="partner-rank">${p.rank}</span>
-          <img class="partner-logo" src="${escapeHtml(p.logo)}" alt="" width="48" height="48" />
-          <div class="partner-meta">
-            <p class="partner-name">${escapeHtml(p.name)}</p>
-            <p class="partner-city">${escapeHtml(p.city)} · ${escapeHtml(secondary)}</p>
-          </div>
-          <div class="partner-stat">
-            <p class="partner-stat-value">${number.format(p.peopleReached)}</p>
-            <p class="partner-stat-label">${escapeHtml(
-              txt("impact.partnersReached", "People reached"),
-            )}</p>
-          </div>
-          <span class="partner-link">${escapeHtml(
-            txt("impact.partnersViewStats", "View stats →"),
-          )}</span>
-        </a>
-      </li>`;
-    })
-    .join("");
+
+  let expanded = false;
+
+  function paint() {
+    const visible =
+      expanded || partners.length <= PARTNERS_PREVIEW
+        ? partners
+        : partners.slice(0, PARTNERS_PREVIEW);
+    board.innerHTML = visible.map(partnerRowHtml).join("");
+
+    if (!expandBtn) return;
+    if (partners.length <= PARTNERS_PREVIEW) {
+      expandBtn.hidden = true;
+      return;
+    }
+    expandBtn.hidden = false;
+    expandBtn.textContent = expanded
+      ? txt("impact.showLess", "Show less")
+      : txt("impact.showMorePartners", "Show more");
+    expandBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+  }
+
+  if (expandBtn && !expandBtn.dataset.wired) {
+    expandBtn.dataset.wired = "1";
+    expandBtn.addEventListener("click", () => {
+      expanded = !expanded;
+      paint();
+    });
+  }
+  paint();
 }
 
 function setContactStatus(message, isError) {
@@ -242,12 +307,11 @@ function wireContactForm() {
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const phone = el("contact-phone")?.value?.trim() ?? "";
     const email = el("contact-email")?.value?.trim() ?? "";
     const comments = el("contact-comments")?.value?.trim() ?? "";
-    if (!phone && !email && !comments) {
+    if (!email && !comments) {
       setContactStatus(
-        txt("contact.empty", "Add a phone, email, or comment before sending."),
+        txt("contact.empty", "Add an email or comment before sending."),
         true,
       );
       return;
@@ -261,13 +325,13 @@ function wireContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, email, comments }),
+        body: JSON.stringify({ email, comments }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         if (data.error === "empty") {
           setContactStatus(
-            txt("contact.empty", "Add a phone, email, or comment before sending."),
+            txt("contact.empty", "Add an email or comment before sending."),
             true,
           );
         } else {

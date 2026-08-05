@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import { RESPONSES_PATH, DATA_DIR } from "../config.js";
-import type { SessionState } from "../corpus/types.js";
+import type { SessionState } from "../library/types.js";
 
 export interface QcRecord {
   ts: string;

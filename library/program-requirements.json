@@ -336,7 +336,7 @@
           "url": "https://cmspcounties.org/healthcare-within-reach/"
         }
       ],
-      "notes": "Only exists in the 35 participating CMSP counties (see corpus/cmsp-counties.json), and only for adults who are not eligible for Medi-Cal. The bot asks for home ZIP only when CMSP would otherwise enter the offer queue, then maps ZIP → county. Counties screen Medi-Cal and CMSP together off one BenefitsCal application, so there is rarely a separate process. Coverage is time-limited, which the offer copy should keep saying.",
+      "notes": "Only exists in the 35 participating CMSP counties (see library/cmsp-counties.json), and only for adults who are not eligible for Medi-Cal. The bot asks for home ZIP only when CMSP would otherwise enter the offer queue, then maps ZIP → county. Counties screen Medi-Cal and CMSP together off one BenefitsCal application, so there is rarely a separate process. Coverage is time-limited, which the offer copy should keep saying.",
       "lastReviewedAt": null,
       "reviewedBy": null
     },
@@ -438,7 +438,7 @@
           "url": "https://www.pge.com/tariffs/assets/pdf/tariffbook/ELEC_FORMS_62-1477.pdf"
         }
       ],
-      "notes": "The easiest real win in the corpus: self-certified online in a few minutes with no documents uploaded up front, though the utility can ask for post-enrollment verification later. Enrollment in Medi-Cal, CalFresh, WIC, SSI, CalWORKs, or LIHEAP qualifies you without any income test. CARE (or FERA) enrollment is what makes AMP available and is a qualifying path into ESA. Re-certification comes every 2 or 4 years.",
+      "notes": "The easiest real win in the library: self-certified online in a few minutes with no documents uploaded up front, though the utility can ask for post-enrollment verification later. Enrollment in Medi-Cal, CalFresh, WIC, SSI, CalWORKs, or LIHEAP qualifies you without any income test. CARE (or FERA) enrollment is what makes AMP available and is a qualifying path into ESA. Re-certification comes every 2 or 4 years.",
       "lastReviewedAt": null,
       "reviewedBy": null
     },
@@ -788,7 +788,7 @@
           "url": "https://ihssconnect.com/ihss-pay-rates-by-county/"
         }
       ],
-      "notes": "Requires Medi-Cal eligibility plus a county social worker's in-home assessment that sets the authorized hours, so it is the slowest intake in the corpus. The applicant is the recipient; the paid provider is often a family member, which confuses people about who applies. Assessed hours and the county wage rate drive the dollar estimate, so a statewide average is only a rough figure.",
+      "notes": "Requires Medi-Cal eligibility plus a county social worker's in-home assessment that sets the authorized hours, so it is the slowest intake in the library. The applicant is the recipient; the paid provider is often a family member, which confuses people about who applies. Assessed hours and the county wage rate drive the dollar estimate, so a statewide average is only a rough figure.",
       "lastReviewedAt": null,
       "reviewedBy": null
     },

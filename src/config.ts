@@ -34,7 +34,7 @@ function env(name: string, fallback?: string): string {
 }
 
 export const ROOT = root;
-export const CORPUS_DIR = path.join(root, "corpus");
+export const LIBRARY_DIR = path.join(root, "library");
 export const DATA_DIR = path.join(root, "data");
 export const RESPONSES_PATH = path.join(DATA_DIR, "responses.jsonl");
 

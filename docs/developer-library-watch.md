@@ -1,12 +1,12 @@
-# Developer corpus watch
+# Developer library watch
 
 **URL (local):** `http://localhost:3000/dev`  
 **Nav:** Impact · Developer  
 **Access:** Password + CAPTCHA + human attestation (humans only — see PRIVACY.md)
 
-Advisory tooling so developers can refresh the **frozen** program corpus (`corpus/programs.json`, `corpus/income-bands.json`) without inventing eligibility at runtime.
+Advisory tooling so developers can refresh the **frozen** program library (`library/programs.json`, `library/income-bands.json`) without inventing eligibility at runtime.
 
-The agent **never writes** to the corpus. Humans review findings and edit JSON, then redeploy.
+The agent **never writes** to the library. Humans review findings and edit JSON, then redeploy.
 
 ### Login policy
 
@@ -20,13 +20,13 @@ For each program (apply URL + `sources[]`):
 |---|---|
 | Link health | HEAD/GET — 4xx/5xx, timeouts, redirects |
 | Funding / closed | Heuristic phrases (“funds exhausted”, “applications closed”, …) |
-| Deadlines / windows | Date-window language vs corpus `deadlines` |
+| Deadlines / windows | Date-window language vs library `deadlines` |
 | Eligibility | Income / eligibility update language |
 | Apply process | Portal / document / interview change language |
 | Max amounts | `$` / `%` benefit language vs `maxBenefit` / `estAnnualUsd` |
 | Branding | Program name missing from fetched page text |
 | CARE/FERA bands | Separate fetch of the CARE/FERA guidelines page vs `income-bands.json` |
-| Deeper review | Optional LLM compare (corpus snapshot ↔ live page text) |
+| Deeper review | Optional LLM compare (library snapshot ↔ live page text) |
 
 ## API
 
@@ -38,7 +38,7 @@ Auth cookie required for all routes below except captcha/login/logout/session.
 | `/api/dev/login` | POST | `{ password, captchaId, captchaAnswer, humanAttestation: true }` |
 | `/api/dev/logout` | POST | Clear session |
 | `/api/dev/session` | GET | `{ authenticated }` |
-| `/api/dev/status` | GET | Corpus overview, open findings, recent scans, LLM on/off |
+| `/api/dev/status` | GET | Library overview, open findings, recent scans, LLM on/off |
 | `/api/dev/scan` | POST | Start a scan (202; 409 if already running) |
 | `/api/dev/scan/:id` | GET | Scan progress + findings for that run |
 | `/api/dev/findings?status=` | GET | `open` (default), `all`, `acknowledged`, `dismissed`, `fixed` |
@@ -50,7 +50,7 @@ Auth cookie required for all routes below except captcha/login/logout/session.
 
 ## Program requirements matrix
 
-An editable table on `/dev` (`#matrix`) that answers "how hard is this program to actually finish, and what does it open up." Data lives in **`corpus/program-requirements.json`**, a companion file the bot never reads — it is operational metadata, not eligibility truth. Unlike `programs.json`, this file *is* written by the dev page: each cell edit saves immediately and atomically, so changes show up as a reviewable git diff. The loader re-reads on mtime change, so hand-editing the file in an editor is still safe.
+An editable table on `/dev` (`#matrix`) that answers "how hard is this program to actually finish, and what does it open up." Data lives in **`library/program-requirements.json`**, a companion file the bot never reads — it is operational metadata, not eligibility truth. Unlike `programs.json`, this file *is* written by the dev page: each cell edit saves immediately and atomically, so changes show up as a reviewable git diff. The loader re-reads on mtime change, so hand-editing the file in an editor is still safe.
 
 Per program:
 
@@ -64,21 +64,21 @@ Per program:
 | Also qualifies you for | Categorical-eligibility graph — enrolling here is accepted as proof for those programs, so offer them next |
 | Needs first | Hard prerequisites (IHSS needs Medi-Cal, YCTC needs CalEITC, AMP needs CARE or FERA) |
 | Review status | `needs_review` → `verified_online` → `signed_off_by_program`, plus a confidence % and a timestamp |
-| Review references | The official pages the row was checked against, editable as `Label \| URL` lines with quick-add from the program's corpus `sources` |
+| Review references | The official pages the row was checked against, editable as `Label \| URL` lines with quick-add from the program's library `sources` |
 
-**Open now?** is recomputed on every request rather than stored, because a hand-maintained "active" flag is exactly the thing that rots into advertising a closed program. It reads the corpus `deadlines` and the live disaster-window table:
+**Open now?** is recomputed on every request rather than stored, because a hand-maintained "active" flag is exactly the thing that rots into advertising a closed program. It reads the library `deadlines` and the live disaster-window table:
 
 | Status | When |
 |---|---|
 | `window_open` | A disaster-gated program has an approved county window taking applications; the detail names the counties and the last apply day |
 | `dormant` | A disaster-gated program has no live window. This is the normal state most of the year and matches the offer card being hidden |
 | `deadline_soon` | The next dated deadline is within 60 days |
-| `deadline_passed` | Every dated deadline is in the past. Usually means the corpus date needs rolling to the next cycle, not that the program ended — so it doubles as a staleness alarm |
+| `deadline_passed` | Every dated deadline is in the past. Usually means the library date needs rolling to the next cycle, not that the program ended — so it doubles as a staleness alarm |
 | `seasonal` | Tagged `seasonal_window` (LIHEAP), so each county's funding window decides |
 | `open` | Everything else |
 | `paused` / `closed` | Pinned by hand via `availabilityOverride`, with `availabilityNote` recording who said so |
 
-Only `open`, `paused`, and `closed` can be set by hand; the rest are derived and the override is rejected if you try. The live-window list is passed into `buildProgramMatrix()` by the web layer so `src/corpus/` keeps no database dependency. The `Status` filter's **Needs attention** option hides everything currently applicable, leaving the rows worth chasing.
+Only `open`, `paused`, and `closed` can be set by hand; the rest are derived and the override is rejected if you try. The live-window list is passed into `buildProgramMatrix()` by the web layer so `src/library/` keeps no database dependency. The `Status` filter's **Needs attention** option hides everything currently applicable, leaving the rows worth chasing.
 
 **Difficulty score** = documents (third-party counted double) + interview weight (0 / 1.5 / 3 / 3.5 / 4.5 / 5) + `formFillMinutes` ÷ 15 + 0.2 per eligibility rule + 1.5 if a prerequisite exists. Easy ≤ 6.5, moderate ≤ 10, hard above. Documents and interviews dominate on purpose: a long rule list decides *whether* you qualify, not how hard the paperwork is.
 
@@ -133,18 +133,18 @@ Your original list — **plus** fields that break ranking, PDFs, or funder math 
 13. **Skip cascades / bill-not-in-name** (`skipCascades`, `skipReasons`, `requiresPastDue`)  
 14. **New or sunset programs** (expansion watchlist + agency announcements)
 
-Aging rule (same as [`expansion-watchlist.md`](expansion-watchlist.md)): if corpus `version` is **>90 days** old, or a major benefits announcement lands, re-run assessment before further engineering.
+Aging rule (same as [`expansion-watchlist.md`](expansion-watchlist.md)): if library `version` is **>90 days** old, or a major benefits announcement lands, re-run assessment before further engineering.
 
 ## Suggested workflow
 
-1. Open `/dev` → **Run corpus check**.  
+1. Open `/dev` → **Run library check**.  
 2. Triage critical/high findings; open evidence URLs.  
-3. Edit `corpus/programs.json` / `income-bands.json`; bump `version` to today’s date.  
+3. Edit `library/programs.json` / `income-bands.json`; bump `version` to today’s date.  
 4. Mark findings **fixed** (or dismiss false positives).  
 5. `npm run typecheck` / redeploy; spot-check offer cards + apply redirects.
 
 ## Safety alignment
 
-- Deterministic ranker still reads only the frozen corpus.  
+- Deterministic ranker still reads only the frozen library.  
 - Watcher findings are **not** eligibility truth for chat users.  
 - Agency sites may block scrapes — treat empty/blocked pages as “verify manually,” not “program gone.”

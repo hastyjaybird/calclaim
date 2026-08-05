@@ -1,5 +1,5 @@
 import { InlineKeyboard } from "grammy";
-import { incomeBandLabels } from "../corpus/load.js";
+import { incomeBandLabels } from "../library/load.js";
 import { PRIVACY_POLICY_URL } from "../privacy/copy.js";
 
 /** Gate-feeder programs shown as multiselect options. */

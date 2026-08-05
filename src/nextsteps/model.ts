@@ -1,13 +1,13 @@
-import { annualizeMaxBenefitUsd } from "../corpus/benefitEstimate.js";
-import { docLabel, hasDoc } from "../corpus/docs.js";
-import { getProgram } from "../corpus/load.js";
-import { programDifficulty } from "../corpus/requirements.js";
+import { annualizeMaxBenefitUsd } from "../library/benefitEstimate.js";
+import { docLabel, hasDoc } from "../library/docs.js";
+import { getProgram } from "../library/load.js";
+import { programDifficulty } from "../library/requirements.js";
 import type {
   DocId,
   NextStepsItem,
   SessionState,
   TodoStatus,
-} from "../corpus/types.js";
+} from "../library/types.js";
 import { formatApplyPeriods } from "../disaster/format.js";
 import { lastApplyDay, windowForProgram } from "../disaster/liveWindow.js";
 
@@ -17,7 +17,7 @@ function deadlineFields(programId: string): {
 } {
   const p = getProgram(programId);
   if (p) {
-    // An approved disaster window has real dates; the corpus row only has the
+    // An approved disaster window has real dates; the library row only has the
     // "windows only" caveat, which reminders cannot act on.
     const window = windowForProgram(p);
     if (window) {
@@ -37,7 +37,7 @@ function deadlineFields(programId: string): {
   };
 }
 
-/** Per-event phone or URL beats the corpus apply link during a window. */
+/** Per-event phone or URL beats the library apply link during a window. */
 function applyLink(programId: string): string {
   const p = getProgram(programId);
   if (!p) return "";

@@ -1,4 +1,4 @@
-import type { SessionState, StepId } from "../corpus/types.js";
+import type { SessionState, StepId } from "../library/types.js";
 import { THANKS_FEEDBACK } from "../privacy/copy.js";
 import { GATE_OPTIONS } from "./keyboards.js";
 

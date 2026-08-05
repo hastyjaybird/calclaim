@@ -11,10 +11,10 @@
 ## How to re-run (checklist)
 
 1. Which programs are **open and accepting applications**.  
-2. Public eligibility + apply steps freezeable into corpus in &lt;2 weeks.  
+2. Public eligibility + apply steps freezeable into library in &lt;2 weeks.  
 3. Language need (Spanish, etc.) vs channel fit.  
 4. Whether reminders/deadlines are knowable without inventing dates.  
-5. Overlap with existing CA corpus (doc reuse across programs).
+5. Overlap with existing CA library (doc reuse across programs).
 
 ---
 
@@ -25,7 +25,7 @@
 | **Spanish conversation mode** | Ship English first | Demand from testers / BD story need |
 | **Puerto Rico locale** | Was v1 energy story; not v2 center | PR benefit stacks + dialect QA capacity |
 | **In-chat field coach** (per-form Next question) | Living PDF is v2 finish line | One high-value program where coach lifts completion |
-| **Other US states** | Corpus + legal surface area | Open applications + Spanish need |
+| **Other US states** | Library + legal surface area | Open applications + Spanish need |
 | **Energy-only IRA chase (TX/FL)** | Wrong product frame for v2 | Only as *rows* inside a state benefits expansion |
 
 ---
@@ -34,7 +34,7 @@
 
 | Expansion | Why interesting | Watch for |
 |---|---|---|
-| **CA Spanish** | Same corpus; large need | Dialect/plain-language QA |
+| **CA Spanish** | Same library; large need | Dialect/plain-language QA |
 | **Additional CA programs** | Child care, housing waitlists, local city aid | Frozen public rules only |
 | **Deep coach for one program** | e.g. CARE or CalFresh apply path | Must remain opt-in from next-steps |
 
@@ -44,7 +44,7 @@
 
 | Market | Note |
 |---|---|
-| **NY / IL / etc. multi-benefit** | MyFriendBen-like stacks; rebuild corpus |
+| **NY / IL / etc. multi-benefit** | MyFriendBen-like stacks; rebuild library |
 | **PR** | High need; separate Spanish register; not energy-only |
 | **TX / FL** | Large future energy $ — only after benefits framing stays primary |
 
@@ -75,6 +75,6 @@
 Expand language, geography, or deep field coach only when **all** are true:
 
 1. Consumer-facing applications are open.  
-2. Public rules freeze into corpus.  
+2. Public rules freeze into library.  
 3. Expansion does not collapse the product back into a single silo (energy-only).  
 4. Reassessment dated within 90 days.

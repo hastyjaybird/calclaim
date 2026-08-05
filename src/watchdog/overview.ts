@@ -1,4 +1,4 @@
-import { getCorpusMeta, loadIncomeBands, loadPrograms } from "../corpus/load.js";
+import { getLibraryMeta, loadIncomeBands, loadPrograms } from "../library/load.js";
 import {
   daysSinceSuccess,
   getScanState,
@@ -11,7 +11,7 @@ import { todayYmd } from "../disaster/format.js";
 import { WATCH_CHECKLIST } from "./checklist.js";
 import { countOpenFindingsByProgram, latestScan, listFindings, listScans } from "./db.js";
 import { llmAvailable } from "./llm.js";
-import type { CorpusOverview } from "./types.js";
+import type { LibraryOverview } from "./types.js";
 
 const AGING_RULE_DAYS = 90;
 
@@ -23,8 +23,8 @@ function ageDaysFromVersion(version: string): number | null {
   return Math.floor((Date.now() - then) / (24 * 60 * 60 * 1000));
 }
 
-export function buildCorpusOverview(): CorpusOverview {
-  const meta = getCorpusMeta();
+export function buildLibraryOverview(): LibraryOverview {
+  const meta = getLibraryMeta();
   const programs = loadPrograms();
   const bands = loadIncomeBands();
   const openByProgram = countOpenFindingsByProgram();
@@ -82,7 +82,7 @@ export function buildDisasterStatus() {
 }
 
 export function buildDevStatus() {
-  const overview = buildCorpusOverview();
+  const overview = buildLibraryOverview();
   const scan = latestScan();
   const openFindings = listFindings({ status: "open", limit: 100 });
   const recentScans = listScans(10);

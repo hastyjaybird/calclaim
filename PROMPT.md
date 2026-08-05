@@ -26,10 +26,10 @@ This is a **portfolio demo**, not a production government product. Goal: show fo
 
 ## V2 scope (hard)
 
-1. **Geography:** California (statewide benefits corpus).  
+1. **Geography:** California (statewide benefits library).  
 2. **Channel:** Telegram bot (`grammy`), hosted (e.g. Railway).  
 3. **Language (ship):** English. Spanish = expansion, not required for first demo.  
-4. **Programs:** Multi-category financial aid. **Energy / PG&E programs (CARE, FERA, ESA, LIHEAP, AMP, …) are normal rows in the corpus** — never the sole product story and never auto-ranked above other aid solely because they are “energy.”  
+4. **Programs:** Multi-category financial aid. **Energy / PG&E programs (CARE, FERA, ESA, LIHEAP, AMP, …) are normal rows in the library** — never the sole product story and never auto-ranked above other aid solely because they are “energy.”  
 5. **Puerto Rico energy locale / PR Spanish mode:** **Out of v2 ship.** Track on expansion watchlist.
 
 Do **not** rebuild the retired v1 “PG&E finish-line field coach only” product as the main demo.
@@ -50,8 +50,8 @@ A reviewer runs this end-to-end in under 10 minutes:
 
 1. Live Telegram bot (opt-in, Help, STOP).  
 2. Gate: family already on Medi-Cal / CalFresh / SSI / CalWORKs / CAPI / GA/GR / CMSP / WIC? → YES or NO arm.  
-3. YES arm: doc-reuse-ranked offer queue (CARE, LifeLine, CalFresh, ESA, … as corpus defines).  
-4. NO arm: income × household band → FERA-only / CARE-band queue / tax-only as corpus defines.  
+3. YES arm: doc-reuse-ranked offer queue (CARE, LifeLine, CalFresh, ESA, … as library defines).  
+4. NO arm: income × household band → FERA-only / CARE-band queue / tax-only as library defines.  
 5. Every offer card: Sign up · Already enrolled · Remind me later · Skip (+ Help / STOP).  
 6. After each meaningful action: regenerate and **send** living To Do List PDF (todos + deadlines).  
 7. End of queue: re-send the **same** To Do List / benefits report PDF (not a second document).  
@@ -77,23 +77,23 @@ Follow [`docs/customer-experience.md`](docs/customer-experience.md) exactly.
 
 1. **Opt-in** — disclaimer + start.  
 2. **Gate** — categorical programs already in household?  
-3. **YES queue / NO queue** — rank by newDocs ASC → timeToMoney ASC; Skip cascades per corpus.  
+3. **YES queue / NO queue** — rank by newDocs ASC → timeToMoney ASC; Skip cascades per library.  
 4. **Living To Do List / benefits report** — one PDF; update + re-send after Sign up / Already / Remind / Skip / income selection.  
 5. **Same PDF** re-sent when queue empties (no second report).  
 6. **Reminders** — Tue noon + T-3 / T-1.  
 7. **Stuck / Help** — privacy, erase, about, STOP.
 
-### Knowledge (frozen corpus)
+### Knowledge (frozen library)
 Version JSON/markdown in-repo. Demo answers must not depend on live web browse.
 
 Minimum program rows (each with docs, deadlines, apply URL/steps, skip cascades, sources) — **energy is not privileged**:
 
 - Categorical / health-food-cash: Medi-Cal, CMSP, WIC, CalFresh, Disaster CalFresh, SSI, CalWORKs, CAPI, GA/GR (as gate feeders and/or offers; BenefitsCal HCPRD coverage)  
 - Telecom: LifeLine  
-- Energy / bill (subset): CARE, FERA, ESA, LIHEAP, AMP *(if past-due rules in corpus)*  
+- Energy / bill (subset): CARE, FERA, ESA, LIHEAP, AMP *(if past-due rules in library)*  
 - Tax credits (info / high-friction offers)  
 
-Cite corpus docs internally; document sources in README. Never invent $ or deadlines outside corpus.
+Cite library docs internally; document sources in README. Never invent $ or deadlines outside library.
 
 ### Safety
 - Disclaimers: estimates; not affiliated with agencies or utilities; not tax/legal/benefits advice.  
@@ -106,13 +106,13 @@ Cite corpus docs internally; document sources in README. Never invent $ or deadl
 - SQLite (or Redis) for sessions/todos; `data/responses.jsonl` for QC.  
 - PDF generator → `sendDocument`.  
 - Railway webhook + cron.  
-- Optional Claude later; **deterministic ranker over corpus is required** for demo reliability.
+- Optional Claude later; **deterministic ranker over library is required** for demo reliability.
 
 ---
 
 ## Suggested milestones
 
-**Slice 1:** Scaffold + corpus schema + CARE/LifeLine/CalFresh seeds + /start + gate + Help/STOP  
+**Slice 1:** Scaffold + library schema + CARE/LifeLine/CalFresh seeds + /start + gate + Help/STOP  
 **Slice 2:** One YES card path + next-steps PDF send + free-form QC  
 **Slice 3:** Full YES + NO queues + CARE Skip cascades + income band  
 **Slice 4:** Reminder worker + erase/privacy + Railway deploy  
@@ -123,7 +123,7 @@ Cite corpus docs internally; document sources in README. Never invent $ or deadl
 ## Deliverables checklist
 
 - [ ] Working Telegram bot  
-- [ ] Frozen multi-category corpus with sources  
+- [ ] Frozen multi-category library with sources  
 - [ ] Living To Do List PDF after actions (= benefits report; one file)  
 - [ ] Reminders (Tue + T-3/T-1 PT)  
 - [ ] Help / STOP / erase (+ QC wipe)  

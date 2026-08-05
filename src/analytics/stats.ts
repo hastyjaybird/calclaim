@@ -1,4 +1,4 @@
-import { getProgram, loadPrograms } from "../corpus/load.js";
+import { getProgram, loadPrograms } from "../library/load.js";
 import { listEvents, type AnalyticsEventRow } from "./db.js";
 import { getCampaign, loadCampaignsFile } from "./campaigns.js";
 import { FUNNEL_STAGES, type FunnelStageId } from "./funnel.js";
@@ -269,7 +269,7 @@ function estForProgram(programId: string): number {
 }
 
 const IMPACT_DISCLAIMER =
-  "Estimates only. Dollar totals use corpus annual benefit estimates × follow-through taps — not verified agency payouts. Map shows QR placement sites and coarse city-level IP when available; never street addresses. Funnel counts unique people per stage (QR/link reach is event count).";
+  "Estimates only. Dollar totals use library annual benefit estimates × follow-through taps — not verified agency payouts. Map shows QR placement sites and coarse city-level IP when available; never street addresses. Funnel counts unique people per stage (QR/link reach is event count).";
 
 function seriesTotal(series: DailyCount[]): number {
   return series.length ? series[series.length - 1]!.cumulative : 0;
@@ -357,6 +357,20 @@ function buildDemoProgramStats(programOpens: number, followThroughs: number): Pr
       followThroughs: follows,
       estAnnualUsd,
       estDollarsUnlocked: follows * estAnnualUsd,
+    });
+  }
+
+  const seen = new Set(rows.map((r) => r.programId));
+  for (const program of loadPrograms()) {
+    if (seen.has(program.id)) continue;
+    rows.push({
+      programId: program.id,
+      name: program.name,
+      category: program.category,
+      opens: 0,
+      followThroughs: 0,
+      estAnnualUsd: program.estAnnualUsd ?? 0,
+      estDollarsUnlocked: 0,
     });
   }
 
@@ -476,11 +490,16 @@ function buildLiveImpactStats(events: AnalyticsEventRow[]): ImpactStats {
   };
 }
 
-export function buildImpactStats(): ImpactStats {
+/**
+ * Public-site stats (demo or live per IMPACT_STATS_MODE).
+ * Pass `{ source: "live" }` for operator tools that must ignore the funder demo set.
+ */
+export function buildImpactStats(opts?: { source?: StatsSource }): ImpactStats {
   const events = listEventsForStats();
   const awareness = events.filter((e) => e.event_type === "awareness");
   const usersPerDayLive = buildUsersPerDay(awareness);
-  if (impactStatsMode() === "demo") {
+  const mode = opts?.source ?? impactStatsMode();
+  if (mode === "demo") {
     return buildDemoImpactStats(usersPerDayLive);
   }
   return buildLiveImpactStats(events);
@@ -665,7 +684,7 @@ export interface PartnerStats {
     blurb: string;
     campaignId: string;
   };
-  /** True for live signups (editable profile); false for corpus demo partners. */
+  /** True for live signups (editable profile); false for library demo partners. */
   editable: boolean;
   peopleReached: number;
   botStarts: number;

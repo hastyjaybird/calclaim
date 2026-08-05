@@ -2,7 +2,7 @@ import cron from "node-cron";
 import type { Bot } from "grammy";
 import { listReminderSessions } from "../db/session.js";
 import { closestDeadline, openTodos } from "../nextsteps/model.js";
-import type { NextStepsItem } from "../corpus/types.js";
+import type { NextStepsItem } from "../library/types.js";
 
 function todayYmd(tz: string): string {
   return new Intl.DateTimeFormat("en-CA", {

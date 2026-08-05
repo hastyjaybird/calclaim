@@ -3,7 +3,7 @@
 **URL (local):** `http://localhost:3000/impact`  
 **Partner signup:** `http://localhost:3000/partners/signup`  
 **API:** `GET /api/stats` · `GET /api/partners` · `GET /api/partners/:slug` · `POST /api/partners/signup` · `GET /api/partners/:slug/banner`  
-**Nav:** Impact · Partners · [Developer](developer-corpus-watch.md) (`/dev`)
+**Nav:** Impact · Partners · [Developer](developer-library-watch.md) (`/dev`)
 
 ## What funders see
 
@@ -11,13 +11,13 @@
 2. **People reached** — QR scans + shared-link clicks (`/go/:campaign`)  
 3. **Programs accessed** — clicks from chat → official apply sites via `/r/:programId`  
 4. **Follow-throughs** — “Add to my To Do List” taps  
-5. **Est. aid unlocked** — sum of corpus `estAnnualUsd` × follow-throughs  
+5. **Est. aid unlocked** — sum of library `estAnnualUsd` × follow-throughs  
 6. **Map** — QR placement pins + coarse city-level IP (never street address)  
 7. **Community partners leaderboard** — orgs ranked by people reached via their unique QR; #1 gets a subtle trophy; each row links to a partner stats slide  
 8. **Charts** — users/day and cumulative people reached  
 9. **Program table** — opens, follow-throughs, estimated $  
 
-Pipeline fall-off (CX tree funnel) lives behind [developer login](developer-corpus-watch.md).
+Pipeline fall-off (CX tree funnel) lives behind [developer login](developer-library-watch.md).
 
 ### Partner slides
 
@@ -31,7 +31,7 @@ Each partner page is a standalone “deck slide” for funders:
 - KPIs (people reached, bot starts, follow-throughs, est. aid)  
 - Map + users/day + cumulative charts for their campaign  
 
-Demo partners live in [`corpus/partners.json`](../corpus/partners.json) (linked to [`corpus/campaigns.json`](../corpus/campaigns.json)). Live signups are stored in SQLite (`partner_signups`) via `/partners/signup` — each gets a unique ID, status page, QR, welcome email, and printable booth banner PDF. Framing is **community outreach partners** — not official agency affiliation.
+Demo partners live in [`library/partners.json`](../library/partners.json) (linked to [`library/campaigns.json`](../library/campaigns.json)). Live signups are stored in SQLite (`partner_signups`) via `/partners/signup` — each gets a unique ID, status page, QR, welcome email, and printable booth banner PDF. Framing is **community outreach partners** — not official agency affiliation.
 
 **Ranking:** people reached (`awareness` events on the partner’s `campaignId`). Secondary stats: bot starts and follow-throughs (session-attributed via sticky `campaignId` from `/start`).
 
@@ -58,7 +58,7 @@ Demo partners live in [`corpus/partners.json`](../corpus/partners.json) (linked 
 | Telegram `/start <payload>` | `bot_start` + session `campaignId` | opt-in flow |
 | Offer “Add to my To Do List” | `follow_through` (with session campaign) | next-steps PDF |
 
-Campaign pins live in [`corpus/campaigns.json`](../corpus/campaigns.json). Print partner QRs from `/api/qr/partner/:slug` or point posters at `/go/<id>`.
+Campaign pins live in [`library/campaigns.json`](../library/campaigns.json). Print partner QRs from `/api/qr/partner/:slug` or point posters at `/go/<id>`.
 
 ## Location policy
 
@@ -94,7 +94,7 @@ API payloads include `statsSource: "demo" | "live"` and always attach `usersPerD
 npm run seed-impact
 ```
 
-Writes fake rows into `analytics_events` (clears prior events). Prefer the **demo display mode** for funder screenshots; use seed when you want `/dev` funnel charts against SQLite without real traffic.
+Writes fake rows into `analytics_events` (clears prior events). Prefer the **demo display mode** for funder screenshots; `/dev` always reads live SQLite via `/api/dev/stats` (never the demo dataset).
 
 ## Env
 

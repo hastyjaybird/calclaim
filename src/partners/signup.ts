@@ -10,6 +10,7 @@ import {
   updateSignedUpPartner,
   type SignedUpPartner,
 } from "./db.js";
+import { issuePartnerEditToken, verifyPartnerEditToken } from "./editToken.js";
 import { sendPartnerWelcomeEmail, type SendPartnerEmailResult } from "./email.js";
 import { savePartnerLogoUpload } from "./logoUpload.js";
 
@@ -25,6 +26,7 @@ export interface PartnerSignupResult {
   statusUrl: string;
   qrUrl: string;
   bannerUrl: string;
+  editToken: string;
   email: SendPartnerEmailResult;
 }
 
@@ -62,10 +64,10 @@ export async function registerPartnerSignup(
   },
 ): Promise<PartnerSignupResult> {
   const token = randomPartnerToken(4);
-  // Underscores only — must match Telegram /start alphabet and corpus campaign style.
+  // Underscores only — must match Telegram /start alphabet and library campaign style.
   const id = `p_${token}`;
   const slug = allocateUniqueSlug(fields.name);
-  // Ensure we didn't collide with a corpus partner slug
+  // Ensure we didn't collide with a library partner slug
   let finalSlug = slug;
   if (getPartnerBySlug(finalSlug)) {
     finalSlug = allocateUniqueSlug(`${fields.name}-${token}`);
@@ -112,7 +114,13 @@ export async function registerPartnerSignup(
     bannerPdf,
   });
 
-  return { partner, statusUrl, qrUrl, bannerUrl, email };
+  const editToken = issuePartnerEditToken(
+    config.developerSessionSecret,
+    partner.id,
+    partner.slug,
+  );
+
+  return { partner, statusUrl, qrUrl, bannerUrl, editToken, email };
 }
 
 export function parsePartnerProfileUpdate(input: PartnerSignupInput): {
@@ -134,8 +142,11 @@ export async function updatePartnerProfile(
     name: string;
     email: string;
     city: string;
-    partnerId: string;
+    partnerId?: string;
+    editToken?: string;
+    asDeveloper?: boolean;
     logo?: { buffer: Buffer; mime: string; filename: string };
+    editTokenSecret?: string;
   },
 ): Promise<
   | { partner: SignedUpPartner; bannerUrl: string }
@@ -143,8 +154,25 @@ export async function updatePartnerProfile(
 > {
   const existing = getSignedUpPartnerBySlug(slug);
   if (!existing) return { error: "not_found" };
-  if (existing.id.toLowerCase() !== fields.partnerId.toLowerCase()) {
-    return { error: "partner_id_mismatch" };
+
+  if (!fields.asDeveloper) {
+    const partnerId = trimField(fields.partnerId, 40).toLowerCase();
+    const editToken = trimField(fields.editToken, 200);
+    if (!partnerId) return { error: "partner_id_required" };
+    if (existing.id.toLowerCase() !== partnerId) {
+      return { error: "partner_id_mismatch" };
+    }
+    if (
+      !fields.editTokenSecret ||
+      !verifyPartnerEditToken(
+        fields.editTokenSecret,
+        partnerId,
+        existing.slug,
+        editToken,
+      )
+    ) {
+      return { error: "edit_expired" };
+    }
   }
 
   let logoPath: string | undefined;
@@ -152,6 +180,7 @@ export async function updatePartnerProfile(
     logoPath = savePartnerLogoUpload(existing.id, fields.logo);
   }
 
+  // Name/email/city/logo only — id, slug, and campaignId stay fixed.
   const partner = updateSignedUpPartner(existing.slug, {
     name: fields.name,
     email: fields.email,

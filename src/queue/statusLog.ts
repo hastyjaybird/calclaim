@@ -1,7 +1,7 @@
 import { getImmigrationAnswer } from "./immigrationMemory.js";
-import { isCmspCounty } from "../corpus/geo.js";
-import { loadPrograms } from "../corpus/load.js";
-import type { Program, SessionState, TodoStatus } from "../corpus/types.js";
+import { isCmspCounty } from "../library/geo.js";
+import { loadPrograms } from "../library/load.js";
+import type { Program, SessionState, TodoStatus } from "../library/types.js";
 import { hasOfferableDisasterWindow } from "../disaster/liveWindow.js";
 
 /** Session-wide status for a single program, for QC / support logging. */
@@ -199,7 +199,7 @@ function explainEligibility(
 }
 
 /**
- * Full per-program status for a session — every corpus program resolves to
+ * Full per-program status for a session — every library program resolves to
  * exactly one row, so nothing is silently omitted from QC logs.
  */
 export function buildProgramStatusRows(session: SessionState): ProgramLogRow[] {

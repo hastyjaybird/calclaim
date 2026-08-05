@@ -23,10 +23,10 @@ Tables: `telegram_users`, `telegram_messages` in the demo database.
 
 - Answers you tap (gate, household size, income band, ZIP when needed for county-specific programs, offer actions)
 - Immigration status (citizen / eligible immigrant / no / prefer not to say) is asked only when needed for later programs. **That answer is not stored** in your session, QC logs, or Telegram message capture, and is cleared from memory when your queue finishes, you restart, or you erase data.
-- Next-steps todo items and deadlines derived from our frozen program corpus
+- Next-steps todo items and deadlines derived from our frozen program library
 - Free-form text or voice notes you send that are not a recognized button/command (alpha feedback / developer quality control)
 - Voice notes are transcribed to text (when transcription is configured) and stored as feedback for the developer To Do List
-- Optional phone, email, and comments submitted on the public contact form (stored in the developer feedback To Do List in SQLite)
+- Optional email and comments submitted on the public contact form (stored in the developer feedback To Do List in SQLite)
 - Partner signup: organization name, work email, and optional city (stored in SQLite `partner_signups`; used to email the QR kit and power the partner status page)
 
 ### Impact analytics (aggregate funder dashboard)
@@ -41,7 +41,7 @@ Tables: `telegram_users`, `telegram_messages` in the demo database.
 - Document uploads as a required product step (ID, pay stubs, bills) — if you send a file anyway, file metadata may be logged as above
 - Payment information
 - Marketing email lists (optional email on the contact form is for replies only; partner signup email is only for delivering that partner’s QR kit; “Email report to my computer” opens your own Mail app with a download link and does not send us the address)
-- Phone numbers unless you tap Telegram’s share-contact control or optionally enter one on the contact form
+- Phone numbers unless you tap Telegram’s share-contact control
 - Precise GPS unless you share a location
 - Raw IP addresses stored long-term (looked up briefly for city-level map dots, then discarded)
 
@@ -64,7 +64,7 @@ We do not sell your data. This demo does not send your Telegram profile or messa
 
 ## Developer area access (humans only)
 
-The Developer tools at `/dev` (corpus watch / scan UI) are for **authorized human operators only**.
+The Developer tools at `/dev` (library watch / scan UI) are for **authorized human operators only**.
 
 - Robots, crawlers, scrapers, automated scripts, AI agents, bots, and any other non-human systems are **prohibited** from logging in to or accessing the Developer page or its APIs (`/api/dev/*`).
 - Access requires a shared operator password, a CAPTCHA challenge, and an explicit human attestation checkbox.
@@ -73,7 +73,7 @@ The Developer tools at `/dev` (corpus watch / scan UI) are for **authorized huma
 
 ## Not affiliated
 
-Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, or any agency. Estimates only — not tax, legal, or benefits advice. Dollar totals on the impact site are corpus estimates × follow-throughs, not verified payouts.
+Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, or any agency. Estimates only — not tax, legal, or benefits advice. Dollar totals on the impact site are library estimates × follow-throughs, not verified payouts.
 
 ## Contact
 

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow, noarchive" />
-  <title>CalClaim — Developer corpus watch</title>
+  <title>CalClaim — Developer library watch</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -30,22 +30,22 @@
         <a href="/impact#about">About</a>
         <a href="/impact#contact">Contact</a>
         <a href="/impact#privacy">Privacy</a>
-        <a href="/dev" aria-current="page">Partner login</a>
+        <a href="/dev" aria-current="page">Developer login</a>
         <button type="button" class="nav-logout" id="btn-logout">Log out</button>
       </nav>
-      <span class="banner-line">Corpus freshness — humans only · advisory findings</span>
+      <span class="banner-line">Library freshness — humans only · advisory findings</span>
     </div>
   </div>
 
   <header class="hero hero-dev">
     <p class="eyebrow">Developer tools</p>
-    <h1>Corpus watch</h1>
+    <h1>Library watch</h1>
     <p class="lede">
       Scan official program pages for date, eligibility, apply-process, funding, amount, and URL drift.
-      Findings never edit the frozen corpus — developers review and update <code>programs.json</code>.
+      Findings never edit the frozen library — developers review and update <code>programs.json</code>.
     </p>
     <div class="cta-row">
-      <button type="button" class="cta" id="btn-scan">Run corpus check</button>
+      <button type="button" class="cta" id="btn-scan">Run library check</button>
       <a class="cta cta-ghost" href="#matrix">Requirements matrix</a>
       <a class="cta cta-ghost" href="#checklist">Watch checklist</a>
     </div>
@@ -53,9 +53,9 @@
   </header>
 
   <main>
-    <section class="metrics" aria-label="Corpus status">
+    <section class="metrics" aria-label="Library status">
       <article class="metric">
-        <p class="metric-label">Corpus version</p>
+        <p class="metric-label">Library version</p>
         <p class="metric-value" id="m-version">—</p>
         <p class="metric-note" id="m-age">Aging rule: 90 days</p>
       </article>
@@ -79,7 +79,10 @@
     <section class="panel" id="funnel" aria-labelledby="funnel-heading">
       <div class="panel-head">
         <h2 id="funnel-heading">Pipeline fall-off</h2>
-        <p>Where people leave the conversation tree — from finding CalClaim to finishing the offer queue.</p>
+        <p>
+          Live collected traffic only (operator Telegram ids excluded) — not the public demo dataset.
+          Where people leave the conversation tree — from finding CalClaim to finishing the offer queue.
+        </p>
       </div>
       <p class="funnel-callout" id="funnel-callout" hidden></p>
       <div class="funnel-layout">
@@ -164,7 +167,7 @@
       <div class="panel-head panel-head-row">
         <div>
           <h2 id="findings-heading">Findings for developers</h2>
-          <p>Prioritized mismatches and link issues. Acknowledge or dismiss after you update the corpus.</p>
+          <p>Prioritized mismatches and link issues. Acknowledge or dismiss after you update the library.</p>
         </div>
         <label class="filter">
           Show
@@ -184,7 +187,7 @@
 
     <section class="panel" aria-labelledby="programs-heading">
       <div class="panel-head">
-        <h2 id="programs-heading">Programs in corpus</h2>
+        <h2 id="programs-heading">Programs in library</h2>
         <p>Each row is a frozen offer CalClaim can present. Open findings are from prior scans.</p>
       </div>
       <div class="table-wrap">
@@ -214,7 +217,7 @@
             Every program ranked easiest to hardest to actually finish — one or two documents
             and no interview at the top, full interviews and home visits at the bottom.
             Cells are editable: pick from the dropdowns and checklists, and each change saves
-            straight to <code>corpus/program-requirements.json</code> so it shows up as a git diff.
+            straight to <code>library/program-requirements.json</code> so it shows up as a git diff.
             Rows start as drafts marked <em>needs review</em> until a human confirms them.
           </p>
         </div>
@@ -295,7 +298,7 @@
           window taking applications — the normal state most of the year, and the offer card stays
           hidden until CDSS approves one. <em>Window open</em> names the counties and the last day
           to apply. <em>Deadline soon</em> fires 60 days out; <em>deadline passed</em> means every
-          deadline in the corpus is behind us, which usually means the date needs rolling to the
+          deadline in the library is behind us, which usually means the date needs rolling to the
           next cycle rather than the program being gone. <em>Seasonal</em> covers programs like
           LIHEAP that only open during a county's funding window. Open the cell to pin
           <em>paused</em> or <em>closed</em> by hand and leave a note saying who told you.
@@ -323,6 +326,72 @@
       </details>
     </section>
 
+    <section class="panel" id="partners" aria-labelledby="partners-heading">
+      <div class="panel-head panel-head-row">
+        <div>
+          <h2 id="partners-heading">Community partners</h2>
+          <p>Signed-up organizations. Edit details here — public partner pages are read-only.</p>
+        </div>
+        <button type="button" class="cta cta-ghost" id="btn-partners-refresh">Refresh</button>
+      </div>
+      <p class="scan-status" id="partners-status" aria-live="polite"></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Organization</th>
+              <th>City</th>
+              <th>Email</th>
+              <th>Partner ID</th>
+              <th>Slug</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="partner-rows">
+            <tr><td colspan="6">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <dialog class="partner-edit-dialog" id="dev-partner-edit-dialog" aria-labelledby="dev-edit-dialog-title">
+      <form id="dev-partner-edit-form" class="partner-edit-form" novalidate>
+        <header class="partner-edit-head">
+          <h2 id="dev-edit-dialog-title">Edit partner</h2>
+          <button type="button" class="partner-edit-close" id="dev-edit-dialog-close" aria-label="Close">×</button>
+        </header>
+        <p class="partner-edit-lede">
+          Partner ID and status URL stay the same when the organization name changes.
+        </p>
+        <p class="partner-edit-meta">
+          <span>ID: <code id="dev-edit-partner-id">—</code></span>
+          <span>Slug: <code id="dev-edit-slug">—</code></span>
+        </p>
+        <label class="field">
+          <span>Organization name</span>
+          <input id="dev-edit-organization" name="organization" type="text" required maxlength="120" autocomplete="organization" />
+        </label>
+        <label class="field">
+          <span>City</span>
+          <input id="dev-edit-city" name="city" type="text" maxlength="80" autocomplete="address-level2" />
+        </label>
+        <label class="field">
+          <span>Work email</span>
+          <input id="dev-edit-email" name="email" type="email" inputmode="email" required maxlength="200" autocomplete="email" />
+        </label>
+        <label class="field">
+          <span>Organization logo (optional)</span>
+          <input id="dev-edit-logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp,image/gif" autocomplete="off" />
+          <span class="field-help">Leave empty to keep the current logo. PNG or JPG, up to 2&nbsp;MB.</span>
+        </label>
+        <p id="dev-edit-status" class="partner-edit-status" role="status" aria-live="polite" hidden></p>
+        <div class="partner-edit-actions">
+          <button type="button" class="cta cta-ghost" id="dev-edit-cancel">Cancel</button>
+          <button type="submit" class="cta" id="dev-edit-submit">Save changes</button>
+        </div>
+      </form>
+    </dialog>
+
     <section class="panel" id="checklist" aria-labelledby="checklist-heading">
       <div class="panel-head">
         <h2 id="checklist-heading">What to keep an eye on</h2>
@@ -334,7 +403,7 @@
     <section class="panel" aria-labelledby="scans-heading">
       <div class="panel-head">
         <h2 id="scans-heading">Recent scans</h2>
-        <p>Scans hit apply URLs and source citations; they never write to the corpus.</p>
+        <p>Scans hit apply URLs and source citations; they never write to the library.</p>
       </div>
       <div class="table-wrap">
         <table>
@@ -359,7 +428,7 @@
   <footer>
     <p>
       CalClaim developer tools · Authorized humans only — no robots, AI agents, or automated login ·
-      Frozen corpus stays human-edited · <a href="/impact">Impact Dashboard</a> ·
+      Frozen library stays human-edited · <a href="/impact">Impact Dashboard</a> ·
       <a href="/impact#contact">Contact</a> ·
       <a href="/impact#privacy">Privacy policy</a>
     </p>

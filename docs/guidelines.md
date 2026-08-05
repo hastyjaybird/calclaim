@@ -14,11 +14,11 @@ Reduce **last-mile friction** so eligible households actually **start and track*
 
 ## V2 markets (committed)
 
-1. **California** — statewide benefits + bill-assistance programs grounded in a frozen public corpus.  
+1. **California** — statewide benefits + bill-assistance programs grounded in a frozen public library.  
 2. **Channel:** Telegram.  
 3. **Language (ship):** English. Spanish and Puerto Rico locales are **expansion**, not v2 must-ship.
 
-Utility / PG&E programs are **in scope as corpus rows**, not as the product identity.
+Utility / PG&E programs are **in scope as library rows**, not as the product identity.
 
 ---
 
@@ -26,8 +26,8 @@ Utility / PG&E programs are **in scope as corpus rows**, not as the product iden
 
 1. Telegram bot UX: opt-in, short turns, buttons, Help, STOP.  
 2. Triage + offer queues per [`customer-experience.md`](customer-experience.md): gate → YES or NO arm → ranked cards → living next-steps updates.  
-3. **Multi-category corpus** — never ship a demo that only lists energy programs.  
-4. Rank by **document reuse** and **time-to-money** (corpus scores), not “energy first.”  
+3. **Multi-category library** — never ship a demo that only lists energy programs.  
+4. Rank by **document reuse** and **time-to-money** (library scores), not “energy first.”  
 5. Living To Do List PDF (= benefits report; one file) re-sent after meaningful actions and at queue end.  
 6. Deadline reminders (Tue noon closest; T-3 / T-1 Pacific).  
 7. Refuse / escalate when unknown; never invent rules.  
@@ -120,7 +120,7 @@ The To Do List / benefits report PDF and offer cards must work for someone **dis
 
 ## Tech preferences
 
-- Deterministic ranker over frozen corpus (required).  
+- Deterministic ranker over frozen library (required).  
 - Claude optional for copy polish later — not required for eligibility truth.  
 - Simple stack: Node/TS + grammy + SQLite + PDF + Railway.  
 

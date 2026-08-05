@@ -1,4 +1,4 @@
-import type { Program } from "../corpus/types.js";
+import type { Program } from "../library/types.js";
 import {
   hasDisasterDb,
   isPeriodOpen,

@@ -11,8 +11,9 @@ const CALCLAIM_LOGO = path.join(
   "public/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png",
 );
 
-const TAGLINE =
-  "Scan to find California benefits help — food, health, phone discounts, energy bill aid, and more.";
+const TAGLINE_LINE1 = "Scan to find California benefits help";
+const TAGLINE_LINE2 =
+  "food, health, phone discounts, energy bill aid, and more.";
 
 /** Letter portrait in PDF points (72 pt/in). */
 const LETTER_W = 612;
@@ -108,11 +109,13 @@ function drawBannerLayout(
   doc: PDFKit.PDFDocument,
   bounds: { x: number; y: number; w: number; h: number },
   input: BannerShared,
+  opts: { frame?: boolean } = {},
 ): void {
   const { x, y, w, h } = bounds;
   const margin = Math.max(18, Math.min(48, w * 0.078));
   const contentW = w - margin * 2;
   const scale = w / LETTER_W;
+  const drawFrame = opts.frame !== false;
 
   const savedBottom = doc.page.margins.bottom;
   const savedTop = doc.page.margins.top;
@@ -123,35 +126,53 @@ function drawBannerLayout(
   doc.rect(x, y, w, h).fill(PAPER);
   doc.restore();
 
-  // Hairline frame
-  doc.save();
-  doc.lineWidth(Math.max(0.6, 1 * scale)).strokeColor(RULE);
-  doc.rect(x + 0.5, y + 0.5, w - 1, h - 1).stroke();
-  doc.restore();
+  if (drawFrame) {
+    // Hairline frame (full placard only — half-fliers use the center cut guide)
+    doc.save();
+    doc.lineWidth(Math.max(0.6, 1 * scale)).strokeColor(RULE);
+    doc.rect(x + 0.5, y + 0.5, w - 1, h - 1).stroke();
+    doc.restore();
+  }
+
+  // QR bordered block — geometric center of the placard (half-fliers reuse this layout)
+  const idSize = Math.max(7, 9 * scale);
+  const footerReserve = margin * 0.65 + idSize + 4 * scale;
+  const headerReserve = Math.min(h * 0.3, 230 * scale);
+  const qrPad = 14 * scale;
+  const pageCenterX = x + w / 2;
+  const pageCenterY = y + h / 2;
+
+  let qrSize = Math.min(300 * scale, contentW * 0.72);
+  const maxHalfAbove = pageCenterY - (y + headerReserve);
+  const maxHalfBelow = y + h - footerReserve - pageCenterY;
+  const maxBox = 2 * Math.min(maxHalfAbove, maxHalfBelow, contentW / 2);
+  const maxQr = Math.max(100 * scale, maxBox - qrPad * 2);
+  if (qrSize > maxQr) qrSize = maxQr;
+
+  const qrBoxSize = qrSize + qrPad * 2;
+  const qrBoxX = pageCenterX - qrBoxSize / 2;
+  const qrBoxY = pageCenterY - qrBoxSize / 2;
+  const qrX = qrBoxX + qrPad;
+  const qrY = qrBoxY + qrPad;
 
   let cy = y + margin * 0.85;
+  const headerBottom = qrBoxY - 14 * scale;
 
   if (input.partnerLogoBuf) {
-    // Partner logo + name first, CalClaim beside them
-    const rowH = Math.min(72 * scale, h * 0.11);
-    const logoBox = rowH;
-    const gap = 10 * scale;
-    const calclaimMaxW = contentW * 0.34;
-    const calclaimMaxH = rowH;
+    // Partner logo (name under it) & CalClaim — tight co-brand lockup
+    const logoBox = Math.min(64 * scale, h * 0.095);
+    const nameSize = Math.max(10, 14 * scale);
+    const ampSize = Math.max(14, 20 * scale);
+    const gap = 8 * scale;
+    const nameH = nameSize * 2.4;
+    const colW = Math.min(contentW * 0.32, 150 * scale);
+    const calclaimDrawW = Math.min(contentW * 0.3, 140 * scale);
+    const calclaimDrawH = logoBox * 0.72;
+    const ampW = ampSize * 0.85;
+    const lockupW = colW + gap + ampW + gap + calclaimDrawW;
+    const lockupX = x + margin + (contentW - lockupW) / 2;
 
-    let calclaimDrawW = calclaimMaxW;
-    let calclaimDrawH = calclaimMaxH * 0.72;
-    if (input.calclaimBuf) {
-      // Reserve right column for CalClaim; left gets logo + name
-    } else {
-      calclaimDrawW = Math.min(calclaimMaxW, 120 * scale);
-    }
-
-    const leftW = contentW - calclaimDrawW - gap * 2;
-    const nameX = x + margin + logoBox + gap;
-    const nameW = Math.max(40, leftW - logoBox - gap);
-
-    doc.image(input.partnerLogoBuf, x + margin, cy, {
+    doc.image(input.partnerLogoBuf, lockupX + (colW - logoBox) / 2, cy, {
       fit: [logoBox, logoBox],
       align: "center",
       valign: "center",
@@ -160,19 +181,31 @@ function drawBannerLayout(
     doc
       .fillColor(INK)
       .font("Helvetica-Bold")
-      .fontSize(Math.max(11, 18 * scale))
-      .text(input.partnerName, nameX, cy + rowH * 0.15, {
-        width: nameW,
-        height: rowH * 0.7,
-        align: "left",
+      .fontSize(nameSize)
+      .text(input.partnerName, lockupX, cy + logoBox + 4 * scale, {
+        width: colW,
+        height: nameH,
+        align: "center",
         ellipsis: true,
       });
 
-    const calclaimX = x + margin + contentW - calclaimDrawW;
+    const ampX = lockupX + colW + gap;
+    const ampY = cy + logoBox * 0.28;
+    doc
+      .fillColor(INK)
+      .font("Helvetica-Bold")
+      .fontSize(ampSize)
+      .text("&", ampX, ampY, {
+        width: ampW,
+        align: "center",
+        lineBreak: false,
+      });
+
+    const calclaimX = ampX + ampW + gap;
     if (input.calclaimBuf) {
-      doc.image(input.calclaimBuf, calclaimX, cy + (rowH - calclaimDrawH) / 2, {
+      doc.image(input.calclaimBuf, calclaimX, cy + (logoBox - calclaimDrawH) / 2, {
         fit: [calclaimDrawW, calclaimDrawH],
-        align: "right",
+        align: "center",
         valign: "center",
       });
     } else {
@@ -180,38 +213,29 @@ function drawBannerLayout(
         .fillColor(INK)
         .font("Helvetica-Bold")
         .fontSize(Math.max(12, 20 * scale))
-        .text("CalClaim", calclaimX, cy + rowH * 0.25, {
+        .text("CalClaim", calclaimX, cy + logoBox * 0.25, {
           width: calclaimDrawW,
-          align: "right",
+          align: "center",
           lineBreak: false,
         });
     }
 
-    cy += rowH + 14 * scale;
-
-    // Divider under co-brand row
-    doc.save();
-    doc
-      .strokeColor(INK)
-      .lineWidth(Math.max(0.5, 0.75 * scale))
-      .moveTo(x + margin, cy)
-      .lineTo(x + margin + contentW, cy)
-      .stroke();
-    doc.restore();
-    cy += 16 * scale;
+    cy += logoBox + nameH + 14 * scale;
   } else {
     if (input.calclaimBuf) {
       const logoH = Math.min(90 * scale, h * 0.12);
-      doc.image(input.calclaimBuf, x + margin, cy, {
-        fit: [contentW * 0.72, logoH],
+      const logoW = contentW * 0.72;
+      doc.image(input.calclaimBuf, x + margin + (contentW - logoW) / 2, cy, {
+        fit: [logoW, logoH],
+        align: "center",
       });
-      cy += logoH + 18 * scale;
+      cy += logoH + 14 * scale;
     } else {
       doc
         .fillColor(INK)
         .font("Helvetica-Bold")
         .fontSize(Math.max(18, 32 * scale))
-        .text("CalClaim", x + margin, cy, { width: contentW });
+        .text("CalClaim", x + margin, cy, { width: contentW, align: "center" });
       cy += 40 * scale;
     }
 
@@ -223,50 +247,47 @@ function drawBannerLayout(
         width: contentW,
         align: "center",
       });
-    cy = doc.y + 12 * scale;
+    cy = doc.y + 10 * scale;
   }
 
+  // Keep tagline in the band above the centered QR
+  if (cy > headerBottom - 36 * scale) {
+    cy = Math.min(cy, headerBottom - 36 * scale);
+  }
+
+  const tagSize = Math.max(10, 15 * scale);
   doc
-    .fillColor(INK_SOFT)
-    .font("Helvetica")
-    .fontSize(Math.max(9, 14 * scale))
-    .text(TAGLINE, x + margin, cy, { width: contentW, align: "center" });
-  cy = doc.y + 22 * scale;
-
-  const footerReserve = 28 * scale;
-  const qrLabelH = 18 * scale;
-  const qrPad = 14 * scale;
-  const maxQr = Math.min(300 * scale, contentW * 0.72);
-  let qrSize = maxQr;
-  const availableForQr = y + h - margin - footerReserve - cy - qrPad * 2 - qrLabelH;
-  if (availableForQr < qrSize) {
-    qrSize = Math.max(120 * scale, availableForQr);
-  }
-
-  const qrX = x + margin + (contentW - qrSize) / 2;
-  const qrY = cy;
+    .fillColor(INK)
+    .font("Helvetica-Bold")
+    .fontSize(tagSize)
+    .text(TAGLINE_LINE1, x + margin, cy, {
+      width: contentW,
+      align: "center",
+      height: tagSize * 1.4,
+      ellipsis: true,
+    });
+  doc
+    .fillColor(INK)
+    .font("Helvetica-Bold")
+    .fontSize(tagSize)
+    .text(TAGLINE_LINE2, x + margin, doc.y + 2 * scale, {
+      width: contentW,
+      align: "center",
+      height: tagSize * 1.4,
+      ellipsis: true,
+    });
 
   doc.save();
   doc
     .lineWidth(Math.max(0.6, 1 * scale))
     .strokeColor(RULE)
-    .rect(qrX - qrPad, qrY - qrPad, qrSize + qrPad * 2, qrSize + qrPad * 2 + qrLabelH)
+    .rect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize)
     .stroke();
   doc.restore();
 
   doc.image(input.qrPng, qrX, qrY, { width: qrSize, height: qrSize });
-  doc
-    .fillColor(INK)
-    .font("Helvetica-Bold")
-    .fontSize(Math.max(8, 12 * scale))
-    .text("Scan with your phone", qrX - qrPad, qrY + qrSize + 4 * scale, {
-      width: qrSize + qrPad * 2,
-      align: "center",
-      lineBreak: false,
-    });
 
   // Partner ID — footnote, bottom-right corner
-  const idSize = Math.max(7, 9 * scale);
   doc
     .fillColor(INK_SOFT)
     .font("Helvetica")
@@ -302,7 +323,9 @@ function drawRotatedShrunkFlier(
   doc.translate(ox + destW, oy);
   doc.rotate(90);
   doc.scale(scale);
-  drawBannerLayout(doc, { x: 0, y: 0, w: LETTER_W, h: LETTER_H }, input);
+  drawBannerLayout(doc, { x: 0, y: 0, w: LETTER_W, h: LETTER_H }, input, {
+    frame: false,
+  });
   doc.restore();
 }
 

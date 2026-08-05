@@ -13,6 +13,6 @@
     "rootDir": ".",
     "types": ["node"]
   },
-  "include": ["src/**/*", "scripts/**/*", "corpus/**/*.json"],
+  "include": ["src/**/*", "scripts/**/*", "library/**/*.json"],
   "exclude": ["node_modules", "dist"]
 }

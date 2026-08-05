@@ -1,4 +1,4 @@
-/** Categories the corpus watcher looks for on official program pages. */
+/** Categories the library watcher looks for on official program pages. */
 export type FindingCategory =
   | "deadline"
   | "eligibility"
@@ -30,7 +30,7 @@ export interface Finding {
   detail: string;
   evidenceUrl: string | null;
   suggestedAction: string | null;
-  corpusField: string | null;
+  libraryField: string | null;
   status: FindingStatus;
   source: "link_check" | "heuristic" | "llm";
   createdAt: string;
@@ -76,11 +76,11 @@ export interface DraftFinding {
   detail: string;
   evidenceUrl?: string | null;
   suggestedAction?: string | null;
-  corpusField?: string | null;
+  libraryField?: string | null;
   source: "link_check" | "heuristic" | "llm";
 }
 
-export interface CorpusOverview {
+export interface LibraryOverview {
   version: string;
   market: string;
   programCount: number;
@@ -105,5 +105,5 @@ export interface WatchItem {
   id: string;
   label: string;
   why: string;
-  corpusFields: string[];
+  libraryFields: string[];
 }

@@ -1,6 +1,6 @@
 import { readFileSync, renameSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { CORPUS_DIR } from "../config.js";
+import { LIBRARY_DIR } from "../config.js";
 import { loadPrograms } from "./load.js";
 import type { Program, ProgramCategory } from "./types.js";
 
@@ -28,7 +28,7 @@ export type DifficultyTier = "easy" | "moderate" | "hard";
 
 /**
  * Whether a program can actually be applied for today. Mostly derived — from
- * corpus deadlines and live disaster windows — because a hand-maintained flag
+ * library deadlines and live disaster windows — because a hand-maintained flag
  * is exactly the kind of thing that goes stale and starts advertising a closed
  * program. Only `open`, `paused`, and `closed` can be pinned by hand.
  */
@@ -70,7 +70,7 @@ export interface ProgramRequirements {
   prerequisites: string[];
   /** Set to pin a tier when the computed score reads wrong. */
   difficultyOverride: DifficultyTier | null;
-  /** Set to pin availability when you know something the corpus dates do not. */
+  /** Set to pin availability when you know something the library dates do not. */
   availabilityOverride: AvailabilityOverride | null;
   /** Why it is paused/closed, or any caveat worth showing next to the status. */
   availabilityNote: string;
@@ -498,7 +498,7 @@ const RULE_WEIGHT = 0.2;
 const EASY_MAX = 6.5;
 const MODERATE_MAX = 10;
 
-const REQUIREMENTS_PATH = path.join(CORPUS_DIR, "program-requirements.json");
+const REQUIREMENTS_PATH = path.join(LIBRARY_DIR, "program-requirements.json");
 
 const ELIGIBILITY_IDS = new Set(ELIGIBILITY_TAGS.map((t) => t.id));
 const DOCUMENT_IDS = new Set(DOCUMENT_TAGS.map((t) => t.id));
@@ -671,7 +671,7 @@ function plural(n: number, word: string): string {
 }
 
 /**
- * Corpus deadline labels carry parenthetical caveats meant for the full card.
+ * Library deadline labels carry parenthetical caveats meant for the full card.
  * The status cell is a few lines wide, so drop the aside and cap the length.
  */
 function shortDeadlineLabel(label: string): string {
@@ -714,7 +714,7 @@ export function computeAvailability(
   }
 
   // Disaster-gated programs exist only around a county application window, so
-  // the published window table decides, not the corpus.
+  // the published window table decides, not the library.
   if (program.requiresActiveDisasterWindow) {
     const windows = ctx.disasterWindows ?? [];
     if (!windows.length) {
@@ -746,7 +746,7 @@ export function computeAvailability(
     return build(
       "deadline_passed",
       `${last.date} · ${ago} ago`,
-      `Every corpus deadline is in the past — "${shortDeadlineLabel(last.label)}" was ${last.date}, ${ago} ago. Roll the date forward to the current cycle.`,
+      `Every library deadline is in the past — "${shortDeadlineLabel(last.label)}" was ${last.date}, ${ago} ago. Roll the date forward to the current cycle.`,
     );
   }
 
@@ -783,7 +783,7 @@ export function computeAvailability(
     "no deadline",
     undated.length
       ? `Accepting applications. ${undated.join(" · ")}`
-      : "Accepting applications year-round — no fixed deadline in the corpus.",
+      : "Accepting applications year-round — no fixed deadline in the library.",
   );
 }
 
@@ -793,7 +793,7 @@ export interface MatrixRow extends ProgramRequirements {
   category: ProgramCategory;
   oneLiner: string;
   applyUrl: string;
-  corpusSources: string[];
+  librarySources: string[];
   formFillMinutes: number;
   timeToMoneyDays: number;
   difficultyScore: number;
@@ -860,7 +860,7 @@ export function buildProgramMatrix(ctx: AvailabilityContext = {}): ProgramMatrix
       category: p.category,
       oneLiner: p.oneLiner,
       applyUrl: p.applyUrl,
-      corpusSources: p.sources,
+      librarySources: p.sources,
       formFillMinutes: p.formFillMinutes,
       timeToMoneyDays: p.timeToMoneyDays,
       difficultyScore: difficulty.score,
@@ -981,7 +981,7 @@ export type RequirementsPatch = Partial<Record<keyof ProgramRequirements, unknow
 
 /**
  * Apply a dev-page edit. Validation is strict because this writes straight into
- * a git-tracked corpus file — a bad id would show up as a silent blank cell.
+ * a git-tracked library file — a bad id would show up as a silent blank cell.
  */
 export function updateProgramRequirements(
   programId: string,
@@ -1080,7 +1080,7 @@ export function updateProgramRequirements(
     category: program.category,
     oneLiner: program.oneLiner,
     applyUrl: program.applyUrl,
-    corpusSources: program.sources,
+    librarySources: program.sources,
     formFillMinutes: program.formFillMinutes,
     timeToMoneyDays: program.timeToMoneyDays,
     difficultyScore: difficulty.score,

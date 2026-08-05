@@ -33,7 +33,7 @@ Named examples that shaped CalClaim:
 |---|---|
 | **MyFriendBen** | Screener → $ value / time-to-apply → results; rules-as-code |
 | **GetCalFresh** | Mobile-first; nudges; stay until submit-ready |
-| **Epilepsy Foundation Sage** | Grounded RAG; refuse when out of corpus |
+| **Epilepsy Foundation Sage** | Grounded RAG; refuse when out of library |
 | **IRC Signpost AI** | Messaging; HITL; verified local content |
 | **Farmer.Chat / Gates agri** | WhatsApp/Telegram; meet-them-where-they-are |
 | **Code for America** | Plain language; CBO-assisted completion |
@@ -66,7 +66,7 @@ Jay **leaned toward** household EE + incentives (became **v1 CalClaim**) and par
 
 ## 5. v2 pivot (2026-07-31) — financial aid services
 
-**Decision:** Rebrand and rebuild the product around **all financial aid / incentive programs** a CA household might use. Utility bill programs (CARE, FERA, ESA, LIHEAP, AMP, …) remain in the corpus as **normal offers**, not the brand or the ranking privilege.
+**Decision:** Rebrand and rebuild the product around **all financial aid / incentive programs** a CA household might use. Utility bill programs (CARE, FERA, ESA, LIHEAP, AMP, …) remain in the library as **normal offers**, not the brand or the ranking privilege.
 
 | Dimension | v2 choice |
 |---|---|
@@ -95,7 +95,7 @@ Build contract: [`customer-experience.md`](customer-experience.md) + Telegram be
 ## 7. Markets
 
 ### v2 committed
-- **California** — Medi-Cal, CalFresh, WIC, LifeLine, CARE/FERA/ESA, LIHEAP, tax credits, CalWORKs, etc. (corpus-defined).
+- **California** — Medi-Cal, CalFresh, WIC, LifeLine, CARE/FERA/ESA, LIHEAP, tax credits, CalWORKs, etc. (library-defined).
 
 ### Deferred (expansion watchlist)
 - Puerto Rico locale / PR Spanish  
@@ -110,7 +110,7 @@ Build contract: [`customer-experience.md`](customer-experience.md) + Telegram be
 
 ## 8. Feasibility
 
-Demo-80% in weeks is realistic if scoped to: Telegram + frozen CA multi-program corpus + next-steps PDF + reminders — **not** national live DB, auto-submit, or full bilingual PR field coach.
+Demo-80% in weeks is realistic if scoped to: Telegram + frozen CA multi-program library + next-steps PDF + reminders — **not** national live DB, auto-submit, or full bilingual PR field coach.
 
 ---
 

@@ -12,7 +12,7 @@ COPY package.json package-lock.json ./
 RUN npm ci \
   && npm cache clean --force
 
-COPY corpus ./corpus
+COPY library ./library
 COPY public ./public
 COPY src ./src
 COPY tsconfig.json ./

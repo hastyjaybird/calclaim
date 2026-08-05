@@ -2,16 +2,16 @@ import {
   getImmigrationAnswer,
   type ImmigrationAnswer,
 } from "./immigrationMemory.js";
-import { missingDocs } from "../corpus/docs.js";
-import { isCmspCounty } from "../corpus/geo.js";
-import { getProgram, loadPrograms } from "../corpus/load.js";
+import { missingDocs } from "../library/docs.js";
+import { isCmspCounty } from "../library/geo.js";
+import { getProgram, loadPrograms } from "../library/load.js";
 import type {
   Branch,
   DocId,
   IncomeBand,
   Program,
   SessionState,
-} from "../corpus/types.js";
+} from "../library/types.js";
 import {
   daysUntilOpen,
   hasOfferableDisasterWindow,

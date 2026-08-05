@@ -70,101 +70,8 @@
           download
           data-i18n="partners.downloadBanner"
         >Download booth banner</a>
-        <button
-          type="button"
-          class="cta cta-ghost"
-          id="edit-partner"
-          hidden
-          data-i18n="partners.editDetails"
-        >Edit details</button>
       </div>
     </header>
-
-    <dialog class="partner-edit-dialog" id="partner-edit-dialog" aria-labelledby="edit-dialog-title">
-      <form id="partner-edit-form" class="partner-edit-form" novalidate>
-        <header class="partner-edit-head">
-          <h2 id="edit-dialog-title" data-i18n="partners.editHeading">Edit partner details</h2>
-          <button
-            type="button"
-            class="partner-edit-close"
-            id="edit-dialog-close"
-            data-i18n-aria="partners.editCloseAria"
-            aria-label="Close"
-          >×</button>
-        </header>
-        <p class="partner-edit-lede" data-i18n="partners.editLede">
-          Update your organization details. Enter the partner ID from your welcome email to save.
-        </p>
-        <label class="field">
-          <span data-i18n="signup.nameLabel">Organization name</span>
-          <input
-            id="edit-organization"
-            name="organization"
-            type="text"
-            required
-            maxlength="120"
-            autocomplete="organization"
-          />
-        </label>
-        <label class="field">
-          <span data-i18n="signup.cityLabel">City</span>
-          <input id="edit-city" name="city" type="text" maxlength="80" autocomplete="address-level2" />
-        </label>
-        <label class="field">
-          <span data-i18n="signup.emailLabel">Work email</span>
-          <input
-            id="edit-email"
-            name="email"
-            type="email"
-            inputmode="email"
-            required
-            maxlength="200"
-            autocomplete="email"
-          />
-        </label>
-        <label class="field">
-          <span data-i18n="signup.logoLabel">Organization logo (optional)</span>
-          <input
-            id="edit-logo"
-            name="logo"
-            type="file"
-            accept="image/png,image/jpeg,image/webp,image/gif"
-            autocomplete="off"
-          />
-          <span class="field-help" data-i18n="partners.editLogoHelp">
-            Leave empty to keep your current logo. PNG or JPG, up to 2&nbsp;MB.
-          </span>
-        </label>
-        <label class="field">
-          <span data-i18n="partners.partnerIdLabel">Partner ID</span>
-          <input
-            id="edit-partner-id"
-            name="partnerId"
-            type="text"
-            required
-            maxlength="40"
-            autocomplete="off"
-            spellcheck="false"
-            data-bwignore
-            data-1p-ignore
-            data-lpignore="true"
-            data-i18n-aria="partners.partnerIdLabel"
-          />
-          <span class="field-help" data-i18n="partners.partnerIdHelp">
-            From your CalClaim welcome email.
-          </span>
-        </label>
-        <p id="edit-status" class="partner-edit-status" role="status" aria-live="polite" hidden></p>
-        <div class="partner-edit-actions">
-          <button type="button" class="cta cta-ghost" id="edit-cancel" data-i18n="partners.editCancel">
-            Cancel
-          </button>
-          <button type="submit" class="cta" id="edit-submit" data-i18n="partners.editSave">
-            Save changes
-          </button>
-        </div>
-      </form>
-    </dialog>
 
     <section class="slide-body">
       <aside class="qr-panel">
@@ -224,7 +131,7 @@
       <div class="panel-head">
         <h2 id="map-heading" data-i18n="partners.mapHeading">Where people found this code</h2>
         <p data-i18n="partners.mapBody">
-          Partner poster site and coarse city-level location — never home addresses.
+          Approximate location only — never home addresses.
         </p>
       </div>
       <div id="map" role="img" data-i18n-aria="partners.mapAria" aria-label="Map of partner outreach locations"></div>
@@ -236,11 +143,14 @@
   <p class="error-banner" id="error-banner" hidden></p>
 
   <footer class="site-footer">
-    <p data-i18n="partners.footer" data-i18n-html>
-      CalClaim demo · Community outreach partner stats ·
-      <a href="/impact#contact">Contact</a> ·
-      <a href="/impact#privacy">Privacy policy</a>
-    </p>
+    <div class="site-footer-inner">
+      <p data-i18n="partners.footer" data-i18n-html>
+        CalClaim demo · Community outreach partner stats ·
+        <a href="/impact#contact">Contact</a> ·
+        <a href="/impact#privacy">Privacy policy</a>
+      </p>
+      <a class="footer-dev-login" href="/dev" data-i18n="nav.developer">Developer login</a>
+    </div>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>

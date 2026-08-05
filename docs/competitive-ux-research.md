@@ -61,7 +61,7 @@ flowchart TB
 
 ### Rewiring America / utility portals / rebate aggregators
 
-Useful as **competitors for the energy rows** in CalClaim’s corpus (CARE, ESA, rebates). They win on discovery and data breadth; they lose on **cross-category completion** and messaging-native checklists.
+Useful as **competitors for the energy rows** in CalClaim’s library (CARE, ESA, rebates). They win on discovery and data breadth; they lose on **cross-category completion** and messaging-native checklists.
 
 **v2 implication:** Do not compete on national energy DB breadth. Compete on **multi-aid queue + file + reminders**. A demo that only mirrors RA→PG&E fails v2.
 
@@ -72,12 +72,12 @@ Useful as **competitors for the energy rows** in CalClaim’s corpus (CARE, ESA,
 | Product | Steal for CalClaim v2 |
 |---|---|
 | Farmer.Chat | Telegram meet-where-they-are; short turns |
-| Epilepsy Sage | Frozen corpus + refuse |
+| Epilepsy Sage | Frozen library + refuse |
 | Signpost AI | Escalation honesty |
 
 **Pattern:**
 
-> Trusted corpus → constrained ranker → Telegram → Sign up + living file → reminders → escalate when unsure.
+> Trusted library → constrained ranker → Telegram → Sign up + living file → reminders → escalate when unsure.
 
 **Anti-pattern:** Invent eligibility $; dump only PG&E URLs.
 
@@ -106,9 +106,9 @@ Telegram /start
 1. **Channel:** Telegram, short bubbles, fixed offer buttons.  
 2. **Scope:** Multiple aid categories in one session.  
 3. **Completion:** Living file + reminders — not link-out and pray.  
-4. **Honesty:** Corpus-bound $ and deadlines; STOP/erase.  
+4. **Honesty:** Library-bound $ and deadlines; STOP/erase.  
 5. **Dignity:** No shame; plain language.  
-6. **Narrow depth &gt; fake national catalog:** CA English first.
+6. **Narrow depth &gt; fake national library:** CA English first.
 
 ---
 

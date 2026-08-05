@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/partners/styles.css?v=20260804-pm" />
-  <link rel="stylesheet" href="/partners/signup/styles.css?v=20260804-pm" />
+  <link rel="stylesheet" href="/partners/signup/styles.css?v=20260804-edit" />
 </head>
 <body data-page="partnerSignup">
   <div class="banner" role="banner">
@@ -104,12 +104,21 @@
             Shown on your printable booth banner. PNG or JPG, up to 2&nbsp;MB.
           </span>
         </label>
-        <p class="signup-hint" data-i18n="signup.hint">
+        <p class="signup-hint" id="signup-hint" data-i18n="signup.hint">
           You’ll get your QR code, status page, and a printable booth banner right away — and a copy by email.
         </p>
         <div class="cta-row">
           <button type="submit" class="cta" id="signup-submit" data-i18n="signup.submit">
             Sign up &amp; get my QR
+          </button>
+          <button
+            type="button"
+            class="cta cta-ghost"
+            id="signup-cancel-edit"
+            hidden
+            data-i18n="signup.cancelEdit"
+          >
+            Cancel
           </button>
         </div>
         <p id="signup-status" class="signup-status" role="status" aria-live="polite" hidden></p>
@@ -141,39 +150,57 @@
       </dl>
       <div class="signup-banner-kit">
         <figure class="signup-banner-thumb">
-          <div
-            class="booth-banner-preview"
-            id="success-banner-preview"
-            role="img"
+          <a
+            class="booth-banner-preview-link"
+            id="success-banner-preview-link"
+            href="#"
+            download
             data-i18n-aria="signup.bannerPreviewAlt"
             aria-label="Preview of your printable booth banner"
           >
-            <div class="booth-banner-preview__brand" id="success-banner-brand">
-              <div class="booth-banner-preview__partner" id="success-banner-logo-wrap" hidden>
-                <img class="booth-banner-preview__logo" id="success-banner-logo" alt="" />
-                <p class="booth-banner-preview__name" id="success-banner-name"></p>
+            <div
+              class="booth-banner-preview"
+              id="success-banner-preview"
+            >
+              <div class="booth-banner-preview__brand" id="success-banner-brand">
+                <div class="booth-banner-preview__partner" id="success-banner-logo-wrap" hidden>
+                  <img class="booth-banner-preview__logo" id="success-banner-logo" alt="" />
+                  <p class="booth-banner-preview__name" id="success-banner-name"></p>
+                </div>
+                <span class="booth-banner-preview__amp" aria-hidden="true">&amp;</span>
+                <img
+                  class="booth-banner-preview__mark"
+                  src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
+                  alt=""
+                  width="160"
+                  height="56"
+                />
+                <p class="booth-banner-preview__name booth-banner-preview__name--solo" id="success-banner-name-solo"></p>
               </div>
-              <img
-                class="booth-banner-preview__mark"
-                src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
-                alt=""
-                width="160"
-                height="56"
-              />
-              <p class="booth-banner-preview__name booth-banner-preview__name--solo" id="success-banner-name-solo"></p>
+              <p
+                class="booth-banner-preview__tag"
+                data-i18n="signup.bannerPreviewTag"
+                data-i18n-html
+              >
+                Scan to find California benefits help<br />food, health, phone discounts, energy bill aid, and more.
+              </p>
+              <div class="booth-banner-preview__qr-wrap">
+                <img class="booth-banner-preview__qr" id="success-banner-qr" alt="" width="120" height="120" />
+              </div>
             </div>
-            <p class="booth-banner-preview__tag" data-i18n="signup.bannerPreviewTag">
-              Scan to find California benefits help — food, health, phone discounts, energy bill aid, and more.
-            </p>
-            <div class="booth-banner-preview__qr-wrap">
-              <img class="booth-banner-preview__qr" id="success-banner-qr" alt="" width="120" height="120" />
-              <span data-i18n="signup.bannerPreviewScan">Scan with your phone</span>
-            </div>
-          </div>
-          <figcaption>
+          </a>
+          <figcaption class="signup-banner-actions">
             <a class="cta" id="success-banner-link" href="#" data-i18n="signup.downloadBanner">
               Download booth banner
             </a>
+            <button
+              type="button"
+              class="cta cta-ghost"
+              id="success-edit-btn"
+              data-i18n="signup.editInformation"
+            >
+              Edit information
+            </button>
           </figcaption>
         </figure>
       </div>
@@ -182,15 +209,18 @@
   </div>
 
   <footer class="site-footer">
-    <p data-i18n="signup.footer" data-i18n-html>
-      CalClaim demo · Community outreach partners ·
-      <a href="/impact#contact">Contact</a> ·
-      <a href="/impact#privacy">Privacy policy</a>
-    </p>
+    <div class="site-footer-inner">
+      <p data-i18n="signup.footer" data-i18n-html>
+        CalClaim demo · Community outreach partners ·
+        <a href="/impact#contact">Contact</a> ·
+        <a href="/impact#privacy">Privacy policy</a>
+      </p>
+      <a class="footer-dev-login" href="/dev" data-i18n="nav.developer">Developer login</a>
+    </div>
   </footer>
 
-  <script src="/i18n/messages.js?v=20260804-qr"></script>
+  <script src="/i18n/messages.js?v=20260804-edit"></script>
   <script src="/i18n/lang.js?v=20260804-qr"></script>
-  <script src="/partners/signup/app.js?v=20260804-pm"></script>
+  <script src="/partners/signup/app.js?v=20260804-edit"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-import type { SessionState } from "../corpus/types.js";
+import type { SessionState } from "../library/types.js";
 import { appendQcResponse } from "../qc/responses.js";
 import {
   insertFeedbackTodo,

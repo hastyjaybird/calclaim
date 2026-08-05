@@ -2,7 +2,7 @@ import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
 import { initAnalytics } from "../analytics/db.js";
-import type { SessionState } from "../corpus/types.js";
+import type { SessionState } from "../library/types.js";
 import { initDisasterWindows } from "../disaster/db.js";
 import { initFeedbackTodos } from "../feedback/todos.js";
 import { initPartnerSignup } from "../partners/db.js";

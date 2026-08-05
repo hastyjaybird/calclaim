@@ -1,7 +1,7 @@
 import type { LinkCheckResult, PageFetchResult } from "./types.js";
 
 const UA =
-  "CalClaimCorpusWatcher/1.0 (+https://github.com/local/calclaim; developer corpus freshness checks; not a bot for users)";
+  "CalClaimLibraryWatcher/1.0 (+https://github.com/local/calclaim; developer library freshness checks; not a bot for users)";
 
 const DEFAULT_TIMEOUT_MS = 12_000;
 const MAX_TEXT_CHARS = 24_000;

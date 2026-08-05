@@ -1,4 +1,4 @@
-import type { Program } from "../corpus/types.js";
+import type { Program } from "../library/types.js";
 import { normalizeUrl } from "./fetch.js";
 import type { DraftFinding, LinkCheckResult, PageFetchResult } from "./types.js";
 
@@ -67,15 +67,15 @@ export function findingsFromLinkCheck(
         ? `${label} blocked automated check for ${program.name}`
         : `${label} unreachable for ${program.name}`,
       detail: blocked
-        ? `${check.url} returned HTTP ${check.status}. Many agency sites block bots — open the URL in a browser before changing the corpus (${check.ms}ms).`
+        ? `${check.url} returned HTTP ${check.status}. Many agency sites block bots — open the URL in a browser before changing the library (${check.ms}ms).`
         : `${check.url} failed: ${check.error ?? "unknown error"} (${check.ms}ms)`,
       evidenceUrl: check.url,
       suggestedAction: blocked
-        ? `Manually verify the page still works. Only update the corpus if the browser also fails or the program moved.`
+        ? `Manually verify the page still works. Only update the library if the browser also fails or the program moved.`
         : kind === "applyUrl"
           ? `Update programs.json → ${program.id}.applyUrl to the current official application page.`
           : `Update or remove this entry in programs.json → ${program.id}.sources.`,
-      corpusField: kind === "applyUrl" ? "applyUrl" : "sources",
+      libraryField: kind === "applyUrl" ? "applyUrl" : "sources",
       source: "link_check",
     });
     return out;
@@ -101,7 +101,7 @@ export function findingsFromLinkCheck(
           kind === "applyUrl"
             ? `Consider updating applyUrl to the final destination: ${check.finalUrl}`
             : `Confirm the redirected source is still the right citation; update sources[] if needed.`,
-        corpusField: kind === "applyUrl" ? "applyUrl" : "sources",
+        libraryField: kind === "applyUrl" ? "applyUrl" : "sources",
         source: "link_check",
       });
     }
@@ -129,8 +129,8 @@ export function findingsFromPageHeuristics(
       detail: `Page text matched “${funding}”. Confirm whether applications are still open.`,
       evidenceUrl: url,
       suggestedAction:
-        "If closed or funds exhausted, pause the program in the corpus (or clearly label the seasonal/closed state) before the next deploy.",
-      corpusField: "deadlines / oneLiner",
+        "If closed or funds exhausted, pause the program in the library (or clearly label the seasonal/closed state) before the next deploy.",
+      libraryField: "deadlines / oneLiner",
       source: "heuristic",
     });
   }
@@ -143,11 +143,11 @@ export function findingsFromPageHeuristics(
       category: "deadline",
       severity: hasStructured ? "medium" : "high",
       title: `Date / window language found for ${program.name}`,
-      detail: `Matched “${deadline}”. Corpus has ${program.deadlines.length} deadline row(s)${hasStructured ? "" : " (none with a concrete date)"}.`,
+      detail: `Matched “${deadline}”. Library has ${program.deadlines.length} deadline row(s)${hasStructured ? "" : " (none with a concrete date)"}.`,
       evidenceUrl: url,
       suggestedAction:
         "Compare against programs.json deadlines[]; update label/date if the agency published a new window.",
-      corpusField: "deadlines",
+      libraryField: "deadlines",
       source: "heuristic",
     });
   }
@@ -161,8 +161,8 @@ export function findingsFromPageHeuristics(
       title: `Eligibility language on live page for ${program.name}`,
       detail: `Matched “${eligibility}”. Re-check incomeGate, oneLiner, and applySteps against the official rules.`,
       evidenceUrl: url,
-      suggestedAction: "Diff official eligibility text vs corpus; update income bands if CARE/FERA.",
-      corpusField: "incomeGate / oneLiner / applySteps",
+      suggestedAction: "Diff official eligibility text vs library; update income bands if CARE/FERA.",
+      libraryField: "incomeGate / oneLiner / applySteps",
       source: "heuristic",
     });
   }
@@ -177,25 +177,25 @@ export function findingsFromPageHeuristics(
       detail: `Matched “${processHit}”. Compare applySteps and docsNeeded to the live instructions.`,
       evidenceUrl: url,
       suggestedAction: "Rewrite applySteps / docsNeeded if the agency changed the path.",
-      corpusField: "applySteps / docsNeeded",
+      libraryField: "applySteps / docsNeeded",
       source: "heuristic",
     });
   }
 
   const amount = matchAny(text, AMOUNT_PATTERNS);
   if (amount) {
-    const corpusMentionsAmount = /\$|\d+\s*%|up to/i.test(program.maxBenefit);
-    if (corpusMentionsAmount || /\$/.test(amount)) {
+    const libraryMentionsAmount = /\$|\d+\s*%|up to/i.test(program.maxBenefit);
+    if (libraryMentionsAmount || /\$/.test(amount)) {
       out.push({
         programId: program.id,
         category: "max_benefit",
         severity: "medium",
         title: `Benefit amount language for ${program.name}`,
-        detail: `Live page has “${amount}”. Corpus maxBenefit is “${program.maxBenefit}” (estAnnualUsd=${program.estAnnualUsd}).`,
+        detail: `Live page has “${amount}”. Library maxBenefit is “${program.maxBenefit}” (estAnnualUsd=${program.estAnnualUsd}).`,
         evidenceUrl: url,
         suggestedAction:
           "If the published max changed, update maxBenefitUsd (and maxBenefit copy) and revise estAnnualUsd for the funder dashboard.",
-        corpusField: "maxBenefitUsd / maxBenefit / estAnnualUsd",
+        libraryField: "maxBenefitUsd / maxBenefit / estAnnualUsd",
         source: "heuristic",
       });
     }
@@ -212,7 +212,7 @@ export function findingsFromPageHeuristics(
       detail: `Could not find “${nameToken}” in stripped page text. Page may have moved, blocked scraping, or rebranded.`,
       evidenceUrl: url,
       suggestedAction: "Open the URL manually; update name/applyUrl if the program portal changed.",
-      corpusField: "name / applyUrl",
+      libraryField: "name / applyUrl",
       source: "heuristic",
     });
   }
@@ -234,8 +234,8 @@ export function findingsForIncomeBandsPage(
         detail: page.error ?? "Empty response",
         evidenceUrl: page.url,
         suggestedAction:
-          "Manually verify corpus/income-bands.json against current PG&E / CPUC published guidelines.",
-        corpusField: "income-bands.json",
+          "Manually verify library/income-bands.json against current PG&E / CPUC published guidelines.",
+        libraryField: "income-bands.json",
         source: "heuristic",
       },
     ];
@@ -249,10 +249,10 @@ export function findingsForIncomeBandsPage(
       category: "income_bands",
       severity: "medium",
       title: "Income dollar amounts found on CARE/FERA page",
-      detail: `Page shows amounts such as ${amountHits.slice(0, 6).join(", ")}. Corpus income-bands version is ${bandsVersion}. Confirm careMax/feraMax still match.`,
+      detail: `Page shows amounts such as ${amountHits.slice(0, 6).join(", ")}. Library income-bands version is ${bandsVersion}. Confirm careMax/feraMax still match.`,
       evidenceUrl: page.finalUrl ?? page.url,
-      suggestedAction: "Update corpus/income-bands.json and bump its version date if thresholds changed.",
-      corpusField: "income-bands.json",
+      suggestedAction: "Update library/income-bands.json and bump its version date if thresholds changed.",
+      libraryField: "income-bands.json",
       source: "heuristic",
     });
   }
@@ -271,7 +271,7 @@ export function findingsForIncomeBandsPage(
       detail: `Matched “${changed}”. Re-verify household bands before production claims.`,
       evidenceUrl: page.finalUrl ?? page.url,
       suggestedAction: "Diff PG&E published CARE/FERA tables vs income-bands.json.",
-      corpusField: "income-bands.json",
+      libraryField: "income-bands.json",
       source: "heuristic",
     });
   }

@@ -78,7 +78,7 @@ function renderOverview(status) {
       (item) => `<li>
         <strong>${escapeHtml(item.label)}</strong>
         <p>${escapeHtml(item.why)}</p>
-        <div class="fields">${escapeHtml(item.corpusFields.join(" · "))}</div>
+        <div class="fields">${escapeHtml(item.libraryFields.join(" · "))}</div>
       </li>`,
     )
     .join("");
@@ -90,7 +90,7 @@ function renderOverview(status) {
 function renderScans(scans, latest) {
   const tbody = el("scan-rows");
   if (!scans.length) {
-    tbody.innerHTML = `<tr><td colspan="6">No scans yet — run a corpus check.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6">No scans yet — run a library check.</td></tr>`;
     return;
   }
   tbody.innerHTML = scans
@@ -114,7 +114,7 @@ function updateScanChrome(scan) {
   if (!scan) {
     status.textContent = "";
     btn.disabled = false;
-    btn.textContent = "Run corpus check";
+    btn.textContent = "Run library check";
     return;
   }
   if (scan.status === "running" || scan.status === "queued") {
@@ -124,7 +124,7 @@ function updateScanChrome(scan) {
     return;
   }
   btn.disabled = false;
-  btn.textContent = "Run corpus check";
+  btn.textContent = "Run library check";
   if (scan.status === "completed") {
     status.textContent = scan.summary || `Scan #${scan.id} completed with ${scan.findingsCount} finding(s).`;
   } else if (scan.status === "failed") {
@@ -137,7 +137,7 @@ function updateScanChrome(scan) {
 function renderFindings(findings) {
   const root = el("findings-list");
   if (!findings.length) {
-    root.innerHTML = `<p class="empty">No findings in this filter. Run a corpus check to look for drift.</p>`;
+    root.innerHTML = `<p class="empty">No findings in this filter. Run a library check to look for drift.</p>`;
     return;
   }
   root.innerHTML = findings
@@ -160,9 +160,9 @@ function renderFindings(findings) {
         </div>
         <p>${escapeHtml(f.detail)}</p>
         ${f.suggestedAction ? `<p><strong>Suggested:</strong> ${escapeHtml(f.suggestedAction)}</p>` : ""}
-        ${f.corpusField ? `<p><strong>Corpus field:</strong> ${escapeHtml(f.corpusField)}</p>` : ""}
+        ${f.libraryField ? `<p><strong>Library field:</strong> ${escapeHtml(f.libraryField)}</p>` : ""}
         <div class="finding-meta">
-          ${f.programId ? `<span class="cat">${escapeHtml(f.programId)}</span>` : `<span class="cat">corpus-wide</span>`}
+          ${f.programId ? `<span class="cat">${escapeHtml(f.programId)}</span>` : `<span class="cat">library-wide</span>`}
           ${evidence}
           <div class="finding-actions">${actions}</div>
         </div>
@@ -468,13 +468,13 @@ async function startScan() {
   const btn = el("btn-scan");
   btn.disabled = true;
   btn.textContent = "Starting…";
-  el("scan-status").textContent = "Starting corpus check…";
+  el("scan-status").textContent = "Starting library check…";
   const res = await api("/api/dev/scan", { method: "POST" });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     alert(data.error || "Could not start scan");
     btn.disabled = false;
-    btn.textContent = "Run corpus check";
+    btn.textContent = "Run library check";
     return;
   }
   startPolling();
@@ -675,7 +675,7 @@ function refsCellHtml(row) {
         )
         .join("")
     : `<span class="chip chip-empty">No references</span>`;
-  const suggestions = [row.applyUrl, ...row.corpusSources].filter(Boolean);
+  const suggestions = [row.applyUrl, ...row.librarySources].filter(Boolean);
   return `<details class="multi" data-kind="refs">
     <summary><span class="ref-links" data-refs="${escapeHtml(row.id)}">${links}</span></summary>
     <div class="multi-menu">
@@ -683,7 +683,7 @@ function refsCellHtml(row) {
       <textarea rows="4" data-program="${escapeHtml(row.id)}" data-field="reviewRefs">${escapeHtml(refsToText(row.reviewRefs))}</textarea>
       ${
         suggestions.length
-          ? `<p class="multi-hint">From the corpus: ${suggestions
+          ? `<p class="multi-hint">From the library: ${suggestions
               .map(
                 (u) =>
                   `<button type="button" class="ref-add" data-add-url="${escapeHtml(u)}">${escapeHtml(
@@ -735,7 +735,7 @@ function reviewCellHtml(row) {
 }
 
 /**
- * Availability is computed from corpus deadlines and the live disaster window
+ * Availability is computed from library deadlines and the live disaster window
  * table, so the summary shows the verdict and the menu explains where it came
  * from before offering the manual override.
  */
@@ -750,7 +750,7 @@ function statusCellHtml(row) {
     </summary>
     <div class="multi-menu">
       <p class="multi-hint" data-availability-why="${escapeHtml(row.id)}">${escapeHtml(a.detail)}</p>
-      <p class="multi-hint">Computed from corpus deadlines and live disaster windows. Override only when you know it is wrong.</p>
+      <p class="multi-hint">Computed from library deadlines and live disaster windows. Override only when you know it is wrong.</p>
       ${selectHtml(row, "availabilityOverride", matrix.data.vocab.availabilityOverride, {
         includeBlank: true,
         blankLabel: "auto (computed)",
@@ -974,7 +974,7 @@ async function saveMatrixField(programId, field, value) {
   matrix.rankStale = true;
   el("btn-matrix-resort").disabled = false;
   setMatrixStatus(
-    `Saved ${FIELD_LABELS[field] ?? field} for ${name} to corpus/program-requirements.json.`,
+    `Saved ${FIELD_LABELS[field] ?? field} for ${name} to library/program-requirements.json.`,
   );
 }
 
@@ -1243,7 +1243,8 @@ function renderFunnel(funnel) {
 }
 
 async function loadFunnel() {
-  const res = await fetch("/api/stats");
+  // Live analytics only — never the public-site demo funnel.
+  const res = await api("/api/dev/stats");
   if (!res.ok) throw new Error("Failed to load funnel stats");
   const stats = await res.json();
   if (typeof Chart !== "undefined") {
@@ -1253,6 +1254,167 @@ async function loadFunnel() {
   renderFunnel(stats.funnel);
 }
 
+/** @type {Array<{ id: string, slug: string, name: string, email: string, city: string, logo: string, statusUrl: string, bannerUrl: string }> | null} */
+let devPartners = null;
+/** @type {{ id: string, slug: string, name: string, email: string, city: string, logo: string } | null} */
+let editingDevPartner = null;
+
+function showDevPartnerStatus(message, isError) {
+  const status = el("dev-edit-status");
+  if (!status) return;
+  status.hidden = !message;
+  status.textContent = message || "";
+  status.classList.toggle("is-error", Boolean(isError));
+}
+
+function closeDevPartnerDialog() {
+  const dialog = el("dev-partner-edit-dialog");
+  if (!dialog) return;
+  if (typeof dialog.close === "function") dialog.close();
+  else dialog.removeAttribute("open");
+  editingDevPartner = null;
+}
+
+function openDevPartnerDialog(partner) {
+  editingDevPartner = partner;
+  const dialog = el("dev-partner-edit-dialog");
+  if (!dialog) return;
+  el("dev-edit-partner-id").textContent = partner.id;
+  el("dev-edit-slug").textContent = partner.slug;
+  el("dev-edit-organization").value = partner.name || "";
+  el("dev-edit-city").value = partner.city || "";
+  el("dev-edit-email").value = partner.email || "";
+  const logoInput = el("dev-edit-logo");
+  if (logoInput) logoInput.value = "";
+  showDevPartnerStatus("", false);
+  if (typeof dialog.showModal === "function") dialog.showModal();
+  else dialog.setAttribute("open", "");
+  el("dev-edit-organization")?.focus();
+}
+
+function renderDevPartners(partners) {
+  devPartners = partners;
+  const tbody = el("partner-rows");
+  if (!tbody) return;
+  if (!partners.length) {
+    tbody.innerHTML = `<tr><td colspan="6">No community partners signed up yet.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = partners
+    .map(
+      (p) => `<tr data-slug="${escapeHtml(p.slug)}">
+        <td>${escapeHtml(p.name)}</td>
+        <td>${escapeHtml(p.city || "—")}</td>
+        <td>${escapeHtml(p.email || "—")}</td>
+        <td><code>${escapeHtml(p.id)}</code></td>
+        <td><a href="${escapeHtml(p.statusUrl)}" target="_blank" rel="noopener">${escapeHtml(p.slug)}</a></td>
+        <td>
+          <div class="partner-row-actions">
+            <button type="button" data-edit-slug="${escapeHtml(p.slug)}">Edit</button>
+            <a href="${escapeHtml(p.bannerUrl)}" download>Banner</a>
+          </div>
+        </td>
+      </tr>`,
+    )
+    .join("");
+
+  tbody.querySelectorAll("[data-edit-slug]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const slug = btn.getAttribute("data-edit-slug");
+      const partner = (devPartners || []).find((p) => p.slug === slug);
+      if (partner) openDevPartnerDialog(partner);
+    });
+  });
+}
+
+async function refreshDevPartners() {
+  const status = el("partners-status");
+  if (status) status.textContent = "Loading partners…";
+  try {
+    const res = await api("/api/dev/partners");
+    if (!res.ok) throw new Error("Failed to load partners");
+    const data = await res.json();
+    renderDevPartners(data.partners || []);
+    if (status) status.textContent = `${(data.partners || []).length} partner(s)`;
+  } catch (err) {
+    console.error(err);
+    if (status) status.textContent = "Could not load partners.";
+    const tbody = el("partner-rows");
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="6">Could not load partners.</td></tr>`;
+    }
+  }
+}
+
+function bindDevPartnerEdit() {
+  const form = el("dev-partner-edit-form");
+  if (!form) return;
+
+  el("dev-edit-dialog-close")?.addEventListener("click", closeDevPartnerDialog);
+  el("dev-edit-cancel")?.addEventListener("click", closeDevPartnerDialog);
+  el("dev-partner-edit-dialog")?.addEventListener("click", (event) => {
+    if (event.target === el("dev-partner-edit-dialog")) closeDevPartnerDialog();
+  });
+  el("btn-partners-refresh")?.addEventListener("click", () => void refreshDevPartners());
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!editingDevPartner) return;
+
+    const name = String(el("dev-edit-organization")?.value || "").trim();
+    const email = String(el("dev-edit-email")?.value || "").trim();
+    const city = String(el("dev-edit-city")?.value || "").trim();
+    const logoFile = el("dev-edit-logo")?.files?.[0] || null;
+    const submit = el("dev-edit-submit");
+
+    if (!name) {
+      showDevPartnerStatus("Add the organization name.", true);
+      return;
+    }
+    if (!email) {
+      showDevPartnerStatus("Add the work email.", true);
+      return;
+    }
+    if (logoFile && logoFile.size > 2_000_000) {
+      showDevPartnerStatus("Logo must be 2 MB or smaller.", true);
+      return;
+    }
+
+    if (submit) submit.disabled = true;
+    showDevPartnerStatus("Saving changes…", false);
+
+    try {
+      const body = new FormData();
+      body.set("name", name);
+      body.set("email", email);
+      body.set("city", city);
+      if (logoFile) body.set("logo", logoFile);
+
+      const res = await api(
+        `/api/partners/${encodeURIComponent(editingDevPartner.slug)}/profile`,
+        { method: "POST", body },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showDevPartnerStatus(
+          data.error === "email_invalid"
+            ? "Enter a valid email address."
+            : "Could not save changes. Try again.",
+          true,
+        );
+        return;
+      }
+      closeDevPartnerDialog();
+      await refreshDevPartners();
+    } catch (err) {
+      console.error(err);
+      showDevPartnerStatus("Could not save changes. Try again.", true);
+    } finally {
+      if (submit) submit.disabled = false;
+    }
+  });
+}
+
 async function main() {
   el("btn-scan").addEventListener("click", () => void startScan());
   el("finding-filter").addEventListener("change", () => void refreshFindings());
@@ -1260,7 +1422,13 @@ async function main() {
   el("disaster-filter")?.addEventListener("change", () => void refreshDisasterWindows());
   el("btn-logout")?.addEventListener("click", () => void logout());
   wireMatrix();
-  await Promise.all([refreshStatus(true), loadFunnel(), loadMatrix()]);
+  bindDevPartnerEdit();
+  await Promise.all([
+    refreshStatus(true),
+    loadFunnel(),
+    loadMatrix(),
+    refreshDevPartners(),
+  ]);
 }
 
 main().catch((err) => {

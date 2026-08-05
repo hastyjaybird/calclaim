@@ -22,8 +22,8 @@ CalClaim deliberately mirrors these **user-visible mechanisms**, not Anthropic�
 
 | Mechanism | Who | User experience | CalClaim v2 mapping |
 |---|---|---|---|
-| Rules-as-code + AI explainer | MyFriendBen / PolicyEngine | Screener → eligibility $ + time → guidance | Deterministic ranker + offer cards + $ estimates from corpus |
-| Grounded RAG companion | Epilepsy Sage | Refuse if not in KB | Frozen multi-program corpus + refusals |
+| Rules-as-code + AI explainer | MyFriendBen / PolicyEngine | Screener → eligibility $ + time → guidance | Deterministic ranker + offer cards + $ estimates from library |
+| Grounded RAG companion | Epilepsy Sage | Refuse if not in KB | Frozen multi-program library + refusals |
 | Staff / user HITL messaging | Signpost AI | Draft → human approve in high stakes | Optional later; demo auto if grounded |
 | Meet-them-where-they-are | Farmer.Chat, Signpost, GetCalFresh | WhatsApp / Telegram / SMS | **Telegram primary** |
 | Nudges / reminders | GetCalFresh | SMS/email → doc submission lift | Tue noon + T-3/T-1 deadline reminders |
@@ -36,7 +36,7 @@ CalClaim deliberately mirrors these **user-visible mechanisms**, not Anthropic�
 ## 3. Structural pattern BD respects
 
 ```
-trusted multi-program corpus
+trusted multi-program library
     → constrained ranker / model (no freestyle eligibility invention)
         → channel people already use (Telegram)
             → clear next step (Sign up) + living file

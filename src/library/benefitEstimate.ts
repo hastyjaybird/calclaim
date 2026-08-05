@@ -7,7 +7,7 @@ function clampHouseholdSize(size: number | null | undefined): number {
   return Math.min(Math.floor(size), 12);
 }
 
-/** Maximum $ the program allows for this household (corpus math). */
+/** Maximum $ the program allows for this household (library math). */
 export function maxBenefitAmountUsd(
   spec: MaxBenefitUsd,
   householdSize: number | null | undefined,

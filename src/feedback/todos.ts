@@ -1,5 +1,5 @@
 import type Database from "better-sqlite3";
-import type { SessionState } from "../corpus/types.js";
+import type { SessionState } from "../library/types.js";
 
 export type FeedbackSource = "text" | "voice" | "contact";
 export type FeedbackTodoStatus = "open" | "done";
@@ -17,7 +17,6 @@ export interface DeveloperFeedbackTodo {
 }
 
 export interface ContactFeedbackFields {
-  phone: string;
   email: string;
   comments: string;
 }
@@ -116,7 +115,6 @@ export function insertContactFeedbackTodo(
   fields: ContactFeedbackFields,
 ): DeveloperFeedbackTodo {
   const lines: string[] = [];
-  if (fields.phone) lines.push(`Phone: ${fields.phone}`);
   if (fields.email) lines.push(`Email: ${fields.email}`);
   if (fields.comments) lines.push(fields.comments);
   return insertTodoRow({
@@ -126,7 +124,6 @@ export function insertContactFeedbackTodo(
     text: lines.join("\n"),
     sessionSnapshot: JSON.stringify({
       channel: "web_contact",
-      phone: fields.phone,
       email: fields.email,
       comments: fields.comments,
     }),

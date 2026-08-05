@@ -17,13 +17,13 @@ import {
 } from "../analytics/stats.js";
 import type { AppConfig } from "../config.js";
 import { campaignLandingUrl, getBotUsername, ROOT } from "../config.js";
-import { getProgram } from "../corpus/load.js";
+import { getProgram } from "../library/load.js";
 import {
   buildProgramMatrix,
   updateProgramRequirements,
   type AvailabilityContext,
   type RequirementsPatch,
-} from "../corpus/requirements.js";
+} from "../library/requirements.js";
 import { renderShareQrPng } from "../bot/share.js";
 import {
   getReportPdf,
@@ -45,11 +45,11 @@ import {
 import { lastApplyDay, offerableDisasterWindows } from "../disaster/liveWindow.js";
 import { getScan, listFindings, setFindingStatus } from "../watchdog/db.js";
 import { buildDevStatus, buildDisasterStatus } from "../watchdog/overview.js";
-import { startCorpusScan } from "../watchdog/runner.js";
+import { startLibraryScan } from "../watchdog/runner.js";
 import type { FindingStatus } from "../watchdog/types.js";
 import { appendContactMessage } from "../contact/messages.js";
 import { renderPartnerBoothBannerPdf } from "../partners/banner.js";
-import { RESERVED_PARTNER_SLUGS } from "../partners/db.js";
+import { listSignedUpPartners, RESERVED_PARTNER_SLUGS } from "../partners/db.js";
 import { readPartnerSignupMultipart } from "../partners/logoUpload.js";
 import {
   parsePartnerProfileUpdate,
@@ -330,7 +330,7 @@ function requireDeveloperAuth(
 
 /**
  * Live disaster windows for the requirements matrix. Passed in rather than
- * imported by the corpus module so the corpus layer stays free of DB access.
+ * imported by the library module so the library layer stays free of DB access.
  */
 function availabilityContext(): AvailabilityContext {
   return {
@@ -360,9 +360,45 @@ async function handleDevApi(
     return true;
   }
 
+  // Always live collected events — never the public-site demo dataset.
+  if (pathname === "/api/dev/stats" && req.method === "GET") {
+    send(
+      res,
+      200,
+      JSON.stringify(buildImpactStats({ source: "live" })),
+      "application/json; charset=utf-8",
+      noIndex,
+    );
+    return true;
+  }
+
+  if (pathname === "/api/dev/partners" && req.method === "GET") {
+    send(
+      res,
+      200,
+      JSON.stringify({
+        partners: listSignedUpPartners().map((p) => ({
+          id: p.id,
+          slug: p.slug,
+          name: p.name,
+          email: p.email,
+          city: p.city,
+          logo: p.logo || "",
+          campaignId: p.campaignId,
+          createdAt: p.createdAt,
+          statusUrl: `/partners/${encodeURIComponent(p.slug)}`,
+          bannerUrl: `/api/partners/${encodeURIComponent(p.slug)}/banner`,
+        })),
+      }),
+      "application/json; charset=utf-8",
+      noIndex,
+    );
+    return true;
+  }
+
   if (pathname === "/api/dev/scan" && req.method === "POST") {
     try {
-      const { scan } = startCorpusScan();
+      const { scan } = startLibraryScan();
       send(res, 202, JSON.stringify({ scan }), "application/json; charset=utf-8", noIndex);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -716,6 +752,11 @@ async function handleGo(
     );
     return;
   }
+  // #region agent log
+  console.log(
+    `[agent-debug] B server.ts:handleGo redirect campaign=${campaignId} bot=${username}`,
+  );
+  // #endregion
   redirect(res, `https://t.me/${username}?start=${encodeURIComponent(campaignId)}`);
 }
 
@@ -930,10 +971,13 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               partnerId: result.partner.id,
               slug: result.partner.slug,
               name: result.partner.name,
+              email: result.partner.email,
+              city: result.partner.city,
               logo: result.partner.logo || "",
               statusUrl: result.statusUrl,
               qrUrl: result.qrUrl,
               bannerUrl: result.bannerUrl,
+              editToken: result.editToken,
               emailMode: result.email.mode,
             }),
             "application/json; charset=utf-8",
@@ -999,11 +1043,16 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             return;
           }
           try {
+            const asDeveloper = isDeveloperAuthed(
+              req,
+              config.developerSessionSecret,
+            );
             const contentType = String(req.headers["content-type"] || "");
             let name = "";
             let email = "";
             let city = "";
             let partnerId = "";
+            let editToken = "";
             let logo: { buffer: Buffer; mime: string; filename: string } | undefined;
 
             if (contentType.includes("multipart/form-data")) {
@@ -1012,6 +1061,7 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               email = multi.email;
               city = multi.city;
               partnerId = multi.partnerId;
+              editToken = multi.editToken;
               logo = multi.logo;
             } else {
               const body = (await readJsonBody(req, 16_384)) as {
@@ -1019,20 +1069,25 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
                 email?: unknown;
                 city?: unknown;
                 partnerId?: unknown;
+                editToken?: unknown;
               };
               name = typeof body.name === "string" ? body.name : "";
               email = typeof body.email === "string" ? body.email : "";
               city = typeof body.city === "string" ? body.city : "";
               partnerId =
                 typeof body.partnerId === "string" ? body.partnerId : "";
+              editToken =
+                typeof body.editToken === "string" ? body.editToken : "";
             }
 
-            const parsed = parsePartnerProfileUpdate({
-              name,
-              email,
-              city,
-              partnerId,
-            });
+            const parsed = asDeveloper
+              ? parsePartnerSignup({ name, email, city })
+              : parsePartnerProfileUpdate({
+                  name,
+                  email,
+                  city,
+                  partnerId,
+                });
             if ("error" in parsed) {
               send(
                 res,
@@ -1043,14 +1098,21 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               return;
             }
             const result = await updatePartnerProfile(slug, {
-              ...parsed,
+              name: parsed.name,
+              email: parsed.email,
+              city: parsed.city,
+              partnerId: asDeveloper ? undefined : partnerId,
+              editToken,
+              asDeveloper,
+              editTokenSecret: config.developerSessionSecret,
               logo,
             });
             if ("error" in result) {
               const status =
                 result.error === "not_found"
                   ? 404
-                  : result.error === "partner_id_mismatch"
+                  : result.error === "partner_id_mismatch" ||
+                      result.error === "edit_expired"
                     ? 403
                     : 400;
               send(
@@ -1066,12 +1128,14 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               200,
               JSON.stringify({
                 ok: true,
+                partnerId: result.partner.id,
                 slug: result.partner.slug,
                 name: result.partner.name,
                 city: result.partner.city,
                 email: result.partner.email,
                 logo: result.partner.logo || "",
                 bannerUrl: result.bannerUrl,
+                qrUrl: `/api/qr/partner/${encodeURIComponent(result.partner.slug)}`,
               }),
               "application/json; charset=utf-8",
             );
@@ -1127,7 +1191,6 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
       if (pathname === "/api/contact" && req.method === "POST") {
         try {
           const body = (await readJsonBody(req, 16_384)) as {
-            phone?: unknown;
             email?: unknown;
             comments?: unknown;
           };

@@ -2,7 +2,7 @@ import { missingDocs } from "./docs.js";
 import type { DocId, Program } from "./types.js";
 
 /**
- * Form-fill minutes from corpus cold-start, discounted when the household
+ * Form-fill minutes from library cold-start, discounted when the household
  * already has docs from a prior form (e.g. Medi-Cal / gate YES).
  *
  * ~45% of cold time is hunting/entering docs — that portion scales with

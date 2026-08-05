@@ -1,7 +1,7 @@
 # CalClaim (v2)
 
 **California financial aid / benefits navigator** on Telegram.  
-Food, health, cash, telecom, energy bill help, and more — **not** a PG&E-only app. Utility programs are one cluster in the corpus.
+Food, health, cash, telecom, energy bill help, and more — **not** a PG&E-only app. Utility programs are one cluster in the library.
 
 **Status:** Runnable demo (long polling locally; webhook-ready for Railway)
 
@@ -29,7 +29,7 @@ npm run dev
 
 4. Open Telegram, tap your bot, send `/start`.  
 5. Open the funder dashboard: [http://localhost:3000/impact](http://localhost:3000/impact)  
-6. Open the developer corpus watch: [http://localhost:3000/dev](http://localhost:3000/dev)
+6. Open the developer library watch: [http://localhost:3000/dev](http://localhost:3000/dev)
 
 Optional demo numbers:
 
@@ -51,7 +51,7 @@ npm run seed-impact
 | `DATABASE_PATH` | SQLite file (default `./data/calclaim.sqlite`) |
 | `SMTP_HOST` / `SMTP_FROM` (+ optional `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`) | Optional — partner signup welcome emails; otherwise kits go to `data/mail-outbox/` |
 | `TZ` | `America/Los_Angeles` |
-| `OPENROUTER_API_KEY` / `OPENAI_API_KEY` | Optional — deeper LLM review on `/dev` corpus scans |
+| `OPENROUTER_API_KEY` / `OPENAI_API_KEY` | Optional — deeper LLM review on `/dev` library scans |
 
 `.env` is loaded automatically on start (existing shell env wins).
 
@@ -61,11 +61,11 @@ Public page at `/impact` shows people reached (QR + links), program apply-page o
 
 Partner signup at `/partners/signup` creates a unique partner ID, status page, QR, and printable booth banner; a welcome email delivers the kit (or `data/mail-outbox/` when SMTP is unset).
 
-Print QR codes to `/go/<campaignId>` (see `corpus/campaigns.json`). Apply buttons in Telegram go through `/r/<programId>` so clicks are countable.
+Print QR codes to `/go/<campaignId>` (see `library/campaigns.json`). Apply buttons in Telegram go through `/r/<programId>` so clicks are countable.
 
-## Developer corpus watch
+## Developer library watch
 
-Page at `/dev` (password + CAPTCHA; **humans only**) runs an advisory agent over each program’s apply URL and source citations: link health, deadlines, eligibility language, apply-process changes, funding/closed signals, max amounts, and CARE/FERA income bands. Optional LLM analysis if an API key is set. Findings never edit the frozen corpus — developers update `corpus/programs.json` by hand. Set `DEVELOPER_PASSWORD` in `.env`. Details: [`docs/developer-corpus-watch.md`](docs/developer-corpus-watch.md).
+Page at `/dev` (password + CAPTCHA; **humans only**) runs an advisory agent over each program’s apply URL and source citations: link health, deadlines, eligibility language, apply-process changes, funding/closed signals, max amounts, and CARE/FERA income bands. Optional LLM analysis if an API key is set. Findings never edit the frozen library — developers update `library/programs.json` by hand. Set `DEVELOPER_PASSWORD` in `.env`. Details: [`docs/developer-library-watch.md`](docs/developer-library-watch.md).
 
 ## What the bot does
 
@@ -92,7 +92,7 @@ Sample PDF: `npm run sample-pdf` → `docs/samples/calclaim-todo-list-sample.pdf
 ## Repo layout
 
 ```
-corpus/           Frozen programs, income bands, QR campaigns
+library/           Frozen programs, income bands, QR campaigns
 public/impact/    Funder dashboard (HTML/CSS/JS)
 src/analytics/    Event log + impact aggregates
 src/web/          HTTP: dashboard, /go, /r redirects

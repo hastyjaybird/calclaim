@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { CORPUS_DIR } from "../config.js";
+import { LIBRARY_DIR } from "../config.js";
 import {
   getSignedUpPartnerByCampaignId,
   getSignedUpPartnerBySlug,
@@ -28,13 +28,13 @@ let cache: PartnersFile | null = null;
 export function loadPartnersFile(): PartnersFile {
   if (!cache) {
     cache = JSON.parse(
-      readFileSync(path.join(CORPUS_DIR, "partners.json"), "utf8"),
+      readFileSync(path.join(LIBRARY_DIR, "partners.json"), "utf8"),
     ) as PartnersFile;
   }
   return cache;
 }
 
-function corpusPartners(): Partner[] {
+function libraryPartners(): Partner[] {
   return loadPartnersFile().partners;
 }
 
@@ -58,27 +58,27 @@ function asPartner(p: {
   };
 }
 
-/** Corpus demo partners plus live signups from SQLite. */
+/** Library demo partners plus live signups from SQLite. */
 export function listPartners(): Partner[] {
-  const fromCorpus = corpusPartners();
-  const corpusSlugs = new Set(fromCorpus.map((p) => p.slug));
+  const fromLibrary = libraryPartners();
+  const librarySlugs = new Set(fromLibrary.map((p) => p.slug));
   const fromSignup = listSignedUpPartners()
-    .filter((p) => !corpusSlugs.has(p.slug))
+    .filter((p) => !librarySlugs.has(p.slug))
     .map(asPartner);
-  return [...fromCorpus, ...fromSignup];
+  return [...fromLibrary, ...fromSignup];
 }
 
 export function getPartnerBySlug(slug: string): Partner | undefined {
   const cleaned = slug.trim().toLowerCase();
-  const fromCorpus = corpusPartners().find((p) => p.slug === cleaned);
-  if (fromCorpus) return fromCorpus;
+  const fromLibrary = libraryPartners().find((p) => p.slug === cleaned);
+  if (fromLibrary) return fromLibrary;
   const signed = getSignedUpPartnerBySlug(cleaned);
   return signed ? asPartner(signed) : undefined;
 }
 
 export function getPartnerByCampaignId(campaignId: string): Partner | undefined {
-  const fromCorpus = corpusPartners().find((p) => p.campaignId === campaignId);
-  if (fromCorpus) return fromCorpus;
+  const fromLibrary = libraryPartners().find((p) => p.campaignId === campaignId);
+  if (fromLibrary) return fromLibrary;
   const signed =
     getSignedUpPartnerByCampaignId(campaignId) ??
     (campaignId.includes("-")

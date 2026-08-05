@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { CORPUS_DIR } from "../config.js";
+import { LIBRARY_DIR } from "../config.js";
 import type { Program } from "./types.js";
 
 interface ProgramsFile {
@@ -22,7 +22,7 @@ let disclaimerCache = "";
 
 function loadProgramsFile(): ProgramsFile {
   return JSON.parse(
-    readFileSync(path.join(CORPUS_DIR, "programs.json"), "utf8"),
+    readFileSync(path.join(LIBRARY_DIR, "programs.json"), "utf8"),
   ) as ProgramsFile;
 }
 
@@ -40,7 +40,7 @@ export function loadPrograms(): Program[] {
   return programsCache;
 }
 
-export function getCorpusMeta(): { version: string; market: string; disclaimer: string } {
+export function getLibraryMeta(): { version: string; market: string; disclaimer: string } {
   loadPrograms();
   return programsMeta!;
 }
@@ -57,7 +57,7 @@ export function getProgram(id: string): Program | undefined {
 export function loadIncomeBands(): IncomeBandsFile {
   if (!bandsCache) {
     bandsCache = JSON.parse(
-      readFileSync(path.join(CORPUS_DIR, "income-bands.json"), "utf8"),
+      readFileSync(path.join(LIBRARY_DIR, "income-bands.json"), "utf8"),
     ) as IncomeBandsFile;
   }
   return bandsCache;

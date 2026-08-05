@@ -1,6 +1,9 @@
 import { Bot, GrammyError, HttpError, type Context } from "grammy";
+import fs from "node:fs";
+import path from "node:path";
 import { sanitizeStartPayload } from "../analytics/campaigns.js";
-import type { SessionState } from "../corpus/types.js";
+import { DATA_DIR } from "../config.js";
+import type { SessionState } from "../library/types.js";
 import { recordAlphaFeedback } from "../feedback/record.js";
 import {
   downloadTelegramFile,
@@ -28,6 +31,43 @@ import {
 import { idleKeyboard } from "./keyboards.js";
 import { openTodos } from "../nextsteps/model.js";
 import { repeatLastMessage } from "./reply.js";
+
+// #region agent log
+function agentDebugLog(
+  hypothesisId: string,
+  location: string,
+  message: string,
+  data: Record<string, unknown> = {},
+): void {
+  const payload = {
+    sessionId: "f9190a",
+    runId: "pre-fix",
+    hypothesisId,
+    location,
+    message,
+    data,
+    timestamp: Date.now(),
+  };
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.appendFileSync(
+      path.join(DATA_DIR, "debug-f9190a.log"),
+      `${JSON.stringify(payload)}\n`,
+    );
+  } catch {
+    /* ignore */
+  }
+  console.log(`[agent-debug] ${hypothesisId} ${location} ${message}`, data);
+  fetch("http://127.0.0.1:7580/ingest/e4761444-e2e7-4508-a7a4-f01794aab8cf", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "f9190a",
+    },
+    body: JSON.stringify(payload),
+  }).catch(() => {});
+}
+// #endregion
 
 async function noteRemindersResumed(ctx: Context): Promise<void> {
   await ctx.reply("Reminders are back on.");
@@ -151,12 +191,29 @@ export function createBot(token: string): Bot {
 
   // Persist everything Telegram exposes on each inbound update
   bot.use(async (ctx, next) => {
+    // #region agent log
+    agentDebugLog("B", "createBot.ts:middleware", "update_received", {
+      updateId: ctx.update.update_id,
+      uid: ctx.from?.id ?? null,
+      hasMessage: Boolean(ctx.message),
+      hasCallback: Boolean(ctx.callbackQuery),
+      text: ctx.message?.text?.slice(0, 80) ?? null,
+      callback: ctx.callbackQuery?.data ?? null,
+    });
+    // #endregion
     captureTelegramUpdate(ctx);
     await next();
   });
 
   bot.command("start", async (ctx) => {
     const uid = ctx.from?.id;
+    // #region agent log
+    agentDebugLog("A", "createBot.ts:start", "start_handler_enter", {
+      uid: uid ?? null,
+      match: ctx.match ?? null,
+      text: ctx.message?.text?.slice(0, 80) ?? null,
+    });
+    // #endregion
     if (!uid) {
       await safeReply(ctx, errorAck());
       return;
@@ -166,7 +223,27 @@ export function createBot(token: string): Bot {
     session.campaignId = payload;
     saveSession(session);
     trackBotStart(uid, payload);
-    await sendOptIn(ctx, session);
+    // #region agent log
+    agentDebugLog("A", "createBot.ts:start", "start_before_sendOptIn", {
+      uid,
+      payload,
+      step: session.step,
+    });
+    // #endregion
+    try {
+      await sendOptIn(ctx, session);
+      // #region agent log
+      agentDebugLog("C", "createBot.ts:start", "start_sendOptIn_ok", { uid });
+      // #endregion
+    } catch (err) {
+      // #region agent log
+      agentDebugLog("C", "createBot.ts:start", "start_sendOptIn_fail", {
+        uid,
+        err: err instanceof Error ? err.message : String(err),
+      });
+      // #endregion
+      throw err;
+    }
   });
 
   bot.command("help", async (ctx) => {
@@ -208,7 +285,21 @@ export function createBot(token: string): Bot {
     }
     const session = getOrCreateSession(uid);
     const data = ctx.callbackQuery.data;
+    // #region agent log
+    agentDebugLog("E", "createBot.ts:callback", "callback_enter", {
+      uid,
+      data,
+      step: session.step,
+    });
+    // #endregion
     await handleCallback(ctx, session, data);
+    // #region agent log
+    agentDebugLog("E", "createBot.ts:callback", "callback_done", {
+      uid,
+      data,
+      step: session.step,
+    });
+    // #endregion
   });
 
   bot.on("message:text", async (ctx) => {
@@ -369,6 +460,17 @@ export function createBot(token: string): Bot {
   bot.catch(async (err) => {
     const ctx = err.ctx;
     console.error("Bot error:", err.error);
+    // #region agent log
+    agentDebugLog("A", "createBot.ts:catch", "bot_error", {
+      uid: ctx.from?.id ?? null,
+      err:
+        err.error instanceof Error
+          ? err.error.message
+          : String(err.error),
+      grammy:
+        err.error instanceof GrammyError ? err.error.description : null,
+    });
+    // #endregion
     if (err.error instanceof GrammyError) {
       console.error("Grammy error:", err.error.description);
     } else if (err.error instanceof HttpError) {

@@ -36,7 +36,7 @@ Energy / utility programs (CARE, FERA, ESA, LIHEAP, AMP, …) are **offers in th
 
 ## Programs in the v2 tree (multi-category — none silent once offered)
 
-Corpus is source of truth. Every program that enters a user’s queue must resolve to a session status:
+Library is source of truth. Every program that enters a user’s queue must resolve to a session status:
 
 | Status | Meaning |
 |---|---|
@@ -47,7 +47,7 @@ Corpus is source of truth. Every program that enters a user’s queue must resol
 | `SKIPPED` | User skipped (plus any cascade) |
 | `NOT_IN_QUEUE` | Eliminated by gate/income/cascades — not shown |
 
-### Illustrative corpus clusters (not energy-privileged)
+### Illustrative library clusters (not energy-privileged)
 
 | Cluster | Program IDs (examples) |
 |---|---|
@@ -60,7 +60,7 @@ Corpus is source of truth. Every program that enters a user’s queue must resol
 | Tax | `tax_credits` (info-only, never enters queue), `caleitc`, `young_child_tax_credit` |
 | Nested employment (not separate offer cards) | CalWORKs → WtW; LA GA/GR → GROW (noted in apply steps) |
 
-**BenefitsCal coverage:** Corpus rows cover every program on [BenefitsCal program descriptions](https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en). `excludeIfAlreadyOn` drops Disaster CalFresh if already on CalFresh, CMSP if already on Medi-Cal, CAPI if already on SSI, and GA/GR if already on CalWORKs/SSI/CAPI.
+**BenefitsCal coverage:** Library rows cover every program on [BenefitsCal program descriptions](https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en). `excludeIfAlreadyOn` drops Disaster CalFresh if already on CalFresh, CMSP if already on Medi-Cal, CAPI if already on SSI, and GA/GR if already on CalWORKs/SSI/CAPI.
 
 **Rule:** Ranking never hard-codes “CARE first because energy.” Offer waves = fewest remaining triage questions first; inside a wave = `newDocsCount ASC` → `timeToMoney ASC` → Skip `elimProgramCount DESC`. Report order = difficulty tier / score ASC.
 
@@ -102,7 +102,7 @@ GLOBAL anytime: Help | STOP | free-form QC fallback
 |---|---|
 | Language → CA-ES / PR-ES must-ship | **Deferred** (v2 English) |
 | PG&E zip / pueblo locale as first gate | **Removed as product center**; territory may appear later inside energy offer copy if needed |
-| Household size / tenure / urgency as long triage | **Only as needed** for income bands / corpus rules |
+| Household size / tenure / urgency as long triage | **Only as needed** for income bands / library rules |
 | CARE-first RESULTS screen | **Replaced** by doc-reuse offer queue |
 | READY_CHECK → FORM_GUIDE → field coach | **Replaced** by living next-steps file + Sign up URL (field coach = future) |
 
@@ -170,12 +170,12 @@ Not your household = roommates who keep their rent/food money separate.
 Add up income for everyone you just counted.
 ```
 
-Bands from frozen CARE/FERA-style tables × household size (corpus). Purpose: eliminate / route offers — **not** to center the product on CARE.
+Bands from frozen CARE/FERA-style tables × household size (library). Purpose: eliminate / route offers — **not** to center the product on CARE.
 
 | Answer | Next |
 |---|---|
 | Above FERA | Drop income-gated offers; continue other waves / gates |
-| FERA band (per corpus HH rules) | Append newly eligible programs; continue waves |
+| FERA band (per library HH rules) | Append newly eligible programs; continue waves |
 | CARE band | Append newly eligible programs; continue waves |
 
 Asked only when the next unlockable programs need an income band (NO arm) — after any zero-question offers (LifeLine, LIHEAP, …) so a dropout still heard about at least one program.
@@ -287,7 +287,7 @@ Est. up to ~${max from maxBenefitUsd for this household} (~$/person when size>1)
 
 **CARE Skip sub-branch** (when user Skips CARE — CARE is still just one program):
 
-| Reason | Effect (corpus-defined) |
+| Reason | Effect (library-defined) |
 |---|---|
 | Not my bill | Drop CARE + related bill programs per cascade |
 | Not interested | Drop CARE only; keep ESA if in queue |
@@ -301,7 +301,7 @@ Est. up to ~${max from maxBenefitUsd for this household} (~$/person when size>1)
 | 1 | AMP; unemployment / SDI / PFL; disaster CalFresh; CMSP (ZIP) | One of: past-due, work, disaster, ZIP |
 | 2+ | NO-arm Medi-Cal / CalFresh / CARE / FERA (household + income); then WIC / CalWORKs (child); SSI / CAPI / IHSS (ABD) | Income block, then child / ABD as needed |
 
-Inside a wave: `newDocs ASC` → `timeToMoney ASC` → corpus order.  
+Inside a wave: `newDocs ASC` → `timeToMoney ASC` → library order.  
 On the report / PDF: open programs sorted **easy → hard** via `programDifficulty`.
 
 **Rule:** Every gate feeder the user did **not** mark at GATE must remain eligible to enter a later wave (subject to income / child / ABD / excludeIfAlreadyOn). Never drop unsigned gate programs by hardcoding a short queue.
@@ -332,7 +332,7 @@ Filename: `calclaim-todo-list.pdf`.
 - [ ] Gate is categorical benefits, not zip→PG&E  
 - [ ] Queue includes **non-energy** programs (e.g. LifeLine and/or CalFresh) in the demo path  
 - [ ] CARE/ESA appear as normal cards, not a separate product mode  
-- [ ] Ranking uses corpus scores (doc reuse / time-to-money), not hard-coded energy-first  
+- [ ] Ranking uses library scores (doc reuse / time-to-money), not hard-coded energy-first  
 - [ ] To Do List PDF (benefits report) sent after an action  
 - [ ] Help / STOP / free-form QC behave per guidelines  
 - [ ] Every button on OPT_IN, GATE, INCOME, OFFER maps to a transition above  
@@ -362,7 +362,7 @@ On GATE type “asdf” → thanks/redirect; still on GATE; row in `data/respons
 ## Implementation notes
 
 - Session: user id, branch (YES/NO), answers, offer queue cursor, `NextSteps` items, reminder flags.  
-- Frozen corpus holds programs across categories + FPL/band tables + cascades + sources.  
+- Frozen library holds programs across categories + FPL/band tables + cascades + sources.  
 - Unlock/$ copy is estimate / upper bound only.  
 - Analytics: public funder dashboard at `/impact` — see [`funder-dashboard.md`](funder-dashboard.md).
 

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { DATA_DIR } from "../config.js";
-import type { SessionState } from "../corpus/types.js";
+import type { SessionState } from "../library/types.js";
 import { buildProgramStatusRows } from "../queue/statusLog.js";
 
 const SESSION_LOG_DIR = path.join(DATA_DIR, "session-logs");
@@ -11,7 +11,7 @@ function logPath(telegramUserId: number): string {
 }
 
 /**
- * Per-user QC log: every corpus program's status (offered, signed up,
+ * Per-user QC log: every library program's status (offered, signed up,
  * skipped, not eligible + why, etc). Rewritten on every session save so it
  * always reflects current state — first write happens when the session is
  * created (opt-in / /start).

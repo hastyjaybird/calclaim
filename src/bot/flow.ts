@@ -4,15 +4,15 @@ import { recordEvent } from "../analytics/db.js";
 import { getCampaign } from "../analytics/campaigns.js";
 import { trackFunnel } from "../analytics/funnel.js";
 import { fromCampaignPin } from "../analytics/geo.js";
-import { countyFromZip, parseZipCode } from "../corpus/geo.js";
+import { countyFromZip, parseZipCode } from "../library/geo.js";
 import {
   formatMaxBenefitEstimate,
   formatUsd,
-} from "../corpus/benefitEstimate.js";
-import { HIGH_FRICTION_TIME_DAYS, docLabel, missingDocs } from "../corpus/docs.js";
-import { formatFormFillEstimate } from "../corpus/formFill.js";
-import { getProgram } from "../corpus/load.js";
-import type { IncomeBand, Program, SessionState } from "../corpus/types.js";
+} from "../library/benefitEstimate.js";
+import { HIGH_FRICTION_TIME_DAYS, docLabel, missingDocs } from "../library/docs.js";
+import { formatFormFillEstimate } from "../library/formFill.js";
+import { getProgram } from "../library/load.js";
+import type { IncomeBand, Program, SessionState } from "../library/types.js";
 import {
   deleteSession,
   emptySession,
@@ -384,7 +384,7 @@ export async function presentOffer(ctx: Context, session: SessionState): Promise
   ];
 
   if (window) {
-    // Dates and apply channel are per event and per county — the corpus deadline
+    // Dates and apply channel are per event and per county — the library deadline
     // and apply URL are both wrong during a real window.
     const timing = formatWindowTiming(window.applyPeriods, openToday);
     if (timing) lines.push(timing);

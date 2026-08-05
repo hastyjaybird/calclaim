@@ -1,9 +1,9 @@
 import PDFDocument from "pdfkit";
-import { formatUsd } from "../corpus/benefitEstimate.js";
-import { docLabel, hasDoc } from "../corpus/docs.js";
-import { estimateFormFillMinutes } from "../corpus/formFill.js";
-import { getDisclaimer, getProgram } from "../corpus/load.js";
-import type { NextStepsItem, SessionState, TodoStatus } from "../corpus/types.js";
+import { formatUsd } from "../library/benefitEstimate.js";
+import { docLabel, hasDoc } from "../library/docs.js";
+import { estimateFormFillMinutes } from "../library/formFill.js";
+import { getDisclaimer, getProgram } from "../library/load.js";
+import type { NextStepsItem, SessionState, TodoStatus } from "../library/types.js";
 import {
   closestDeadline,
   docsSavingsTable,

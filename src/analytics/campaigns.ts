@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { CORPUS_DIR } from "../config.js";
+import { LIBRARY_DIR } from "../config.js";
 import { getSignedUpPartnerByCampaignId } from "../partners/db.js";
 import type { AnalyticsSource } from "./db.js";
 
@@ -25,7 +25,7 @@ let cache: CampaignsFile | null = null;
 export function loadCampaignsFile(): CampaignsFile {
   if (!cache) {
     cache = JSON.parse(
-      readFileSync(path.join(CORPUS_DIR, "campaigns.json"), "utf8"),
+      readFileSync(path.join(LIBRARY_DIR, "campaigns.json"), "utf8"),
     ) as CampaignsFile;
   }
   return cache;
