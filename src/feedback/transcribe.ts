@@ -1,6 +1,6 @@
 /**
  * Voice → text via OpenAI Whisper (or OpenAI-compatible /audio/transcriptions).
- * OpenRouter chat keys usually cannot hit this endpoint — set OPENAI_API_KEY.
+ * OpenRouter chat keys usually cannot hit this endpoint – set OPENAI_API_KEY.
  */
 
 export interface TranscribeResult {
@@ -34,7 +34,7 @@ export async function transcribeVoiceBuffer(
   const cfg = resolveWhisperConfig();
   if (!cfg) {
     return {
-      text: "[voice message — transcription unavailable; set OPENAI_API_KEY]",
+      text: "[voice message – transcription unavailable; set OPENAI_API_KEY]",
       status: "unavailable",
     };
   }
@@ -57,20 +57,20 @@ export async function transcribeVoiceBuffer(
       const errText = await res.text().catch(() => "");
       console.error("Whisper transcription failed:", res.status, errText.slice(0, 300));
       return {
-        text: "[voice message — transcription failed]",
+        text: "[voice message – transcription failed]",
         status: "failed",
       };
     }
     const data = (await res.json()) as { text?: string };
     const text = (data.text ?? "").trim();
     if (!text) {
-      return { text: "[voice message — empty transcript]", status: "failed" };
+      return { text: "[voice message – empty transcript]", status: "failed" };
     }
     return { text, status: "ok" };
   } catch (err) {
     console.error("Whisper transcription error:", err);
     return {
-      text: "[voice message — transcription failed]",
+      text: "[voice message – transcription failed]",
       status: "failed",
     };
   }

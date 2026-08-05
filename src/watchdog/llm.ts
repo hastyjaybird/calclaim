@@ -100,7 +100,7 @@ export async function analyzeProgramWithLlm(
 Compare the frozen library JSON against live official page text.
 ONLY report concrete, evidence-backed mismatches or risks that would require a human developer to edit the library.
 Do NOT invent eligibility rules. If unsure, omit the finding or mark severity "info".
-Never suggest auto-applying changes — findings are advisory only.
+Never suggest auto-applying changes – findings are advisory only.
 Return JSON only: {"findings":[{category,severity,title,detail,suggestedAction,libraryField,evidenceQuote}]}
 Categories: deadline, eligibility, apply_process, funding_status, max_benefit, apply_url, docs_needed, program_status, branding, est_annual, other
 Severities: critical, high, medium, low, info

@@ -69,7 +69,7 @@ export function formatMaxBenefitEstimate(
   const scalesWithHh =
     Boolean(program.maxBenefitUsd.byHouseholdSize) ||
     program.maxBenefitUsd.perPerson != null;
-  // Household size is already known from triage — don't restate it. Show
+  // Household size is already known from triage – don't restate it. Show
   // $/person when the max scales with size (skip for a solo household).
   const perPersonNote =
     scalesWithHh && n > 1

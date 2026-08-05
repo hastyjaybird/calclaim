@@ -305,7 +305,7 @@
       "name": "GA/GR",
       "category": "cash",
       "oneLiner": "County General Assistance / General Relief cash aid for adults who do not qualify for other state or federal cash programs",
-      "maxBenefit": "County-set; often ~$200–$400/mo for a single adult (LA GR ~$221; estimate — varies by county)",
+      "maxBenefit": "County-set; often ~$200–$400/mo for a single adult (LA GR ~$221; estimate – varies by county)",
       "applyUrl": "https://benefitscal.com/ApplyForBenefits/begin/ABOVR?lang=en",
       "deadlines": [],
       "applySteps": [
@@ -359,7 +359,7 @@
       "applyUrl": "https://benefitscal.com/ApplyForBenefits/begin/ABOVR?lang=en",
       "deadlines": [],
       "applySteps": [
-        "Apply for health benefits via BenefitsCal or your county — they screen Medi-Cal and CMSP together",
+        "Apply for health benefits via BenefitsCal or your county – they screen Medi-Cal and CMSP together",
         "Provide residency, income, and resource verification if asked"
       ],
       "docsNeeded": [
@@ -402,7 +402,7 @@
       "id": "disaster_calfresh",
       "name": "Disaster CalFresh",
       "category": "food",
-      "oneLiner": "Temporary food benefits after a federally declared disaster — only when your county opens a D-CalFresh application window",
+      "oneLiner": "Temporary food benefits after a federally declared disaster – only when your county opens a D-CalFresh application window",
       "maxBenefit": "Up to one month at the CalFresh max allotment for household size (estimate; disaster window only)",
       "applyUrl": "https://www.cdss.ca.gov/inforesources/calfresh/disaster-calfresh",
       "deadlines": [
@@ -412,7 +412,7 @@
         }
       ],
       "applySteps": [
-        "Apply during your county's Disaster CalFresh window only — by phone or in person, as your county announced",
+        "Apply during your county's Disaster CalFresh window only – by phone or in person, as your county announced",
         "Show you lived or worked in the disaster area at the time of the disaster",
         "Report a disaster-related loss (food, income, inaccessible resources, or disaster expenses)"
       ],
@@ -643,7 +643,7 @@
       "applyUrl": "https://www.csd.ca.gov/Pages/LIHEAP.aspx",
       "deadlines": [
         {
-          "label": "Seasonal windows — check your county",
+          "label": "Seasonal windows – check your county",
           "date": null
         }
       ],
@@ -729,7 +729,7 @@
       "name": "Medical Baseline",
       "category": "energy",
       "oneLiner": "Extra utility allowance for medical needs",
-      "maxBenefit": "Extra ~500 kWh / 25 therms per month at the lowest baseline rate — worth roughly $50/mo (estimate; varies widely by rate plan and usage)",
+      "maxBenefit": "Extra ~500 kWh / 25 therms per month at the lowest baseline rate – worth roughly $50/mo (estimate; varies widely by rate plan and usage)",
       "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/medical-baseline-program.html",
       "deadlines": [],
       "applySteps": [
@@ -779,7 +779,7 @@
       ],
       "applySteps": [
         "Gather income records and receipts (W-2s, 1099s, award letters)",
-        "Book a VITA / tax-preparer appointment — this usually means a real meeting",
+        "Book a VITA / tax-preparer appointment – this usually means a real meeting",
         "CalClaim does not file taxes"
       ],
       "docsNeeded": [
@@ -946,7 +946,7 @@
       "name": "In-Home Supportive Services (IHSS)",
       "category": "cash",
       "oneLiner": "Pays a caregiver (often a family member) to help an aged, blind, or disabled person stay safely at home",
-      "maxBenefit": "Averages about 100 hrs/mo of paid care statewide, at your county's hourly rate ($16.90-$23.00/hr) — roughly $1,700-$2,300/mo (estimate; depends on your assessed hours and county wage)",
+      "maxBenefit": "Averages about 100 hrs/mo of paid care statewide, at your county's hourly rate ($16.90-$23.00/hr) – roughly $1,700-$2,300/mo (estimate; depends on your assessed hours and county wage)",
       "applyUrl": "https://www.cdss.ca.gov/in-home-supportive-services",
       "deadlines": [],
       "applySteps": [

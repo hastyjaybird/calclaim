@@ -66,7 +66,7 @@ function buildWelcomeHtml(payload: PartnerWelcomeEmailPayload): string {
               </p>
               <p style="margin:0 0 8px;font-size:14px;color:#084d3d;font-weight:700;">Booth banner (print this)</p>
               <p style="margin:0 0 18px;font-size:15px;line-height:1.45;color:#3a5550;">
-                Attached as <code>calclaim-booth-banner.pdf</code> — page 1 is a full booth placard; page 2 has two half-page fliers (same layout, rotated) to cut and hand out.
+                Attached as <code>calclaim-booth-banner.pdf</code> – page 1 is a full booth placard; page 2 has two half-page fliers (same layout, rotated) to cut and hand out.
                 <br /><a href="${escapeHtml(bannerUrl)}" style="color:#0d7a5f;">Download booth banner</a>
               </p>
               <p style="margin:0;font-size:13px;line-height:1.45;color:#3a5550;">
@@ -101,12 +101,12 @@ ${statusUrl}
 Your unique QR code (also attached as calclaim-qr.png):
 ${qrUrl}
 
-Booth banner to print (also attached as calclaim-booth-banner.pdf) — page 1 is a full booth placard; page 2 has two half-page fliers (same layout, rotated) to cut and hand out:
+Booth banner to print (also attached as calclaim-booth-banner.pdf) – page 1 is a full booth placard; page 2 has two half-page fliers (same layout, rotated) to cut and hand out:
 ${bannerUrl}
 
 Questions? Reply to this email or use the contact form on the CalClaim impact site.
 
-— CalClaim
+– CalClaim
 `;
 }
 
@@ -132,7 +132,7 @@ async function sendViaSmtp(payload: PartnerWelcomeEmailPayload): Promise<SendPar
   await transporter.sendMail({
     from,
     to: payload.partner.email,
-    subject: `Welcome to CalClaim — your partner kit (${payload.partner.id})`,
+    subject: `Welcome to CalClaim – your partner kit (${payload.partner.id})`,
     text: buildWelcomeText(payload),
     html: buildWelcomeHtml(payload),
     attachments: [
@@ -177,14 +177,14 @@ async function writeOutbox(payload: PartnerWelcomeEmailPayload): Promise<SendPar
     JSON.stringify(
       {
         to: payload.partner.email,
-        subject: `Welcome to CalClaim — your partner kit (${payload.partner.id})`,
+        subject: `Welcome to CalClaim – your partner kit (${payload.partner.id})`,
         partnerId: payload.partner.id,
         slug: payload.partner.slug,
         statusUrl: payload.statusUrl,
         qrUrl: payload.qrUrl,
         bannerUrl: payload.bannerUrl,
         writtenAt: new Date().toISOString(),
-        note: "SMTP not configured — email written to mail-outbox for local demo.",
+        note: "SMTP not configured – email written to mail-outbox for local demo.",
       },
       null,
       2,
@@ -193,7 +193,7 @@ async function writeOutbox(payload: PartnerWelcomeEmailPayload): Promise<SendPar
   );
 
   console.log(
-    `[partner-email] SMTP unset — wrote welcome kit to ${outDir} (to: ${payload.partner.email})`,
+    `[partner-email] SMTP unset – wrote welcome kit to ${outDir} (to: ${payload.partner.email})`,
   );
 
   return {

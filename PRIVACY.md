@@ -1,6 +1,6 @@
 # CalClaim Privacy Policy (demo)
 
-**Product:** CalClaim v2 — California financial aid / benefits navigator (Telegram)  
+**Product:** CalClaim v2 – California financial aid / benefits navigator (Telegram)  
 **Last updated:** 2026-07-31
 
 ## What we collect
@@ -38,7 +38,7 @@ Tables: `telegram_users`, `telegram_messages` in the demo database.
 
 ## What we do **not** collect (v2)
 
-- Document uploads as a required product step (ID, pay stubs, bills) — if you send a file anyway, file metadata may be logged as above
+- Document uploads as a required product step (ID, pay stubs, bills) – if you send a file anyway, file metadata may be logged as above
 - Payment information
 - Marketing email lists (optional email on the contact form is for replies only; partner signup email is only for delivering that partner’s QR kit; “Email report to my computer” opens your own Mail app with a download link and does not send us the address)
 - Phone numbers unless you tap Telegram’s share-contact control
@@ -73,7 +73,7 @@ The Developer tools at `/dev` (library watch / scan UI) are for **authorized hum
 
 ## Not affiliated
 
-Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, or any agency. Estimates only — not tax, legal, or benefits advice. Dollar totals on the impact site are library estimates × follow-throughs, not verified payouts.
+Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, or any agency. Estimates only – not tax, legal, or benefits advice. Dollar totals on the impact site are library estimates × follow-throughs, not verified payouts.
 
 ## Contact
 

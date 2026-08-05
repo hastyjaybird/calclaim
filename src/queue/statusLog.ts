@@ -155,7 +155,7 @@ function explainEligibility(
     );
     return {
       eligible: false,
-      reason: `Excluded — already enrolled in ${other}`,
+      reason: `Excluded – already enrolled in ${other}`,
     };
   }
   if (
@@ -199,7 +199,7 @@ function explainEligibility(
 }
 
 /**
- * Full per-program status for a session — every library program resolves to
+ * Full per-program status for a session – every library program resolves to
  * exactly one row, so nothing is silently omitted from QC logs.
  */
 export function buildProgramStatusRows(session: SessionState): ProgramLogRow[] {

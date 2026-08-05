@@ -56,8 +56,8 @@ function toDraft(
     ? operation.counties
     : (event?.counties ?? []);
   const label = event
-    ? `${eventLabel(event)}${counties.length ? ` — ${formatCounties(counties)}` : ""}`
-    : `Disaster CalFresh — ${formatCounties(counties) || "California"}`;
+    ? `${eventLabel(event)}${counties.length ? ` – ${formatCounties(counties)}` : ""}`
+    : `Disaster CalFresh – ${formatCounties(counties) || "California"}`;
 
   return {
     femaDisasterNumber: event?.disasterNumber ?? null,
@@ -192,7 +192,7 @@ export async function runDisasterScan(
     } else if (!publish && result.window.status === "pending") {
       held.push({ window: result.window, validation });
       // A window can stay held for days. Report it when it first fails, or when
-      // it starts failing something different — not once a day forever.
+      // it starts failing something different – not once a day forever.
       const changed =
         result.previous == null ||
         result.previous.status !== "pending" ||
@@ -231,7 +231,7 @@ export async function runDisasterScan(
     `[disaster] scan ${today}: ${summary.femaEvents} CA IA declarations ` +
       `(${summary.femaActive} recent), ${summary.fnsOperations} FNS operation(s), ` +
       `${published.length} auto-published, ${held.length} held, ${expired} expired` +
-      (errors.length ? ` — errors: ${errors.join("; ")}` : ""),
+      (errors.length ? ` – errors: ${errors.join("; ")}` : ""),
   );
   return summary;
 }

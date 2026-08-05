@@ -107,7 +107,7 @@
     document.querySelectorAll(".lang-btn").forEach((btn) => {
       const btnLang = btn.getAttribute("data-lang");
       const base = stripLangPrefix(location.pathname);
-      // No hash — language switches should start at the top of the page.
+      // No hash – language switches should start at the top of the page.
       const targetPath = base === "/" ? "/impact" : base;
       btn.setAttribute("href", withLang(targetPath, btnLang));
       btn.setAttribute("aria-pressed", btnLang === lang ? "true" : "false");
@@ -118,7 +118,7 @@
   function mountLangSwitch(lang) {
     const host = document.getElementById("lang-switch");
     if (!host) return;
-    // No hash — language switches should start at the top of the page.
+    // No hash – language switches should start at the top of the page.
     const basePath = stripLangPrefix(location.pathname) || "/impact";
     host.setAttribute("role", "navigation");
     host.setAttribute("aria-label", t(lang, "lang.aria"));

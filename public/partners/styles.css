@@ -501,6 +501,47 @@ body {
   background: var(--paper-deep);
 }
 
+.map-dot-wrap,
+.map-cluster-wrap {
+  background: transparent;
+  border: none;
+}
+
+.map-dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #0d7a5f;
+  border: 1.5px solid #0a2e24;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.65);
+  opacity: 0.92;
+}
+
+.map-dot--ghost {
+  opacity: 0.35;
+  background: transparent;
+  border-width: 2px;
+  box-shadow: none;
+}
+
+.map-cluster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size, 34px);
+  height: var(--size, 34px);
+  border-radius: 50%;
+  background: #0d7a5f;
+  color: #fff;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: calc(var(--size, 34px) * 0.38);
+  line-height: 1;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(10, 46, 36, 0.35);
+}
+
 .charts {
   display: grid;
   grid-template-columns: 1fr 1fr;

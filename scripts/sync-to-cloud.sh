@@ -37,7 +37,7 @@ if [[ "$SYNC_ENV" == "1" ]]; then
     exit 1
   fi
 elif ! ssh "$HOST" "test -f '${REMOTE_DIR}/.env'"; then
-  echo "[calclaim] No remote .env — seeding from local (first deploy)"
+  echo "[calclaim] No remote .env – seeding from local (first deploy)"
   if [[ ! -f "$ROOT/.env" ]]; then
     echo "  ERROR: need local .env for first deploy" >&2
     exit 1

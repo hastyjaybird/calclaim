@@ -10,7 +10,7 @@ export const SHARE_LINK_CAMPAIGN = "link_share";
 export const SHARE_QR_CAMPAIGN = "qr_peer_share";
 
 const SHARE_BLURB =
-  "Find California benefits help with CalClaim — food, health, phone, energy bill programs, and more.";
+  "Find California benefits help with CalClaim – food, health, phone, energy bill programs, and more.";
 
 function telegramSafePublicUrl(url: string): boolean {
   try {

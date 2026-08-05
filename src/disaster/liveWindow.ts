@@ -56,7 +56,7 @@ export function windowForProgram(program: Program): DisasterWindow | null {
   )[0]!;
 }
 
-/** Last day of the final open application period — the real "act by" date. */
+/** Last day of the final open application period – the real "act by" date. */
 export function lastApplyDay(window: DisasterWindow): string | null {
   return window.applyPeriods.reduce<string | null>(
     (acc, p) => (acc == null || p.end > acc ? p.end : acc),

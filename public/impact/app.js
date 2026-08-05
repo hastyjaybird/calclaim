@@ -97,9 +97,89 @@ function escapeHtml(s) {
     .replaceAll('"', "&quot;");
 }
 
-// Statewide California view — keep as default for all map loads.
+// Statewide California view – keep as default for all map loads.
 const CA_CENTER = [37.2, -119.5];
 const CA_ZOOM = 5;
+/** ~¼ mile in degrees of latitude (1° lat ≈ 69 miles). */
+const QUARTER_MILE_LAT = 0.25 / 69;
+/** Cap visual dots per area; weights keep cluster totals accurate. */
+const MAX_VISUAL_DOTS = 48;
+
+function hashSeed(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function mulberry32(a) {
+  return function () {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function kindColor(kind) {
+  if (kind === "qr") return "#0d7a5f";
+  if (kind === "link") return "#2a6f8f";
+  if (kind === "mixed") return "#3d6b5c";
+  return "#4a6b63";
+}
+
+/** Stable ~¼-mile offset in a random direction (deterministic per seed). */
+function jitterAround(lat, lng, seed) {
+  const rnd = mulberry32(hashSeed(seed));
+  const angle = rnd() * Math.PI * 2;
+  const dist = QUARTER_MILE_LAT * (0.7 + rnd() * 0.6);
+  const cosLat = Math.cos((lat * Math.PI) / 180);
+  return [lat + dist * Math.cos(angle), lng + (dist * Math.sin(angle)) / Math.max(0.2, cosLat)];
+}
+
+function personDotIcon(color, ghost) {
+  const ghostClass = ghost ? " map-dot--ghost" : "";
+  return L.divIcon({
+    className: "map-dot-wrap",
+    html: `<span class="map-dot${ghostClass}" style="--dot:${color}"></span>`,
+    iconSize: [10, 10],
+    iconAnchor: [5, 5],
+  });
+}
+
+function clusterDivIcon(count) {
+  const size = count < 10 ? 34 : count < 50 ? 42 : count < 100 ? 50 : 58;
+  return L.divIcon({
+    className: "map-cluster-wrap",
+    html: `<div class="map-cluster" style="--size:${size}px">${count}</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
+function markerWeight(marker) {
+  return marker.options.personWeight || 1;
+}
+
+function clusterPeopleCount(cluster) {
+  return cluster.getAllChildMarkers().reduce((sum, m) => sum + markerWeight(m), 0);
+}
+
+/** Split `count` people into up to MAX_VISUAL_DOTS weighted slots. */
+function weightSlots(count) {
+  const n = Math.min(count, MAX_VISUAL_DOTS);
+  const base = Math.floor(count / n);
+  let rem = count % n;
+  const slots = [];
+  for (let i = 0; i < n; i++) {
+    slots.push(base + (rem > 0 ? 1 : 0));
+    if (rem > 0) rem -= 1;
+  }
+  return slots;
+}
 
 function renderMap(points) {
   const map = L.map("map", { scrollWheelZoom: false }).setView(CA_CENTER, CA_ZOOM);
@@ -108,24 +188,53 @@ function renderMap(points) {
     maxZoom: 12,
   }).addTo(map);
 
+  const clusters = L.markerClusterGroup({
+    showCoverageOnHover: false,
+    maxClusterRadius: 52,
+    spiderfyOnMaxZoom: true,
+    disableClusteringAtZoom: 12,
+    chunkedLoading: true,
+    iconCreateFunction(cluster) {
+      return clusterDivIcon(clusterPeopleCount(cluster));
+    },
+  });
+
+  const layers = [];
   for (const p of points) {
-    const radius = p.count === 0 ? 8 : Math.min(28, 10 + p.count * 3);
-    const color = p.kind === "qr" ? "#0d7a5f" : p.kind === "link" ? "#2a6f8f" : "#4a6b63";
-    const marker = L.circleMarker([p.lat, p.lng], {
-      radius,
-      color,
-      weight: 2,
-      fillColor: color,
-      fillOpacity: p.count === 0 ? 0.25 : 0.55,
-    }).addTo(map);
-    marker.bindPopup(
-      `<strong>${escapeHtml(p.label)}</strong><br>${p.count} awareness event${p.count === 1 ? "" : "s"}`,
-    );
+    const color = kindColor(p.kind);
+    const n = Math.max(0, Math.floor(p.count));
+    if (n === 0) {
+      const marker = L.marker([p.lat, p.lng], {
+        icon: personDotIcon(color, true),
+        personWeight: 0,
+      });
+      marker.bindPopup(`<strong>${escapeHtml(p.label)}</strong><br>0 awareness events`);
+      layers.push(marker);
+      continue;
+    }
+    const slots = weightSlots(n);
+    for (let i = 0; i < slots.length; i++) {
+      const weight = slots[i];
+      const [lat, lng] = jitterAround(p.lat, p.lng, `${p.lat.toFixed(4)},${p.lng.toFixed(4)},${p.kind},${i}`);
+      const marker = L.marker([lat, lng], {
+        icon: personDotIcon(color, false),
+        personWeight: weight,
+      });
+      const label =
+        weight === 1
+          ? "1 awareness event"
+          : `${weight} awareness events`;
+      marker.bindPopup(`<strong>${escapeHtml(p.label)}</strong><br>${label}`);
+      layers.push(marker);
+    }
   }
+
+  clusters.addLayers(layers);
+  map.addLayer(clusters);
 }
 
 function formatChartLabel(dateStr) {
-  if (!dateStr || dateStr === "—") return dateStr;
+  if (!dateStr || dateStr === "–") return dateStr;
   const d = new Date(`${dateStr}T12:00:00`);
   if (Number.isNaN(d.getTime())) return dateStr;
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -179,7 +288,7 @@ function lineChart(canvasId, labels, values, label) {
 function renderCharts(series) {
   const labels = series.map((d) => d.date);
   if (!labels.length) {
-    labels.push("—");
+    labels.push("–");
     lineChart("chart-daily", labels, [0], "Users / day");
     lineChart("chart-cumulative", labels, [0], "Cumulative");
     return;
@@ -198,7 +307,7 @@ function renderCharts(series) {
   );
 }
 
-// Bold star (not a cup) — reads clearly at leaderboard size
+// Bold star (not a cup) – reads clearly at leaderboard size
 const TROPHY_SVG = `<svg class="partner-trophy" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
   <defs>
     <linearGradient id="trophy-shine" x1="0" y1="0" x2="0" y2="1">
@@ -344,7 +453,7 @@ function wireContactForm() {
       }
       form.reset();
       setContactStatus(
-        txt("contact.success", "Thanks — we got your message."),
+        txt("contact.success", "Thanks – we got your message."),
         false,
       );
     } catch {

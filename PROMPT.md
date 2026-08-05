@@ -1,11 +1,11 @@
-# CalClaim v2 — Project Kickoff Prompt
+# CalClaim v2 – Project Kickoff Prompt
 
 Copy everything below the line into a new agent/chat when building the demo.
 
 Also read before building:
 - `docs/guidelines.md` (**v2**)
-- `docs/customer-experience.md` (**required** — gate, YES/NO queues, next-steps)
-- `docs/finish-line-ux.md` (**required** — living file + apply handoff)
+- `docs/customer-experience.md` (**required** – gate, YES/NO queues, next-steps)
+- `docs/finish-line-ux.md` (**required** – living file + apply handoff)
 - `docs/origin-and-reasoning.md` (includes v1 → v2 pivot)
 - `docs/bd-design-patterns.md`
 - `docs/expansion-watchlist.md` (do not expand geography/language without reassessment)
@@ -16,9 +16,9 @@ Also read before building:
 
 ## Project
 
-Build **CalClaim v2**: a **Telegram** chatbot that helps California people find **financial aid and benefit programs** across categories (health, food, cash assistance, telecom, energy bill help, tax credits, and more), maintain a **living next-steps file** with deadlines, and get nudged until they act — not just browse links.
+Build **CalClaim v2**: a **Telegram** chatbot that helps California people find **financial aid and benefit programs** across categories (health, food, cash assistance, telecom, energy bill help, tax credits, and more), maintain a **living next-steps file** with deadlines, and get nudged until they act – not just browse links.
 
-This is a **portfolio demo**, not a production government product. Goal: show forward-deployed, last-mile AI for underserved users — constrained grounded knowledge + messaging channel + completion (files + reminders). Strong enough for Beneficial Deployments / nonprofit AI / economic mobility conversations.
+This is a **portfolio demo**, not a production government product. Goal: show forward-deployed, last-mile AI for underserved users – constrained grounded knowledge + messaging channel + completion (files + reminders). Strong enough for Beneficial Deployments / nonprofit AI / economic mobility conversations.
 
 **One-line job:** User texts CalClaim → ranked aid offers → living checklist PDF → reminders → ready to apply on official sites.
 
@@ -29,7 +29,7 @@ This is a **portfolio demo**, not a production government product. Goal: show fo
 1. **Geography:** California (statewide benefits library).  
 2. **Channel:** Telegram bot (`grammy`), hosted (e.g. Railway).  
 3. **Language (ship):** English. Spanish = expansion, not required for first demo.  
-4. **Programs:** Multi-category financial aid. **Energy / PG&E programs (CARE, FERA, ESA, LIHEAP, AMP, …) are normal rows in the library** — never the sole product story and never auto-ranked above other aid solely because they are “energy.”  
+4. **Programs:** Multi-category financial aid. **Energy / PG&E programs (CARE, FERA, ESA, LIHEAP, AMP, …) are normal rows in the library** – never the sole product story and never auto-ranked above other aid solely because they are “energy.”  
 5. **Puerto Rico energy locale / PR Spanish mode:** **Out of v2 ship.** Track on expansion watchlist.
 
 Do **not** rebuild the retired v1 “PG&E finish-line field coach only” product as the main demo.
@@ -75,18 +75,18 @@ A reviewer runs this end-to-end in under 10 minutes:
 ### Core flows
 Follow [`docs/customer-experience.md`](docs/customer-experience.md) exactly.
 
-1. **Opt-in** — disclaimer + start.  
-2. **Gate** — categorical programs already in household?  
-3. **YES queue / NO queue** — rank by newDocs ASC → timeToMoney ASC; Skip cascades per library.  
-4. **Living To Do List / benefits report** — one PDF; update + re-send after Sign up / Already / Remind / Skip / income selection.  
+1. **Opt-in** – disclaimer + start.  
+2. **Gate** – categorical programs already in household?  
+3. **YES queue / NO queue** – rank by newDocs ASC → timeToMoney ASC; Skip cascades per library.  
+4. **Living To Do List / benefits report** – one PDF; update + re-send after Sign up / Already / Remind / Skip / income selection.  
 5. **Same PDF** re-sent when queue empties (no second report).  
-6. **Reminders** — Tue noon + T-3 / T-1.  
-7. **Stuck / Help** — privacy, erase, about, STOP.
+6. **Reminders** – Tue noon + T-3 / T-1.  
+7. **Stuck / Help** – privacy, erase, about, STOP.
 
 ### Knowledge (frozen library)
 Version JSON/markdown in-repo. Demo answers must not depend on live web browse.
 
-Minimum program rows (each with docs, deadlines, apply URL/steps, skip cascades, sources) — **energy is not privileged**:
+Minimum program rows (each with docs, deadlines, apply URL/steps, skip cascades, sources) – **energy is not privileged**:
 
 - Categorical / health-food-cash: Medi-Cal, CMSP, WIC, CalFresh, Disaster CalFresh, SSI, CalWORKs, CAPI, GA/GR (as gate feeders and/or offers; BenefitsCal HCPRD coverage)  
 - Telecom: LifeLine  
@@ -135,13 +135,13 @@ Cite library docs internally; document sources in README. Never invent $ or dead
 
 ## Voice examples
 
-**Opt-in:** “CalClaim helps you find California benefits and bill help you may qualify for — food, health, phone, energy discounts, and more. Estimates only. Not affiliated with any agency. [ Start ]”
+**Opt-in:** “CalClaim helps you find California benefits and bill help you may qualify for – food, health, phone, energy discounts, and more. Estimates only. Not affiliated with any agency. [ Start ]”
 
 **Gate:** “Is anyone in your household already on Medi-Cal, CalFresh, SSI, CalWORKs, CAPI, GA/GR, CMSP, or WIC?” (multiselect + Done / None)
 
-**Offer card (example — not energy-special):** “CalFresh — grocery help. Est. up to ~$X/mo (~$Y/person) if eligible. [ Sign up ] [ Already enrolled ] [ Remind me later ] [ Skip ]”
+**Offer card (example – not energy-special):** “CalFresh – grocery help. Est. up to ~$X/mo (~$Y/person) if eligible. [ Sign up ] [ Already enrolled ] [ Remind me later ] [ Skip ]”
 
-**Offer card (energy as peer):** “CARE — PG&E bill discount if you’re a PG&E customer. Est. ~30–35% off electric. [ Sign up ] …”
+**Offer card (energy as peer):** “CARE – PG&E bill discount if you’re a PG&E customer. Est. ~30–35% off electric. [ Sign up ] …”
 
 **After action:** “Updated your To Do List (benefits report) ↓” + document.
 

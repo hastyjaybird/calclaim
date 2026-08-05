@@ -1,7 +1,7 @@
-# Finish-line UX — v2 living checklist + apply handoff
+# Finish-line UX – v2 living checklist + apply handoff
 
 **Status:** Settled **v2** product contract (2026-07-31)  
-**Product version:** CalClaim v2 — California financial aid / benefits navigator  
+**Product version:** CalClaim v2 – California financial aid / benefits navigator  
 **Applies to:** Completion after offer cards (all program categories).  
 **Design persona:** Someone distracted, tired, wrangling kids, or low working memory. If they cannot see what to do next without re-reading the whole chat, the UX failed.
 
@@ -11,7 +11,7 @@
 
 ## Job
 
-Get the user from “you might qualify for several kinds of help” to “I have a clear To Do List with links and deadlines — and I’ll get nudged” with **almost no thinking**.
+Get the user from “you might qualify for several kinds of help” to “I have a clear To Do List with links and deadlines – and I’ll get nudged” with **almost no thinking**.
 
 We do **not** auto-submit to agencies. We do **not** make energy/PG&E the only finish path.
 
@@ -19,39 +19,39 @@ We do **not** auto-submit to agencies. We do **not** make energy/PG&E the only f
 
 ## Hard rules (non-negotiable)
 
-1. **One job per screen** in chat — usually one offer card or one confirm.  
-2. **The file is the durable finish line** — one To Do List / benefits report PDF is updated and re-sent after meaningful actions.  
+1. **One job per screen** in chat – usually one offer card or one confirm.  
+2. **The file is the durable finish line** – one To Do List / benefits report PDF is updated and re-sent after meaningful actions.  
 3. **Same button shapes** on every offer: I'm already enrolled · Add to my To Do List · Skip program.  
-4. **Official apply links live in the finish summary + PDF** — not on offer cards (keeps people in chat).  
+4. **Official apply links live in the finish summary + PDF** – not on offer cards (keeps people in chat).  
 5. **No auto-submit** (v2).  
-6. **Forgiving STOP / erase** — user can wipe everything.  
-7. **Reminders never invent deadlines** — only library/session dates.  
-8. **Multi-category** — a “finished” demo must not look like a PG&E-only checklist.
+6. **Forgiving STOP / erase** – user can wipe everything.  
+7. **Reminders never invent deadlines** – only library/session dates.  
+8. **Multi-category** – a “finished” demo must not look like a PG&E-only checklist.
 
 ---
 
 ## Interaction model (canonical v2)
 
-### Phase 1 — Offer → action
+### Phase 1 – Offer → action
 
 User sees one program card (any category). They tap Already enrolled / Add to my To Do List / Skip program.
 
-### Phase 2 — Finish summary + living To Do List (= benefits report)
+### Phase 2 – Finish summary + living To Do List (= benefits report)
 
 When the queue ends **and** there is at least one open to-do:
 
 1. Abbreviated chat summary (total $, docs → $, programs + signup URLs)  
 2. Send `calclaim-todo-list.pdf`:
    - Header + “You may qualify for a total of ~$X this year”  
-   - **Step 1 — Find your documents** (deduped, with est. $ unlocked)  
-   - **Step 2 — Open applications** (program, est. minutes, **clickable** apply link, deadline, status)  
+   - **Step 1 – Find your documents** (deduped, with est. $ unlocked)  
+   - **Step 2 – Open applications** (program, est. minutes, **clickable** apply link, deadline, status)  
    - Closest deadline · Already on · disclaimer  
 
 If there are **no** open to-dos: skip the report; nudge share-with-a-friend.
 
 After the PDF: auto-prompt email-to-computer (Send link to my email). Idle actions: Email report to my computer · Share · Restart · More info.
 
-### Phase 3 — Reminders
+### Phase 3 – Reminders
 
 | Trigger | When (America/Los_Angeles) |
 |---|---|
@@ -129,6 +129,6 @@ If the finish-line still feels like “only PG&E links,” it fails the v2 bar i
 
 ## Related
 
-- [`customer-experience.md`](customer-experience.md) — v2 tree  
-- [`guidelines.md`](guidelines.md) — framing  
-- [`../PROMPT.md`](../PROMPT.md) — build kickoff  
+- [`customer-experience.md`](customer-experience.md) – v2 tree  
+- [`guidelines.md`](guidelines.md) – framing  
+- [`../PROMPT.md`](../PROMPT.md) – build kickoff  

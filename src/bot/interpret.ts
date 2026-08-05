@@ -201,7 +201,7 @@ export function normalizeText(raw: string): string {
   // /help@MyBot foo → help foo
   t = t.replace(/^\/([a-z0-9_]+)(?:@\w+)?/i, "$1");
   t = t.replace(/['']/g, "'");
-  t = t.replace(/[–—]/g, "-");
+  t = t.replace(/[––]/g, "-");
   // Keep letters, numbers, spaces, apostrophes, hyphens
   t = t.replace(/[^\p{L}\p{N}\s'-]+/gu, " ");
   t = t.replace(/-/g, " ");
@@ -230,7 +230,7 @@ function fuzzyAliasMatch(
     string[],
   ][]) {
     for (const alias of aliases) {
-      // Skip tiny aliases for fuzzy — too many false positives (e.g. "y" vs "n")
+      // Skip tiny aliases for fuzzy – too many false positives (e.g. "y" vs "n")
       if (alias.length < 3) continue;
       const dist = editDistance(normalized, alias);
       if (dist > maxDistanceFor(alias)) continue;
@@ -523,7 +523,7 @@ function interpretStepAnswer(
     ) {
       return { kind: "step_answer", callback: "zip:skip" };
     }
-    // Digits may still have spaces/dashes before normalize — use raw-ish digits.
+    // Digits may still have spaces/dashes before normalize – use raw-ish digits.
     const digits = normalized.replace(/\D/g, "");
     if (digits.length === 5 || digits.length === 9) {
       return { kind: "step_answer", callback: `zip:${digits.slice(0, 5)}` };
@@ -598,7 +598,7 @@ export function interpretMessage(
   const normalized = normalizeText(raw);
   if (!normalized) return { kind: "unknown" };
 
-  // On the Start screen, "start"/"begin" means tap Start — not /restart.
+  // On the Start screen, "start"/"begin" means tap Start – not /restart.
   if (session.step === "opt_in") {
     const optInStart = interpretStepAnswer(normalized, session);
     if (optInStart) return optInStart;
@@ -646,29 +646,29 @@ export function interpretMessage(
 export function stepNudge(step: StepId): string {
   switch (step) {
     case "opt_in":
-      return "Whenever you're ready, tap Start below — or type help for options.";
+      return "Whenever you're ready, tap Start below – or type help for options.";
     case "gate":
-      return "Tap any programs you're already on, then Done — or None if none of those.";
+      return "Tap any programs you're already on, then Done – or None if none of those.";
     case "household_size":
       return "Tap a number for how many people share money with you (not separate roommates).";
     case "income_band":
-      return "Pick the income range that fits best — rough is fine.";
+      return "Pick the income range that fits best – rough is fine.";
     case "past_due":
       return "Quick yes/no on whether the utility bill is past due (or say the bill isn't in your name).";
     case "has_child":
-      return "Tap Yes or No — kids under 18 or pregnancy in the household.";
+      return "Tap Yes or No – kids under 18 or pregnancy in the household.";
     case "has_abd":
-      return "Tap Yes or No — anyone 65+, blind, or disabled in the household.";
+      return "Tap Yes or No – anyone 65+, blind, or disabled in the household.";
     case "has_work_disruption":
-      return "Tap the option that fits — lost a job, can't work for health reasons, caring for family, or none of these.";
+      return "Tap the option that fits – lost a job, can't work for health reasons, caring for family, or none of these.";
     case "has_disaster_area":
-      return "Tap Yes or No — did anyone in the household live or work in the disaster area?";
+      return "Tap Yes or No – did anyone in the household live or work in the disaster area?";
     case "has_immigration_status":
-      return "Tap Yes (citizen or eligible immigrant), No, or Prefer not to say — your answer is not stored.";
+      return "Tap Yes (citizen or eligible immigrant), No, or Prefer not to say – your answer is not stored.";
     case "has_zip":
       return "Type your 5-digit home ZIP code, or tap Skip if you're not sure.";
     case "offer":
-      return "Use the buttons — add to your To Do List, say you're already enrolled, or skip.";
+      return "Use the buttons – add to your To Do List, say you're already enrolled, or skip.";
     case "idle":
       return "You're all set for now. Restart, share with a friend, email your report to a computer, or more info.";
     case "confirm_stop":
@@ -678,7 +678,7 @@ export function stepNudge(step: StepId): string {
     case "help_menu":
       return "Pick a button below, or type stop, to do, share, restart, or erase.";
     default:
-      return "Tap a button below to keep going — or type help if you're stuck.";
+      return "Tap a button below to keep going – or type help if you're stuck.";
   }
 }
 
@@ -695,13 +695,13 @@ export function suggestAck(display: string, step: StepId): string {
 }
 
 export function mediaAck(step: StepId): string {
-  return `Got that — thanks. I work best with the buttons below. ${stepNudge(step)}`;
+  return `Got that – thanks. I work best with the buttons below. ${stepNudge(step)}`;
 }
 
 export function errorAck(): string {
-  return "Something hiccuped on my side — sorry about that. Try tapping a button again, or type help.";
+  return "Something hiccuped on my side – sorry about that. Try tapping a button again, or type help.";
 }
 
 export function staleCallbackAck(step: StepId): string {
-  return `That button looks out of date — no worries. ${stepNudge(step)}`;
+  return `That button looks out of date – no worries. ${stepNudge(step)}`;
 }

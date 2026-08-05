@@ -61,7 +61,7 @@ export function campaignSource(campaign: Campaign | undefined): AnalyticsSource 
   return campaign.kind === "qr" ? "qr" : "link";
 }
 
-/** Telegram /start payloads allow A-Z, a-z, 0-9, _, - — max 64 */
+/** Telegram /start payloads allow A-Z, a-z, 0-9, _, - – max 64 */
 export function sanitizeStartPayload(raw: string | undefined): string | null {
   if (!raw) return null;
   const cleaned = raw.trim().slice(0, 64);

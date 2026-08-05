@@ -360,7 +360,7 @@ async function handleDevApi(
     return true;
   }
 
-  // Always live collected events — never the public-site demo dataset.
+  // Always live collected events – never the public-site demo dataset.
   if (pathname === "/api/dev/stats" && req.method === "GET") {
     send(
       res,
@@ -754,10 +754,147 @@ async function handleGo(
   }
   // #region agent log
   console.log(
-    `[agent-debug] B server.ts:handleGo redirect campaign=${campaignId} bot=${username}`,
+    `[agent-debug] B server.ts:handleGo bridge campaign=${campaignId} bot=${username}`,
   );
   // #endregion
-  redirect(res, `https://t.me/${username}?start=${encodeURIComponent(campaignId)}`);
+  // Serve a bridge page instead of a bare t.me 302. Desktop browsers often land
+  // on Telegram's "START BOT" interstitial where the button silently fails;
+  // tg:// + web.telegram.org?tgaddr bypass that screen.
+  send(
+    res,
+    200,
+    telegramOpenBridgeHtml(username, campaignId),
+    "text/html; charset=utf-8",
+    { "Cache-Control": "no-store" },
+  );
+}
+
+/** HTML handoff: try Telegram app, then Telegram Web with start payload. */
+function telegramOpenBridgeHtml(botUsername: string, campaignId: string): string {
+  const start = encodeURIComponent(campaignId);
+  const tMe = `https://t.me/${botUsername}?start=${start}`;
+  const tgApp = `tg://resolve?domain=${botUsername}&start=${start}`;
+  const tgAddr = encodeURIComponent(tgApp);
+  const webK = `https://web.telegram.org/k/#?tgaddr=${tgAddr}`;
+  const webA = `https://web.telegram.org/a/#?tgaddr=${tgAddr}`;
+  const safeTMe = escapeHtml(tMe);
+  const safeTgApp = escapeHtml(tgApp);
+  const safeWebK = escapeHtml(webK);
+  const safeBot = escapeHtml(botUsername);
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Open CalClaim</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #10241f;
+      --ink-soft: #3a5550;
+      --leaf: #0d7a5f;
+      --leaf-deep: #084d3d;
+      --paper: #eef4f1;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 1.5rem;
+      font-family: Figtree, system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(900px 480px at 10% -10%, rgba(13, 122, 95, 0.18), transparent 55%),
+        linear-gradient(180deg, #e2ece8 0%, var(--paper) 50%, #e7f0f3 100%);
+    }
+    main {
+      width: min(26rem, 100%);
+      text-align: center;
+    }
+    h1 {
+      margin: 0 0 0.4rem;
+      font-family: Fraunces, Georgia, serif;
+      font-size: clamp(1.8rem, 5vw, 2.3rem);
+      font-weight: 600;
+    }
+    p { margin: 0 0 1.25rem; color: var(--ink-soft); line-height: 1.45; }
+    .actions { display: grid; gap: 0.65rem; }
+    a.cta {
+      display: block;
+      padding: 0.85rem 1.1rem;
+      border-radius: 0.65rem;
+      background: linear-gradient(135deg, var(--leaf-deep), var(--leaf));
+      color: #f7f3ea;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    a.cta.secondary {
+      background: transparent;
+      color: var(--leaf-deep);
+      border: 1px solid rgba(8, 77, 61, 0.28);
+    }
+    .hint { margin-top: 1rem; font-size: 0.9rem; }
+    .hint a { color: var(--leaf-deep); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>CalClaim</h1>
+    <p id="status">Opening Telegram…</p>
+    <div class="actions">
+      <a class="cta" id="open-app" href="${safeTgApp}">Open Telegram app</a>
+      <a class="cta secondary" id="open-web" href="${safeWebK}">Continue in browser</a>
+    </div>
+    <p class="hint">Stuck? <a href="${safeTMe}">@${safeBot} on t.me</a></p>
+  </main>
+  <script>
+    (function () {
+      var tgApp = ${JSON.stringify(tgApp)};
+      var webK = ${JSON.stringify(webK)};
+      var webA = ${JSON.stringify(webA)};
+      var tMe = ${JSON.stringify(tMe)};
+      var status = document.getElementById("status");
+      var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "");
+      var left = false;
+      function markLeft() { left = true; }
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) markLeft();
+      });
+      window.addEventListener("pagehide", markLeft);
+      window.addEventListener("blur", markLeft);
+
+      function go(url) {
+        try { window.location.href = url; } catch (e) {}
+      }
+
+      if (mobile) {
+        go(tgApp);
+        setTimeout(function () {
+          if (!left) {
+            if (status) status.textContent = "If Telegram did not open, tap a button below.";
+            go(tMe);
+          }
+        }, 1400);
+      } else {
+        // Desktop: skip t.me START BOT interstitial (often unresponsive).
+        go(webK);
+        setTimeout(function () {
+          if (!left) {
+            if (status) status.textContent = "If Telegram Web did not open, tap Continue in browser.";
+            go(webA);
+          }
+        }, 1600);
+      }
+    })();
+  </script>
+</body>
+</html>`;
 }
 
 function escapeHtml(s: string): string {
@@ -1437,7 +1574,7 @@ export function startWebServer(
     console.log(`  Developer (password + CAPTCHA): ${config.publicBaseUrl}/dev`);
     console.log(`  Sample QR landing: ${config.publicBaseUrl}/go/qr_oakland_library`);
     if (!config.developerPassword) {
-      console.warn("  DEVELOPER_PASSWORD is unset — developer login will fail until set.");
+      console.warn("  DEVELOPER_PASSWORD is unset – developer login will fail until set.");
     }
   });
   return server;

@@ -36,7 +36,7 @@ function trimField(value: unknown, max: number): string {
 }
 
 function isValidEmail(email: string): boolean {
-  // Practical check — not a full RFC parser
+  // Practical check – not a full RFC parser
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 200;
 }
 
@@ -64,7 +64,7 @@ export async function registerPartnerSignup(
   },
 ): Promise<PartnerSignupResult> {
   const token = randomPartnerToken(4);
-  // Underscores only — must match Telegram /start alphabet and library campaign style.
+  // Underscores only – must match Telegram /start alphabet and library campaign style.
   const id = `p_${token}`;
   const slug = allocateUniqueSlug(fields.name);
   // Ensure we didn't collide with a library partner slug
@@ -180,7 +180,7 @@ export async function updatePartnerProfile(
     logoPath = savePartnerLogoUpload(existing.id, fields.logo);
   }
 
-  // Name/email/city/logo only — id, slug, and campaignId stay fixed.
+  // Name/email/city/logo only – id, slug, and campaignId stay fixed.
   const partner = updateSignedUpPartner(existing.slug, {
     name: fields.name,
     email: fields.email,

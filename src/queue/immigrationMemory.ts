@@ -1,5 +1,5 @@
 /**
- * Immigration-status answers stay in process memory only — never written to
+ * Immigration-status answers stay in process memory only – never written to
  * the session DB, session logs, or analytics. Cleared on finish / erase / restart.
  * Telegram capture also skips logging the answer (see telegramCapture.ts).
  */
@@ -7,7 +7,7 @@
 export type ImmigrationAnswer = "eligible" | "ineligible" | "declined";
 
 const answers = new Map<number, ImmigrationAnswer>();
-/** Users currently on the immigration-status prompt — text replies are not logged. */
+/** Users currently on the immigration-status prompt – text replies are not logged. */
 const awaitingPrompt = new Set<number>();
 
 export function getImmigrationAnswer(

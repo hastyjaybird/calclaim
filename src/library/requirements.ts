@@ -27,8 +27,8 @@ export type ReviewStatus =
 export type DifficultyTier = "easy" | "moderate" | "hard";
 
 /**
- * Whether a program can actually be applied for today. Mostly derived — from
- * library deadlines and live disaster windows — because a hand-maintained flag
+ * Whether a program can actually be applied for today. Mostly derived – from
+ * library deadlines and live disaster windows – because a hand-maintained flag
  * is exactly the kind of thing that goes stale and starts advertising a closed
  * program. Only `open`, `paused`, and `closed` can be pinned by hand.
  */
@@ -348,7 +348,7 @@ export const ELIGIBILITY_TAGS: readonly VocabItem[] = [
 
 /**
  * Documents the applicant has to physically produce. Third-party documents are
- * scored double in the difficulty math — waiting on a doctor or a landlord is
+ * scored double in the difficulty math – waiting on a doctor or a landlord is
  * what actually stalls an application.
  */
 export const DOCUMENT_TAGS: readonly VocabItem[] = [
@@ -409,7 +409,7 @@ export const DOCUMENT_TAGS: readonly VocabItem[] = [
   {
     id: "categoricalProof",
     label:
-      "Award letter proving enrollment (Medi-Cal / CalFresh / SSI / CalWORKs / WIC) — categorical path",
+      "Award letter proving enrollment (Medi-Cal / CalFresh / SSI / CalWORKs / WIC) – categorical path",
     short: "Award letter",
     group: "Third party",
   },
@@ -489,7 +489,7 @@ const DEADLINE_SOON_DAYS = 60;
 
 /**
  * Documents and interviews carry the weight because they are what actually
- * stalls an application. Eligibility rules are only a tiebreaker — a long rule
+ * stalls an application. Eligibility rules are only a tiebreaker – a long rule
  * list decides *whether* you qualify, not how hard the paperwork is.
  */
 const RULE_WEIGHT = 0.2;
@@ -551,7 +551,7 @@ function readFile(): RequirementsFile {
       programs: parsed.programs ?? {},
     };
   } catch {
-    // A missing or unparseable file must not take the dev page down — every
+    // A missing or unparseable file must not take the dev page down – every
     // program just shows up empty and flagged for review.
     fileCache = { version: "unversioned", notes: "", programs: {} };
   }
@@ -597,7 +597,7 @@ export function scoreDifficulty(
   entry: ProgramRequirements,
 ): DifficultyResult {
   const docs = entry.documents.filter((d) => d !== "none");
-  // Categorical award letter OR income docs are alternatives — score the harder
+  // Categorical award letter OR income docs are alternatives – score the harder
   // of the two once, not both as required.
   const hasCategorical = docs.includes("categoricalProof");
   const hasIncome = docs.includes("incomeProof");
@@ -607,7 +607,7 @@ export function scoreDifficulty(
   });
   const docPoints = scoredDocs.reduce((sum, d) => {
     if (hasCategorical && hasIncome && d === "categoricalProof") {
-      // Award letter is third-party (2); pay stubs are first-party (1) — take max.
+      // Award letter is third-party (2); pay stubs are first-party (1) – take max.
       return sum + Math.max(THIRD_PARTY_DOCS.has("categoricalProof") ? 2 : 1, 1);
     }
     return sum + (THIRD_PARTY_DOCS.has(d) ? 2 : 1);
@@ -706,7 +706,7 @@ export function computeAvailability(
     const status = entry.availabilityOverride;
     const detail =
       status === "closed"
-        ? "Marked closed by hand — pull it from the offer queue."
+        ? "Marked closed by hand – pull it from the offer queue."
         : status === "paused"
           ? "Marked paused or waitlisted by hand."
           : "Marked open by hand, overriding the computed status.";
@@ -746,7 +746,7 @@ export function computeAvailability(
     return build(
       "deadline_passed",
       `${last.date} · ${ago} ago`,
-      `Every library deadline is in the past — "${shortDeadlineLabel(last.label)}" was ${last.date}, ${ago} ago. Roll the date forward to the current cycle.`,
+      `Every library deadline is in the past – "${shortDeadlineLabel(last.label)}" was ${last.date}, ${ago} ago. Roll the date forward to the current cycle.`,
     );
   }
 
@@ -757,7 +757,7 @@ export function computeAvailability(
       return build(
         "deadline_soon",
         `${next.date} · ${plural(days, "day")} away`,
-        `"${shortDeadlineLabel(next.label)}" is ${next.date} — ${plural(days, "day")} away.`,
+        `"${shortDeadlineLabel(next.label)}" is ${next.date} – ${plural(days, "day")} away.`,
       );
     }
   }
@@ -783,7 +783,7 @@ export function computeAvailability(
     "no deadline",
     undated.length
       ? `Accepting applications. ${undated.join(" · ")}`
-      : "Accepting applications year-round — no fixed deadline in the library.",
+      : "Accepting applications year-round – no fixed deadline in the library.",
   );
 }
 
@@ -800,7 +800,7 @@ export interface MatrixRow extends ProgramRequirements {
   difficultyTier: DifficultyTier;
   difficultyBreakdown: string;
   availability: Availability;
-  /** Reverse edges of `unlocks` — who gets you in the door here. */
+  /** Reverse edges of `unlocks` – who gets you in the door here. */
   unlockedBy: string[];
   rank: number;
 }
@@ -809,7 +809,7 @@ export interface MatrixSummary {
   byTier: Record<DifficultyTier, number>;
   byReview: Record<ReviewStatus, number>;
   byAvailability: Record<AvailabilityStatus, number>;
-  /** Programs not accepting applications today — the number worth acting on. */
+  /** Programs not accepting applications today – the number worth acting on. */
   notOpen: number;
   documented: number;
   total: number;
@@ -970,7 +970,7 @@ function parseRefs(value: unknown): ReviewRef[] {
     const rec = raw as { label?: unknown; url?: unknown };
     const url = String(rec.url ?? "").trim();
     if (!/^https?:\/\//i.test(url)) {
-      throw new Error(`Reference URL must start with http:// or https:// — got "${url}"`);
+      throw new Error(`Reference URL must start with http:// or https:// – got "${url}"`);
     }
     const label = String(rec.label ?? "").trim().slice(0, 160);
     return { label: label || new URL(url).hostname, url: url.slice(0, 600) };
@@ -981,7 +981,7 @@ export type RequirementsPatch = Partial<Record<keyof ProgramRequirements, unknow
 
 /**
  * Apply a dev-page edit. Validation is strict because this writes straight into
- * a git-tracked library file — a bad id would show up as a silent blank cell.
+ * a git-tracked library file – a bad id would show up as a silent blank cell.
  */
 export function updateProgramRequirements(
   programId: string,

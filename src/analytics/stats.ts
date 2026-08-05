@@ -48,7 +48,7 @@ export interface FunnelStep {
 
 export interface FunnelStats {
   stages: FunnelStep[];
-  /** Stage id entered *from* — where the largest absolute drop happens */
+  /** Stage id entered *from* – where the largest absolute drop happens */
   biggestDropFrom: FunnelStageId | null;
   biggestDropTo: FunnelStageId | null;
   biggestDropCount: number;
@@ -70,9 +70,9 @@ export interface ImpactStats {
   estDollarsUnlocked: number;
   /** Series shown on the charts (demo sample or live). */
   usersPerDay: DailyCount[];
-  /** Always the live analytics series — kept so we can flip back later. */
+  /** Always the live analytics series – kept so we can flip back later. */
   usersPerDayLive: DailyCount[];
-  /** @deprecated Use statsSource — "sample" means demo charts. */
+  /** @deprecated Use statsSource – "sample" means demo charts. */
   chartSeriesSource: "sample" | "live";
   programs: ProgramStat[];
   mapPoints: MapPoint[];
@@ -135,7 +135,7 @@ const PARTNER_SAMPLE_PROFILES: Record<
   website: { base: 5, growth: 0.045, startOffsetDays: 10 },
 };
 
-/** Demo program mix — weighted opens once the funnel is “at scale”. */
+/** Demo program mix – weighted opens once the funnel is “at scale”. */
 const DEMO_PROGRAM_WEIGHTS: { id: string; weight: number }[] = [
   { id: "calfresh", weight: 22 },
   { id: "medi_cal", weight: 18 },
@@ -269,7 +269,7 @@ function estForProgram(programId: string): number {
 }
 
 const IMPACT_DISCLAIMER =
-  "Estimates only. Dollar totals use library annual benefit estimates × follow-through taps — not verified agency payouts. Map shows QR placement sites and coarse city-level IP when available; never street addresses. Funnel counts unique people per stage (QR/link reach is event count).";
+  "Estimates only. Dollar totals use library annual benefit estimates × follow-through taps – not verified agency payouts. Map shows QR placement sites and coarse city-level IP when available; never street addresses. Funnel counts unique people per stage (QR/link reach is event count).";
 
 function seriesTotal(series: DailyCount[]): number {
   return series.length ? series[series.length - 1]!.cumulative : 0;
@@ -693,7 +693,7 @@ export interface PartnerStats {
   estDollarsUnlocked: number;
   usersPerDay: DailyCount[];
   usersPerDayLive: DailyCount[];
-  /** @deprecated Use statsSource — "sample" means demo charts. */
+  /** @deprecated Use statsSource – "sample" means demo charts. */
   chartSeriesSource: "sample" | "live";
   mapPoints: MapPoint[];
   programs: ProgramStat[];
@@ -701,7 +701,7 @@ export interface PartnerStats {
 }
 
 const PARTNER_DISCLAIMER =
-  "Partner stats credit people reached via this partner’s unique QR code. Downstream metrics use session attribution from that QR. Estimates only — not verified agency payouts.";
+  "Partner stats credit people reached via this partner’s unique QR code. Downstream metrics use session attribution from that QR. Estimates only – not verified agency payouts.";
 
 /** Map telegram users → first bot_start campaign (sticky attribution fallback). */
 function firstBotStartCampaignByUser(

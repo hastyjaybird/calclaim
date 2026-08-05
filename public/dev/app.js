@@ -24,7 +24,7 @@ function escapeHtml(s) {
 }
 
 function formatWhen(iso) {
-  if (!iso) return "—";
+  if (!iso) return "–";
   try {
     return new Date(iso).toLocaleString(undefined, {
       month: "short",
@@ -44,9 +44,9 @@ function renderOverview(status) {
   el("m-version").textContent = o.version;
   const age =
     o.ageDays == null
-      ? "Age unknown — use YYYY-MM-DD versions"
+      ? "Age unknown – use YYYY-MM-DD versions"
       : o.needsReview
-        ? `${o.ageDays} days old — review due (>${o.agingRuleDays}d)`
+        ? `${o.ageDays} days old – review due (>${o.agingRuleDays}d)`
         : `${o.ageDays} days old (within ${o.agingRuleDays}d rule)`;
   el("m-age").textContent = age;
   if (o.needsReview) el("m-age").style.color = "#8a4a10";
@@ -90,7 +90,7 @@ function renderOverview(status) {
 function renderScans(scans, latest) {
   const tbody = el("scan-rows");
   if (!scans.length) {
-    tbody.innerHTML = `<tr><td colspan="6">No scans yet — run a library check.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6">No scans yet – run a library check.</td></tr>`;
     return;
   }
   tbody.innerHTML = scans
@@ -305,7 +305,7 @@ function renderDisasterScanState(disaster) {
     `${disaster.upcomingCount || 0} published, not open yet`,
     `${disaster.heldCount} held`,
   ];
-  status.textContent = `${parts.join(" · ")} — ${counts.join(", ")}`;
+  status.textContent = `${parts.join(" · ")} – ${counts.join(", ")}`;
   status.style.color = stale ? "#8a4a10" : "";
 }
 
@@ -340,7 +340,7 @@ function renderDisasterWindows(windows) {
   const root = el("disaster-list");
   if (!root) return;
   if (!windows.length) {
-    root.innerHTML = `<p class="empty">No disaster windows in this filter. Disaster CalFresh is dormant most of the year — this staying empty is the expected state.</p>`;
+    root.innerHTML = `<p class="empty">No disaster windows in this filter. Disaster CalFresh is dormant most of the year – this staying empty is the expected state.</p>`;
     return;
   }
   root.innerHTML = windows
@@ -576,7 +576,7 @@ function chipsHtml(field, ids) {
   return chips.join("");
 }
 
-/** Flatten document labels for CSV/search — categorical + income become one OR line. */
+/** Flatten document labels for CSV/search – categorical + income become one OR line. */
 function documentLabelsForExport(ids) {
   if (!ids.length) return [];
   const hasOr = ids.includes("categoricalProof") && ids.includes("incomeProof");
@@ -755,7 +755,7 @@ function statusCellHtml(row) {
         includeBlank: true,
         blankLabel: "auto (computed)",
       })}
-      <textarea rows="3" placeholder="Why, and who said so — e.g. funds exhausted for FY26 per CSD 7/15"
+      <textarea rows="3" placeholder="Why, and who said so – e.g. funds exhausted for FY26 per CSD 7/15"
         data-program="${escapeHtml(row.id)}" data-field="availabilityNote">${escapeHtml(row.availabilityNote)}</textarea>
     </div>
   </details>`;
@@ -867,7 +867,7 @@ function renderMatrixSummary() {
     `Review: ${s.byReview.needs_review} need review · ${s.byReview.verified_online} verified online · ${s.byReview.signed_off_by_program} signed off`,
     s.avgConfidence == null ? "no confidence set" : `avg confidence ${s.avgConfidence}%`,
     `matrix version ${matrix.data.version}`,
-  ].join(" — ");
+  ].join(" – ");
 }
 
 /** Update only derived/summary cells so an open editor keeps its focus. */
@@ -1117,7 +1117,7 @@ async function copyMatrixJson() {
     await navigator.clipboard.writeText(json);
     setMatrixStatus("Copied the matrix JSON to the clipboard.");
   } catch {
-    setMatrixStatus("Clipboard blocked — the file on disk already has these edits.", true);
+    setMatrixStatus("Clipboard blocked – the file on disk already has these edits.", true);
   }
 }
 
@@ -1162,7 +1162,7 @@ function renderFunnel(funnel) {
       const dropCell =
         s.dropOff > 0
           ? `<span class="${s.dropPct === maxDropPct && maxDropPct > 0 ? "drop-bad" : ""}">−${number.format(s.dropOff)} (${s.dropPct}%)</span>`
-          : "—";
+          : "–";
       return `<tr>
         <td>${escapeHtml(s.label)}<span class="stage-detail">${escapeHtml(s.detail)}</span></td>
         <td class="num">${number.format(s.count)}</td>
@@ -1243,7 +1243,7 @@ function renderFunnel(funnel) {
 }
 
 async function loadFunnel() {
-  // Live analytics only — never the public-site demo funnel.
+  // Live analytics only – never the public-site demo funnel.
   const res = await api("/api/dev/stats");
   if (!res.ok) throw new Error("Failed to load funnel stats");
   const stats = await res.json();
@@ -1304,8 +1304,8 @@ function renderDevPartners(partners) {
     .map(
       (p) => `<tr data-slug="${escapeHtml(p.slug)}">
         <td>${escapeHtml(p.name)}</td>
-        <td>${escapeHtml(p.city || "—")}</td>
-        <td>${escapeHtml(p.email || "—")}</td>
+        <td>${escapeHtml(p.city || "–")}</td>
+        <td>${escapeHtml(p.email || "–")}</td>
         <td><code>${escapeHtml(p.id)}</code></td>
         <td><a href="${escapeHtml(p.statusUrl)}" target="_blank" rel="noopener">${escapeHtml(p.slug)}</a></td>
         <td>

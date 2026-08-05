@@ -1,7 +1,7 @@
 # CalClaim (v2)
 
 **California financial aid / benefits navigator** on Telegram.  
-Food, health, cash, telecom, energy bill help, and more — **not** a PG&E-only app. Utility programs are one cluster in the library.
+Food, health, cash, telecom, energy bill help, and more – **not** a PG&E-only app. Utility programs are one cluster in the library.
 
 **Status:** Runnable demo (long polling locally; webhook-ready for Railway)
 
@@ -44,14 +44,14 @@ npm run seed-impact
 | `TELEGRAM_BOT_TOKEN` | Required |
 | `TELEGRAM_BOT_USERNAME` | Optional; auto from Telegram at boot |
 | `PUBLIC_BASE_URL` | Origin for QR landings + apply redirects (default `http://localhost:3000`) |
-| `IMPACT_STATS_MODE` | `demo` (default) or `live` — what `/impact` and partner pages display |
-| `OPERATOR_TELEGRAM_USER_IDS` | Optional — your Telegram id(s), excluded from live stats rollups |
+| `IMPACT_STATS_MODE` | `demo` (default) or `live` – what `/impact` and partner pages display |
+| `OPERATOR_TELEGRAM_USER_IDS` | Optional – your Telegram id(s), excluded from live stats rollups |
 | `BOT_MODE` | `long_polling` (default) or `webhook` |
 | `WEBHOOK_URL` / `WEBHOOK_SECRET` / `PORT` | Webhook deploy |
 | `DATABASE_PATH` | SQLite file (default `./data/calclaim.sqlite`) |
-| `SMTP_HOST` / `SMTP_FROM` (+ optional `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`) | Optional — partner signup welcome emails; otherwise kits go to `data/mail-outbox/` |
+| `SMTP_HOST` / `SMTP_FROM` (+ optional `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`) | Optional – partner signup welcome emails; otherwise kits go to `data/mail-outbox/` |
 | `TZ` | `America/Los_Angeles` |
-| `OPENROUTER_API_KEY` / `OPENAI_API_KEY` | Optional — deeper LLM review on `/dev` library scans |
+| `OPENROUTER_API_KEY` / `OPENAI_API_KEY` | Optional – deeper LLM review on `/dev` library scans |
 
 `.env` is loaded automatically on start (existing shell env wins).
 
@@ -65,24 +65,24 @@ Print QR codes to `/go/<campaignId>` (see `library/campaigns.json`). Apply butto
 
 ## Developer library watch
 
-Page at `/dev` (password + CAPTCHA; **humans only**) runs an advisory agent over each program’s apply URL and source citations: link health, deadlines, eligibility language, apply-process changes, funding/closed signals, max amounts, and CARE/FERA income bands. Optional LLM analysis if an API key is set. Findings never edit the frozen library — developers update `library/programs.json` by hand. Set `DEVELOPER_PASSWORD` in `.env`. Details: [`docs/developer-library-watch.md`](docs/developer-library-watch.md).
+Page at `/dev` (password + CAPTCHA; **humans only**) runs an advisory agent over each program’s apply URL and source citations: link health, deadlines, eligibility language, apply-process changes, funding/closed signals, max amounts, and CARE/FERA income bands. Optional LLM analysis if an API key is set. Findings never edit the frozen library – developers update `library/programs.json` by hand. Set `DEVELOPER_PASSWORD` in `.env`. Details: [`docs/developer-library-watch.md`](docs/developer-library-watch.md).
 
 ## What the bot does
 
-1. **Opt-in** — multi-category disclaimer  
-2. **Gate** — already on Medi-Cal / CalFresh / SSI / CalWORKs / WIC?  
-3. **YES / NO queues** — ranked by new docs + time-to-money (CARE is not hard-coded first for “energy” reasons)  
-4. **Offer cards** — I'm already enrolled · Add to my To Do List · Skip program (apply links stay in the report, not on the card)  
-5. **Finish** — abbreviated text summary + To Do List PDF when there are open tasks; if none, nudge to share with a friend  
-6. **Finish** — summary + PDF, then email-to-computer (Mail app auto-opens with a download link). Idle: Email · Share · Restart · More info  
-7. **Reminders** — daily 12:00 PT scan (Tue closest + T-3 + T-1)  
+1. **Opt-in** – multi-category disclaimer  
+2. **Gate** – already on Medi-Cal / CalFresh / SSI / CalWORKs / WIC?  
+3. **YES / NO queues** – ranked by new docs + time-to-money (CARE is not hard-coded first for “energy” reasons)  
+4. **Offer cards** – I'm already enrolled · Add to my To Do List · Skip program (apply links stay in the report, not on the card)  
+5. **Finish** – abbreviated text summary + To Do List PDF when there are open tasks; if none, nudge to share with a friend  
+6. **Finish** – summary + PDF, then email-to-computer (Mail app auto-opens with a download link). Idle: Email · Share · Restart · More info  
+7. **Reminders** – daily 12:00 PT scan (Tue closest + T-3 + T-1)  
 8. **Help / Share / STOP / erase** + alpha feedback (text/voice → QC log + `/dev` To Do List; voice transcribed with Whisper when `OPENAI_API_KEY` is set)
 
 ## Demo script (~5 min)
 
 1. `/start` → Start  
 2. **Yes** on gate → past due **No**  
-3. Walk CARE (energy) → **Skip** or Sign up; then LifeLine (telecom) and CalFresh (food) — show multi-category  
+3. Walk CARE (energy) → **Skip** or Sign up; then LifeLine (telecom) and CalFresh (food) – show multi-category  
 4. Open the PDF; confirm food + telecom + energy can all appear  
 5. Type `asdf` (or send a voice note) → “Thanks for your feedback!” + last prompt repeated (no advance); item appears on `/dev` feedback to-do  
 6. Help → Share (link / QR) → About → STOP → erase  

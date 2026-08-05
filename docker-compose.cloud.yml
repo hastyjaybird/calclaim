@@ -1,4 +1,4 @@
-# CalClaim on Vultr — joins Dashbird's Docker network so Caddy can reverse_proxy.
+# CalClaim on Vultr – joins Dashbird's Docker network so Caddy can reverse_proxy.
 # Usage:
 #   CLOUD_HOST=root@144.202.105.150 ./scripts/sync-to-cloud.sh
 #

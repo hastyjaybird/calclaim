@@ -1,8 +1,8 @@
-# Origin and reasoning — how we arrived at CalClaim v2
+# Origin and reasoning – how we arrived at CalClaim v2
 
 **Date locked (v1 concept):** 2026-07-30  
 **Date pivoted (v2):** 2026-07-31  
-**Context:** Jay exploring demo projects toward Anthropic **Beneficial Deployments (BD)** / Claude for Nonprofits–adjacent work — last-mile AI for underserved populations.
+**Context:** Jay exploring demo projects toward Anthropic **Beneficial Deployments (BD)** / Claude for Nonprofits–adjacent work – last-mile AI for underserved populations.
 
 ---
 
@@ -10,7 +10,7 @@
 
 | Version | What it was | Status |
 |---|---|---|
-| **v1** | Energy-efficiency + PG&E incentives navigator; CARE/ESA finish-line field coach; CA + PR Spanish | **Retired as product center** — kept as history |
+| **v1** | Energy-efficiency + PG&E incentives navigator; CARE/ESA finish-line field coach; CA + PR Spanish | **Retired as product center** – kept as history |
 | **v2 (current)** | **California financial aid / benefits navigator** on Telegram; multi-category offer queue; living next-steps PDF + reminders; energy/PG&E programs = **one cluster among many** | **Build this** |
 
 ---
@@ -50,7 +50,7 @@ Jay **leaned toward** household EE + incentives (became **v1 CalClaim**) and par
 
 ---
 
-## 4. v1 concept (energy + PG&E) — why it existed
+## 4. v1 concept (energy + PG&E) – why it existed
 
 ### Kept briefly as A
 - Real household $ and underenrollment on CARE/FERA/ESA.  
@@ -64,7 +64,7 @@ Jay **leaned toward** household EE + incentives (became **v1 CalClaim**) and par
 
 ---
 
-## 5. v2 pivot (2026-07-31) — financial aid services
+## 5. v2 pivot (2026-07-31) – financial aid services
 
 **Decision:** Rebrand and rebuild the product around **all financial aid / incentive programs** a CA household might use. Utility bill programs (CARE, FERA, ESA, LIHEAP, AMP, …) remain in the library as **normal offers**, not the brand or the ranking privilege.
 
@@ -88,14 +88,14 @@ Build contract: [`customer-experience.md`](customer-experience.md) + Telegram be
 |---|---|
 | PasoWatt / DoneWatt | Early energy-era candidates |
 | NowWatt | v1 → early v2 working name (energy pun); retired with PG&E-centered framing |
-| **CalClaim** | **Locked (2026-07-31)** — California + claim what’s yours; multi-category benefits, not energy-only |
+| **CalClaim** | **Locked (2026-07-31)** – California + claim what’s yours; multi-category benefits, not energy-only |
 
 ---
 
 ## 7. Markets
 
 ### v2 committed
-- **California** — Medi-Cal, CalFresh, WIC, LifeLine, CARE/FERA/ESA, LIHEAP, tax credits, CalWORKs, etc. (library-defined).
+- **California** – Medi-Cal, CalFresh, WIC, LifeLine, CARE/FERA/ESA, LIHEAP, tax credits, CalWORKs, etc. (library-defined).
 
 ### Deferred (expansion watchlist)
 - Puerto Rico locale / PR Spanish  
@@ -110,12 +110,12 @@ Build contract: [`customer-experience.md`](customer-experience.md) + Telegram be
 
 ## 8. Feasibility
 
-Demo-80% in weeks is realistic if scoped to: Telegram + frozen CA multi-program library + next-steps PDF + reminders — **not** national live DB, auto-submit, or full bilingual PR field coach.
+Demo-80% in weeks is realistic if scoped to: Telegram + frozen CA multi-program library + next-steps PDF + reminders – **not** national live DB, auto-submit, or full bilingual PR field coach.
 
 ---
 
 ## 9. Resume / BD story (v2 north star)
 
-> I pointed a constrained assistant at underserved California households on Telegram, grounded it in public benefits rules across food, health, telecom, and bill assistance, and stayed with them via a living next-steps file and reminders until they were ready to apply — the same last-mile pattern BD partners use for benefits and crisis info.
+> I pointed a constrained assistant at underserved California households on Telegram, grounded it in public benefits rules across food, health, telecom, and bill assistance, and stayed with them via a living next-steps file and reminders until they were ready to apply – the same last-mile pattern BD partners use for benefits and crisis info.
 
 Scope cuts prefer that sentence over energy nostalgia.

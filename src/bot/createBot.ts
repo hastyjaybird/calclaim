@@ -41,7 +41,7 @@ function agentDebugLog(
 ): void {
   const payload = {
     sessionId: "f9190a",
-    runId: "pre-fix",
+    runId: "post-fix",
     hypothesisId,
     location,
     message,
@@ -91,7 +91,7 @@ async function reorient(
   if (!repeated) {
     await safeReply(
       ctx,
-      "Tap a button below when you're ready — or type help.",
+      "Tap a button below when you're ready – or type help.",
     );
   }
 }
@@ -172,7 +172,7 @@ async function handleInterpretedText(
     return true;
   }
 
-  // Unknown — log as alpha feedback, stay on the same step
+  // Unknown – log as alpha feedback, stay on the same step
   // Never store free-text while asking immigration status (privacy promise).
   if (session.step !== "has_immigration_status") {
     recordAlphaFeedback({
@@ -308,7 +308,7 @@ export function createBot(token: string): Bot {
       await safeReply(ctx, errorAck());
       return;
     }
-    // Slash commands are handled by bot.command(...) above — don't double-run.
+    // Slash commands are handled by bot.command(...) above – don't double-run.
     const text = ctx.message.text ?? "";
     if (text.startsWith("/")) return;
     const session = getOrCreateSession(uid);
@@ -361,7 +361,7 @@ export function createBot(token: string): Bot {
 
       recordAlphaFeedback({
         session,
-        text: text || "[voice — empty transcript]",
+        text: text || "[voice – empty transcript]",
         source: "voice",
         transcriptStatus: status,
       });
@@ -369,7 +369,7 @@ export function createBot(token: string): Bot {
       console.error("Voice feedback handling failed:", err);
       recordAlphaFeedback({
         session,
-        text: "[voice message — download or transcription failed]",
+        text: "[voice message – download or transcription failed]",
         source: "voice",
         transcriptStatus: "failed",
       });
@@ -425,7 +425,7 @@ export function createBot(token: string): Bot {
   bot.on("message", async (ctx) => {
     // Skip if a more specific handler already ran (grammy won't double-fire
     // the same update through overlapping filters in practice for these, but
-    // text/voice/media are registered above — this catches leftovers).
+    // text/voice/media are registered above – this catches leftovers).
     if (
       ctx.message.text ||
       ctx.message.voice ||

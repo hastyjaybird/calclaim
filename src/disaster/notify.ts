@@ -38,7 +38,7 @@ export function formatAutoPublishAlert(
   publicBaseUrl: string,
 ): string {
   return [
-    "Disaster CalFresh is now LIVE in the bot — published automatically.",
+    "Disaster CalFresh is now LIVE in the bot – published automatically.",
     "",
     ...windowFacts(window),
     "",
@@ -59,7 +59,7 @@ export function formatHeldWindowAlert(
   publicBaseUrl: string,
 ): string {
   return [
-    "Disaster CalFresh window found but NOT published — the data failed a sanity check.",
+    "Disaster CalFresh window found but NOT published – the data failed a sanity check.",
     "",
     ...windowFacts(window),
     "",
@@ -80,7 +80,7 @@ function describeConfidence(confidence: Confidence): string {
     case "fns_only":
       return "FEMA declaration matched; CDSS has not published dates yet";
     case "fns_unverified":
-      return "FNS only — FEMA was unreachable, declaration taken from the FNS notice";
+      return "FNS only – FEMA was unreachable, declaration taken from the FNS notice";
   }
 }
 

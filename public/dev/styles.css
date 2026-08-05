@@ -471,7 +471,7 @@ button.cta:disabled {
   width: 3.4rem;
 }
 
-/* Open now? — green when someone can apply today, grey when merely dormant
+/* Open now? – green when someone can apply today, grey when merely dormant
    (the normal disaster-program state), amber/red when it needs a human. */
 .badge-avail-open,
 .badge-avail-window_open {

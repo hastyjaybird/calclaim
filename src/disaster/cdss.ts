@@ -36,9 +36,9 @@ export interface ExtractedWindow {
 export interface CdssScanResult {
   ok: boolean;
   error: string | null;
-  /** Set when some pages fetched and others failed — visible but not an outage. */
+  /** Set when some pages fetched and others failed – visible but not an outage. */
   partialError: string | null;
-  /** Hash of the combined page text — lets the caller skip the LLM when unchanged. */
+  /** Hash of the combined page text – lets the caller skip the LLM when unchanged. */
   contentHash: string;
   windows: ExtractedWindow[];
   pages: Array<{ url: string; ok: boolean; status: number | null }>;
@@ -83,14 +83,14 @@ function toYmd(year: number, month: number, day: number): string | null {
 
 /**
  * Pull "February 10-14, 2025" / "Oct 18-22 and 25-26, 2021" style ranges.
- * Advisory only — every window lands as pending for human review.
+ * Advisory only – every window lands as pending for human review.
  */
 export function parseApplyPeriods(text: string, fallbackYear: number): ApplyPeriod[] {
   const out: ApplyPeriod[] = [];
   const monthNames = Object.keys(MONTHS).join("|");
   const re = new RegExp(
     String.raw`\b(${monthNames})\.?\s+(\d{1,2})` +
-      String.raw`(?:\s*(?:-|–|—|to|through)\s*(?:(${monthNames})\.?\s+)?(\d{1,2}))?` +
+      String.raw`(?:\s*(?:-|–|–|to|through)\s*(?:(${monthNames})\.?\s+)?(\d{1,2}))?` +
       String.raw`(?:\s*,?\s*(\d{4}))?`,
     "gi",
   );
@@ -123,7 +123,7 @@ function nearestYear(text: string, at: number): number | null {
   return years.length ? years[years.length - 1]! : null;
 }
 
-/** California 5-digit ZIPs only — filters the "00018" style typos in state releases. */
+/** California 5-digit ZIPs only – filters the "00018" style typos in state releases. */
 export function parseZips(text: string): string[] {
   const found = new Set<string>();
   for (const m of text.matchAll(/\b(9[0-6]\d{3})\b/g)) found.add(m[1]!);
@@ -177,7 +177,7 @@ For each real D-CalFresh window, extract:
 - counties: county names without the word "County", e.g. ["Los Angeles"]
 - zips: 5-digit ZIP codes if the announcement narrows to ZIPs, else null
 - placeLabels: recognizable place names (cities/neighborhoods) if listed, else null
-- applyPeriods: [{"start":"YYYY-MM-DD","end":"YYYY-MM-DD"}] — one entry per
+- applyPeriods: [{"start":"YYYY-MM-DD","end":"YYYY-MM-DD"}] – one entry per
   contiguous run of days. "Feb 10-14 and Feb 18-19" is TWO entries.
 - applyPhone: phone number to apply, else null
 - applyUrl: URL to apply, else null. Do NOT use a generic BenefitsCal apply link.

@@ -70,7 +70,7 @@ function toGrayscalePng(buf: Buffer): Buffer {
       return PNG.sync.write(out);
     }
   } catch {
-    // Fall through — embed original if conversion fails
+    // Fall through – embed original if conversion fails
   }
   return buf;
 }
@@ -127,14 +127,14 @@ function drawBannerLayout(
   doc.restore();
 
   if (drawFrame) {
-    // Hairline frame (full placard only — half-fliers use the center cut guide)
+    // Hairline frame (full placard only – half-fliers use the center cut guide)
     doc.save();
     doc.lineWidth(Math.max(0.6, 1 * scale)).strokeColor(RULE);
     doc.rect(x + 0.5, y + 0.5, w - 1, h - 1).stroke();
     doc.restore();
   }
 
-  // QR bordered block — geometric center of the placard (half-fliers reuse this layout)
+  // QR bordered block – geometric center of the placard (half-fliers reuse this layout)
   const idSize = Math.max(7, 9 * scale);
   const footerReserve = margin * 0.65 + idSize + 4 * scale;
   const headerReserve = Math.min(h * 0.3, 230 * scale);
@@ -159,7 +159,7 @@ function drawBannerLayout(
   const headerBottom = qrBoxY - 14 * scale;
 
   if (input.partnerLogoBuf) {
-    // Partner logo (name under it) & CalClaim — tight co-brand lockup
+    // Partner logo (name under it) & CalClaim – tight co-brand lockup
     const logoBox = Math.min(64 * scale, h * 0.095);
     const nameSize = Math.max(10, 14 * scale);
     const ampSize = Math.max(14, 20 * scale);
@@ -287,7 +287,7 @@ function drawBannerLayout(
 
   doc.image(input.qrPng, qrX, qrY, { width: qrSize, height: qrSize });
 
-  // Partner ID — footnote, bottom-right corner
+  // Partner ID – footnote, bottom-right corner
   doc
     .fillColor(INK_SOFT)
     .font("Helvetica")
@@ -364,7 +364,7 @@ export async function renderPartnerBoothBannerPdf(input: {
     layout: "portrait",
     margins: { top: 0, bottom: 0, left: 0, right: 0 },
     info: {
-      Title: `CalClaim booth banner — ${input.partnerName}`,
+      Title: `CalClaim booth banner – ${input.partnerName}`,
       Author: "CalClaim",
     },
   });
@@ -380,7 +380,7 @@ export async function renderPartnerBoothBannerPdf(input: {
 
   drawBannerLayout(doc, { x: 0, y: 0, w: LETTER_W, h: LETTER_H }, shared);
 
-  // Page 2: two half-letter fliers — same layout, rotated 90° and shrunk
+  // Page 2: two half-letter fliers – same layout, rotated 90° and shrunk
   doc.addPage({
     size: "LETTER",
     layout: "portrait",

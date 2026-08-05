@@ -2,12 +2,12 @@
 window.CALCLAIM_I18N = {
   en: {
     meta: {
-      impactTitle: "CalClaim — Demo",
-      partnerTitle: "CalClaim — Partner impact",
-      partnerSignupTitle: "CalClaim — Sign up to be a partner",
-      aboutTitle: "CalClaim — About",
-      privacyTitle: "CalClaim — Privacy policy",
-      contactTitle: "CalClaim — Contact",
+      impactTitle: "CalClaim – Demo",
+      partnerTitle: "CalClaim – Partner impact",
+      partnerSignupTitle: "CalClaim – Sign up to be a partner",
+      aboutTitle: "CalClaim – About",
+      privacyTitle: "CalClaim – Privacy policy",
+      contactTitle: "CalClaim – Contact",
     },
     nav: {
       site: "Site",
@@ -28,7 +28,7 @@ window.CALCLAIM_I18N = {
     partners: {
       blurbFallback: "Community outreach partner",
       qrHeading: "{name}'s unique QR code",
-      qrBody: "Print or share this code — every scan credits this partner on the leaderboard.",
+      qrBody: "Print or share this code – every scan credits this partner on the leaderboard.",
       qrAlt: "{name} QR code for CalClaim",
       metricsAria: "Partner impact metrics",
       peopleReached: "People reached",
@@ -36,7 +36,7 @@ window.CALCLAIM_I18N = {
       followThroughs: "Follow-throughs",
       estAid: "Est. aid unlocked",
       mapHeading: "Where people found this code",
-      mapBody: "Approximate location only — never home addresses.",
+      mapBody: "Approximate location only – never home addresses.",
       mapAria: "Map of partner outreach locations",
       chartsAria: "Partner usage over time",
       usersPerDay: "Users per day",
@@ -73,7 +73,7 @@ window.CALCLAIM_I18N = {
       cityLabel: "City",
       logoLabel: "Organization logo (optional)",
       logoHelp: "Shown on your printable booth banner. PNG or JPG, up to 2 MB.",
-      hint: "You’ll get your QR code, status page, and a printable booth banner right away — and a copy by email.",
+      hint: "You’ll get your QR code, status page, and a printable booth banner right away – and a copy by email.",
       submit: "Sign up & get my QR",
       sending: "Creating your partner kit…",
       successEyebrow: "You’re in",
@@ -89,7 +89,7 @@ window.CALCLAIM_I18N = {
       saveChanges: "Save changes",
       saving: "Saving your changes…",
       editHint:
-        "Your partner ID and status page link stay the same — even if you change the organization name.",
+        "Your partner ID and status page link stay the same – even if you change the organization name.",
       bannerPreviewAlt: "Preview of your printable booth banner",
       bannerPreviewTag:
         "Scan to find California benefits help<br>food, health, phone discounts, energy bill aid, and more.",
@@ -102,15 +102,15 @@ window.CALCLAIM_I18N = {
       error: "Could not sign up. Try again.",
       errorSave: "Could not save changes. Try again.",
       errorEditExpired:
-        "This edit session expired. Your account was already created — contact us if you need a change.",
+        "This edit session expired. Your account was already created – contact us if you need a change.",
       footer:
         'CalClaim demo · Community outreach partners · <a href="__CONTACT__">Contact</a> · <a href="__PRIVACY__">Privacy policy</a>',
     },
     impact: {
       eyebrow: "Demo",
-      lede: "A California financial aid navigator — food, health, phone discounts, energy bill help, and more.",
+      lede: "A California financial aid navigator – food, health, phone discounts, energy bill help, and more.",
       partnerSignupBody:
-        "Partner community organizations — Get your own CalClaim QR code to share. Each scan will credit you in the leaderboard and access to your statistics page.",
+        "Partner community organizations – Get your own CalClaim QR code to share. Each scan will credit you in the leaderboard.",
       partnerSignupCta: "Sign up to be a partner",
       openCta: "Open CalClaim",
       tryBody: "Scan the code or tap Open CalClaim to start.",
@@ -126,11 +126,11 @@ window.CALCLAIM_I18N = {
       estAid: "Est. aid unlocked",
       estAidNote: "Library annual estimates × follow-throughs",
       mapHeading: "Where people found CalClaim",
-      mapBody: "Approximate location only — never home addresses.",
+      mapBody: "Approximate location only – never home addresses.",
       mapAria: "Map of awareness locations",
       partnersHeading: "Community partners",
       partnersBody:
-        "Organizations hosting CalClaim QR codes — ranked by people reached through their unique code.",
+        "Organizations hosting CalClaim QR codes – ranked by people reached through their unique code.",
       partnersAria: "Partner leaderboard",
       partnersEmpty: "No partner outreach yet.",
       partnersReached: "People reached",
@@ -156,7 +156,7 @@ window.CALCLAIM_I18N = {
       emptyPrograms: "No program opens yet. Share a QR or open an apply link from CalClaim.",
       loadError: "Could not load stats. Is the CalClaim server running?",
       disclaimer:
-        "Estimates only. Dollar totals use library annual benefit estimates × follow-through taps — not verified agency payouts. Map shows QR placement sites and coarse city-level IP when available; never street addresses. Funnel counts unique people per stage (QR/link reach is event count).",
+        "Estimates only. Dollar totals use library annual benefit estimates × follow-through taps – not verified agency payouts. Map shows QR placement sites and coarse city-level IP when available; never street addresses. Funnel counts unique people per stage (QR/link reach is event count).",
       footer:
         'CalClaim demo · Not affiliated with any agency · Estimates only · <a href="__CONTACT__">Contact</a> · <a href="__PRIVACY__">Privacy policy</a>',
     },
@@ -164,13 +164,13 @@ window.CALCLAIM_I18N = {
       bannerLine: "What CalClaim is",
       eyebrow: "About",
       title: "About",
-      lede: "Built so California families can claim help they already qualify for — without selling your data, and without turning benefits into a product.",
+      lede: "Built so California families can claim help they already qualify for – without selling your data, and without turning benefits into a product.",
       storyWhy:
-        "Too many households leave food benefits, health coverage, phone discounts, and bill assistance on the table — not because they don’t qualify, but because the maze is exhausting. CalClaim was made to meet people where they already are (a chat on their phone) and walk them to the finish line.",
+        "Too many households leave food benefits, health coverage, phone discounts, and bill assistance on the table – not because they don’t qualify, but because the maze is exhausting. CalClaim was made to meet people where they already are (a chat on their phone) and walk them to the finish line.",
       storyValues:
         "I’m Jay, and this is a not-for-profit project. There is no ad network, no data marketplace, and no growth team trying to monetize your answers. Privacy is the point: asking about household size and income is intimate, so we keep only what we need to guide you, never sell it, and let you erase everything anytime.",
       storyImpact:
-        "The impact we care about is practical — more people finishing applications, more community partners handing someone a QR code instead of a dead-end flyer, and fewer families walking away from help they were always meant to have.",
+        "The impact we care about is practical – more people finishing applications, more community partners handing someone a QR code instead of a dead-end flyer, and fewer families walking away from help they were always meant to have.",
       footer:
         'CalClaim demo · Not affiliated with any agency · <a href="__CONTACT__">Contact</a> · <a href="__PRIVACY__">Privacy policy</a>',
     },
@@ -178,14 +178,14 @@ window.CALCLAIM_I18N = {
       bannerLine: "How CalClaim handles your information",
       eyebrow: "Legal",
       title: "Privacy",
-      lede: "Your answers stay with you. We use them only to find programs you may qualify for — never to sell, never for ads. Type erase anytime and your CalClaim data is gone.",
+      lede: "Your answers stay with you. We use them only to find programs you may qualify for – never to sell, never for ads. Type erase anytime and your CalClaim data is gone.",
       expandLabel: "Full privacy policy and disclaimer",
       collectHeading: "What we collect",
       collect1: "Answers you choose while finding programs (household size, income band, ZIP when needed for county programs, offer actions)",
       collect2: "Your To Do List / benefits report items derived from our program list",
       collect3: "Optional free-form text or voice notes you send as alpha feedback",
       collect4: "Aggregate impact events: QR scans, shared-link clicks, apply-page opens, follow-throughs",
-      collect5: "Coarse location only (poster sites and city-level IP for the map — never street addresses)",
+      collect5: "Coarse location only (poster sites and city-level IP for the map – never street addresses)",
       collect6: "Optional email and comments you submit on the contact form",
       collect7: "Organization name, work email, and optional city if you sign up as a community partner (to send your QR kit and show your status page)",
       notCollectHeading: "What we do not collect",
@@ -193,18 +193,18 @@ window.CALCLAIM_I18N = {
       not2: "Payment information",
       not3: "Marketing email lists",
       not4: "Precise GPS unless you choose to share a location",
-      not5: "Immigration status answers (asked only when needed — not stored, not linked to your phone number)",
+      not5: "Immigration status answers (asked only when needed – not stored, not linked to your phone number)",
       useHeading: "How we use data",
       useBody:
         "We use your data anonymously to run your session, send next-steps and reminders, improve the demo UX, and publish aggregate impact metrics on the public dashboard. Partner signup details are used to email your QR kit and credit scans on your status page. We do not give or sell your data.",
       choicesHeading: "Your choices",
-      choiceStop: "Type 'stop' — pause deadline reminders (keeps your data for your reference)",
-      choiceErase: "Type 'erase' — delete your CalClaim session data",
+      choiceStop: "Type 'stop' – pause deadline reminders (keeps your data for your reference)",
+      choiceErase: "Type 'erase' – delete your CalClaim session data",
       disclaimerHeading: "Disclaimer",
       disclaimer:
-        "CalClaim is a personal portfolio project — not an official agency service. Estimates only. Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, or any agency. Not tax, legal, or benefits advice. Official agencies decide eligibility.",
+        "CalClaim is a personal portfolio project – not an official agency service. Estimates only. Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, or any agency. Not tax, legal, or benefits advice. Official agencies decide eligibility.",
       scope:
-        "Energy / utility programs (CARE, ESA, etc.) are just some of the programs in the list — not the whole product.",
+        "Energy / utility programs (CARE, ESA, etc.) are just some of the programs in the list – not the whole product.",
       fullCta: "Read the policy on GitHub",
       footer:
         'CalClaim demo · Not affiliated with any agency · <a href="__PRIVACY__">Privacy policy</a> · <a href="__CONTACT__">Contact</a>',
@@ -217,7 +217,7 @@ window.CALCLAIM_I18N = {
       emailLabel: "Email",
       commentsLabel: "Comments and feedback",
       submit: "Send",
-      success: "Thanks — we got your message.",
+      success: "Thanks – we got your message.",
       empty: "Add an email or comment before sending.",
       error: "Could not send. Try again.",
       footer:
@@ -226,12 +226,12 @@ window.CALCLAIM_I18N = {
   },
   es: {
     meta: {
-      impactTitle: "CalClaim — Demo",
-      partnerTitle: "CalClaim — Impacto del socio",
-      partnerSignupTitle: "CalClaim — Regístrate como socio",
-      aboutTitle: "CalClaim — Acerca de",
-      privacyTitle: "CalClaim — Política de privacidad",
-      contactTitle: "CalClaim — Contacto",
+      impactTitle: "CalClaim – Demo",
+      partnerTitle: "CalClaim – Impacto del socio",
+      partnerSignupTitle: "CalClaim – Regístrate como socio",
+      aboutTitle: "CalClaim – Acerca de",
+      privacyTitle: "CalClaim – Política de privacidad",
+      contactTitle: "CalClaim – Contacto",
     },
     nav: {
       site: "Sitio",
@@ -252,7 +252,7 @@ window.CALCLAIM_I18N = {
     partners: {
       blurbFallback: "Socio de difusión comunitaria",
       qrHeading: "Código QR único de {name}",
-      qrBody: "Imprima o comparta este código — cada escaneo acredita a este socio en la clasificación.",
+      qrBody: "Imprima o comparta este código – cada escaneo acredita a este socio en la clasificación.",
       qrAlt: "Código QR de {name} para CalClaim",
       metricsAria: "Métricas de impacto del socio",
       peopleReached: "Personas alcanzadas",
@@ -260,7 +260,7 @@ window.CALCLAIM_I18N = {
       followThroughs: "Seguimientos",
       estAid: "Ayuda estimada desbloqueada",
       mapHeading: "Dónde encontraron este código",
-      mapBody: "Solo ubicación aproximada — nunca direcciones de domicilio.",
+      mapBody: "Solo ubicación aproximada – nunca direcciones de domicilio.",
       mapAria: "Mapa de difusión del socio",
       chartsAria: "Uso del socio a lo largo del tiempo",
       usersPerDay: "Usuarios por día",
@@ -297,7 +297,7 @@ window.CALCLAIM_I18N = {
       cityLabel: "Ciudad",
       logoLabel: "Logo de la organización (opcional)",
       logoHelp: "Se muestra en tu banner imprimible. PNG o JPG, hasta 2 MB.",
-      hint: "Recibirás de inmediato tu código QR, página de estado y un banner imprimible — y una copia por correo.",
+      hint: "Recibirás de inmediato tu código QR, página de estado y un banner imprimible – y una copia por correo.",
       submit: "Regístrate y obtén tu QR",
       sending: "Creando tu kit de socio…",
       successEyebrow: "Listo",
@@ -313,7 +313,7 @@ window.CALCLAIM_I18N = {
       saveChanges: "Guardar cambios",
       saving: "Guardando tus cambios…",
       editHint:
-        "Tu ID de socio y el enlace a la página de estado no cambian — aunque modifiques el nombre de la organización.",
+        "Tu ID de socio y el enlace a la página de estado no cambian – aunque modifiques el nombre de la organización.",
       bannerPreviewAlt: "Vista previa de tu banner imprimible para el stand",
       bannerPreviewTag:
         "Escanea para encontrar ayuda con beneficios en California<br>comida, salud, descuentos en teléfono, ayuda con la factura de energía y más.",
@@ -326,7 +326,7 @@ window.CALCLAIM_I18N = {
       error: "No se pudo registrar. Inténtalo de nuevo.",
       errorSave: "No se pudieron guardar los cambios. Inténtalo de nuevo.",
       errorEditExpired:
-        "Esta sesión de edición expiró. Tu cuenta ya se creó — contáctanos si necesitas un cambio.",
+        "Esta sesión de edición expiró. Tu cuenta ya se creó – contáctanos si necesitas un cambio.",
       footer:
         'Demo de CalClaim · Socios de difusión comunitaria · <a href="__CONTACT__">Contacto</a> · <a href="__PRIVACY__">Política de privacidad</a>',
     },
@@ -334,7 +334,7 @@ window.CALCLAIM_I18N = {
       eyebrow: "Demo",
       lede: "Un navegador de ayuda financiera en California: comida, salud, descuentos de teléfono, ayuda con la factura de energía y más.",
       partnerSignupBody:
-        "Organizaciones comunitarias asociadas: obtén tu propio código QR de CalClaim para compartir. Cada escaneo te acreditará en la clasificación y te dará acceso a tu página de estadísticas.",
+        "Organizaciones comunitarias asociadas: obtén tu propio código QR de CalClaim para compartir. Cada escaneo te acreditará en la clasificación.",
       partnerSignupCta: "Regístrate como socio",
       openCta: "Abrir CalClaim",
       tryBody: "Escanea el código o toca Abrir CalClaim para empezar.",
@@ -350,11 +350,11 @@ window.CALCLAIM_I18N = {
       estAid: "Ayuda estimada desbloqueada",
       estAidNote: "Estimaciones anuales de la biblioteca × seguimientos",
       mapHeading: "Dónde encontraron CalClaim",
-      mapBody: "Solo ubicación aproximada — nunca direcciones de domicilio.",
+      mapBody: "Solo ubicación aproximada – nunca direcciones de domicilio.",
       mapAria: "Mapa de ubicaciones de difusión",
       partnersHeading: "Socios comunitarios",
       partnersBody:
-        "Organizaciones que alojan códigos QR de CalClaim — clasificadas por personas alcanzadas con su código único.",
+        "Organizaciones que alojan códigos QR de CalClaim – clasificadas por personas alcanzadas con su código único.",
       partnersAria: "Tabla de clasificación de socios",
       partnersEmpty: "Aún no hay difusión de socios.",
       partnersReached: "Personas alcanzadas",
@@ -380,7 +380,7 @@ window.CALCLAIM_I18N = {
       emptyPrograms: "Aún no hay aperturas de programas. Comparte un QR o abre un enlace de solicitud desde CalClaim.",
       loadError: "No se pudieron cargar las estadísticas. ¿Está en marcha el servidor de CalClaim?",
       disclaimer:
-        "Solo estimaciones. Los totales en dólares usan estimaciones anuales de la biblioteca × toques de seguimiento — no son pagos verificados de agencias. El mapa muestra sitios de carteles QR y IP aproximada a nivel de ciudad cuando está disponible; nunca direcciones. El embudo cuenta personas únicas por etapa (alcance QR/enlace es conteo de eventos).",
+        "Solo estimaciones. Los totales en dólares usan estimaciones anuales de la biblioteca × toques de seguimiento – no son pagos verificados de agencias. El mapa muestra sitios de carteles QR y IP aproximada a nivel de ciudad cuando está disponible; nunca direcciones. El embudo cuenta personas únicas por etapa (alcance QR/enlace es conteo de eventos).",
       footer:
         'Demo de CalClaim · Sin afiliación con ninguna agencia · Solo estimaciones · <a href="__CONTACT__">Contacto</a> · <a href="__PRIVACY__">Política de privacidad</a>',
     },
@@ -388,9 +388,9 @@ window.CALCLAIM_I18N = {
       bannerLine: "Qué es CalClaim",
       eyebrow: "Acerca de",
       title: "Acerca de",
-      lede: "Hecho para que las familias de California puedan reclamar la ayuda a la que ya califican — sin vender tus datos y sin convertir los beneficios en un producto.",
+      lede: "Hecho para que las familias de California puedan reclamar la ayuda a la que ya califican – sin vender tus datos y sin convertir los beneficios en un producto.",
       storyWhy:
-        "Demasiados hogares dejan en la mesa beneficios de comida, cobertura de salud, descuentos de teléfono y ayuda con facturas — no porque no califiquen, sino porque el laberinto agota. CalClaim nació para encontrar a las personas donde ya están (un chat en el teléfono) y acompañarlas hasta el final.",
+        "Demasiados hogares dejan en la mesa beneficios de comida, cobertura de salud, descuentos de teléfono y ayuda con facturas – no porque no califiquen, sino porque el laberinto agota. CalClaim nació para encontrar a las personas donde ya están (un chat en el teléfono) y acompañarlas hasta el final.",
       storyValues:
         "Soy Jay, y este es un proyecto sin fines de lucro. No hay red de anuncios, ni mercado de datos, ni equipo de crecimiento tratando de monetizar tus respuestas. La privacidad es el punto: preguntar por el tamaño del hogar y los ingresos es íntimo, así que guardamos solo lo necesario para guiarte, nunca lo vendemos y puedes borrar todo en cualquier momento.",
       storyImpact:
@@ -402,14 +402,14 @@ window.CALCLAIM_I18N = {
       bannerLine: "Cómo CalClaim maneja tu información",
       eyebrow: "Legal",
       title: "Privacidad",
-      lede: "Tus respuestas se quedan contigo. Las usamos solo para encontrar programas a los que puedas calificar — nunca para vender, nunca para anuncios. Escribe erase en cualquier momento y tus datos de CalClaim desaparecen.",
+      lede: "Tus respuestas se quedan contigo. Las usamos solo para encontrar programas a los que puedas calificar – nunca para vender, nunca para anuncios. Escribe erase en cualquier momento y tus datos de CalClaim desaparecen.",
       expandLabel: "Política de privacidad completa y descargo de responsabilidad",
       collectHeading: "Qué recopilamos",
       collect1: "Respuestas que eliges al buscar programas (tamaño del hogar, banda de ingresos, código postal cuando hace falta para programas del condado, acciones de oferta)",
       collect2: "Tu lista de tareas / elementos del informe de beneficios derivados de nuestra lista de programas",
       collect3: "Texto libre opcional o notas de voz que envías como comentarios alfa",
       collect4: "Eventos de impacto agregados: escaneos QR, clics en enlaces compartidos, aperturas de solicitud, seguimientos",
-      collect5: "Solo ubicación aproximada (sitios de carteles e IP a nivel de ciudad para el mapa — nunca direcciones)",
+      collect5: "Solo ubicación aproximada (sitios de carteles e IP a nivel de ciudad para el mapa – nunca direcciones)",
       collect6: "Correo y comentarios opcionales que envías en el formulario de contacto",
       collect7: "Nombre de la organización, correo de trabajo y ciudad opcional si te registras como socio comunitario (para enviarte el kit QR y mostrar tu página de estado)",
       notCollectHeading: "Qué no recopilamos",
@@ -417,18 +417,18 @@ window.CALCLAIM_I18N = {
       not2: "Información de pago",
       not3: "Listas de correo de marketing",
       not4: "GPS preciso a menos que elijas compartir una ubicación",
-      not5: "Respuestas sobre estatus migratorio (solo se preguntan cuando hace falta — no se guardan ni se vinculan a tu número)",
+      not5: "Respuestas sobre estatus migratorio (solo se preguntan cuando hace falta – no se guardan ni se vinculan a tu número)",
       useHeading: "Cómo usamos los datos",
       useBody:
         "Usamos tus datos de forma anónima para ejecutar tu sesión, enviar siguientes pasos y recordatorios, mejorar la demo y publicar métricas de impacto agregadas en el panel público. Los datos de registro de socios se usan para enviarte el kit QR y acreditar escaneos en tu página de estado. No damos ni vendemos tus datos.",
       choicesHeading: "Tus opciones",
-      choiceStop: "Escribe 'stop' — pausar recordatorios de plazos (conserva tus datos para tu referencia)",
-      choiceErase: "Escribe 'erase' — eliminar tus datos de sesión de CalClaim",
+      choiceStop: "Escribe 'stop' – pausar recordatorios de plazos (conserva tus datos para tu referencia)",
+      choiceErase: "Escribe 'erase' – eliminar tus datos de sesión de CalClaim",
       disclaimerHeading: "Descargo de responsabilidad",
       disclaimer:
-        "CalClaim es un proyecto personal de portafolio — no es un servicio oficial de ninguna agencia. Solo estimaciones. Sin afiliación con PG&E, DHCS, CDSS, USDA, FCC, IRS ni ninguna agencia. No es asesoría fiscal, legal ni de beneficios. Las agencias oficiales deciden la elegibilidad.",
+        "CalClaim es un proyecto personal de portafolio – no es un servicio oficial de ninguna agencia. Solo estimaciones. Sin afiliación con PG&E, DHCS, CDSS, USDA, FCC, IRS ni ninguna agencia. No es asesoría fiscal, legal ni de beneficios. Las agencias oficiales deciden la elegibilidad.",
       scope:
-        "Los programas de energía / servicios (CARE, ESA, etc.) son solo algunos de los programas de la lista — no son todo el producto.",
+        "Los programas de energía / servicios (CARE, ESA, etc.) son solo algunos de los programas de la lista – no son todo el producto.",
       fullCta: "Leer la política en GitHub",
       footer:
         'Demo de CalClaim · Sin afiliación con ninguna agencia · <a href="__PRIVACY__">Política de privacidad</a> · <a href="__CONTACT__">Contacto</a>',
@@ -441,7 +441,7 @@ window.CALCLAIM_I18N = {
       emailLabel: "Correo electrónico",
       commentsLabel: "Comentarios y opiniones",
       submit: "Enviar",
-      success: "Gracias — recibimos tu mensaje.",
+      success: "Gracias – recibimos tu mensaje.",
       empty: "Añade un correo o comentario antes de enviar.",
       error: "No se pudo enviar. Inténtalo de nuevo.",
       footer:
@@ -450,12 +450,12 @@ window.CALCLAIM_I18N = {
   },
   zh: {
     meta: {
-      impactTitle: "CalClaim — 演示",
-      partnerTitle: "CalClaim — 合作伙伴影响",
-      partnerSignupTitle: "CalClaim — 注册成为合作伙伴",
-      aboutTitle: "CalClaim — 关于",
-      privacyTitle: "CalClaim — 隐私政策",
-      contactTitle: "CalClaim — 联系我们",
+      impactTitle: "CalClaim – 演示",
+      partnerTitle: "CalClaim – 合作伙伴影响",
+      partnerSignupTitle: "CalClaim – 注册成为合作伙伴",
+      aboutTitle: "CalClaim – 关于",
+      privacyTitle: "CalClaim – 隐私政策",
+      contactTitle: "CalClaim – 联系我们",
     },
     nav: {
       site: "网站",
@@ -476,7 +476,7 @@ window.CALCLAIM_I18N = {
     partners: {
       blurbFallback: "社区推广合作伙伴",
       qrHeading: "{name} 的专属二维码",
-      qrBody: "打印或分享此二维码——每次扫描都会计入该合作伙伴的排行榜。",
+      qrBody: "打印或分享此二维码––每次扫描都会计入该合作伙伴的排行榜。",
       qrAlt: "{name} 的 CalClaim 二维码",
       metricsAria: "合作伙伴影响指标",
       peopleReached: "触达人数",
@@ -484,7 +484,7 @@ window.CALCLAIM_I18N = {
       followThroughs: "跟进完成",
       estAid: "预估解锁援助",
       mapHeading: "人们在哪里扫到此码",
-      mapBody: "仅显示大致位置——从不显示家庭住址。",
+      mapBody: "仅显示大致位置––从不显示家庭住址。",
       mapAria: "合作伙伴推广地点地图",
       chartsAria: "合作伙伴使用趋势",
       usersPerDay: "每日用户",
@@ -520,7 +520,7 @@ window.CALCLAIM_I18N = {
       cityLabel: "城市",
       logoLabel: "组织标志（可选）",
       logoHelp: "将显示在可打印展位横幅上。PNG 或 JPG，最大 2 MB。",
-      hint: "您会立即获得二维码、状态页和可打印展位横幅——同时也会发一封邮件副本。",
+      hint: "您会立即获得二维码、状态页和可打印展位横幅––同时也会发一封邮件副本。",
       submit: "注册并获取二维码",
       sending: "正在创建您的合作伙伴资料包…",
       successEyebrow: "注册成功",
@@ -546,15 +546,15 @@ window.CALCLAIM_I18N = {
       errorLogoSize: "标志须不超过 2 MB。",
       error: "注册失败，请重试。",
       errorSave: "无法保存更改，请重试。",
-      errorEditExpired: "此编辑会话已过期。您的账户已创建——如需更改请联系我们。",
+      errorEditExpired: "此编辑会话已过期。您的账户已创建––如需更改请联系我们。",
       footer:
         'CalClaim 演示 · 社区推广合作伙伴 · <a href="__CONTACT__">联系我们</a> · <a href="__PRIVACY__">隐私政策</a>',
     },
     impact: {
       eyebrow: "演示",
-      lede: "加州经济援助导航——食品、医疗、电话优惠、能源账单援助等。",
+      lede: "加州经济援助导航––食品、医疗、电话优惠、能源账单援助等。",
       partnerSignupBody:
-        "合作社区组织——获取您专属的 CalClaim 二维码进行分享。每次扫描都会记入您的排行榜，并解锁您的统计页面。",
+        "合作社区组织––获取您专属的 CalClaim 二维码进行分享。每次扫描都会记入您的排行榜。",
       partnerSignupCta: "注册成为合作伙伴",
       openCta: "打开 CalClaim",
       tryBody: "扫描二维码或点击“打开 CalClaim”即可开始。",
@@ -570,10 +570,10 @@ window.CALCLAIM_I18N = {
       estAid: "预估解锁援助",
       estAidNote: "福利资料库年度估算 × 跟进次数",
       mapHeading: "人们在哪里发现 CalClaim",
-      mapBody: "仅显示大致位置——从不显示家庭住址。",
+      mapBody: "仅显示大致位置––从不显示家庭住址。",
       mapAria: "传播地点地图",
       partnersHeading: "社区合作伙伴",
-      partnersBody: "托管 CalClaim 二维码的组织——按通过其专属二维码触达的人数排名。",
+      partnersBody: "托管 CalClaim 二维码的组织––按通过其专属二维码触达的人数排名。",
       partnersAria: "合作伙伴排行榜",
       partnersEmpty: "尚无合作伙伴推广数据。",
       partnersReached: "触达人数",
@@ -599,7 +599,7 @@ window.CALCLAIM_I18N = {
       emptyPrograms: "尚无项目打开记录。请分享二维码，或从 CalClaim 打开申请链接。",
       loadError: "无法加载统计数据。CalClaim 服务器是否正在运行？",
       disclaimer:
-        "仅为估算。金额使用福利资料库年度估算 × 跟进点击——并非经核实的机构发放金额。地图显示二维码放置地点及可用时的粗略城市级 IP；从不显示街道地址。漏斗按阶段统计独立人数（二维码/链接触达为事件计数）。",
+        "仅为估算。金额使用福利资料库年度估算 × 跟进点击––并非经核实的机构发放金额。地图显示二维码放置地点及可用时的粗略城市级 IP；从不显示街道地址。漏斗按阶段统计独立人数（二维码/链接触达为事件计数）。",
       footer:
         'CalClaim 演示 · 与任何机构无关 · 仅为估算 · <a href="__CONTACT__">联系我们</a> · <a href="__PRIVACY__">隐私政策</a>',
     },
@@ -607,13 +607,13 @@ window.CALCLAIM_I18N = {
       bannerLine: "CalClaim 是什么",
       eyebrow: "关于",
       title: "关于",
-      lede: "为了让加州家庭能够申领本就符合资格的援助而建——不出售您的数据，也不把福利变成商品。",
+      lede: "为了让加州家庭能够申领本就符合资格的援助而建––不出售您的数据，也不把福利变成商品。",
       storyWhy:
-        "太多家庭把食品援助、医保、电话折扣和账单补助留在桌上——不是因为不符合资格，而是因为流程太折腾。CalClaim 的出发点，是在人们已经在用的地方（手机上的对话）遇见他们，并陪他们走到终点。",
+        "太多家庭把食品援助、医保、电话折扣和账单补助留在桌上––不是因为不符合资格，而是因为流程太折腾。CalClaim 的出发点，是在人们已经在用的地方（手机上的对话）遇见他们，并陪他们走到终点。",
       storyValues:
         "我是 Jay，这是一个非营利项目。没有广告网络，没有数据市场，也没有增长团队想把您的答案变现。隐私就是重点：询问家庭人数和收入是私事，所以我们只保留引导您所需的信息，绝不出售，并随时让您删除一切。",
       storyImpact:
-        "我们在意的影响很实际——更多人完成申请，更多社区合作伙伴递出二维码而不是无用的传单，更少家庭与本就属于他们的帮助擦肩而过。",
+        "我们在意的影响很实际––更多人完成申请，更多社区合作伙伴递出二维码而不是无用的传单，更少家庭与本就属于他们的帮助擦肩而过。",
       footer:
         'CalClaim 演示 · 与任何机构无关 · <a href="__CONTACT__">联系我们</a> · <a href="__PRIVACY__">隐私政策</a>',
     },
@@ -621,14 +621,14 @@ window.CALCLAIM_I18N = {
       bannerLine: "CalClaim 如何处理您的信息",
       eyebrow: "法律信息",
       title: "隐私",
-      lede: "您的答案只属于您。我们仅用它们查找您可能符合的项目——绝不出售，绝不用于广告。随时输入 erase，您的 CalClaim 数据即被删除。",
+      lede: "您的答案只属于您。我们仅用它们查找您可能符合的项目––绝不出售，绝不用于广告。随时输入 erase，您的 CalClaim 数据即被删除。",
       expandLabel: "完整隐私政策与免责声明",
       collectHeading: "我们收集什么",
       collect1: "您在查找项目时选择的答案（家庭人数、收入区间、必要时提供的邮编以核对县项目、项目操作）",
       collect2: "由我们的项目列表生成的待办 / 福利报告条目",
       collect3: "您作为 alpha 反馈发送的可选文字或语音留言",
       collect4: "汇总影响事件：二维码扫描、分享链接点击、申请页打开、跟进",
-      collect5: "仅粗略位置（海报地点与地图用的城市级 IP——从不显示街道地址）",
+      collect5: "仅粗略位置（海报地点与地图用的城市级 IP––从不显示街道地址）",
       collect6: "您在联系表单中提交的可选邮箱与评论",
       collect7: "若注册成为社区合作伙伴：组织名称、工作邮箱与可选城市（用于发送二维码资料包并展示状态页）",
       notCollectHeading: "我们不收集什么",
@@ -636,18 +636,18 @@ window.CALCLAIM_I18N = {
       not2: "支付信息",
       not3: "营销邮件列表",
       not4: "精确 GPS（除非您选择分享位置）",
-      not5: "移民身份回答（仅在需要时询问——不存储，不与您的电话号码关联）",
+      not5: "移民身份回答（仅在需要时询问––不存储，不与您的电话号码关联）",
       useHeading: "我们如何使用数据",
       useBody:
         "我们以匿名方式使用您的数据来运行您的会话、发送后续步骤与提醒、改进演示体验，并在公开面板发布汇总影响指标。合作伙伴注册信息用于发送二维码资料包，并将扫描计入您的状态页。我们不会提供或出售您的数据。",
       choicesHeading: "您的选择",
-      choiceStop: "输入 'stop' — 暂停截止日期提醒（保留您的数据供您查阅）",
-      choiceErase: "输入 'erase' — 删除您会话中的 CalClaim 数据",
+      choiceStop: "输入 'stop' – 暂停截止日期提醒（保留您的数据供您查阅）",
+      choiceErase: "输入 'erase' – 删除您会话中的 CalClaim 数据",
       disclaimerHeading: "免责声明",
       disclaimer:
-        "CalClaim 是个人作品集项目——不是任何官方机构服务。仅为估算。与 PG&E、DHCS、CDSS、USDA、FCC、IRS 或任何机构无关。不构成税务、法律或福利建议。正式资格由官方机构决定。",
+        "CalClaim 是个人作品集项目––不是任何官方机构服务。仅为估算。与 PG&E、DHCS、CDSS、USDA、FCC、IRS 或任何机构无关。不构成税务、法律或福利建议。正式资格由官方机构决定。",
       scope:
-        "能源 / 公用事业项目（CARE、ESA 等）只是列表中的一部分——并非全部产品。",
+        "能源 / 公用事业项目（CARE、ESA 等）只是列表中的一部分––并非全部产品。",
       fullCta: "在 GitHub 阅读政策",
       footer:
         'CalClaim 演示 · 与任何机构无关 · <a href="__PRIVACY__">隐私政策</a> · <a href="__CONTACT__">联系我们</a>',
@@ -660,7 +660,7 @@ window.CALCLAIM_I18N = {
       emailLabel: "邮箱",
       commentsLabel: "评论与反馈",
       submit: "发送",
-      success: "谢谢——我们已收到您的留言。",
+      success: "谢谢––我们已收到您的留言。",
       empty: "发送前请填写邮箱或评论。",
       error: "发送失败，请重试。",
       footer:

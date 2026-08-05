@@ -36,7 +36,7 @@ function periodText(period: ApplyPeriod): string {
   return `${monthDay(period.start)} - ${monthDay(period.end)}`;
 }
 
-/** "Feb 10-14 and Feb 18-19, 2025" — one entry per contiguous run of days. */
+/** "Feb 10-14 and Feb 18-19, 2025" – one entry per contiguous run of days. */
 export function formatApplyPeriods(periods: ApplyPeriod[]): string {
   if (!periods.length) return "";
   const years = new Set(
@@ -56,7 +56,7 @@ export function formatApplyPeriods(periods: ApplyPeriod[]): string {
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-/** "Mon, Feb 10" — a weekday helps someone plan around a short window. */
+/** "Mon, Feb 10" – a weekday helps someone plan around a short window. */
 export function formatOpenDay(ymd: string): string {
   const p = parts(ymd);
   if (!p) return ymd;
@@ -76,7 +76,7 @@ export function formatWindowTiming(
   const all = formatApplyPeriods(periods);
   if (openToday) return `Deadline: apply ${all} only`;
   const first = periods[0]!.start;
-  return `Applications open ${formatOpenDay(first)} — apply ${all} only`;
+  return `Applications open ${formatOpenDay(first)} – apply ${all} only`;
 }
 
 /** "Jan 7 - Jan 31, 2025" for the incident period residency is tested against. */
@@ -110,7 +110,7 @@ export function describeArea(window: DisasterWindow, maxZips = 24): string[] {
   const lines: string[] = [];
   const counties = formatCounties(window.counties);
   const places = window.placeLabels?.length
-    ? ` — including ${window.placeLabels.join(", ")}`
+    ? ` – including ${window.placeLabels.join(", ")}`
     : "";
   if (counties) lines.push(`${counties}${places}`);
   else if (window.placeLabels?.length) lines.push(window.placeLabels.join(", "));
@@ -125,7 +125,7 @@ export function describeArea(window: DisasterWindow, maxZips = 24): string[] {
   return lines;
 }
 
-/** How to apply — per-event phone or URL, never a generic CalFresh link. */
+/** How to apply – per-event phone or URL, never a generic CalFresh link. */
 export function formatApplyChannel(window: DisasterWindow): string | null {
   if (window.applyPhone && window.applyUrl) {
     return `Apply by phone at ${window.applyPhone} or online at ${window.applyUrl}`;

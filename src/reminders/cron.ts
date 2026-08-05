@@ -33,7 +33,7 @@ async function send(bot: Bot, userId: number, text: string): Promise<void> {
 }
 
 export function startReminderCron(bot: Bot, tz: string): void {
-  // Every day at 12:00 America/Los_Angeles — handles Tue closest + T-3 + T-1
+  // Every day at 12:00 America/Los_Angeles – handles Tue closest + T-3 + T-1
   cron.schedule(
     "0 12 * * *",
     async () => {
@@ -65,7 +65,7 @@ export function startReminderCron(bot: Bot, tz: string): void {
             // Avoid duplicate if already T-3 or T-1 today
             if (d !== 3 && d !== 1) {
               messages.push(
-                `Tuesday check-in — closest deadline:\n${formatItem(closest)}\nDeadline: ${closest.deadlineLabel} (${closest.deadlineDate})`,
+                `Tuesday check-in – closest deadline:\n${formatItem(closest)}\nDeadline: ${closest.deadlineLabel} (${closest.deadlineDate})`,
               );
             }
           }

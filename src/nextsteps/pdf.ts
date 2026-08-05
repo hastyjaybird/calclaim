@@ -43,7 +43,7 @@ function deadlineLine(item: NextStepsItem): string {
       ? `${item.deadlineLabel} (${item.deadlineDate})`
       : item.deadlineLabel;
   }
-  return "No deadline — apply anytime (confirm on the official site)";
+  return "No deadline – apply anytime (confirm on the official site)";
 }
 
 function sectionTitle(doc: PDFKit.PDFDocument, title: string): void {
@@ -74,12 +74,12 @@ function drawFindYourDocumentsTable(
   const headerH = 22;
   const rowH = 28;
 
-  sectionTitle(doc, "Step 1 — Find your documents");
+  sectionTitle(doc, "Step 1 – Find your documents");
   doc
     .fontSize(9)
     .fillColor("#444")
     .text(
-      "Pull these together first — each one unlocks estimated aid on your open applications (estimates only). Where a program accepts an award letter or pay stubs, that counts as one choice.",
+      "Pull these together first – each one unlocks estimated aid on your open applications (estimates only). Where a program accepts an award letter or pay stubs, that counts as one choice.",
     );
   doc.moveDown(0.4);
 
@@ -132,7 +132,7 @@ function drawFindYourDocumentsTable(
   doc.rect(left, tableTop, usable, y - tableTop).stroke();
   doc.restore();
 
-  // Absolute-positioned table cells leave the text cursor mid-row — reset.
+  // Absolute-positioned table cells leave the text cursor mid-row – reset.
   doc.x = left;
   doc.y = y + 10;
   doc
@@ -190,7 +190,7 @@ function drawTodoItem(
       .text(`Est. ~${mins} min to fill out the application`, { width: usable });
   }
 
-  // Short clickable CTA (full URL as annotation target) — avoids broken multi-line link hitboxes.
+  // Short clickable CTA (full URL as annotation target) – avoids broken multi-line link hitboxes.
   doc.fillColor("#222").fontSize(10).text("Apply: ", { continued: true });
   doc.fillColor("#0b5c2e").text("Open official page", {
     link: item.link,
@@ -240,7 +240,7 @@ export async function renderNextStepsPdf(session: SessionState): Promise<Buffer>
     .fillColor("#000")
     .font("Helvetica-Bold")
     .fontSize(18)
-    .text("CalClaim — Your To Do List");
+    .text("CalClaim – Your To Do List");
   doc
     .font("Helvetica")
     .fontSize(10)
@@ -264,10 +264,10 @@ export async function renderNextStepsPdf(session: SessionState): Promise<Buffer>
 
   drawFindYourDocumentsTable(doc, session);
 
-  sectionTitle(doc, "Step 2 — Open applications");
+  sectionTitle(doc, "Step 2 – Open applications");
   const todos = openTodos(session);
   if (todos.length === 0) {
-    doc.fontSize(10).fillColor("#000").text("• No open items — nice work.");
+    doc.fontSize(10).fillColor("#000").text("• No open items – nice work.");
     doc.moveDown();
   } else {
     doc

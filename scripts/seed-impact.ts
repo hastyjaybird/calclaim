@@ -121,7 +121,7 @@ for (let day = daysBack; day >= 0; day--) {
     if (depth >= 1 && Math.random() < 0.85) depth = 2; // gate
     if (depth >= 2 && Math.random() < 0.8) depth = 3; // triage
     if (depth >= 3 && Math.random() < 0.9) depth = 4; // first offer
-    if (depth >= 4 && Math.random() < 0.55) depth = 5; // apply — biggest intentional drop
+    if (depth >= 4 && Math.random() < 0.55) depth = 5; // apply – biggest intentional drop
     if (depth >= 5 && Math.random() < 0.65) depth = 6; // follow-through
     if (depth >= 6 && Math.random() < 0.5) depth = 7; // finished
 

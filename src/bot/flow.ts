@@ -148,7 +148,7 @@ export async function sendOptIn(
     session,
     `${siteUrl}
 
-CalClaim helps you find California benefits and bill help — food, health, phone discounts, energy bill programs, and more.
+CalClaim helps you find California benefits and bill help – food, health, phone discounts, energy bill programs, and more.
 
 Estimates only. Not affiliated with any agency.
 Type 'help' for more options.
@@ -169,7 +169,7 @@ export async function sendGate(ctx: Context, session: SessionState): Promise<voi
 
 ${HOUSEHOLD_EXPLAIN}
 
-Tap all that apply, then Done — or None.`,
+Tap all that apply, then Done – or None.`,
     { reply_markup: gateKeyboard([]) },
   );
 }
@@ -190,7 +190,7 @@ async function continueAfterGateNo(ctx: Context, session: SessionState): Promise
   session.alreadyOn = [];
   session.queue = [];
   session.queueIndex = 0;
-  // Lifeline / LIHEAP / etc. need no income — ask household/income only when needed.
+  // Lifeline / LIHEAP / etc. need no income – ask household/income only when needed.
   await beginOfferQueue(ctx, session);
 }
 
@@ -256,7 +256,7 @@ function formatReportSummary(session: SessionState): string {
   if (docs.length > 0) {
     lines.push("", "Documents that unlock aid:");
     for (const d of docs) {
-      lines.push(`• ${d.label} — up to ~${formatUsd(d.annualUsd)}/yr`);
+      lines.push(`• ${d.label} – up to ~${formatUsd(d.annualUsd)}/yr`);
     }
   }
 
@@ -271,7 +271,7 @@ function formatReportSummary(session: SessionState): string {
     "",
     "Full report PDF coming next ↓",
     "",
-    "We'd really appreciate any feedback — just send a text or voice message anytime.",
+    "We'd really appreciate any feedback – just send a text or voice message anytime.",
     "",
     "For more help, visit BenefitsCal at https://benefitscal.com/",
   );
@@ -279,14 +279,14 @@ function formatReportSummary(session: SessionState): string {
 }
 
 function formatEmptyQueueMessage(): string {
-  return `You're through the list — nothing to add to a To Do List right now.
+  return `You're through the list – nothing to add to a To Do List right now.
 
 Know someone who might need benefits help? Share CalClaim with a friend.
 
-We'd really appreciate any feedback — just send a text or voice message anytime.`;
+We'd really appreciate any feedback – just send a text or voice message anytime.`;
 }
 
-/** Pause deadline reminders only — keeps session, todos, and data. */
+/** Pause deadline reminders only – keeps session, todos, and data. */
 export async function stopRemindersOnly(
   ctx: Context,
   session: SessionState,
@@ -301,7 +301,7 @@ export async function stopRemindersOnly(
   await replyTracked(
     ctx,
     session,
-    "Reminders stopped. Your To Do List and data stay. Message me anytime to turn reminders back on — or say 'to do' for your report, help for more info.",
+    "Reminders stopped. Your To Do List and data stay. Message me anytime to turn reminders back on – or say 'to do' for your report, help for more info.",
     { reply_markup: idleKeyboard(hasOpenReport(session)) },
   );
 }
@@ -338,7 +338,7 @@ async function finishQueue(ctx: Context, session: SessionState): Promise<void> {
 
 export async function presentOffer(ctx: Context, session: SessionState): Promise<void> {
   if (session.queueIndex >= session.queue.length) {
-    // Wave done — ask the next cheapest gate, or finish if none remain.
+    // Wave done – ask the next cheapest gate, or finish if none remain.
     await beginOfferQueue(ctx, session);
     return;
   }
@@ -374,8 +374,8 @@ export async function presentOffer(ctx: Context, session: SessionState): Promise
       : `You may qualify for ${program.name}.`,
     "",
     window
-      ? `${program.name} — ${disasterOneLiner(window, supplement)}`
-      : `${program.name} — ${program.oneLiner}`,
+      ? `${program.name} – ${disasterOneLiner(window, supplement)}`
+      : `${program.name} – ${program.oneLiner}`,
     formatFormFillEstimate(program, session.docsInHand),
     "",
     supplement
@@ -384,7 +384,7 @@ export async function presentOffer(ctx: Context, session: SessionState): Promise
   ];
 
   if (window) {
-    // Dates and apply channel are per event and per county — the library deadline
+    // Dates and apply channel are per event and per county – the library deadline
     // and apply URL are both wrong during a real window.
     const timing = formatWindowTiming(window.applyPeriods, openToday);
     if (timing) lines.push(timing);
@@ -427,7 +427,7 @@ function highFrictionDocsNeeded(
 }
 
 /**
- * Households already on CalFresh are not excluded — CDSS gives them a
+ * Households already on CalFresh are not excluded – CDSS gives them a
  * supplemental payment up to the maximum allotment instead of a full month.
  */
 function isDisasterSupplement(program: Program, session: SessionState): boolean {
@@ -448,7 +448,7 @@ function disasterOneLiner(window: DisasterWindow, supplement: boolean): string {
 
 /**
  * The legal test is home *or* work location, for any household member, so one
- * yes/no over the named areas fits it exactly — and nothing about the user's
+ * yes/no over the named areas fits it exactly – and nothing about the user's
  * location needs storing.
  */
 function disasterAreaQuestion(windows: DisasterWindow[]): string {
@@ -473,7 +473,7 @@ function disasterAreaQuestion(windows: DisasterWindow[]): string {
 
   lines.push(
     "",
-    "Say yes if anyone in your household lived or worked there — a job in the area counts even if you live somewhere else.",
+    "Say yes if anyone in your household lived or worked there – a job in the area counts even if you live somewhere else.",
   );
   return lines.join("\n");
 }
@@ -481,7 +481,7 @@ function disasterAreaQuestion(windows: DisasterWindow[]): string {
 /**
  * Offer programs eligible with answers so far (fewest extra questions first via
  * wave order). When the current wave is empty, ask the next gate that unlocks
- * the cheapest remaining programs — never front-load the full quiz.
+ * the cheapest remaining programs – never front-load the full quiz.
  */
 async function beginOfferQueue(
   ctx: Context,
@@ -524,7 +524,7 @@ async function askImmigrationStatus(
 
 Are you (or the person applying) a U.S. citizen or an eligible immigrant?
 
-Your answer is not stored and is not connected to your phone number — it is completely private. We only use it once to decide which programs to show next.`,
+Your answer is not stored and is not connected to your phone number – it is completely private. We only use it once to decide which programs to show next.`,
     { reply_markup: immigrationStatusKeyboard() },
   );
 }
@@ -625,7 +625,7 @@ ${HOUSEHOLD_EXPLAIN}`,
       await replyTracked(
         ctx,
         session,
-        "What's your home ZIP code? (5 digits — used only to check county-specific programs.)",
+        "What's your home ZIP code? (5 digits – used only to check county-specific programs.)",
         { reply_markup: zipKeyboard() },
       );
       return;
@@ -658,7 +658,7 @@ async function promptEmailToComputer(
     "To open this report on a computer: forward the PDF above to your own email (Telegram → Share), then open the attachment on your laptop.";
 
   const emailCopy =
-    "To open this report on a computer: tap below — your email app opens with a download link. Send it to yourself, then open the link on your laptop.\n\n" +
+    "To open this report on a computer: tap below – your email app opens with a download link. Send it to yourself, then open the link on your laptop.\n\n" +
     "(Phones can't attach the PDF to email automatically.)";
 
   if (!appConfig?.publicBaseUrl) {
@@ -696,7 +696,7 @@ export async function handleCallback(
   data: string,
 ): Promise<void> {
   // Only ack real button taps. Typing "help"/"Help"/etc. reuses this handler
-  // without a callback_query — grammy's answerCallbackQuery throws sync then.
+  // without a callback_query – grammy's answerCallbackQuery throws sync then.
   if (ctx.callbackQuery) {
     await ctx.answerCallbackQuery().catch(() => undefined);
   }
@@ -772,7 +772,7 @@ export async function handleCallback(
     eraseUserQc(uid);
     eraseUserFeedbackTodos(uid);
     deleteSession(uid);
-    await ctx.reply("Your data is erased. Goodbye — message /start anytime to begin again.");
+    await ctx.reply("Your data is erased. Goodbye – message /start anytime to begin again.");
     return;
   }
   if (data === "stop:no" || data === "erase:no") {
@@ -800,7 +800,7 @@ export async function handleCallback(
       }).catch(() => undefined);
       return;
     }
-    // Unknown program id — fall through to stale-button reply
+    // Unknown program id – fall through to stale-button reply
   }
 
   if (data === "gate:done") {
@@ -1039,7 +1039,7 @@ Add up income for everyone you just counted.`,
     return;
   }
 
-  // Stale / unknown button — never leave the user hanging
+  // Stale / unknown button – never leave the user hanging
   await ctx.reply(staleCallbackAck(session.step)).catch(() => undefined);
   const repeated = await repeatLastMessage(ctx, session).catch(() => false);
   if (!repeated) {
@@ -1059,7 +1059,7 @@ async function sendShareMenu(
     await replyTracked(
       ctx,
       session,
-      "Sharing isn't ready yet — try again in a moment, or type help.",
+      "Sharing isn't ready yet – try again in a moment, or type help.",
       { reply_markup: helpKeyboard() },
     );
     return;
@@ -1092,7 +1092,7 @@ async function sendShareQr(
     await replyTracked(
       ctx,
       session,
-      "Sharing isn't ready yet — try again in a moment, or type help.",
+      "Sharing isn't ready yet – try again in a moment, or type help.",
       { reply_markup: helpKeyboard() },
     );
     return;
@@ -1114,7 +1114,7 @@ async function sendShareQr(
     const png = await renderShareQrPng(qrUrl);
     await ctx.replyWithPhoto(new InputFile(png, "calclaim-share-qr.png"), {
       caption:
-        "Have them scan this with their phone camera — it opens CalClaim.\n\nYou can also copy/text the link from the Share screen.",
+        "Have them scan this with their phone camera – it opens CalClaim.\n\nYou can also copy/text the link from the Share screen.",
       reply_markup: markup,
     });
   } catch (err) {
@@ -1122,7 +1122,7 @@ async function sendShareQr(
     await replyTracked(
       ctx,
       session,
-      "Couldn't generate the QR image just now. Copy/text the share link instead — or try Show QR code again.",
+      "Couldn't generate the QR image just now. Copy/text the share link instead – or try Show QR code again.",
       { reply_markup: markup, link_preview_options: { is_disabled: true } },
     );
     return;

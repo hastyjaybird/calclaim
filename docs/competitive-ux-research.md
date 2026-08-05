@@ -2,7 +2,7 @@
 
 **Status:** Merged into v2 product framing (2026-07-31)  
 **Compiled:** 2026-07-30 · **Rewritten for v2:** 2026-07-31  
-**Scope:** Competitive landscape for CalClaim’s **v2 wedge** — Telegram + multi-category financial aid queue + living next-steps + reminders. Energy tools are a **subset** of competitors, not the whole map.
+**Scope:** Competitive landscape for CalClaim’s **v2 wedge** – Telegram + multi-category financial aid queue + living next-steps + reminders. Energy tools are a **subset** of competitors, not the whole map.
 
 ---
 
@@ -36,7 +36,7 @@ flowchart TB
 
 ---
 
-## A. Primary analogs — multi-benefit last mile
+## A. Primary analogs – multi-benefit last mile
 
 ### 1. MyFriendBen
 
@@ -57,7 +57,7 @@ flowchart TB
 
 ---
 
-## B. Energy subset (still relevant — not the product center)
+## B. Energy subset (still relevant – not the product center)
 
 ### Rewiring America / utility portals / rebate aggregators
 
@@ -97,7 +97,7 @@ Telegram /start
   → Reminders
 ```
 
-**Demo bar:** &lt;10 minutes to a multi-category next-steps PDF — not a utility form coach.
+**Demo bar:** &lt;10 minutes to a multi-category next-steps PDF – not a utility form coach.
 
 ---
 
@@ -105,7 +105,7 @@ Telegram /start
 
 1. **Channel:** Telegram, short bubbles, fixed offer buttons.  
 2. **Scope:** Multiple aid categories in one session.  
-3. **Completion:** Living file + reminders — not link-out and pray.  
+3. **Completion:** Living file + reminders – not link-out and pray.  
 4. **Honesty:** Library-bound $ and deadlines; STOP/erase.  
 5. **Dignity:** No shame; plain language.  
 6. **Narrow depth &gt; fake national library:** CA English first.
@@ -125,7 +125,7 @@ Telegram /start
 
 ## Related docs
 
-- [guidelines.md](guidelines.md) — v2 uniqueness bar  
-- [finish-line-ux.md](finish-line-ux.md) — living file contract  
-- [customer-experience.md](customer-experience.md) — v2 tree  
-- [origin-and-reasoning.md](origin-and-reasoning.md) — v1 → v2 pivot  
+- [guidelines.md](guidelines.md) – v2 uniqueness bar  
+- [finish-line-ux.md](finish-line-ux.md) – living file contract  
+- [customer-experience.md](customer-experience.md) – v2 tree  
+- [origin-and-reasoning.md](origin-and-reasoning.md) – v1 → v2 pivot  

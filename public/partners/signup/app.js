@@ -79,11 +79,11 @@ function setFormMode(isEdit) {
     hint.textContent = isEdit
       ? txt(
           "signup.editHint",
-          "Your partner ID and status page link stay the same — even if you change the organization name.",
+          "Your partner ID and status page link stay the same – even if you change the organization name.",
         )
       : txt(
           "signup.hint",
-          "You’ll get your QR code, status page, and a printable booth banner right away — and a copy by email.",
+          "You’ll get your QR code, status page, and a printable booth banner right away – and a copy by email.",
         );
   }
 }
@@ -270,11 +270,11 @@ async function submitForm(event) {
         ),
         edit_expired: txt(
           "signup.errorEditExpired",
-          "This edit session expired. Sign up again isn’t needed — contact us if you need a change.",
+          "This edit session expired. Sign up again isn’t needed – contact us if you need a change.",
         ),
         partner_id_mismatch: txt(
           "signup.errorEditExpired",
-          "This edit session expired. Sign up again isn’t needed — contact us if you need a change.",
+          "This edit session expired. Sign up again isn’t needed – contact us if you need a change.",
         ),
       };
       showStatus(

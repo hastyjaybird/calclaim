@@ -57,6 +57,6 @@ export function mailtoWithReportLink(pdfUrl: string): string {
 
 ${pdfUrl}
 
-(Estimates only — not affiliated with any agency.)`;
+(Estimates only – not affiliated with any agency.)`;
   return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }

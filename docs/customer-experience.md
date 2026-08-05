@@ -1,7 +1,7 @@
-# Customer experience — v2 benefits queue (complete tree)
+# Customer experience – v2 benefits queue (complete tree)
 
 **Status:** Settled **v2** build contract (2026-07-31)  
-**Product version:** CalClaim v2 — California financial aid / benefits navigator (Telegram)  
+**Product version:** CalClaim v2 – California financial aid / benefits navigator (Telegram)  
 **Applies before code:** Implement this tree. Do not invent a PG&E-only funnel.  
 **Companion law:** [`finish-line-ux.md`](finish-line-ux.md) for living To Do List / benefits report + reminders.  
 **Supersedes:** Retired v1 energy-only triage (language → PG&E zip → CARE-first field coach).
@@ -21,12 +21,12 @@ Energy / utility programs (CARE, FERA, ESA, LIHEAP, AMP, …) are **offers in th
 | Bin | When we ask | Examples |
 |---|---|---|
 | **Memorized / known** | Gate + income band (NO arm) | Already on Medi-Cal/CalFresh/…; rough income × HH band |
-| **Look up / official** | Inside To Do List PDF + offer “Sign up” | Account #, award letters, pay stubs — listed in **file**, not a mega triage quiz |
+| **Look up / official** | Inside To Do List PDF + offer “Sign up” | Account #, award letters, pay stubs – listed in **file**, not a mega triage quiz |
 | **Apply** | Official site via Sign up URL | User applies; we do not auto-submit |
 
 **Rules:**
 - Triage stays short (opt-in → gate → first offer as soon as possible).  
-- Ask income / past-due / child / ABD / work / disaster / ZIP **only when needed to unlock the next offer wave** — never front-load the full quiz.  
+- Ask income / past-due / child / ABD / work / disaster / ZIP **only when needed to unlock the next offer wave** – never front-load the full quiz.  
 - Rank offer waves by fewest remaining triage questions, then `newDocs` → `timeToMoney` inside a wave.  
 - Report / PDF lists open programs **easiest → hardest** (requirements-matrix difficulty).  
 - Never a mega-checklist of all programs in chat.  
@@ -34,7 +34,7 @@ Energy / utility programs (CARE, FERA, ESA, LIHEAP, AMP, …) are **offers in th
 
 ---
 
-## Programs in the v2 tree (multi-category — none silent once offered)
+## Programs in the v2 tree (multi-category – none silent once offered)
 
 Library is source of truth. Every program that enters a user’s queue must resolve to a session status:
 
@@ -45,7 +45,7 @@ Library is source of truth. Every program that enters a user’s queue must reso
 | `ALREADY_ENROLLED` | User says they’re on it |
 | `SNOOZED` | Remind me later |
 | `SKIPPED` | User skipped (plus any cascade) |
-| `NOT_IN_QUEUE` | Eliminated by gate/income/cascades — not shown |
+| `NOT_IN_QUEUE` | Eliminated by gate/income/cascades – not shown |
 
 ### Illustrative library clusters (not energy-privileged)
 
@@ -115,7 +115,7 @@ GLOBAL anytime: Help | STOP | free-form QC fallback
 ```text
 https://calclaim.jayhasty.com   (or PUBLIC_BASE_URL when it is https-safe)
 
-CalClaim helps you find California benefits and bill help —
+CalClaim helps you find California benefits and bill help –
 food, health, phone discounts, energy bill programs, tax credits, and more.
 Estimates only. Not affiliated with any agency or utility.
 
@@ -170,7 +170,7 @@ Not your household = roommates who keep their rent/food money separate.
 Add up income for everyone you just counted.
 ```
 
-Bands from frozen CARE/FERA-style tables × household size (library). Purpose: eliminate / route offers — **not** to center the product on CARE.
+Bands from frozen CARE/FERA-style tables × household size (library). Purpose: eliminate / route offers – **not** to center the product on CARE.
 
 | Answer | Next |
 |---|---|
@@ -178,7 +178,7 @@ Bands from frozen CARE/FERA-style tables × household size (library). Purpose: e
 | FERA band (per library HH rules) | Append newly eligible programs; continue waves |
 | CARE band | Append newly eligible programs; continue waves |
 
-Asked only when the next unlockable programs need an income band (NO arm) — after any zero-question offers (LifeLine, LIHEAP, …) so a dropout still heard about at least one program.
+Asked only when the next unlockable programs need an income band (NO arm) – after any zero-question offers (LifeLine, LIHEAP, …) so a dropout still heard about at least one program.
 
 ### PAST_DUE (when AMP would be the next unlock)
 
@@ -188,7 +188,7 @@ Is your utility bill past due?
 [ Yes ] [ No ] / bill not in my name
 ```
 
-Gates AMP only — asked in the offer loop when past-due is the cheapest remaining gate, not right after the gate.
+Gates AMP only – asked in the offer loop when past-due is the cheapest remaining gate, not right after the gate.
 
 ### HAS_CHILD (only if a `requiresChildInHousehold` program would enter the queue)
 
@@ -206,7 +206,7 @@ Not your household = roommates who keep their rent/food money separate.
 | Yes | `hasChildInHousehold=true` → include CalWORKs / WIC (if otherwise eligible) |
 | No | Drop programs with `requiresChildInHousehold` (`NOT_IN_QUEUE`) |
 
-Same pattern as past-due for AMP: ask once, only when it gates an optional offer — not as a global early quiz.
+Same pattern as past-due for AMP: ask once, only when it gates an optional offer – not as a global early quiz.
 
 ### HAS_ABD (only if a `requiresAgedBlindOrDisabled` program would enter the queue)
 
@@ -232,7 +232,7 @@ Asked after HAS_CHILD when needed. Gate feeders the household is **not** already
 Has anything affected your ability to work in the last few months?
 
 [ Lost my job ]
-[ Can't work — illness, injury, or pregnancy ]
+[ Can't work – illness, injury, or pregnancy ]
 [ Caring for a sick family member / new baby ]
 [ None of these ]
 ```
@@ -244,14 +244,14 @@ Has anything affected your ability to work in the last few months?
 | Family care/bonding | `workDisruption="family_care"` → include `pfl` |
 | None of these | `workDisruption="none"` → drop all three (`NOT_IN_QUEUE`) |
 
-Single-select — `unemployment`/`sdi`/`pfl` are mutually exclusive by construction (each requires a different answer), matching how EDD itself treats these as separate claim types. Asked after HAS_ABD, same "only when it gates an offer" pattern as past-due/child/ABD.
+Single-select – `unemployment`/`sdi`/`pfl` are mutually exclusive by construction (each requires a different answer), matching how EDD itself treats these as separate claim types. Asked after HAS_ABD, same "only when it gates an offer" pattern as past-due/child/ABD.
 
 ### HAS_ZIP (only if a `requiresCmspCounty` program would enter the queue)
 
 ```text
-What's your home ZIP code? (5 digits — used only to check county-specific programs.)
+What's your home ZIP code? (5 digits – used only to check county-specific programs.)
 
-[ Skip — not sure ]
+[ Skip – not sure ]
 ```
 
 | Control | Logic |
@@ -259,14 +259,14 @@ What's your home ZIP code? (5 digits — used only to check county-specific prog
 | 5-digit CA ZIP | Resolve county → include CMSP only if county is one of the 35 participating CMSP counties |
 | Skip / unknown ZIP | Drop CMSP (`NOT_IN_QUEUE`) |
 
-Asked in the offer loop when it is the cheapest remaining gate for still-unlockable programs (same pattern as past-due / child / ABD — not an early quiz).
+Asked in the offer loop when it is the cheapest remaining gate for still-unlockable programs (same pattern as past-due / child / ABD – not an early quiz).
 
 ### OFFER_CARD (every program)
 
 ```text
 You may qualify for {Program name}.
 
-{Program name} — {one-line plain benefit}
+{Program name} – {one-line plain benefit}
 Est. ~{formFillMinutes, discounted if docs already in hand} min to fill out form.
 Est. up to ~${max from maxBenefitUsd for this household} (~$/person when size>1). Deadline: {label (YYYY-MM-DD) or label-only / “check site”}.
 [If timeToMoneyDays ≥ 21:] Docs / numbers you'll likely need: • …
@@ -283,9 +283,9 @@ Est. up to ~${max from maxBenefitUsd for this household} (~$/person when size>1)
 | Skip program | Apply skip cascade if any → next offer |
 | Help / STOP | Global handlers |
 
-**No “Open apply page now” on the card** — outbound links during the queue caused drop-off.
+**No “Open apply page now” on the card** – outbound links during the queue caused drop-off.
 
-**CARE Skip sub-branch** (when user Skips CARE — CARE is still just one program):
+**CARE Skip sub-branch** (when user Skips CARE – CARE is still just one program):
 
 | Reason | Effect (library-defined) |
 |---|---|
@@ -315,7 +315,7 @@ Zero-question programs (LifeLine, LIHEAP, …) are offered **before** household/
 ## Finish (end of offer queue)
 
 **If open to-do items exist:**
-1. Abbreviated text summary — total $ this year · docs that unlock $ · program list with signup URLs  
+1. Abbreviated text summary – total $ this year · docs that unlock $ · program list with signup URLs  
 2. Send `calclaim-todo-list.pdf`  
 3. Auto-prompt email-to-computer (Mail app + 7-day download link). Idle: Email · Share · Restart · More info
 
@@ -341,19 +341,19 @@ Filename: `calclaim-todo-list.pdf`.
 
 ## Demo path scripts (build QA)
 
-### Path A — YES arm (categorical)
+### Path A – YES arm (categorical)
 
 Start → Yes → CARE card → Sign up → To Do List PDF → LifeLine → … → same To Do List PDF at end → reminders armed.
 
-### Path B — NO arm, CARE band
+### Path B – NO arm, CARE band
 
 Start → No → CARE-band income → CARE → … → includes at least one non-energy offer before end.
 
-### Path C — STOP
+### Path C – STOP
 
 Any screen → STOP → confirm → wipe → goodbye.
 
-### Path D — Free-form
+### Path D – Free-form
 
 On GATE type “asdf” → thanks/redirect; still on GATE; row in `data/responses.jsonl`.
 
@@ -364,13 +364,13 @@ On GATE type “asdf” → thanks/redirect; still on GATE; row in `data/respons
 - Session: user id, branch (YES/NO), answers, offer queue cursor, `NextSteps` items, reminder flags.  
 - Frozen library holds programs across categories + FPL/band tables + cascades + sources.  
 - Unlock/$ copy is estimate / upper bound only.  
-- Analytics: public funder dashboard at `/impact` — see [`funder-dashboard.md`](funder-dashboard.md).
+- Analytics: public funder dashboard at `/impact` – see [`funder-dashboard.md`](funder-dashboard.md).
 
 ---
 
 ## Related
 
-- [`finish-line-ux.md`](finish-line-ux.md) — files + reminders  
-- [`guidelines.md`](guidelines.md) — v2 safety + framing  
-- [`../PROMPT.md`](../PROMPT.md) — build kickoff  
+- [`finish-line-ux.md`](finish-line-ux.md) – files + reminders  
+- [`guidelines.md`](guidelines.md) – v2 safety + framing  
+- [`../PROMPT.md`](../PROMPT.md) – build kickoff  
 - Cursor plan: Telegram PDF benefits bot  

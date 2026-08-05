@@ -58,7 +58,7 @@ form.addEventListener("submit", async (e) => {
     const next = new URLSearchParams(location.search).get("next") || "/dev";
     location.href = next.startsWith("/dev") ? next : "/dev";
   } catch {
-    showError("Network error — try again.");
+    showError("Network error – try again.");
     await loadCaptcha().catch(() => {});
   } finally {
     submit.disabled = false;

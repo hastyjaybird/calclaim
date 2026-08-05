@@ -63,7 +63,7 @@ export const WATCH_CHECKLIST: WatchItem[] = [
   {
     id: "program_status",
     label: "Open / closed / waitlist status",
-    why: "No first-class status field yet — closed programs should be removed or clearly labeled.",
+    why: "No first-class status field yet – closed programs should be removed or clearly labeled.",
     libraryFields: ["oneLiner", "deadlines"],
   },
   {
@@ -87,7 +87,7 @@ export const WATCH_CHECKLIST: WatchItem[] = [
   {
     id: "cascades",
     label: "Skip cascades & bill-not-in-name rules",
-    why: "CARE skip cascades drop ESA/AMP/Medical Baseline — wrong links break routing.",
+    why: "CARE skip cascades drop ESA/AMP/Medical Baseline – wrong links break routing.",
     libraryFields: ["skipCascades", "skipReasons", "requiresPastDue"],
   },
   {

@@ -378,7 +378,7 @@ export function pickNextTriageGate(session: SessionState): TriageGateId | null {
 
 /**
  * Append programs that are eligible with answers so far, ranked fewest-docs /
- * fastest-pay. Does not reset queueIndex — earlier waves stay behind the cursor.
+ * fastest-pay. Does not reset queueIndex – earlier waves stay behind the cursor.
  */
 export function extendOfferQueue(
   session: SessionState,
@@ -415,7 +415,7 @@ export function queueNeedsStatusGate(session: SessionState): boolean {
   return false;
 }
 
-/** @deprecated Prefer pickNextTriageGate — kept for status probes / callers. */
+/** @deprecated Prefer pickNextTriageGate – kept for status probes / callers. */
 export function queueNeedsChildGate(session: SessionState): boolean {
   return (
     gateStillOpen("child", session) &&

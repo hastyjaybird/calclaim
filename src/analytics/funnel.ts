@@ -40,7 +40,7 @@ export const FUNNEL_STAGES = [
   {
     id: "follow_through",
     label: "Added to list",
-    detail: "“I opened it — add to list”",
+    detail: "“I opened it – add to list”",
   },
   {
     id: "finished",

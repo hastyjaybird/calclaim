@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow, noarchive" />
-  <title>CalClaim — Developer library watch</title>
+  <title>CalClaim – Developer library watch</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -33,7 +33,7 @@
         <a href="/dev" aria-current="page">Developer login</a>
         <button type="button" class="nav-logout" id="btn-logout">Log out</button>
       </nav>
-      <span class="banner-line">Library freshness — humans only · advisory findings</span>
+      <span class="banner-line">Library freshness – humans only · advisory findings</span>
     </div>
   </div>
 
@@ -42,7 +42,7 @@
     <h1>Library watch</h1>
     <p class="lede">
       Scan official program pages for date, eligibility, apply-process, funding, amount, and URL drift.
-      Findings never edit the frozen library — developers review and update <code>programs.json</code>.
+      Findings never edit the frozen library – developers review and update <code>programs.json</code>.
     </p>
     <div class="cta-row">
       <button type="button" class="cta" id="btn-scan">Run library check</button>
@@ -56,22 +56,22 @@
     <section class="metrics" aria-label="Library status">
       <article class="metric">
         <p class="metric-label">Library version</p>
-        <p class="metric-value" id="m-version">—</p>
+        <p class="metric-value" id="m-version">–</p>
         <p class="metric-note" id="m-age">Aging rule: 90 days</p>
       </article>
       <article class="metric">
         <p class="metric-label">Programs</p>
-        <p class="metric-value" id="m-programs">—</p>
-        <p class="metric-note" id="m-bands">Income bands: —</p>
+        <p class="metric-value" id="m-programs">–</p>
+        <p class="metric-note" id="m-bands">Income bands: –</p>
       </article>
       <article class="metric">
         <p class="metric-label">Open findings</p>
-        <p class="metric-value" id="m-open">—</p>
+        <p class="metric-value" id="m-open">–</p>
         <p class="metric-note"><span id="m-crit">0</span> critical · <span id="m-high">0</span> high</p>
       </article>
       <article class="metric metric-accent">
         <p class="metric-label">LLM analysis</p>
-        <p class="metric-value metric-value-sm" id="m-llm">—</p>
+        <p class="metric-value metric-value-sm" id="m-llm">–</p>
         <p class="metric-note">Optional via API key in env</p>
       </article>
     </section>
@@ -80,8 +80,8 @@
       <div class="panel-head">
         <h2 id="funnel-heading">Pipeline fall-off</h2>
         <p>
-          Live collected traffic only (operator Telegram ids excluded) — not the public demo dataset.
-          Where people leave the conversation tree — from finding CalClaim to finishing the offer queue.
+          Live collected traffic only (operator Telegram ids excluded) – not the public demo dataset.
+          Where people leave the conversation tree – from finding CalClaim to finishing the offer queue.
         </p>
       </div>
       <p class="funnel-callout" id="funnel-callout" hidden></p>
@@ -110,7 +110,7 @@
     <section class="panel" aria-labelledby="feedback-heading">
       <div class="panel-head panel-head-row">
         <div>
-          <h2 id="feedback-heading">Alpha user feedback — to do</h2>
+          <h2 id="feedback-heading">Alpha user feedback – to do</h2>
           <p>
             Text and voice notes from testers, plus web contact form messages.
             Voice is transcribed to text when <code>OPENAI_API_KEY</code> is set.
@@ -136,13 +136,13 @@
         <div>
           <h2 id="disaster-heading">Disaster CalFresh windows</h2>
           <p>
-            Scanned daily and published automatically — nothing here waits on you. USDA FNS
+            Scanned daily and published automatically – nothing here waits on you. USDA FNS
             is the agency that approves Disaster CalFresh and the only source that states the
             application dates, so it drives the decision; FEMA supplies the declaration used
             to corroborate it and CDSS supplies the phone number. A window goes live on its
             own once every mechanical check passes, and stops matching once its last apply
             day passes. <strong>Held</strong> means the checks did not pass, so the card
-            stayed hidden — the extraction or the source looks wrong, and the failed check is
+            stayed hidden – the extraction or the source looks wrong, and the failed check is
             listed on the card below.
           </p>
         </div>
@@ -214,7 +214,7 @@
         <div>
           <h2 id="matrix-heading">Program requirements matrix</h2>
           <p>
-            Every program ranked easiest to hardest to actually finish — one or two documents
+            Every program ranked easiest to hardest to actually finish – one or two documents
             and no interview at the top, full interviews and home visits at the bottom.
             Cells are editable: pick from the dropdowns and checklists, and each change saves
             straight to <code>library/program-requirements.json</code> so it shows up as a git diff.
@@ -295,7 +295,7 @@
         <p>
           <strong>Open now?</strong> is computed on every load, not stored, so it cannot go stale.
           <em>Dormant</em> means a disaster-gated program like Disaster CalFresh has no county
-          window taking applications — the normal state most of the year, and the offer card stays
+          window taking applications – the normal state most of the year, and the offer card stays
           hidden until CDSS approves one. <em>Window open</em> names the counties and the last day
           to apply. <em>Deadline soon</em> fires 60 days out; <em>deadline passed</em> means every
           deadline in the library is behind us, which usually means the date needs rolling to the
@@ -309,19 +309,19 @@
           that alternative path is scored once) + interview weight (none 0, phone-if-questions 1.5, phone
           required 3, appointment 3.5, in-person 4.5, home assessment 5) + form minutes ÷ 15 +
           0.2 per eligibility rule + 1.5 if another program has to come first. Documents and
-          interviews dominate on purpose — a long rule list decides whether you qualify, not how
+          interviews dominate on purpose – a long rule list decides whether you qualify, not how
           hard the paperwork is. Easy is 6.5 or less, moderate up to 10, hard above that. Use the
           tier dropdown on a row to pin a tier when the score reads wrong.
         </p>
         <p>
           In the <strong>Documents needed</strong> column, programs that accept either path show
           <em>Award letter OR pay stubs</em> as one chip. Tax credits list a <em>filed tax return</em>
-          explicitly — that is not the same as pay-stub income proof.
+          explicitly – that is not the same as pay-stub income proof.
         </p>
         <p>
           <strong>Also qualifies you for</strong> is the categorical-eligibility graph: enrolling
           in the row's program is accepted as proof for those programs, so they should be offered
-          next. <strong>Needs first</strong> is the reverse — a hard prerequisite.
+          next. <strong>Needs first</strong> is the reverse – a hard prerequisite.
         </p>
       </details>
     </section>
@@ -330,7 +330,7 @@
       <div class="panel-head panel-head-row">
         <div>
           <h2 id="partners-heading">Community partners</h2>
-          <p>Signed-up organizations. Edit details here — public partner pages are read-only.</p>
+          <p>Signed-up organizations. Edit details here – public partner pages are read-only.</p>
         </div>
         <button type="button" class="cta cta-ghost" id="btn-partners-refresh">Refresh</button>
       </div>
@@ -364,8 +364,8 @@
           Partner ID and status URL stay the same when the organization name changes.
         </p>
         <p class="partner-edit-meta">
-          <span>ID: <code id="dev-edit-partner-id">—</code></span>
-          <span>Slug: <code id="dev-edit-slug">—</code></span>
+          <span>ID: <code id="dev-edit-partner-id">–</code></span>
+          <span>Slug: <code id="dev-edit-slug">–</code></span>
         </p>
         <label class="field">
           <span>Organization name</span>
@@ -395,7 +395,7 @@
     <section class="panel" id="checklist" aria-labelledby="checklist-heading">
       <div class="panel-head">
         <h2 id="checklist-heading">What to keep an eye on</h2>
-        <p>Beyond dates, qualifications, apply steps, funding, max amounts, and URLs — these fields also break CalClaim when stale.</p>
+        <p>Beyond dates, qualifications, apply steps, funding, max amounts, and URLs – these fields also break CalClaim when stale.</p>
       </div>
       <ul class="checklist" id="checklist-items"></ul>
     </section>
@@ -427,7 +427,7 @@
 
   <footer>
     <p>
-      CalClaim developer tools · Authorized humans only — no robots, AI agents, or automated login ·
+      CalClaim developer tools · Authorized humans only – no robots, AI agents, or automated login ·
       Frozen library stays human-edited · <a href="/impact">Impact Dashboard</a> ·
       <a href="/impact#contact">Contact</a> ·
       <a href="/impact#privacy">Privacy policy</a>

@@ -24,7 +24,7 @@ Jay will describe website changes against the **English** public pages. Apply th
 2. Add or update the matching keys in `messages.js` for **en**, **es**, and **zh**.
 3. Keep `data-i18n` / `data-i18n-html` / `data-i18n-aria` / `data-i18n-alt` keys in sync with the markup.
 4. Translate ES/ZH to match the English meaning; do not leave new English-only UI on `/es` or `/zh`.
-5. If a structural change has no copy (layout, CSS, assets), it automatically applies to all languages — still verify nothing language-specific broke.
+5. If a structural change has no copy (layout, CSS, assets), it automatically applies to all languages – still verify nothing language-specific broke.
 
 ## Examples
 

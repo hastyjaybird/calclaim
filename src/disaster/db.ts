@@ -142,7 +142,7 @@ function getDb(): Database.Database {
 
 /**
  * Lets the ranker fail closed. Without the table there are no windows, and no
- * windows means the Disaster CalFresh card stays hidden — the safe direction.
+ * windows means the Disaster CalFresh card stays hidden – the safe direction.
  */
 export function hasDisasterDb(): boolean {
   return disasterDb != null;
@@ -216,7 +216,7 @@ function rowToWindow(row: Record<string, unknown>): DisasterWindow {
 
 /**
  * Stable identity across re-scans: the event plus the county scope. Dates are
- * deliberately excluded — FNS can amend or extend an application period, and
+ * deliberately excluded – FNS can amend or extend an application period, and
  * that has to update the existing row rather than leave the old dates live.
  * Counties stay in the key so staggered per-county windows remain separate.
  */
@@ -237,7 +237,7 @@ export interface UpsertAudit {
   validation?: unknown;
   /**
    * Promote an existing pending/expired row to active. A row a human dismissed
-   * is never promoted — a manual override outranks the scan.
+   * is never promoted – a manual override outranks the scan.
    */
   promoteToActive?: boolean;
 }
@@ -422,7 +422,7 @@ export function listLiveWindows(today: string): DisasterWindow[] {
  * Published windows that have not closed yet, including ones whose application
  * period has not opened. FNS approves an operation about two weeks before
  * applications start, and that lead time is the most useful thing the card can
- * say — a household can have documents ready for day one.
+ * say – a household can have documents ready for day one.
  */
 export function listApprovedWindows(today: string): DisasterWindow[] {
   return listWindows("active", 200).filter((w) => {
@@ -491,7 +491,7 @@ export function getScanState(source: DisasterScanSource): DisasterScanState | nu
 }
 
 /**
- * `error` may be set on a successful run to record a partial failure — it shows
+ * `error` may be set on a successful run to record a partial failure – it shows
  * in /dev without resetting last_success_at, so it does not raise a false alarm.
  */
 export function recordScanResult(

@@ -13,7 +13,7 @@ function logPath(telegramUserId: number): string {
 /**
  * Per-user QC log: every library program's status (offered, signed up,
  * skipped, not eligible + why, etc). Rewritten on every session save so it
- * always reflects current state — first write happens when the session is
+ * always reflects current state – first write happens when the session is
  * created (opt-in / /start).
  */
 export function writeSessionProgramLog(session: SessionState): void {

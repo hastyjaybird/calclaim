@@ -29,7 +29,7 @@ export interface FemaEvent {
   incidentType: string;
   title: string;
   declarationDate: string;
-  /** Start of the incident period — the date D-CalFresh residency is tested against. */
+  /** Start of the incident period – the date D-CalFresh residency is tested against. */
   incidentBegin: string;
   incidentEnd: string | null;
   lastIaFilingDate: string | null;
@@ -78,7 +78,7 @@ function lookbackDate(now: Date): string {
  * California major-disaster declarations that authorized Individual Assistance.
  *
  * Filters on ihProgramDeclared (Individuals and Households Program), NOT
- * iaProgramDeclared — the latter is false on every current California record,
+ * iaProgramDeclared – the latter is false on every current California record,
  * so filtering on it silently returns nothing.
  */
 export async function fetchCaliforniaIaDeclarations(

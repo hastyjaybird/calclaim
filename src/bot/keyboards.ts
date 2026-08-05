@@ -48,7 +48,7 @@ export function incomeKeyboard(householdSize: number): InlineKeyboard {
 
 export function pastDueKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
-    .text("Yes — past due", "pastdue:yes")
+    .text("Yes – past due", "pastdue:yes")
     .text("No", "pastdue:no")
     .row()
     .text("The PG&E bill is not in my name", "pastdue:not_my_name");
@@ -73,14 +73,14 @@ export function disasterAreaKeyboard(): InlineKeyboard {
 }
 
 export function zipKeyboard(): InlineKeyboard {
-  return new InlineKeyboard().text("Skip — not sure", "zip:skip");
+  return new InlineKeyboard().text("Skip – not sure", "zip:skip");
 }
 
 export function workDisruptionKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
     .text("Lost my job", "work:job_loss")
     .row()
-    .text("Can't work — illness, injury, or pregnancy", "work:health")
+    .text("Can't work – illness, injury, or pregnancy", "work:health")
     .row()
     .text("Caring for a sick family member / new baby", "work:family_care")
     .row()
@@ -89,14 +89,14 @@ export function workDisruptionKeyboard(): InlineKeyboard {
 
 export function immigrationStatusKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
-    .text("Yes — citizen or eligible immigrant", "status:eligible")
+    .text("Yes – citizen or eligible immigrant", "status:eligible")
     .row()
     .text("No", "status:ineligible")
     .row()
     .text("Prefer not to say", "status:declined");
 }
 
-/** Offer actions stay in-chat — no outbound apply URL (reduces drop-off). */
+/** Offer actions stay in-chat – no outbound apply URL (reduces drop-off). */
 export function offerKeyboard(programId: string): InlineKeyboard {
   return new InlineKeyboard()
     .text("I'm already enrolled", `offer:already:${programId}`)
@@ -134,12 +134,12 @@ export function shareKeyboard(telegramShareHref: string | null): InlineKeyboard 
 export function confirmKeyboard(kind: "stop" | "erase"): InlineKeyboard {
   if (kind === "stop") {
     return new InlineKeyboard()
-      .text("Yes — stop reminders", "stop:yes")
-      .text("No — keep going", "stop:no");
+      .text("Yes – stop reminders", "stop:yes")
+      .text("No – keep going", "stop:no");
   }
   return new InlineKeyboard()
-    .text("Yes — erase and exit", "erase:yes")
-    .text("No — keep going", "erase:no");
+    .text("Yes – erase and exit", "erase:yes")
+    .text("No – keep going", "erase:no");
 }
 
 /** End-of-flow actions. Email only when there is an open to-do report. */

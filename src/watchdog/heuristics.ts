@@ -67,7 +67,7 @@ export function findingsFromLinkCheck(
         ? `${label} blocked automated check for ${program.name}`
         : `${label} unreachable for ${program.name}`,
       detail: blocked
-        ? `${check.url} returned HTTP ${check.status}. Many agency sites block bots — open the URL in a browser before changing the library (${check.ms}ms).`
+        ? `${check.url} returned HTTP ${check.status}. Many agency sites block bots – open the URL in a browser before changing the library (${check.ms}ms).`
         : `${check.url} failed: ${check.error ?? "unknown error"} (${check.ms}ms)`,
       evidenceUrl: check.url,
       suggestedAction: blocked

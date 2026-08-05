@@ -3,7 +3,7 @@
  * Never store street addresses. Round coords so dots are ~city/neighborhood scale.
  */
 
-/** ~0.05° ≈ 3–4 miles — privacy floor for any stored point */
+/** ~0.05° ≈ 3–4 miles – privacy floor for any stored point */
 const COORD_PRECISION = 20; // 1/0.05
 
 export function roundCoord(n: number): number {
@@ -31,7 +31,7 @@ export function fromCampaignPin(pin: {
   };
 }
 
-/** Best-effort city-level IP lookup. Fails soft — never blocks redirects. */
+/** Best-effort city-level IP lookup. Fails soft – never blocks redirects. */
 export async function coarseFromIp(ip: string | null): Promise<CoarseLocation> {
   if (!ip || ip === "127.0.0.1" || ip === "::1" || ip.startsWith("10.") || ip.startsWith("192.168.")) {
     return { lat: null, lng: null, label: null };

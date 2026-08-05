@@ -1,4 +1,4 @@
-# Expansion watchlist — near-future markets & program types
+# Expansion watchlist – near-future markets & program types
 
 **Assessment date:** 2026-07-31 (v2)  
 **V2 committed:** California financial aid / benefits (English, Telegram) only.
@@ -30,7 +30,7 @@
 
 ---
 
-## Tier A — best next after CA English Telegram
+## Tier A – best next after CA English Telegram
 
 | Expansion | Why interesting | Watch for |
 |---|---|---|
@@ -40,17 +40,17 @@
 
 ---
 
-## Tier B — other geographies (later)
+## Tier B – other geographies (later)
 
 | Market | Note |
 |---|---|
 | **NY / IL / etc. multi-benefit** | MyFriendBen-like stacks; rebuild library |
 | **PR** | High need; separate Spanish register; not energy-only |
-| **TX / FL** | Large future energy $ — only after benefits framing stays primary |
+| **TX / FL** | Large future energy $ – only after benefits framing stays primary |
 
 ---
 
-## Program types (v2 priority — multi-category)
+## Program types (v2 priority – multi-category)
 
 | Priority | Program type | CalClaim fit |
 |---|---|---|

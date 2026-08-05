@@ -14,7 +14,7 @@ export type DocId =
   | "incomeProof"
   /** Award letter from a qualifying program, or pay stubs / benefit letter. */
   | "incomeOrCategorical"
-  /** Filed return — CalEITC / YCTC path (not a substitute for incomeProof). */
+  /** Filed return – CalEITC / YCTC path (not a substitute for incomeProof). */
   | "taxReturn"
   | "taxForms";
 
@@ -47,7 +47,7 @@ export type StepId =
   | "confirm_erase"
   | "help_menu";
 
-/** Why work/earnings stopped or dropped recently — gates EDD wage-replacement programs. */
+/** Why work/earnings stopped or dropped recently – gates EDD wage-replacement programs. */
 export type WorkDisruption = "job_loss" | "health" | "family_care" | "none";
 
 export interface Deadline {
@@ -85,7 +85,7 @@ export interface Program {
   category: ProgramCategory;
   oneLiner: string;
   maxBenefit: string;
-  /** Max $ by person/household — source of truth for offer “Est.” line. */
+  /** Max $ by person/household – source of truth for offer “Est.” line. */
   maxBenefitUsd: MaxBenefitUsd;
   /** Conservative annual $ estimate for funder impact math (not a promise). */
   estAnnualUsd: number;
@@ -123,7 +123,7 @@ export interface Program {
   /**
    * Needs U.S. citizen or eligible-immigrant status (CalFresh, SSI, CalWORKs,
    * CMSP, UI). Held until after status-blind offers, then a private one-shot
-   * question — the answer is not persisted on the session.
+   * question – the answer is not persisted on the session.
    */
   requiresCitizenOrEligibleImmigrant?: boolean;
   /**
@@ -153,7 +153,7 @@ export interface NextStepsItem {
   docs: DocId[];
 }
 
-/** Last interactive bot prompt — re-shown after alpha feedback. */
+/** Last interactive bot prompt – re-shown after alpha feedback. */
 export interface LastBotMessage {
   text: string;
   replyMarkup: { inline_keyboard: unknown } | null;
@@ -169,11 +169,11 @@ export interface SessionState {
   pastDue: boolean | null;
   /** True when user said the utility / PG&E bill is not in their name. */
   billNotInMyName: boolean;
-  /** Kids under 18 or pregnancy — gates requiresChildInHousehold programs. */
+  /** Kids under 18 or pregnancy – gates requiresChildInHousehold programs. */
   hasChildInHousehold: boolean | null;
-  /** Aged 65+ / blind / disabled — gates requiresAgedBlindOrDisabled programs. */
+  /** Aged 65+ / blind / disabled – gates requiresAgedBlindOrDisabled programs. */
   hasAgedBlindOrDisabled: boolean | null;
-  /** Job loss / health / family-care / none — gates requiresWorkDisruption programs. */
+  /** Job loss / health / family-care / none – gates requiresWorkDisruption programs. */
   workDisruption: WorkDisruption | null;
   /**
    * Lived or worked in a declared disaster area during an open D-CalFresh
@@ -182,7 +182,7 @@ export interface SessionState {
    */
   inDisasterArea: boolean | null;
   /**
-   * Home ZIP — asked only when a county-gated program (CMSP) would enter the
+   * Home ZIP – asked only when a county-gated program (CMSP) would enter the
    * queue. null = not asked; "" = skipped; otherwise a 5-digit ZIP.
    */
   residenceZip: string | null;
@@ -194,12 +194,12 @@ export interface SessionState {
   alreadyOn: string[];
   items: NextStepsItem[];
   remindersEnabled: boolean;
-  /** User said STOP — pauses reminders until their next message (data kept). */
+  /** User said STOP – pauses reminders until their next message (data kept). */
   remindersStopped: boolean;
   awaitingConfirm: "stop" | "erase" | null;
   /** Most recent screen prompt (text + keyboard) for feedback replay. */
   lastBotMessage: LastBotMessage | null;
-  /** Campaign from QR / share /start payload — used for partner attribution. */
+  /** Campaign from QR / share /start payload – used for partner attribution. */
   campaignId: string | null;
   createdAt: string;
   updatedAt: string;

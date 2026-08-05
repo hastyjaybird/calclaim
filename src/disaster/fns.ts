@@ -71,7 +71,7 @@ const MONTHS: Record<string, number> = {
 };
 
 const MONTH_NAMES = Object.keys(MONTHS).join("|");
-/** "Feb. 10, 2025" / "February 10, 2025" — FNS always writes the year. */
+/** "Feb. 10, 2025" / "February 10, 2025" – FNS always writes the year. */
 const FULL_DATE = String.raw`(${MONTH_NAMES})\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})`;
 
 /**

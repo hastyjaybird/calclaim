@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CalClaim — Partner impact</title>
+  <title>CalClaim – Partner impact</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="/partners/styles.css" />
 </head>
 <body data-page="partner">
@@ -57,7 +58,7 @@
         />
         <span class="co-brand-partner-name" id="partner-logo-name" hidden></span>
       </div>
-      <h1 class="partner-title" id="partner-name">—</h1>
+      <h1 class="partner-title" id="partner-name">–</h1>
       <p class="partner-city" id="partner-city"></p>
       <p class="partner-blurb" id="partner-blurb" data-i18n="partners.blurbFallback">
         Community outreach partner
@@ -77,7 +78,7 @@
       <aside class="qr-panel">
         <h2 id="partner-qr-heading">Partner unique QR code</h2>
         <p data-i18n="partners.qrBody">
-          Print or share this code — every scan credits this partner on the leaderboard.
+          Print or share this code – every scan credits this partner on the leaderboard.
         </p>
         <img
           class="partner-qr"
@@ -93,19 +94,19 @@
       <section class="metrics" data-i18n-aria="partners.metricsAria" aria-label="Partner impact metrics">
         <article class="metric">
           <p class="metric-label" data-i18n="partners.peopleReached">People reached</p>
-          <p class="metric-value" id="m-reached">—</p>
+          <p class="metric-value" id="m-reached">–</p>
         </article>
         <article class="metric">
           <p class="metric-label" data-i18n="partners.botStarts">Opened CalClaim</p>
-          <p class="metric-value" id="m-starts">—</p>
+          <p class="metric-value" id="m-starts">–</p>
         </article>
         <article class="metric">
           <p class="metric-label" data-i18n="partners.followThroughs">Follow-throughs</p>
-          <p class="metric-value" id="m-follow">—</p>
+          <p class="metric-value" id="m-follow">–</p>
         </article>
         <article class="metric metric-accent">
           <p class="metric-label" data-i18n="partners.estAid">Est. aid unlocked</p>
-          <p class="metric-value" id="m-dollars">—</p>
+          <p class="metric-value" id="m-dollars">–</p>
         </article>
       </section>
     </section>
@@ -131,7 +132,7 @@
       <div class="panel-head">
         <h2 id="map-heading" data-i18n="partners.mapHeading">Where people found this code</h2>
         <p data-i18n="partners.mapBody">
-          Approximate location only — never home addresses.
+          Approximate location only – never home addresses.
         </p>
       </div>
       <div id="map" role="img" data-i18n-aria="partners.mapAria" aria-label="Map of partner outreach locations"></div>
@@ -154,6 +155,7 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="/i18n/messages.js"></script>
   <script src="/i18n/lang.js"></script>

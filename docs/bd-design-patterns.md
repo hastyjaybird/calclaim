@@ -14,7 +14,7 @@ CalClaim deliberately mirrors these **user-visible mechanisms**, not Anthropic�
 3. Education  
 4. Economic mobility (incl. agriculture + US skills/career tools)
 
-**v2 CalClaim** sits squarely in **economic mobility**: helping households claim food, health, cash, telecom, and bill-assistance benefits. Energy bill programs are one mobility lever among many — not the sole vertical.
+**v2 CalClaim** sits squarely in **economic mobility**: helping households claim food, health, cash, telecom, and bill-assistance benefits. Energy bill programs are one mobility lever among many – not the sole vertical.
 
 ---
 
@@ -28,7 +28,7 @@ CalClaim deliberately mirrors these **user-visible mechanisms**, not Anthropic�
 | Meet-them-where-they-are | Farmer.Chat, Signpost, GetCalFresh | WhatsApp / Telegram / SMS | **Telegram primary** |
 | Nudges / reminders | GetCalFresh | SMS/email → doc submission lift | Tue noon + T-3/T-1 deadline reminders |
 | Living checklist | Benefits / assister tools | Durable To Do List | **To Do List PDF** (= benefits report) re-sent after actions |
-| CBO / assister portals | GetCalFresh legacy | Helper completes with client | Future optional field coach — not v2 default |
+| CBO / assister portals | GetCalFresh legacy | Helper completes with client | Future optional field coach – not v2 default |
 | Evals / public goods | Gates, Signpost research | Benchmarks | Demo scripts + sample PDFs |
 
 ---
@@ -60,7 +60,7 @@ ClimateDash proves multi-agent build skill. Rewiring America owns energy eligibi
 | Product | Why not clone |
 |---|---|
 | Rewiring America calculator | Energy discovery incumbent; we are multi-aid completion |
-| Full MyFriendBen / PolicyEngine | Multi-state rules engine too large for demo — steal UX, not scale |
+| Full MyFriendBen / PolicyEngine | Multi-state rules engine too large for demo – steal UX, not scale |
 | GetCalFresh county integration | Real submission APIs out of scope |
 | Full Signpost HITL ops | Ops-heavy |
 | LegalZoom filings | Liability + no agency APIs |
@@ -69,4 +69,4 @@ ClimateDash proves multi-agent build skill. Rewiring America owns energy eligibi
 
 ## 6. Language as a BD-shaped requirement
 
-BD/Gates emphasize local language. **v2 ships English**; Spanish conversation and PR mode remain on the expansion watchlist — still valued, not blocking the first Telegram demo.
+BD/Gates emphasize local language. **v2 ships English**; Spanish conversation and PR mode remain on the expansion watchlist – still valued, not blocking the first Telegram demo.

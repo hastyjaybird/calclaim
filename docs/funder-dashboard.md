@@ -7,15 +7,15 @@
 
 ## What funders see
 
-1. **Banner** — CalClaim + one-line demo framing  
-2. **People reached** — QR scans + shared-link clicks (`/go/:campaign`)  
-3. **Programs accessed** — clicks from chat → official apply sites via `/r/:programId`  
-4. **Follow-throughs** — “Add to my To Do List” taps  
-5. **Est. aid unlocked** — sum of library `estAnnualUsd` × follow-throughs  
-6. **Map** — QR placement pins + coarse city-level IP (never street address)  
-7. **Community partners leaderboard** — orgs ranked by people reached via their unique QR; #1 gets a subtle trophy; each row links to a partner stats slide  
-8. **Charts** — users/day and cumulative people reached  
-9. **Program table** — opens, follow-throughs, estimated $  
+1. **Banner** – CalClaim + one-line demo framing  
+2. **People reached** – QR scans + shared-link clicks (`/go/:campaign`)  
+3. **Programs accessed** – clicks from chat → official apply sites via `/r/:programId`  
+4. **Follow-throughs** – “Add to my To Do List” taps  
+5. **Est. aid unlocked** – sum of library `estAnnualUsd` × follow-throughs  
+6. **Map** – QR placement pins + coarse city-level IP (never street address)  
+7. **Community partners leaderboard** – orgs ranked by people reached via their unique QR; #1 gets a subtle trophy; each row links to a partner stats slide  
+8. **Charts** – users/day and cumulative people reached  
+9. **Program table** – opens, follow-throughs, estimated $  
 
 Pipeline fall-off (CX tree funnel) lives behind [developer login](developer-library-watch.md).
 
@@ -31,7 +31,7 @@ Each partner page is a standalone “deck slide” for funders:
 - KPIs (people reached, bot starts, follow-throughs, est. aid)  
 - Map + users/day + cumulative charts for their campaign  
 
-Demo partners live in [`library/partners.json`](../library/partners.json) (linked to [`library/campaigns.json`](../library/campaigns.json)). Live signups are stored in SQLite (`partner_signups`) via `/partners/signup` — each gets a unique ID, status page, QR, welcome email, and printable booth banner PDF. Framing is **community outreach partners** — not official agency affiliation.
+Demo partners live in [`library/partners.json`](../library/partners.json) (linked to [`library/campaigns.json`](../library/campaigns.json)). Live signups are stored in SQLite (`partner_signups`) via `/partners/signup` – each gets a unique ID, status page, QR, welcome email, and printable booth banner PDF. Framing is **community outreach partners** – not official agency affiliation.
 
 **Ranking:** people reached (`awareness` events on the partner’s `campaignId`). Secondary stats: bot starts and follow-throughs (session-attributed via sticky `campaignId` from `/start`).
 
@@ -76,13 +76,13 @@ The public site (`/impact`, `/partners/…`) can show either:
 | **demo** (default) | Staged ~90-day “fully running” metrics, map, charts, program table, partner leaderboard | `IMPACT_STATS_MODE=demo` or default in `DEFAULT_IMPACT_STATS_MODE` |
 | **live** | Real `analytics_events` (operator Telegram ids excluded) | `IMPACT_STATS_MODE=live` |
 
-**Recording always continues** — QR landings (`/go/…`), Telegram funnel steps, and apply redirects (`/r/…`) keep writing to SQLite regardless of display mode. Flip the site by setting `IMPACT_STATS_MODE=live` (or ask to “switch website to live data”).
+**Recording always continues** – QR landings (`/go/…`), Telegram funnel steps, and apply redirects (`/r/…`) keep writing to SQLite regardless of display mode. Flip the site by setting `IMPACT_STATS_MODE=live` (or ask to “switch website to live data”).
 
 Exclude your own phone from live rollups:
 
 ```bash
 OPERATOR_TELEGRAM_USER_IDS=123456789
-# optional alias — private chat id equals user id
+# optional alias – private chat id equals user id
 # DEVELOPER_TELEGRAM_CHAT_ID=123456789
 ```
 
@@ -98,8 +98,8 @@ Writes fake rows into `analytics_events` (clears prior events). Prefer the **dem
 
 ## Env
 
-- `PUBLIC_BASE_URL` — required in production so Telegram buttons hit *your* redirects  
-- `TELEGRAM_BOT_USERNAME` — optional; resolved via `getMe()` at boot  
-- `PORT` — web + (webhook) Telegram share the same listener  
-- `IMPACT_STATS_MODE` — `demo` (default) or `live` for public dashboards  
-- `OPERATOR_TELEGRAM_USER_IDS` — comma-separated Telegram user ids omitted from live rollups  
+- `PUBLIC_BASE_URL` – required in production so Telegram buttons hit *your* redirects  
+- `TELEGRAM_BOT_USERNAME` – optional; resolved via `getMe()` at boot  
+- `PORT` – web + (webhook) Telegram share the same listener  
+- `IMPACT_STATS_MODE` – `demo` (default) or `live` for public dashboards  
+- `OPERATOR_TELEGRAM_USER_IDS` – comma-separated Telegram user ids omitted from live rollups  
