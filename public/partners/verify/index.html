@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CalClaim – Verify partner email</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/partners/styles.css?v=20260805-verify" />
+  <link rel="stylesheet" href="/partners/signup/styles.css?v=20260805-verify" />
+</head>
+<body data-page="partnerVerify">
+  <div class="banner" role="banner">
+    <div class="banner-inner">
+      <a class="banner-brand" href="/impact" data-i18n-aria="nav.homeAria" aria-label="CalClaim home">
+        <img
+          class="banner-mark"
+          src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
+          alt="CalClaim"
+          width="180"
+          height="63"
+        />
+      </a>
+      <span class="banner-sep" aria-hidden="true"></span>
+      <nav class="site-nav" data-i18n-aria="nav.site" aria-label="Site">
+        <a href="/impact" data-i18n="nav.impact">Impact</a>
+        <a href="/impact#partners" data-i18n="nav.partners">Leaderboard</a>
+        <a href="/impact#about" data-i18n="nav.about">About</a>
+        <a href="/impact#contact" data-i18n="nav.contact">Contact</a>
+        <a href="/impact#privacy" data-i18n="nav.privacy">Privacy</a>
+      </nav>
+      <div id="lang-switch" class="lang-switch"></div>
+    </div>
+  </div>
+
+  <div class="signup-deck">
+    <a class="back-link" href="/impact#partners" data-i18n="partners.backLink">← Back to partner leaderboard</a>
+
+    <main class="signup-shell">
+      <section class="signup-hero" id="verify-loading">
+        <p class="signup-eyebrow" data-i18n="verify.eyebrow">Email verification</p>
+        <h2 data-i18n="verify.loadingHeading">Confirming your email…</h2>
+        <p class="signup-lede" data-i18n="verify.loadingBody">
+          Hang tight – we’re verifying this account.
+        </p>
+      </section>
+
+      <section class="signup-hero" id="verify-error" hidden>
+        <p class="signup-eyebrow" data-i18n="verify.eyebrow">Email verification</p>
+        <h2 data-i18n="verify.errorHeading">This link is invalid or expired.</h2>
+        <p class="signup-lede" data-i18n="verify.errorBody">
+          Request a new signup, or contact us if you already verified and need help.
+        </p>
+        <div class="cta-row">
+          <a class="cta" href="/partners/signup" data-i18n="verify.signupAgain">Back to signup</a>
+        </div>
+      </section>
+
+      <section class="signup-success" id="verify-success" hidden>
+        <p class="signup-eyebrow" data-i18n="verify.successEyebrow">Verified account</p>
+        <h2 data-i18n="verify.successHeading">Your email is verified.</h2>
+        <p class="signup-lede" id="verify-success-body">
+          This is a verified partner account. Your QR kit is ready.
+        </p>
+        <p class="verified-badge-row" id="verify-badge-row" hidden>
+          <span class="verified-badge" id="verify-badge"></span>
+        </p>
+        <figure class="signup-qr-hero">
+          <img
+            id="verify-qr"
+            class="signup-qr-hero__img"
+            alt=""
+            width="280"
+            height="280"
+            data-i18n-alt="signup.qrAlt"
+          />
+          <figcaption data-i18n="signup.bannerPreviewScan">Scan with your phone</figcaption>
+        </figure>
+        <dl class="signup-kit">
+          <div>
+            <dt data-i18n="signup.statusLinkLabel">Status page</dt>
+            <dd><a id="verify-status-link" href="#">–</a></dd>
+          </div>
+        </dl>
+        <div class="cta-row">
+          <a class="cta" id="verify-banner-link" href="#" data-i18n="signup.downloadBanner">
+            Download booth banner
+          </a>
+          <a class="cta cta-ghost" id="verify-status-cta" href="#" data-i18n="verify.viewStatus">
+            View status page
+          </a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <p data-i18n="signup.footer" data-i18n-html>
+        CalClaim demo · Community outreach partners ·
+        <a href="/impact#contact">Contact</a> ·
+        <a href="/impact#privacy">Privacy policy</a>
+      </p>
+      <a class="footer-dev-login" href="/dev" data-i18n="nav.developer">Developer login</a>
+    </div>
+  </footer>
+
+  <script src="/i18n/messages.js?v=20260805-lb-orgs"></script>
+  <script src="/i18n/lang.js?v=20260804-qr"></script>
+  <script src="/partners/verify/app.js?v=20260805-lb-orgs"></script>
+</body>
+</html>

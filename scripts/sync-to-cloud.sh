@@ -5,12 +5,19 @@
 # Optional:
 #   CLOUD_DIR=/opt/calclaim
 #   SYNC_ENV=1   # push local .env (creates server .env from local if missing otherwise)
+#   SKIP_DNS=1   # skip Cloudflare upsert + public DNS/HTTPS verify
+#
+# DNS: deploy never deleted the hostname — the Cloudflare A record was missing
+# from the deploy path and kept vanishing after manual proxy toggles. Every
+# deploy now upserts calclaim.jayhasty.com (requires CLOUDFLARE_API_TOKEN) and
+# fails if public DNS/HTTPS still look broken.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 HOST="${CLOUD_HOST:?Set CLOUD_HOST=root@your-server-ip}"
 REMOTE_DIR="${CLOUD_DIR:-/opt/calclaim}"
 SYNC_ENV="${SYNC_ENV:-0}"
+SKIP_DNS="${SKIP_DNS:-0}"
 
 RSYNC=(rsync -avz --delete
   --exclude node_modules
@@ -88,4 +95,17 @@ sleep 3
 ssh "$HOST" "docker inspect --format='{{.State.Health.Status}}' calclaim 2>/dev/null || docker ps --filter name=calclaim --format '{{.Status}}'"
 ssh "$HOST" "docker logs calclaim --tail 30 2>&1" || true
 
-echo "[calclaim] Done. After DNS + Caddy: https://calclaim.jayhasty.com/impact"
+if [[ "$SKIP_DNS" != "1" ]]; then
+  echo "[calclaim] Ensuring Cloudflare DNS"
+  if ! bash "$ROOT/scripts/ensure-calclaim-dns.sh"; then
+    echo "[calclaim] DNS upsert failed – refusing to treat deploy as healthy." >&2
+    echo "  Add CLOUDFLARE_API_TOKEN to ${ROOT}/.env (Zone DNS Edit on jayhasty.com)," >&2
+    echo "  or set SKIP_DNS=1 to bypass (not recommended)." >&2
+    exit 1
+  fi
+  bash "$ROOT/scripts/verify-calclaim-dns.sh"
+else
+  echo "[calclaim] SKIP_DNS=1 – not checking public DNS/HTTPS"
+fi
+
+echo "[calclaim] Done: https://calclaim.jayhasty.com/impact"

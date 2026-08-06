@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/partners/styles.css?v=20260804-pm" />
-  <link rel="stylesheet" href="/partners/signup/styles.css?v=20260804-edit" />
+  <link rel="stylesheet" href="/partners/styles.css?v=20260805-verify" />
+  <link rel="stylesheet" href="/partners/signup/styles.css?v=20260805-verify" />
 </head>
 <body data-page="partnerSignup">
   <div class="banner" role="banner">
@@ -50,12 +50,36 @@
         />
       </h1>
       <p class="signup-lede" data-i18n="signup.lede">
-        Share CalClaim at your booth with a unique QR code. Every scan credits your organization on the leaderboard.
+        Same signup for everyone: verify your email, then get a QR kit and stats page. Organizations must use a real company or organization domain (not Gmail or Yahoo) and appear on the public leaderboard. Individuals keep a private stats page.
       </p>
 
       <form id="partner-signup-form" class="signup-form" novalidate>
+        <fieldset class="account-type">
+          <legend data-i18n="signup.accountTypeLabel">I am signing up as</legend>
+          <div class="account-type-options">
+            <label class="account-type-option">
+              <input
+                type="radio"
+                name="accountType"
+                value="organization"
+                id="signup-type-org"
+                checked
+              />
+              <span data-i18n="signup.accountTypeOrg">Organization</span>
+            </label>
+            <label class="account-type-option">
+              <input
+                type="radio"
+                name="accountType"
+                value="individual"
+                id="signup-type-individual"
+              />
+              <span data-i18n="signup.accountTypeIndividual">Individual</span>
+            </label>
+          </div>
+        </fieldset>
         <label class="field">
-          <span data-i18n="signup.nameLabel">Organization name</span>
+          <span id="signup-name-label" data-i18n="signup.nameLabel">Organization name</span>
           <input
             id="signup-organization"
             name="organization"
@@ -67,7 +91,7 @@
           />
         </label>
         <label class="field">
-          <span data-i18n="signup.emailLabel">Work email</span>
+          <span id="signup-email-label" data-i18n="signup.emailLabel">Work email</span>
           <input
             id="signup-email"
             name="email"
@@ -78,6 +102,9 @@
             maxlength="200"
             data-i18n-aria="signup.emailLabel"
           />
+          <span class="field-help" id="signup-email-help" data-i18n="signup.emailHelpOrg">
+            Must be your organization’s email domain (not Gmail, Yahoo, or Outlook).
+          </span>
         </label>
         <label class="field">
           <span data-i18n="signup.cityLabel">City</span>
@@ -105,11 +132,11 @@
           </span>
         </label>
         <p class="signup-hint" id="signup-hint" data-i18n="signup.hint">
-          You’ll get your QR code, status page, and a printable booth banner right away – and a copy by email.
+          We’ll email a verification link. After you confirm, you’ll get your QR code, status page, and booth banner.
         </p>
         <div class="cta-row">
           <button type="submit" class="cta" id="signup-submit" data-i18n="signup.submit">
-            Sign up &amp; get my QR
+            Sign up &amp; verify email
           </button>
           <button
             type="button"
@@ -125,8 +152,21 @@
       </form>
     </section>
 
+    <section class="signup-pending" id="signup-pending-panel" hidden>
+      <p class="signup-eyebrow" data-i18n="signup.pendingEyebrow">Check your email</p>
+      <h2 data-i18n="signup.pendingHeading">Verify your email to finish signup.</h2>
+      <p class="signup-lede" id="signup-pending-body">
+        We sent a verification link to your email. Click it to confirm this is a verified account.
+      </p>
+      <p class="signup-pending-domain" id="signup-pending-domain" hidden></p>
+      <p class="signup-hint" data-i18n="signup.pendingHint">
+        The link expires in 48 hours. Your QR kit unlocks after verification.
+      </p>
+      <p id="signup-pending-demo" class="signup-pending-demo" hidden></p>
+    </section>
+
     <section class="signup-success" id="signup-success-panel" hidden>
-      <p class="signup-eyebrow" data-i18n="signup.successEyebrow">You’re in</p>
+      <p class="signup-eyebrow" data-i18n="signup.successEyebrow">Verified</p>
       <h2 data-i18n="signup.successHeading">Thanks for partnering with us.</h2>
       <p class="signup-lede" data-i18n="signup.successBody">
         Here is your unique QR code. Print out the booth banner for your next event.
@@ -219,8 +259,8 @@
     </div>
   </footer>
 
-  <script src="/i18n/messages.js?v=20260804-edit"></script>
+  <script src="/i18n/messages.js?v=20260805-lb-orgs"></script>
   <script src="/i18n/lang.js?v=20260804-qr"></script>
-  <script src="/partners/signup/app.js?v=20260804-edit"></script>
+  <script src="/partners/signup/app.js?v=20260805-lb-orgs"></script>
 </body>
 </html>

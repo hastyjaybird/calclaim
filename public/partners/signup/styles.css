@@ -13,8 +13,113 @@
 }
 
 .signup-hero,
-.signup-success {
+.signup-success,
+.signup-pending {
   animation: signup-rise 0.55s ease both;
+}
+
+.account-type {
+  margin: 0 0 1.25rem;
+  padding: 0;
+  border: 0;
+}
+
+.account-type legend {
+  margin: 0 0 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--leaf-deep);
+}
+
+.account-type-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.account-type-option {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(13, 122, 95, 0.28);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.account-type-option:has(input:checked) {
+  border-color: var(--leaf);
+  background: rgba(13, 122, 95, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(13, 122, 95, 0.2);
+}
+
+.account-type-option input {
+  margin: 0;
+  accent-color: var(--leaf);
+}
+
+.signup-pending h2,
+.signup-success h2 {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  font-weight: 700;
+  color: var(--leaf-deep);
+  line-height: 1.15;
+}
+
+.signup-pending-domain {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--leaf-deep);
+}
+
+.signup-pending-demo {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: rgba(13, 122, 95, 0.08);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  word-break: break-all;
+}
+
+.signup-pending-demo a {
+  color: var(--leaf-deep);
+  font-weight: 600;
+}
+
+.verified-badge-row {
+  margin: 0 0 1.25rem;
+}
+
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(13, 122, 95, 0.12);
+  color: var(--leaf-deep);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.verified-badge::before {
+  content: "";
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--leaf);
+  box-shadow: 0 0 0 3px rgba(13, 122, 95, 0.18);
 }
 
 @keyframes signup-rise {
@@ -60,15 +165,6 @@
 
 .signup-hero h1 {
   margin: 0;
-}
-
-.signup-success h2 {
-  margin: 0 0 0.75rem;
-  font-family: var(--font-display);
-  font-size: clamp(1.8rem, 4vw, 2.4rem);
-  font-weight: 700;
-  color: var(--leaf-deep);
-  line-height: 1.15;
 }
 
 .signup-lede {

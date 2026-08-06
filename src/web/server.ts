@@ -49,7 +49,11 @@ import { startLibraryScan } from "../watchdog/runner.js";
 import type { FindingStatus } from "../watchdog/types.js";
 import { appendContactMessage } from "../contact/messages.js";
 import { renderPartnerBoothBannerPdf } from "../partners/banner.js";
-import { listSignedUpPartners, RESERVED_PARTNER_SLUGS } from "../partners/db.js";
+import {
+  getSignedUpPartnerBySlug,
+  listSignedUpPartners,
+  RESERVED_PARTNER_SLUGS,
+} from "../partners/db.js";
 import { readPartnerSignupMultipart } from "../partners/logoUpload.js";
 import {
   parsePartnerProfileUpdate,
@@ -57,6 +61,7 @@ import {
   registerPartnerSignup,
   updatePartnerProfile,
 } from "../partners/signup.js";
+import { verifyPartnerEmail } from "../partners/verify.js";
 import {
   createCaptchaChallenge,
   createSession,
@@ -159,9 +164,11 @@ function serveStatic(
   if (rel === "/" || rel === "/impact" || rel === "/impact/") rel = "/impact/index.html";
   if (rel === "/dev" || rel === "/dev/") rel = "/dev/index.html";
   // Partner deck template: /partners and /partners/:slug → partners/index.html
-  // Signup form lives at /partners/signup
+  // Signup / verify forms live at /partners/signup and /partners/verify
   if (rel === "/partners/signup" || rel === "/partners/signup/") {
     rel = "/partners/signup/index.html";
+  } else if (rel === "/partners/verify" || rel === "/partners/verify/") {
+    rel = "/partners/verify/index.html";
   } else if (rel === "/partners" || rel === "/partners/") {
     rel = "/partners/index.html";
   } else if (/^\/partners\/[A-Za-z0-9_-]+\/?$/.test(rel)) {
@@ -386,6 +393,10 @@ async function handleDevApi(
           logo: p.logo || "",
           campaignId: p.campaignId,
           createdAt: p.createdAt,
+          accountType: p.accountType,
+          emailDomain: p.emailDomain,
+          emailVerified: Boolean(p.emailVerifiedAt),
+          emailVerifiedAt: p.emailVerifiedAt,
           statusUrl: `/partners/${encodeURIComponent(p.slug)}`,
           bannerUrl: `/api/partners/${encodeURIComponent(p.slug)}/banner`,
         })),
@@ -1067,6 +1078,7 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
           let name = "";
           let email = "";
           let city = "";
+          let accountType = "";
           let logo: { buffer: Buffer; mime: string; filename: string } | undefined;
 
           if (contentType.includes("multipart/form-data")) {
@@ -1074,19 +1086,23 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             name = multi.name;
             email = multi.email;
             city = multi.city;
+            accountType = multi.accountType;
             logo = multi.logo;
           } else {
             const body = (await readJsonBody(req, 16_384)) as {
               name?: unknown;
               email?: unknown;
               city?: unknown;
+              accountType?: unknown;
             };
             name = typeof body.name === "string" ? body.name : "";
             email = typeof body.email === "string" ? body.email : "";
             city = typeof body.city === "string" ? body.city : "";
+            accountType =
+              typeof body.accountType === "string" ? body.accountType : "";
           }
 
-          const parsed = parsePartnerSignup({ name, email, city });
+          const parsed = parsePartnerSignup({ name, email, city, accountType });
           if ("error" in parsed) {
             send(
               res,
@@ -1105,17 +1121,17 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             200,
             JSON.stringify({
               ok: true,
+              pendingVerification: true,
               partnerId: result.partner.id,
               slug: result.partner.slug,
               name: result.partner.name,
               email: result.partner.email,
               city: result.partner.city,
               logo: result.partner.logo || "",
-              statusUrl: result.statusUrl,
-              qrUrl: result.qrUrl,
-              bannerUrl: result.bannerUrl,
-              editToken: result.editToken,
+              accountType: result.partner.accountType,
+              emailDomain: result.emailDomain,
               emailMode: result.email.mode,
+              verifyUrl: result.verifyUrl || null,
             }),
             "application/json; charset=utf-8",
           );
@@ -1140,6 +1156,65 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             res,
             500,
             JSON.stringify({ error: "signup_failed" }),
+            "application/json; charset=utf-8",
+          );
+        }
+        return;
+      }
+
+      if (pathname === "/api/partners/verify-email" && req.method === "POST") {
+        try {
+          const body = (await readJsonBody(req, 4_096)) as { token?: unknown };
+          const token = typeof body.token === "string" ? body.token.trim() : "";
+          if (!token) {
+            send(
+              res,
+              400,
+              JSON.stringify({ error: "verify_invalid" }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          const result = await verifyPartnerEmail(config, token);
+          if (!result.ok) {
+            send(
+              res,
+              400,
+              JSON.stringify({ error: result.error }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          const { kit } = result;
+          send(
+            res,
+            200,
+            JSON.stringify({
+              ok: true,
+              alreadyVerified: result.alreadyVerified,
+              partnerId: kit.partner.id,
+              slug: kit.partner.slug,
+              name: kit.partner.name,
+              email: kit.partner.email,
+              city: kit.partner.city,
+              logo: kit.partner.logo || "",
+              accountType: kit.partner.accountType,
+              emailDomain: kit.partner.emailDomain,
+              emailVerified: true,
+              statusUrl: kit.statusUrl,
+              qrUrl: kit.qrUrl,
+              bannerUrl: kit.bannerUrl,
+              editToken: kit.editToken,
+              emailMode: kit.email.mode,
+            }),
+            "application/json; charset=utf-8",
+          );
+        } catch (err) {
+          console.error("Partner email verify failed:", err);
+          send(
+            res,
+            500,
+            JSON.stringify({ error: "verify_failed" }),
             "application/json; charset=utf-8",
           );
         }
@@ -1184,6 +1259,7 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               req,
               config.developerSessionSecret,
             );
+            const existingPartner = getSignedUpPartnerBySlug(slug);
             const contentType = String(req.headers["content-type"] || "");
             let name = "";
             let email = "";
@@ -1217,14 +1293,13 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
                 typeof body.editToken === "string" ? body.editToken : "";
             }
 
+            const accountType = existingPartner?.accountType ?? "organization";
             const parsed = asDeveloper
-              ? parsePartnerSignup({ name, email, city })
-              : parsePartnerProfileUpdate({
-                  name,
-                  email,
-                  city,
-                  partnerId,
-                });
+              ? parsePartnerSignup({ name, email, city, accountType })
+              : parsePartnerProfileUpdate(
+                  { name, email, city, partnerId, accountType },
+                  { accountType },
+                );
             if ("error" in parsed) {
               send(
                 res,
@@ -1243,6 +1318,8 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               asDeveloper,
               editTokenSecret: config.developerSessionSecret,
               logo,
+              accountType,
+              publicBaseUrl: config.publicBaseUrl,
             });
             if ("error" in result) {
               const status =
@@ -1271,6 +1348,11 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
                 city: result.partner.city,
                 email: result.partner.email,
                 logo: result.partner.logo || "",
+                accountType: result.partner.accountType,
+                emailDomain: result.partner.emailDomain,
+                emailVerified: Boolean(result.partner.emailVerifiedAt),
+                pendingVerification: Boolean(result.pendingVerification),
+                verifyUrl: result.verifyUrl || null,
                 bannerUrl: result.bannerUrl,
                 qrUrl: `/api/qr/partner/${encodeURIComponent(result.partner.slug)}`,
               }),
@@ -1469,6 +1551,13 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             serveStatic(res, "/partners/signup");
             return;
           }
+          if (
+            publicPath === "/partners/verify" ||
+            publicPath === "/partners/verify/"
+          ) {
+            serveStatic(res, "/partners/verify");
+            return;
+          }
           const slug = publicPath
             .slice("/partners/".length)
             .replace(/\/$/, "")
@@ -1521,6 +1610,10 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
         }
         if (pathname === "/partners/signup" || pathname === "/partners/signup/") {
           serveStatic(res, "/partners/signup");
+          return;
+        }
+        if (pathname === "/partners/verify" || pathname === "/partners/verify/") {
+          serveStatic(res, "/partners/verify");
           return;
         }
         const slug = pathname.slice("/partners/".length).replace(/\/$/, "").split("/")[0] ?? "";

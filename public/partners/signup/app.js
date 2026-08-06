@@ -10,6 +10,7 @@ const EDIT_SESSION_KEY = "calclaim-signup-edit";
  *  qrUrl: string,
  *  bannerUrl: string,
  *  editToken: string,
+ *  accountType?: string,
  * }} */
 let editablePartner = null;
 let editingExisting = false;
@@ -24,6 +25,66 @@ function txt(key, fallback) {
 
 function withLang(path) {
   return window.CalClaimLang?.withLang?.(path) || path;
+}
+
+function selectedAccountType() {
+  const checked = document.querySelector(
+    'input[name="accountType"]:checked',
+  );
+  return checked?.value === "individual" ? "individual" : "organization";
+}
+
+function applyAccountTypeLabels() {
+  const type = selectedAccountType();
+  const isOrg = type === "organization";
+  const nameLabel = el("signup-name-label");
+  const emailLabel = el("signup-email-label");
+  const emailHelp = el("signup-email-help");
+  const nameInput = el("signup-organization");
+  if (nameLabel) {
+    nameLabel.textContent = isOrg
+      ? txt("signup.nameLabel", "Organization name")
+      : txt("signup.nameLabelIndividual", "Your name");
+  }
+  if (emailLabel) {
+    emailLabel.textContent = isOrg
+      ? txt("signup.emailLabel", "Work email")
+      : txt("signup.emailLabelIndividual", "Email");
+  }
+  if (emailHelp) {
+    emailHelp.textContent = isOrg
+      ? txt(
+          "signup.emailHelpOrg",
+          "Must be your organization’s domain (not Gmail, Yahoo, Outlook, or other free email).",
+        )
+      : txt(
+          "signup.emailHelpIndividual",
+          "Any email works. We’ll send a verification link – same steps as organizations.",
+        );
+  }
+  const logoLabelEl = el("signup-logo")?.closest("label")?.querySelector(
+    "span:first-child",
+  );
+  if (logoLabelEl) {
+    logoLabelEl.textContent = isOrg
+      ? txt("signup.logoLabel", "Organization logo (optional)")
+      : txt("signup.logoLabelIndividual", "Logo (optional)");
+  }
+  if (nameInput) {
+    nameInput.autocomplete = isOrg ? "organization" : "name";
+  }
+  const hint = el("signup-hint");
+  if (hint && !editingExisting) {
+    hint.textContent = isOrg
+      ? txt(
+          "signup.hint",
+          "We’ll email a verification link. After you confirm, you’ll get your QR code, status page, and booth banner.",
+        )
+      : txt(
+          "signup.hintIndividual",
+          "We’ll email a verification link. After you confirm, you’ll get your QR code and private stats page (not listed on the public leaderboard).",
+        );
+  }
 }
 
 function showStatus(message, isError) {
@@ -69,22 +130,23 @@ function setFormMode(isEdit) {
   const submit = el("signup-submit");
   const cancel = el("signup-cancel-edit");
   const hint = el("signup-hint");
+  const typeField = document.querySelector(".account-type");
   if (submit) {
     submit.textContent = isEdit
       ? txt("signup.saveChanges", "Save changes")
-      : txt("signup.submit", "Sign up & get my QR");
+      : txt("signup.submit", "Sign up & verify email");
   }
   if (cancel) cancel.hidden = !isEdit;
+  if (typeField) typeField.hidden = isEdit;
   if (hint) {
-    hint.textContent = isEdit
-      ? txt(
-          "signup.editHint",
-          "Your partner ID and status page link stay the same – even if you change the organization name.",
-        )
-      : txt(
-          "signup.hint",
-          "You’ll get your QR code, status page, and a printable booth banner right away – and a copy by email.",
-        );
+    if (isEdit) {
+      hint.textContent = txt(
+        "signup.editHint",
+        "Your partner ID and status page link stay the same – even if you change the name.",
+      );
+    } else {
+      applyAccountTypeLabels();
+    }
   }
 }
 
@@ -96,12 +158,85 @@ function fillFormFromPartner(partner) {
   if (logoInput) logoInput.value = "";
 }
 
-function showFormPanel() {
+function hideAllPanels() {
   const formPanel = el("signup-form-panel");
+  const pendingPanel = el("signup-pending-panel");
   const successPanel = el("signup-success-panel");
-  if (formPanel) formPanel.hidden = false;
+  if (formPanel) formPanel.hidden = true;
+  if (pendingPanel) pendingPanel.hidden = true;
   if (successPanel) successPanel.hidden = true;
+}
+
+function showFormPanel() {
+  hideAllPanels();
+  const formPanel = el("signup-form-panel");
+  if (formPanel) formPanel.hidden = false;
   formPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function showPending(payload) {
+  hideAllPanels();
+  const pendingPanel = el("signup-pending-panel");
+  if (pendingPanel) pendingPanel.hidden = false;
+
+  const body = el("signup-pending-body");
+  if (body) {
+    const template = txt(
+      "signup.pendingBody",
+      "We sent a verification link to {email}. Click it to confirm this is a verified account.",
+    );
+    body.textContent = template.replace("{email}", payload.email || "");
+  }
+
+  const domainEl = el("signup-pending-domain");
+  if (domainEl) {
+    if (payload.accountType === "organization" && payload.emailDomain) {
+      domainEl.hidden = false;
+      domainEl.textContent = txt(
+        "signup.pendingDomain",
+        "Organization domain to verify: @{domain}",
+      ).replace("{domain}", payload.emailDomain);
+    } else {
+      domainEl.hidden = true;
+      domainEl.textContent = "";
+    }
+  }
+
+  const pendingHint = document.querySelector("#signup-pending-panel .signup-hint");
+  if (pendingHint) {
+    pendingHint.textContent =
+      payload.accountType === "individual"
+        ? txt(
+            "signup.pendingHintIndividual",
+            "The link expires in 48 hours. After verification you’ll get a private stats page and QR kit – individuals are not listed on the public leaderboard.",
+          )
+        : txt(
+            "signup.pendingHint",
+            "The link expires in 48 hours. Your QR kit unlocks after verification. Organizations then appear on the public leaderboard.",
+          );
+  }
+
+  const demo = el("signup-pending-demo");
+  if (demo) {
+    if (payload.verifyUrl) {
+      demo.hidden = false;
+      demo.innerHTML = "";
+      const note = document.createElement("span");
+      note.textContent = txt(
+        "signup.pendingDemoLink",
+        "Local demo (SMTP unset) – open verification link: ",
+      );
+      const link = document.createElement("a");
+      link.href = payload.verifyUrl;
+      link.textContent = payload.verifyUrl;
+      demo.append(note, link);
+    } else {
+      demo.hidden = true;
+      demo.textContent = "";
+    }
+  }
+
+  pendingPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function showSuccess(payload) {
@@ -117,14 +252,28 @@ function showSuccess(payload) {
       payload.bannerUrl ||
       `/api/partners/${encodeURIComponent(payload.slug)}/banner`,
     editToken: payload.editToken || editablePartner?.editToken || "",
+    accountType: payload.accountType || editablePartner?.accountType || "organization",
   };
   persistEditSession(editablePartner);
   setFormMode(false);
 
-  const formPanel = el("signup-form-panel");
+  hideAllPanels();
   const successPanel = el("signup-success-panel");
-  if (formPanel) formPanel.hidden = true;
   if (successPanel) successPanel.hidden = false;
+
+  const successBody = document.querySelector("#signup-success-panel .signup-lede");
+  if (successBody) {
+    successBody.textContent =
+      editablePartner.accountType === "individual"
+        ? txt(
+            "signup.successBodyIndividual",
+            "Here is your unique QR code and private stats page. Individuals are not shown on the public leaderboard – bookmark your status link from the email.",
+          )
+        : txt(
+            "signup.successBody",
+            "Here is your unique QR code. Print out the booth banner for your next event. Your organization is eligible for the public leaderboard.",
+          );
+  }
 
   const statusLink = el("success-status-link");
   if (statusLink) {
@@ -194,21 +343,76 @@ function cancelEdit() {
   showSuccess(editablePartner);
 }
 
+function errorMessageFor(code, isEdit) {
+  const map = {
+    name_required: txt("signup.errorName", "Add your organization name."),
+    name_required_individual: txt(
+      "signup.errorNameIndividual",
+      "Add your name.",
+    ),
+    email_required: txt("signup.errorEmail", "Add your email."),
+    email_invalid: txt(
+      "signup.errorEmailInvalid",
+      "Enter a valid email address.",
+    ),
+    email_org_domain_required: txt(
+      "signup.errorOrgDomain",
+      "Organizations must use a work email domain (not Gmail, Yahoo, or Outlook).",
+    ),
+    account_type_required: txt(
+      "signup.errorAccountType",
+      "Choose organization or individual.",
+    ),
+    account_type_invalid: txt(
+      "signup.errorAccountType",
+      "Choose organization or individual.",
+    ),
+    logo_type: txt(
+      "signup.errorLogoType",
+      "Use a PNG, JPG, WebP, or GIF logo.",
+    ),
+    logo_too_large: txt(
+      "signup.errorLogoSize",
+      "Logo must be 2 MB or smaller.",
+    ),
+    edit_expired: txt(
+      "signup.errorEditExpired",
+      "This edit session expired. Sign up again isn’t needed – contact us if you need a change.",
+    ),
+    partner_id_mismatch: txt(
+      "signup.errorEditExpired",
+      "This edit session expired. Sign up again isn’t needed – contact us if you need a change.",
+    ),
+  };
+  return (
+    map[code] ||
+    (isEdit
+      ? txt("signup.errorSave", "Could not save changes. Try again.")
+      : txt("signup.error", "Could not sign up. Try again."))
+  );
+}
+
 async function submitForm(event) {
   event.preventDefault();
   const submit = el("signup-submit");
   const name = String(el("signup-organization")?.value || "").trim();
   const email = String(el("signup-email")?.value || "").trim();
   const city = String(el("signup-city")?.value || "").trim();
+  const accountType = selectedAccountType();
   const logoInput = el("signup-logo");
   const logoFile = logoInput?.files?.[0] || null;
 
   if (!name) {
-    showStatus(txt("signup.errorName", "Add your organization name."), true);
+    showStatus(
+      accountType === "individual"
+        ? txt("signup.errorNameIndividual", "Add your name.")
+        : txt("signup.errorName", "Add your organization name."),
+      true,
+    );
     return;
   }
   if (!email) {
-    showStatus(txt("signup.errorEmail", "Add your work email."), true);
+    showStatus(txt("signup.errorEmail", "Add your email."), true);
     return;
   }
   if (logoFile && logoFile.size > 2_000_000) {
@@ -224,7 +428,7 @@ async function submitForm(event) {
   showStatus(
     isEdit
       ? txt("signup.saving", "Saving your changes…")
-      : txt("signup.sending", "Creating your partner kit…"),
+      : txt("signup.sending", "Sending verification email…"),
     false,
   );
 
@@ -233,6 +437,7 @@ async function submitForm(event) {
     body.set("name", name);
     body.set("email", email);
     body.set("city", city);
+    body.set("accountType", accountType);
     if (logoFile) body.set("logo", logoFile);
 
     let res;
@@ -253,41 +458,22 @@ async function submitForm(event) {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       const code = data.error || "signup_failed";
-      const map = {
-        name_required: txt("signup.errorName", "Add your organization name."),
-        email_required: txt("signup.errorEmail", "Add your work email."),
-        email_invalid: txt(
-          "signup.errorEmailInvalid",
-          "Enter a valid email address.",
-        ),
-        logo_type: txt(
-          "signup.errorLogoType",
-          "Use a PNG, JPG, WebP, or GIF logo.",
-        ),
-        logo_too_large: txt(
-          "signup.errorLogoSize",
-          "Logo must be 2 MB or smaller.",
-        ),
-        edit_expired: txt(
-          "signup.errorEditExpired",
-          "This edit session expired. Sign up again isn’t needed – contact us if you need a change.",
-        ),
-        partner_id_mismatch: txt(
-          "signup.errorEditExpired",
-          "This edit session expired. Sign up again isn’t needed – contact us if you need a change.",
-        ),
-      };
-      showStatus(
-        map[code] ||
-          (isEdit
-            ? txt("signup.errorSave", "Could not save changes. Try again.")
-            : txt("signup.error", "Could not sign up. Try again.")),
-        true,
-      );
+      showStatus(errorMessageFor(code, isEdit), true);
       if (code === "edit_expired" || code === "partner_id_mismatch") {
         clearEditSession();
         setFormMode(false);
       }
+      return;
+    }
+
+    if (data.pendingVerification) {
+      clearEditSession();
+      showPending({
+        email: data.email || email,
+        emailDomain: data.emailDomain || "",
+        accountType: data.accountType || accountType,
+        verifyUrl: data.verifyUrl || "",
+      });
       return;
     }
 
@@ -301,6 +487,7 @@ async function submitForm(event) {
       qrUrl: data.qrUrl || editablePartner?.qrUrl,
       bannerUrl: data.bannerUrl || editablePartner?.bannerUrl,
       editToken: data.editToken || editablePartner?.editToken,
+      accountType: data.accountType || accountType,
     });
   } catch {
     showStatus(
@@ -321,6 +508,9 @@ function bindForm() {
   form.addEventListener("submit", (event) => void submitForm(event));
   el("signup-cancel-edit")?.addEventListener("click", cancelEdit);
   el("success-edit-btn")?.addEventListener("click", startEdit);
+  document.querySelectorAll('input[name="accountType"]').forEach((input) => {
+    input.addEventListener("change", applyAccountTypeLabels);
+  });
 
   // Leaving the signup page ends the one-time edit session.
   document.querySelectorAll("a[href]").forEach((anchor) => {
@@ -334,6 +524,7 @@ function bindForm() {
 
 function init() {
   bindForm();
+  applyAccountTypeLabels();
   const saved = loadEditSession();
   if (saved) {
     showSuccess(saved);

@@ -62,24 +62,51 @@ window.CALCLAIM_I18N = {
       editError: "Could not save changes. Try again.",
       errorPartnerId: "Enter your partner ID from the welcome email.",
       errorPartnerIdMismatch: "That partner ID doesn’t match this page.",
+      verifiedOrg: "Verified · @{domain}",
+      verifiedIndividual: "Verified email",
+      pendingVerification: "Email verification pending",
       footer:
         'CalClaim demo · Community outreach partner stats · <a href="__CONTACT__">Contact</a> · <a href="__PRIVACY__">Privacy policy</a>',
     },
     signup: {
       eyebrow: "Community partners",
-      lede: "Share CalClaim at your booth with a unique QR code. Every scan credits your organization on the leaderboard.",
+      lede: "Same signup for everyone: verify your email, then get a QR kit and stats page. Organizations must use a real company or organization domain (not Gmail or Yahoo) and appear on the public leaderboard. Individuals keep a private stats page.",
+      accountTypeLabel: "I am signing up as",
+      accountTypeOrg: "Organization",
+      accountTypeIndividual: "Individual",
       nameLabel: "Organization name",
+      nameLabelIndividual: "Your name",
       emailLabel: "Work email",
+      emailLabelIndividual: "Email",
+      emailHelpOrg:
+        "Must be your organization’s domain (not Gmail, Yahoo, Outlook, or other free email).",
+      emailHelpIndividual:
+        "Any email works. We’ll send a verification link – same steps as organizations.",
       cityLabel: "City",
       logoLabel: "Organization logo (optional)",
+      logoLabelIndividual: "Logo (optional)",
       logoHelp: "Shown on your printable booth banner. PNG or JPG, up to 2 MB.",
-      hint: "You’ll get your QR code, status page, and a printable booth banner right away – and a copy by email.",
-      submit: "Sign up & get my QR",
-      sending: "Creating your partner kit…",
-      successEyebrow: "You’re in",
+      hint: "We’ll email a verification link. After you confirm, you’ll get your QR code, status page, and booth banner.",
+      hintIndividual:
+        "We’ll email a verification link. After you confirm, you’ll get your QR code and private stats page (not listed on the public leaderboard).",
+      submit: "Sign up & verify email",
+      sending: "Sending verification email…",
+      pendingEyebrow: "Check your email",
+      pendingHeading: "Verify your email to finish signup.",
+      pendingBody:
+        "We sent a verification link to {email}. Click it to confirm this is a verified account.",
+      pendingDomain: "Organization domain to verify: @{domain}",
+      pendingHint:
+        "The link expires in 48 hours. Your QR kit unlocks after verification. Organizations then appear on the public leaderboard.",
+      pendingHintIndividual:
+        "The link expires in 48 hours. After verification you’ll get a private stats page and QR kit – individuals are not listed on the public leaderboard.",
+      pendingDemoLink: "Local demo (SMTP unset) – open verification link: ",
+      successEyebrow: "Verified",
       successHeading: "Thanks for partnering with us.",
       successBody:
-        "Here is your unique QR code. Print out the booth banner for your next event.",
+        "Here is your unique QR code. Print out the booth banner for your next event. Your organization is eligible for the public leaderboard.",
+      successBodyIndividual:
+        "Here is your unique QR code and private stats page. Individuals are not shown on the public leaderboard – bookmark your status link from the email.",
       qrAlt: "Your unique partner QR code",
       partnerIdLabel: "Your partner ID",
       statusLinkLabel: "Status page",
@@ -89,14 +116,18 @@ window.CALCLAIM_I18N = {
       saveChanges: "Save changes",
       saving: "Saving your changes…",
       editHint:
-        "Your partner ID and status page link stay the same – even if you change the organization name.",
+        "Your partner ID and status page link stay the same – even if you change the name.",
       bannerPreviewAlt: "Preview of your printable booth banner",
       bannerPreviewTag:
         "Scan to find California benefits help<br>food, health, phone discounts, energy bill aid, and more.",
       bannerPreviewScan: "Scan with your phone",
       errorName: "Add your organization name.",
-      errorEmail: "Add your work email.",
+      errorNameIndividual: "Add your name.",
+      errorEmail: "Add your email.",
       errorEmailInvalid: "Enter a valid email address.",
+      errorOrgDomain:
+        "Organizations must use a work email domain (not Gmail, Yahoo, or Outlook).",
+      errorAccountType: "Choose organization or individual.",
       errorLogoType: "Use a PNG, JPG, WebP, or GIF logo.",
       errorLogoSize: "Logo must be 2 MB or smaller.",
       error: "Could not sign up. Try again.",
@@ -106,11 +137,29 @@ window.CALCLAIM_I18N = {
       footer:
         'CalClaim demo · Community outreach partners · <a href="__CONTACT__">Contact</a> · <a href="__PRIVACY__">Privacy policy</a>',
     },
+    verify: {
+      eyebrow: "Email verification",
+      loadingHeading: "Confirming your email…",
+      loadingBody: "Hang tight – we’re verifying this account.",
+      errorHeading: "This link is invalid or expired.",
+      errorBody:
+        "Request a new signup, or contact us if you already verified and need help.",
+      signupAgain: "Back to signup",
+      successEyebrow: "Verified account",
+      successHeading: "Your email is verified.",
+      successBody:
+        "This is a verified organization account. Your QR kit is ready and you can appear on the public leaderboard.",
+      successBodyIndividual:
+        "This is a verified individual account. Your QR kit and private stats page are ready (not listed on the public leaderboard).",
+      alreadyBody:
+        "This email was already verified. Your QR kit is ready again below.",
+      viewStatus: "View status page",
+    },
     impact: {
       eyebrow: "Demo",
       lede: "A California financial aid navigator – food, health, phone discounts, energy bill help, and more.",
       partnerSignupBody:
-        "Partner community organizations – Get your own CalClaim QR code to share. Each scan will credit you in the leaderboard.",
+        "Organizations and individuals sign up the same way and verify by email. Organizations need a real work domain and appear on the public leaderboard; individuals get a private stats page.",
       partnerSignupCta: "Sign up to be a partner",
       openCta: "Open CalClaim",
       tryBody: "Scan the code or tap Open CalClaim to start.",
@@ -130,7 +179,7 @@ window.CALCLAIM_I18N = {
       mapAria: "Map of awareness locations",
       partnersHeading: "Community partners",
       partnersBody:
-        "Organizations hosting CalClaim QR codes – ranked by people reached through their unique code.",
+        "Verified organizations hosting CalClaim QR codes – ranked by people reached through their unique code. Individuals partner privately and are not listed here.",
       partnersAria: "Partner leaderboard",
       partnersEmpty: "No partner outreach yet.",
       partnersReached: "People reached",
@@ -286,24 +335,51 @@ window.CALCLAIM_I18N = {
       editError: "No se pudieron guardar los cambios. Inténtalo de nuevo.",
       errorPartnerId: "Ingresa tu ID de socio del correo de bienvenida.",
       errorPartnerIdMismatch: "Ese ID de socio no corresponde a esta página.",
+      verifiedOrg: "Verificado · @{domain}",
+      verifiedIndividual: "Correo verificado",
+      pendingVerification: "Verificación de correo pendiente",
       footer:
         'Demo de CalClaim · Estadísticas de socio comunitario · <a href="__CONTACT__">Contacto</a> · <a href="__PRIVACY__">Política de privacidad</a>',
     },
     signup: {
       eyebrow: "Socios comunitarios",
-      lede: "Comparte CalClaim en tu stand con un código QR único. Cada escaneo acredita a tu organización en la clasificación.",
+      lede: "El mismo registro para todos: verifica tu correo y obtén un kit QR y una página de estadísticas. Las organizaciones deben usar un dominio real de empresa u organización (no Gmail ni Yahoo) y aparecen en la clasificación pública. Las personas tienen una página de estadísticas privada.",
+      accountTypeLabel: "Me registro como",
+      accountTypeOrg: "Organización",
+      accountTypeIndividual: "Persona",
       nameLabel: "Nombre de la organización",
+      nameLabelIndividual: "Tu nombre",
       emailLabel: "Correo de trabajo",
+      emailLabelIndividual: "Correo electrónico",
+      emailHelpOrg:
+        "Debe ser el dominio de tu organización (no Gmail, Yahoo, Outlook u otro correo gratuito).",
+      emailHelpIndividual:
+        "Cualquier correo sirve. Te enviaremos un enlace de verificación – los mismos pasos que las organizaciones.",
       cityLabel: "Ciudad",
       logoLabel: "Logo de la organización (opcional)",
+      logoLabelIndividual: "Logo (opcional)",
       logoHelp: "Se muestra en tu banner imprimible. PNG o JPG, hasta 2 MB.",
-      hint: "Recibirás de inmediato tu código QR, página de estado y un banner imprimible – y una copia por correo.",
-      submit: "Regístrate y obtén tu QR",
-      sending: "Creando tu kit de socio…",
-      successEyebrow: "Listo",
+      hint: "Te enviaremos un enlace de verificación. Al confirmarlo, recibirás tu código QR, página de estado y banner.",
+      hintIndividual:
+        "Te enviaremos un enlace de verificación. Al confirmarlo, recibirás tu código QR y una página de estadísticas privada (no apareces en la clasificación pública).",
+      submit: "Regístrate y verifica el correo",
+      sending: "Enviando correo de verificación…",
+      pendingEyebrow: "Revisa tu correo",
+      pendingHeading: "Verifica tu correo para terminar el registro.",
+      pendingBody:
+        "Enviamos un enlace de verificación a {email}. Ábrelo para confirmar que esta es una cuenta verificada.",
+      pendingDomain: "Dominio de organización a verificar: @{domain}",
+      pendingHint:
+        "El enlace caduca en 48 horas. Tu kit QR se desbloquea tras la verificación. Las organizaciones aparecen luego en la clasificación pública.",
+      pendingHintIndividual:
+        "El enlace caduca en 48 horas. Tras verificar tendrás una página de estadísticas privada y un kit QR – las personas no aparecen en la clasificación pública.",
+      pendingDemoLink: "Demo local (SMTP no configurado) – abre el enlace: ",
+      successEyebrow: "Verificado",
       successHeading: "Gracias por asociarte con nosotros.",
       successBody:
-        "Aquí está tu código QR único. Imprime el banner del stand para tu próximo evento.",
+        "Aquí está tu código QR único. Imprime el banner del stand para tu próximo evento. Tu organización puede aparecer en la clasificación pública.",
+      successBodyIndividual:
+        "Aquí está tu código QR y tu página de estadísticas privada. Las personas no aparecen en la clasificación pública – guarda el enlace de estado del correo.",
       qrAlt: "Tu código QR único de socio",
       partnerIdLabel: "Tu ID de socio",
       statusLinkLabel: "Página de estado",
@@ -313,14 +389,18 @@ window.CALCLAIM_I18N = {
       saveChanges: "Guardar cambios",
       saving: "Guardando tus cambios…",
       editHint:
-        "Tu ID de socio y el enlace a la página de estado no cambian – aunque modifiques el nombre de la organización.",
+        "Tu ID de socio y el enlace a la página de estado no cambian – aunque modifiques el nombre.",
       bannerPreviewAlt: "Vista previa de tu banner imprimible para el stand",
       bannerPreviewTag:
         "Escanea para encontrar ayuda con beneficios en California<br>comida, salud, descuentos en teléfono, ayuda con la factura de energía y más.",
       bannerPreviewScan: "Escanea con tu teléfono",
       errorName: "Agrega el nombre de tu organización.",
-      errorEmail: "Agrega tu correo de trabajo.",
+      errorNameIndividual: "Agrega tu nombre.",
+      errorEmail: "Agrega tu correo.",
       errorEmailInvalid: "Ingresa un correo válido.",
+      errorOrgDomain:
+        "Las organizaciones deben usar un dominio de correo laboral (no Gmail, Yahoo u Outlook).",
+      errorAccountType: "Elige organización o persona.",
       errorLogoType: "Usa un logo PNG, JPG, WebP o GIF.",
       errorLogoSize: "El logo debe pesar 2 MB o menos.",
       error: "No se pudo registrar. Inténtalo de nuevo.",
@@ -330,11 +410,29 @@ window.CALCLAIM_I18N = {
       footer:
         'Demo de CalClaim · Socios de difusión comunitaria · <a href="__CONTACT__">Contacto</a> · <a href="__PRIVACY__">Política de privacidad</a>',
     },
+    verify: {
+      eyebrow: "Verificación de correo",
+      loadingHeading: "Confirmando tu correo…",
+      loadingBody: "Un momento – estamos verificando esta cuenta.",
+      errorHeading: "Este enlace no es válido o ha caducado.",
+      errorBody:
+        "Vuelve a registrarte, o contáctanos si ya verificaste y necesitas ayuda.",
+      signupAgain: "Volver al registro",
+      successEyebrow: "Cuenta verificada",
+      successHeading: "Tu correo está verificado.",
+      successBody:
+        "Esta es una cuenta de organización verificada. Tu kit QR está listo y puedes aparecer en la clasificación pública.",
+      successBodyIndividual:
+        "Esta es una cuenta individual verificada. Tu kit QR y tu página de estadísticas privada están listos (no apareces en la clasificación pública).",
+      alreadyBody:
+        "Este correo ya estaba verificado. Tu kit QR vuelve a aparecer abajo.",
+      viewStatus: "Ver página de estado",
+    },
     impact: {
       eyebrow: "Demo",
       lede: "Un navegador de ayuda financiera en California: comida, salud, descuentos de teléfono, ayuda con la factura de energía y más.",
       partnerSignupBody:
-        "Organizaciones comunitarias asociadas: obtén tu propio código QR de CalClaim para compartir. Cada escaneo te acreditará en la clasificación.",
+        "Organizaciones y personas se registran igual y verifican por correo. Las organizaciones necesitan un dominio laboral real y aparecen en la clasificación pública; las personas tienen una página de estadísticas privada.",
       partnerSignupCta: "Regístrate como socio",
       openCta: "Abrir CalClaim",
       tryBody: "Escanea el código o toca Abrir CalClaim para empezar.",
@@ -354,7 +452,7 @@ window.CALCLAIM_I18N = {
       mapAria: "Mapa de ubicaciones de difusión",
       partnersHeading: "Socios comunitarios",
       partnersBody:
-        "Organizaciones que alojan códigos QR de CalClaim – clasificadas por personas alcanzadas con su código único.",
+        "Organizaciones verificadas que alojan códigos QR de CalClaim – clasificadas por personas alcanzadas con su código único. Las personas participan en privado y no aparecen aquí.",
       partnersAria: "Tabla de clasificación de socios",
       partnersEmpty: "Aún no hay difusión de socios.",
       partnersReached: "Personas alcanzadas",
@@ -509,23 +607,48 @@ window.CALCLAIM_I18N = {
       editError: "无法保存更改，请重试。",
       errorPartnerId: "请输入欢迎邮件中的合作伙伴 ID。",
       errorPartnerIdMismatch: "该合作伙伴 ID 与此页面不匹配。",
+      verifiedOrg: "已验证 · @{domain}",
+      verifiedIndividual: "已验证邮箱",
+      pendingVerification: "邮箱验证待完成",
       footer:
         'CalClaim 演示 · 社区推广合作伙伴统计 · <a href="__CONTACT__">联系我们</a> · <a href="__PRIVACY__">隐私政策</a>',
     },
     signup: {
       eyebrow: "社区合作伙伴",
-      lede: "用专属二维码在展位分享 CalClaim。每次扫描都会记入贵组织的排行榜。",
+      lede: "所有人注册流程相同：验证邮箱后即可获得二维码资料包和统计页。组织须使用真实的公司或机构域名（不可使用 Gmail、Yahoo 等），并出现在公开排行榜。个人拥有私密统计页。",
+      accountTypeLabel: "我要注册为",
+      accountTypeOrg: "组织",
+      accountTypeIndividual: "个人",
       nameLabel: "组织名称",
+      nameLabelIndividual: "您的姓名",
       emailLabel: "工作邮箱",
+      emailLabelIndividual: "邮箱",
+      emailHelpOrg: "须为贵组织域名（不可使用 Gmail、Yahoo、Outlook 等免费邮箱）。",
+      emailHelpIndividual: "任意邮箱均可。我们将发送验证链接––步骤与组织相同。",
       cityLabel: "城市",
       logoLabel: "组织标志（可选）",
+      logoLabelIndividual: "标志（可选）",
       logoHelp: "将显示在可打印展位横幅上。PNG 或 JPG，最大 2 MB。",
-      hint: "您会立即获得二维码、状态页和可打印展位横幅––同时也会发一封邮件副本。",
-      submit: "注册并获取二维码",
-      sending: "正在创建您的合作伙伴资料包…",
-      successEyebrow: "注册成功",
+      hint: "我们将发送验证链接。确认后您将获得二维码、状态页和展位横幅。",
+      hintIndividual:
+        "我们将发送验证链接。确认后您将获得二维码和私密统计页（不会出现在公开排行榜）。",
+      submit: "注册并验证邮箱",
+      sending: "正在发送验证邮件…",
+      pendingEyebrow: "请查收邮箱",
+      pendingHeading: "验证邮箱以完成注册。",
+      pendingBody: "我们已向 {email} 发送验证链接。请点击以确认此为已验证账户。",
+      pendingDomain: "待验证的组织域名：@{domain}",
+      pendingHint:
+        "链接 48 小时内有效。验证后即可解锁二维码资料包。组织随后会出现在公开排行榜。",
+      pendingHintIndividual:
+        "链接 48 小时内有效。验证后您将获得私密统计页和二维码资料包––个人不会出现在公开排行榜。",
+      pendingDemoLink: "本地演示（未配置 SMTP）––打开验证链接：",
+      successEyebrow: "已验证",
       successHeading: "感谢与我们合作。",
-      successBody: "这是您的专属二维码。请打印展位横幅，带到下次活动使用。",
+      successBody:
+        "这是您的专属二维码。请打印展位横幅，带到下次活动使用。贵组织可出现在公开排行榜。",
+      successBodyIndividual:
+        "这是您的专属二维码和私密统计页。个人不会显示在公开排行榜––请收藏邮件中的状态页链接。",
       qrAlt: "您的专属合作伙伴二维码",
       partnerIdLabel: "您的合作伙伴 ID",
       statusLinkLabel: "状态页",
@@ -534,14 +657,17 @@ window.CALCLAIM_I18N = {
       cancelEdit: "取消",
       saveChanges: "保存更改",
       saving: "正在保存更改…",
-      editHint: "即使更改组织名称，您的合作伙伴 ID 和状态页链接也会保持不变。",
+      editHint: "即使更改名称，您的合作伙伴 ID 和状态页链接也会保持不变。",
       bannerPreviewAlt: "可打印展位横幅预览",
       bannerPreviewTag:
         "扫码查找加州福利帮助<br>食品、医疗、电话折扣、能源账单援助等。",
       bannerPreviewScan: "用手机扫描",
       errorName: "请填写组织名称。",
-      errorEmail: "请填写工作邮箱。",
+      errorNameIndividual: "请填写您的姓名。",
+      errorEmail: "请填写邮箱。",
       errorEmailInvalid: "请输入有效的邮箱地址。",
+      errorOrgDomain: "组织须使用工作邮箱域名（不可使用 Gmail、Yahoo 或 Outlook）。",
+      errorAccountType: "请选择组织或个人。",
       errorLogoType: "请使用 PNG、JPG、WebP 或 GIF 标志。",
       errorLogoSize: "标志须不超过 2 MB。",
       error: "注册失败，请重试。",
@@ -550,11 +676,27 @@ window.CALCLAIM_I18N = {
       footer:
         'CalClaim 演示 · 社区推广合作伙伴 · <a href="__CONTACT__">联系我们</a> · <a href="__PRIVACY__">隐私政策</a>',
     },
+    verify: {
+      eyebrow: "邮箱验证",
+      loadingHeading: "正在确认您的邮箱…",
+      loadingBody: "请稍候––我们正在验证此账户。",
+      errorHeading: "此链接无效或已过期。",
+      errorBody: "请重新注册，或若您已完成验证并需要帮助，请联系我们。",
+      signupAgain: "返回注册",
+      successEyebrow: "已验证账户",
+      successHeading: "您的邮箱已验证。",
+      successBody:
+        "这是已验证的组织账户。您的二维码资料包已就绪，并可出现在公开排行榜。",
+      successBodyIndividual:
+        "这是已验证的个人账户。您的二维码资料包和私密统计页已就绪（不会出现在公开排行榜）。",
+      alreadyBody: "此邮箱此前已验证。您的二维码资料包再次显示如下。",
+      viewStatus: "查看状态页",
+    },
     impact: {
       eyebrow: "演示",
       lede: "加州经济援助导航––食品、医疗、电话优惠、能源账单援助等。",
       partnerSignupBody:
-        "合作社区组织––获取您专属的 CalClaim 二维码进行分享。每次扫描都会记入您的排行榜。",
+        "组织和个人注册流程相同，并通过邮件验证。组织须使用真实工作域名并出现在公开排行榜；个人拥有私密统计页。",
       partnerSignupCta: "注册成为合作伙伴",
       openCta: "打开 CalClaim",
       tryBody: "扫描二维码或点击“打开 CalClaim”即可开始。",
@@ -573,7 +715,8 @@ window.CALCLAIM_I18N = {
       mapBody: "仅显示大致位置––从不显示家庭住址。",
       mapAria: "传播地点地图",
       partnersHeading: "社区合作伙伴",
-      partnersBody: "托管 CalClaim 二维码的组织––按通过其专属二维码触达的人数排名。",
+      partnersBody:
+        "已验证并托管 CalClaim 二维码的组织––按通过其专属二维码触达的人数排名。个人私下合作，不会出现在此列表。",
       partnersAria: "合作伙伴排行榜",
       partnersEmpty: "尚无合作伙伴推广数据。",
       partnersReached: "触达人数",

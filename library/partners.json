@@ -1,6 +1,6 @@
 {
-  "version": "2026-08-01",
-  "disclaimer": "Community outreach partners host CalClaim QR codes. Not official agency affiliations.",
+  "version": "2026-08-05",
+  "disclaimer": "Community outreach partners host CalClaim QR codes. Not official agency affiliations. Demo partners use verified organization email domains.",
   "partners": [
     {
       "id": "oakland_library",
@@ -9,7 +9,10 @@
       "city": "Oakland, CA",
       "campaignId": "qr_oakland_library",
       "logo": "/brand/partners/oakland-library.svg",
-      "blurb": "Community outreach partner"
+      "blurb": "Community outreach partner",
+      "accountType": "organization",
+      "emailDomain": "oaklandlibrary.org",
+      "emailVerified": true
     },
     {
       "id": "sf_mission",
@@ -18,7 +21,10 @@
       "city": "San Francisco, CA",
       "campaignId": "qr_sf_mission",
       "logo": "/brand/partners/mission-community.svg",
-      "blurb": "Community outreach partner"
+      "blurb": "Community outreach partner",
+      "accountType": "organization",
+      "emailDomain": "missioncommunity.org",
+      "emailVerified": true
     },
     {
       "id": "fresno_food_bank",
@@ -27,7 +33,10 @@
       "city": "Fresno, CA",
       "campaignId": "qr_fresno_foodbank",
       "logo": "/brand/partners/fresno-food-bank.svg",
-      "blurb": "Community outreach partner"
+      "blurb": "Community outreach partner",
+      "accountType": "organization",
+      "emailDomain": "fresnofoodbank.org",
+      "emailVerified": true
     },
     {
       "id": "la_family_resource",
@@ -36,7 +45,10 @@
       "city": "Los Angeles, CA",
       "campaignId": "qr_la_family_resource",
       "logo": "/brand/partners/la-family-resource.svg",
-      "blurb": "Community outreach partner"
+      "blurb": "Community outreach partner",
+      "accountType": "organization",
+      "emailDomain": "lafrc.org",
+      "emailVerified": true
     },
     {
       "id": "website",
@@ -45,7 +57,10 @@
       "city": "Online",
       "campaignId": "qr_website",
       "logo": "/brand/calclaim-logo-icon-cropped.png",
-      "blurb": "QR on the public impact page"
+      "blurb": "QR on the public impact page",
+      "accountType": "organization",
+      "emailDomain": "calclaim.jayhasty.com",
+      "emailVerified": true
     }
   ]
 }

@@ -52,6 +52,7 @@ npm run seed-impact
 | `SMTP_HOST` / `SMTP_FROM` (+ optional `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`) | Optional – partner signup welcome emails; otherwise kits go to `data/mail-outbox/` |
 | `TZ` | `America/Los_Angeles` |
 | `OPENROUTER_API_KEY` / `OPENAI_API_KEY` | Optional – deeper LLM review on `/dev` library scans |
+| `CLOUDFLARE_API_TOKEN` | Required for cloud deploy DNS ensure (`calclaim.jayhasty.com` A record) |
 
 `.env` is loaded automatically on start (existing shell env wins).
 
@@ -120,6 +121,15 @@ PRIVACY.md
 ## Non-affiliation
 
 Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, or Anthropic. Estimates only; not tax, legal, or benefits advice.
+
+## Deploy (Vultr)
+
+```bash
+# .env needs TELEGRAM_BOT_TOKEN and CLOUDFLARE_API_TOKEN (Zone DNS Edit on jayhasty.com)
+CLOUD_HOST=root@144.202.105.150 ./scripts/sync-to-cloud.sh
+```
+
+That syncs the app, rebuilds the container, **upserts** the Cloudflare `A` record for `calclaim.jayhasty.com`, and fails if public DNS/HTTPS still look broken. The hostname going NXDOMAIN after a deploy was never the container dying — the DNS record was missing from Cloudflare (often deleted while toggling proxy status). Do not use `SKIP_DNS=1` unless you are intentionally bypassing that check.
 
 ## Deploy (Railway sketch)
 

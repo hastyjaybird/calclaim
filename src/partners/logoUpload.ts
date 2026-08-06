@@ -31,6 +31,7 @@ export async function readPartnerSignupMultipart(
   city: string;
   partnerId: string;
   editToken: string;
+  accountType: string;
   logo?: { buffer: Buffer; mime: string; filename: string };
 }> {
   const contentType = String(req.headers["content-type"] || "");
@@ -47,6 +48,7 @@ export async function readPartnerSignupMultipart(
   let city = "";
   let partnerId = "";
   let editToken = "";
+  let accountType = "";
   let logo: { buffer: Buffer; mime: string; filename: string } | undefined;
 
   for (const part of parts) {
@@ -84,14 +86,16 @@ export async function readPartnerSignupMultipart(
     if (field === "name") name = text.slice(0, 120);
     else if (field === "email") email = text.slice(0, 200).toLowerCase();
     else if (field === "city") city = text.slice(0, 80);
-    else if (field === "partnerId" || field === "partner_id") {
+    else if (field === "accountType" || field === "account_type") {
+      accountType = text.slice(0, 40).toLowerCase();
+    } else if (field === "partnerId" || field === "partner_id") {
       partnerId = text.slice(0, 40).toLowerCase();
     } else if (field === "editToken" || field === "edit_token") {
       editToken = text.slice(0, 200);
     }
   }
 
-  return { name, email, city, partnerId, editToken, logo };
+  return { name, email, city, partnerId, editToken, accountType, logo };
 }
 
 export function savePartnerLogoUpload(

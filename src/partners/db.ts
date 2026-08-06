@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import type Database from "better-sqlite3";
+import type { PartnerAccountType } from "./emailDomains.js";
 
 export interface SignedUpPartner {
   id: string;
@@ -11,12 +12,29 @@ export interface SignedUpPartner {
   logo: string;
   blurb: string;
   createdAt: string;
+  accountType: PartnerAccountType;
+  emailDomain: string;
+  /** ISO timestamp when the signup email was verified; null until confirmed. */
+  emailVerifiedAt: string | null;
 }
 
 let db: Database.Database | null = null;
 
 /** Reserved path segments under /partners/ that are not partner slugs. */
-export const RESERVED_PARTNER_SLUGS = new Set(["signup"]);
+export const RESERVED_PARTNER_SLUGS = new Set(["signup", "verify"]);
+
+function ensureColumn(
+  database: Database.Database,
+  table: string,
+  column: string,
+  type: string,
+): void {
+  const cols = database.prepare(`PRAGMA table_info(${table})`).all() as Array<{
+    name: string;
+  }>;
+  if (cols.some((c) => c.name === column)) return;
+  database.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+}
 
 export function initPartnerSignup(database: Database.Database): void {
   db = database;
@@ -35,6 +53,40 @@ export function initPartnerSignup(database: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_partner_signups_email
       ON partner_signups(email);
   `);
+
+  ensureColumn(db, "partner_signups", "account_type", "TEXT NOT NULL DEFAULT 'organization'");
+  ensureColumn(db, "partner_signups", "email_domain", "TEXT NOT NULL DEFAULT ''");
+  ensureColumn(db, "partner_signups", "email_verified_at", "TEXT");
+
+  // Backfill domain from email; grandfather existing rows as verified so they stay listed.
+  const rows = db
+    .prepare(
+      `SELECT id, email, email_domain, email_verified_at, created_at
+       FROM partner_signups`,
+    )
+    .all() as Array<{
+    id: string;
+    email: string;
+    email_domain: string;
+    email_verified_at: string | null;
+    created_at: string;
+  }>;
+  const patch = db.prepare(
+    `UPDATE partner_signups
+     SET email_domain = ?, email_verified_at = COALESCE(email_verified_at, ?)
+     WHERE id = ?`,
+  );
+  for (const row of rows) {
+    const at = row.email.lastIndexOf("@");
+    const domain =
+      row.email_domain ||
+      (at >= 0 ? row.email.slice(at + 1).trim().toLowerCase() : "");
+    const verifiedAt = row.email_verified_at || row.created_at;
+    if (domain !== row.email_domain || !row.email_verified_at) {
+      patch.run(domain, verifiedAt, row.id);
+    }
+  }
+
   // Repair ids that used hyphens (invalid for some Telegram clients / older sanitizer).
   // Canonical form is p_<hex> / qr_p_<hex>.
   const broken = db
@@ -65,7 +117,7 @@ function getDb(): Database.Database {
   return db;
 }
 
-function rowToPartner(row: {
+type PartnerRow = {
   id: string;
   slug: string;
   name: string;
@@ -75,7 +127,18 @@ function rowToPartner(row: {
   logo: string;
   blurb: string;
   created_at: string;
-}): SignedUpPartner {
+  account_type: string;
+  email_domain: string;
+  email_verified_at: string | null;
+};
+
+const PARTNER_SELECT = `SELECT id, slug, name, email, city, campaign_id, logo, blurb,
+  created_at, account_type, email_domain, email_verified_at
+  FROM partner_signups`;
+
+function rowToPartner(row: PartnerRow): SignedUpPartner {
+  const accountType: PartnerAccountType =
+    row.account_type === "individual" ? "individual" : "organization";
   return {
     id: row.id,
     slug: row.slug,
@@ -86,28 +149,15 @@ function rowToPartner(row: {
     logo: row.logo,
     blurb: row.blurb,
     createdAt: row.created_at,
+    accountType,
+    emailDomain: row.email_domain || "",
+    emailVerifiedAt: row.email_verified_at || null,
   };
 }
 
 export function listSignedUpPartners(): SignedUpPartner[] {
   if (!db) return [];
-  const rows = getDb()
-    .prepare(
-      `SELECT id, slug, name, email, city, campaign_id, logo, blurb, created_at
-       FROM partner_signups
-       ORDER BY created_at ASC`,
-    )
-    .all() as Array<{
-    id: string;
-    slug: string;
-    name: string;
-    email: string;
-    city: string;
-    campaign_id: string;
-    logo: string;
-    blurb: string;
-    created_at: string;
-  }>;
+  const rows = getDb().prepare(`${PARTNER_SELECT} ORDER BY created_at ASC`).all() as PartnerRow[];
   return rows.map(rowToPartner);
 }
 
@@ -115,23 +165,17 @@ export function getSignedUpPartnerBySlug(slug: string): SignedUpPartner | undefi
   if (!db) return undefined;
   const cleaned = slug.trim().toLowerCase();
   const row = getDb()
-    .prepare(
-      `SELECT id, slug, name, email, city, campaign_id, logo, blurb, created_at
-       FROM partner_signups WHERE slug = ?`,
-    )
-    .get(cleaned) as
-    | {
-        id: string;
-        slug: string;
-        name: string;
-        email: string;
-        city: string;
-        campaign_id: string;
-        logo: string;
-        blurb: string;
-        created_at: string;
-      }
-    | undefined;
+    .prepare(`${PARTNER_SELECT} WHERE slug = ?`)
+    .get(cleaned) as PartnerRow | undefined;
+  return row ? rowToPartner(row) : undefined;
+}
+
+export function getSignedUpPartnerById(id: string): SignedUpPartner | undefined {
+  if (!db) return undefined;
+  const cleaned = id.trim().toLowerCase();
+  const row = getDb()
+    .prepare(`${PARTNER_SELECT} WHERE lower(id) = ?`)
+    .get(cleaned) as PartnerRow | undefined;
   return row ? rowToPartner(row) : undefined;
 }
 
@@ -140,23 +184,8 @@ export function getSignedUpPartnerByCampaignId(
 ): SignedUpPartner | undefined {
   if (!db) return undefined;
   const row = getDb()
-    .prepare(
-      `SELECT id, slug, name, email, city, campaign_id, logo, blurb, created_at
-       FROM partner_signups WHERE campaign_id = ?`,
-    )
-    .get(campaignId) as
-    | {
-        id: string;
-        slug: string;
-        name: string;
-        email: string;
-        city: string;
-        campaign_id: string;
-        logo: string;
-        blurb: string;
-        created_at: string;
-      }
-    | undefined;
+    .prepare(`${PARTNER_SELECT} WHERE campaign_id = ?`)
+    .get(campaignId) as PartnerRow | undefined;
   return row ? rowToPartner(row) : undefined;
 }
 
@@ -178,15 +207,20 @@ export function insertSignedUpPartner(input: {
   campaignId: string;
   logo?: string;
   blurb?: string;
+  accountType: PartnerAccountType;
+  emailDomain: string;
+  emailVerifiedAt?: string | null;
 }): SignedUpPartner {
   const createdAt = new Date().toISOString();
   const logo = input.logo ?? "";
   const blurb = input.blurb ?? "Community outreach partner";
+  const emailVerifiedAt = input.emailVerifiedAt ?? null;
   getDb()
     .prepare(
       `INSERT INTO partner_signups
-        (id, slug, name, email, city, campaign_id, logo, blurb, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, slug, name, email, city, campaign_id, logo, blurb, created_at,
+         account_type, email_domain, email_verified_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       input.id,
@@ -198,6 +232,9 @@ export function insertSignedUpPartner(input: {
       logo,
       blurb,
       createdAt,
+      input.accountType,
+      input.emailDomain,
+      emailVerifiedAt,
     );
   return {
     id: input.id,
@@ -209,6 +246,9 @@ export function insertSignedUpPartner(input: {
     logo,
     blurb,
     createdAt,
+    accountType: input.accountType,
+    emailDomain: input.emailDomain,
+    emailVerifiedAt,
   };
 }
 
@@ -219,25 +259,57 @@ export function updateSignedUpPartner(
     email: string;
     city: string;
     logo?: string;
+    emailDomain?: string;
+    emailVerifiedAt?: string | null;
   },
 ): SignedUpPartner | undefined {
   const existing = getSignedUpPartnerBySlug(slug);
   if (!existing) return undefined;
   const logo = patch.logo !== undefined ? patch.logo : existing.logo;
+  const emailDomain =
+    patch.emailDomain !== undefined ? patch.emailDomain : existing.emailDomain;
+  const emailVerifiedAt =
+    patch.emailVerifiedAt !== undefined
+      ? patch.emailVerifiedAt
+      : existing.emailVerifiedAt;
   getDb()
     .prepare(
       `UPDATE partner_signups
-       SET name = ?, email = ?, city = ?, logo = ?
+       SET name = ?, email = ?, city = ?, logo = ?,
+           email_domain = ?, email_verified_at = ?
        WHERE slug = ?`,
     )
-    .run(patch.name, patch.email, patch.city, logo, existing.slug);
+    .run(
+      patch.name,
+      patch.email,
+      patch.city,
+      logo,
+      emailDomain,
+      emailVerifiedAt,
+      existing.slug,
+    );
   return {
     ...existing,
     name: patch.name,
     email: patch.email,
     city: patch.city,
     logo,
+    emailDomain,
+    emailVerifiedAt,
   };
+}
+
+export function markPartnerEmailVerified(
+  partnerId: string,
+  verifiedAt = new Date().toISOString(),
+): SignedUpPartner | undefined {
+  const existing = getSignedUpPartnerById(partnerId);
+  if (!existing) return undefined;
+  if (existing.emailVerifiedAt) return existing;
+  getDb()
+    .prepare(`UPDATE partner_signups SET email_verified_at = ? WHERE id = ?`)
+    .run(verifiedAt, existing.id);
+  return { ...existing, emailVerifiedAt: verifiedAt };
 }
 
 /** Short hex token for partner / campaign ids (combined with a `p_` / `qr_p_` prefix). */

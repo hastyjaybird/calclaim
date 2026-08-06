@@ -10,18 +10,39 @@ import {
   updateSignedUpPartner,
   type SignedUpPartner,
 } from "./db.js";
+import {
+  parseAccountType,
+  validateSignupEmail,
+  type PartnerAccountType,
+} from "./emailDomains.js";
 import { issuePartnerEditToken, verifyPartnerEditToken } from "./editToken.js";
-import { sendPartnerWelcomeEmail, type SendPartnerEmailResult } from "./email.js";
+import {
+  sendPartnerVerificationEmail,
+  sendPartnerWelcomeEmail,
+  type SendPartnerEmailResult,
+} from "./email.js";
 import { savePartnerLogoUpload } from "./logoUpload.js";
+import { issueEmailVerifyToken } from "./verifyToken.js";
 
 export interface PartnerSignupInput {
   name?: unknown;
   email?: unknown;
   city?: unknown;
   partnerId?: unknown;
+  accountType?: unknown;
 }
 
-export interface PartnerSignupResult {
+export interface PartnerSignupPendingResult {
+  partner: SignedUpPartner;
+  pendingVerification: true;
+  verifyHintEmail: string;
+  emailDomain: string;
+  email: SendPartnerEmailResult;
+  /** Present when SMTP is unset so local demos can open the link from the API response. */
+  verifyUrl?: string;
+}
+
+export interface PartnerKitResult {
   partner: SignedUpPartner;
   statusUrl: string;
   qrUrl: string;
@@ -35,23 +56,37 @@ function trimField(value: unknown, max: number): string {
   return value.trim().slice(0, max);
 }
 
-function isValidEmail(email: string): boolean {
-  // Practical check – not a full RFC parser
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 200;
-}
-
 export function parsePartnerSignup(input: PartnerSignupInput): {
   name: string;
   email: string;
   city: string;
+  accountType: PartnerAccountType;
+  emailDomain: string;
 } | { error: string } {
+  const accountType = parseAccountType(input.accountType ?? "organization");
+  if (typeof accountType === "object" && "error" in accountType) {
+    return accountType;
+  }
   const name = trimField(input.name, 120);
-  const email = trimField(input.email, 200).toLowerCase();
   const city = trimField(input.city, 80);
-  if (!name) return { error: "name_required" };
-  if (!email) return { error: "email_required" };
-  if (!isValidEmail(email)) return { error: "email_invalid" };
-  return { name, email, city };
+  if (!name) {
+    return {
+      error:
+        accountType === "individual" ? "name_required_individual" : "name_required",
+    };
+  }
+  const emailCheck = validateSignupEmail(
+    accountType,
+    trimField(input.email, 200),
+  );
+  if ("error" in emailCheck) return emailCheck;
+  return {
+    name,
+    email: emailCheck.email,
+    city,
+    accountType,
+    emailDomain: emailCheck.domain,
+  };
 }
 
 export async function registerPartnerSignup(
@@ -60,9 +95,11 @@ export async function registerPartnerSignup(
     name: string;
     email: string;
     city: string;
+    accountType: PartnerAccountType;
+    emailDomain: string;
     logo?: { buffer: Buffer; mime: string; filename: string };
   },
-): Promise<PartnerSignupResult> {
+): Promise<PartnerSignupPendingResult> {
   const token = randomPartnerToken(4);
   // Underscores only – must match Telegram /start alphabet and library campaign style.
   const id = `p_${token}`;
@@ -79,6 +116,11 @@ export async function registerPartnerSignup(
     logoPath = savePartnerLogoUpload(id, fields.logo);
   }
 
+  const blurb =
+    fields.accountType === "individual"
+      ? "Individual outreach partner"
+      : "Community outreach partner";
+
   const partner = insertSignedUpPartner({
     id,
     slug: finalSlug,
@@ -87,9 +129,36 @@ export async function registerPartnerSignup(
     city: fields.city || "California",
     campaignId,
     logo: logoPath,
-    blurb: "Community outreach partner",
+    blurb,
+    accountType: fields.accountType,
+    emailDomain: fields.emailDomain,
+    emailVerifiedAt: null,
   });
 
+  const verifyToken = issueEmailVerifyToken(
+    config.developerSessionSecret,
+    partner.id,
+    partner.email,
+  );
+  const verifyUrl = `${config.publicBaseUrl}/partners/verify?token=${encodeURIComponent(verifyToken)}`;
+
+  const email = await sendPartnerVerificationEmail({ partner, verifyUrl });
+
+  return {
+    partner,
+    pendingVerification: true,
+    verifyHintEmail: partner.email,
+    emailDomain: partner.emailDomain,
+    email,
+    verifyUrl: email.mode === "outbox" ? verifyUrl : undefined,
+  };
+}
+
+/** Build QR kit + welcome email after the signup email is verified. */
+export async function deliverPartnerKit(
+  config: AppConfig,
+  partner: SignedUpPartner,
+): Promise<PartnerKitResult> {
   const statusUrl = `${config.publicBaseUrl}/partners/${encodeURIComponent(partner.slug)}`;
   const qrUrl = `${config.publicBaseUrl}/api/qr/partner/${encodeURIComponent(partner.slug)}`;
   const bannerUrl = `${config.publicBaseUrl}/api/partners/${encodeURIComponent(partner.slug)}/banner`;
@@ -123,13 +192,21 @@ export async function registerPartnerSignup(
   return { partner, statusUrl, qrUrl, bannerUrl, editToken, email };
 }
 
-export function parsePartnerProfileUpdate(input: PartnerSignupInput): {
+export function parsePartnerProfileUpdate(
+  input: PartnerSignupInput,
+  defaults?: { accountType?: PartnerAccountType },
+): {
   name: string;
   email: string;
   city: string;
   partnerId: string;
+  accountType: PartnerAccountType;
+  emailDomain: string;
 } | { error: string } {
-  const parsed = parsePartnerSignup(input);
+  const parsed = parsePartnerSignup({
+    ...input,
+    accountType: input.accountType ?? defaults?.accountType ?? "organization",
+  });
   if ("error" in parsed) return parsed;
   const partnerId = trimField(input.partnerId, 40).toLowerCase();
   if (!partnerId) return { error: "partner_id_required" };
@@ -147,9 +224,19 @@ export async function updatePartnerProfile(
     asDeveloper?: boolean;
     logo?: { buffer: Buffer; mime: string; filename: string };
     editTokenSecret?: string;
+    accountType?: PartnerAccountType;
+    emailDomain?: string;
+    /** When set, re-issue verification for a changed email. */
+    publicBaseUrl?: string;
   },
 ): Promise<
-  | { partner: SignedUpPartner; bannerUrl: string }
+  | {
+      partner: SignedUpPartner;
+      bannerUrl: string;
+      pendingVerification?: boolean;
+      verifyUrl?: string;
+      email?: SendPartnerEmailResult;
+    }
   | { error: string }
 > {
   const existing = getSignedUpPartnerBySlug(slug);
@@ -180,17 +267,46 @@ export async function updatePartnerProfile(
     logoPath = savePartnerLogoUpload(existing.id, fields.logo);
   }
 
+  const nextEmail = fields.email;
+  const emailChanged = nextEmail.toLowerCase() !== existing.email.toLowerCase();
+  const accountType = fields.accountType ?? existing.accountType;
+  const emailCheck = validateSignupEmail(accountType, nextEmail);
+  if ("error" in emailCheck) return emailCheck;
+
   // Name/email/city/logo only – id, slug, and campaignId stay fixed.
   const partner = updateSignedUpPartner(existing.slug, {
     name: fields.name,
-    email: fields.email,
+    email: emailCheck.email,
     city: fields.city || "California",
     logo: logoPath,
+    emailDomain: emailCheck.domain,
+    emailVerifiedAt: emailChanged ? null : existing.emailVerifiedAt,
   });
   if (!partner) return { error: "not_found" };
 
-  return {
+  const result: {
+    partner: SignedUpPartner;
+    bannerUrl: string;
+    pendingVerification?: boolean;
+    verifyUrl?: string;
+    email?: SendPartnerEmailResult;
+  } = {
     partner,
     bannerUrl: `/api/partners/${encodeURIComponent(partner.slug)}/banner`,
   };
+
+  if (emailChanged && fields.editTokenSecret && fields.publicBaseUrl) {
+    const verifyToken = issueEmailVerifyToken(
+      fields.editTokenSecret,
+      partner.id,
+      partner.email,
+    );
+    const verifyUrl = `${fields.publicBaseUrl}/partners/verify?token=${encodeURIComponent(verifyToken)}`;
+    const email = await sendPartnerVerificationEmail({ partner, verifyUrl });
+    result.pendingVerification = true;
+    result.email = email;
+    if (email.mode === "outbox") result.verifyUrl = verifyUrl;
+  }
+
+  return result;
 }

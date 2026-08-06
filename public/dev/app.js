@@ -1301,11 +1301,16 @@ function renderDevPartners(partners) {
     return;
   }
   tbody.innerHTML = partners
-    .map(
-      (p) => `<tr data-slug="${escapeHtml(p.slug)}">
-        <td>${escapeHtml(p.name)}</td>
+    .map((p) => {
+      const verified = p.emailVerified
+        ? p.accountType === "organization" && p.emailDomain
+          ? `Verified · @${p.emailDomain}`
+          : "Verified email"
+        : "Pending verification";
+      return `<tr data-slug="${escapeHtml(p.slug)}">
+        <td>${escapeHtml(p.name)}<br><small>${escapeHtml(p.accountType || "organization")}</small></td>
         <td>${escapeHtml(p.city || "–")}</td>
-        <td>${escapeHtml(p.email || "–")}</td>
+        <td>${escapeHtml(p.email || "–")}<br><small>${escapeHtml(verified)}</small></td>
         <td><code>${escapeHtml(p.id)}</code></td>
         <td><a href="${escapeHtml(p.statusUrl)}" target="_blank" rel="noopener">${escapeHtml(p.slug)}</a></td>
         <td>
@@ -1314,8 +1319,8 @@ function renderDevPartners(partners) {
             <a href="${escapeHtml(p.bannerUrl)}" download>Banner</a>
           </div>
         </td>
-      </tr>`,
-    )
+      </tr>`;
+    })
     .join("");
 
   tbody.querySelectorAll("[data-edit-slug]").forEach((btn) => {

@@ -5,7 +5,8 @@
 # Requires:
 #   - dashbird stack already up (external network dashbird_default)
 #   - Caddy site block for CALCLAIM_DOMAIN → calclaim:3000
-#   - Cloudflare A record calclaim → Vultr IP (DNS only / grey cloud)
+#   - Cloudflare A record calclaim → Vultr IP (ensured by scripts/ensure-calclaim-dns.sh;
+#     Proxied/orange OK — matches dashbird; requires CLOUDFLARE_API_TOKEN in .env)
 
 services:
   calclaim:

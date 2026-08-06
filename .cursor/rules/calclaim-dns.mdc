@@ -1,0 +1,36 @@
+---
+description: CalClaim public DNS – never delete Cloudflare record; use ensure script
+alwaysApply: true
+---
+
+# CalClaim DNS (`calclaim.jayhasty.com`)
+
+## What goes wrong
+
+Browsers show “server not found” / NXDOMAIN when the Cloudflare **A** record for `calclaim` is missing. **Deploy does not delete DNS.** The record has been wiped by manual grey/orange proxy fights in the Cloudflare dashboard (delete + recreate, unsaved edits).
+
+The app container and Caddy can be healthy while public DNS is still NXDOMAIN.
+
+## Lasting fix (already in repo)
+
+1. `CLOUDFLARE_API_TOKEN` in `calclaim/.env` (Zone → DNS → Edit on `jayhasty.com`)
+2. `scripts/ensure-calclaim-dns.sh` upserts `A calclaim → 144.202.105.150` (Proxied/orange by default — matches `dashbird`)
+3. `scripts/sync-to-cloud.sh` runs ensure + `verify-calclaim-dns.sh` after container up; deploy **fails** if public DNS/HTTPS still broken
+4. Escape hatch only: `SKIP_DNS=1` (do not use casually)
+
+## Agent rules
+
+- If the site is “not found,” check public DNS (`NXDOMAIN`) before blaming the container.
+- **Do not** tell the user to delete the `calclaim` DNS row to flip proxy status.
+- **Do not** leave a Cloudflare DNS row in edit mode without Save.
+- Prefer `./scripts/ensure-calclaim-dns.sh` (or full `sync-to-cloud.sh`) over hand-editing DNS.
+- Proxied (orange) is OK once Caddy has a cert; do not insist on grey-cloud if that causes UI churn.
+- If ensure says the record exists but public DNS is NXDOMAIN, check Cloudflare zone status.
+  Lasting failure mode: zone `status=moved` / `ns_mismatch` — registrar still on `jewel`/`max`
+  while **this** Cloudflare zone only publishes via `agustin`/`chin`. Staying on jewel/max keeps
+  serving a stale view (no calclaim). Fix: Squarespace → Update nameservers → exactly the pair
+  shown in Cloudflare Overview for jayhasty.com (currently agustin + chin). Do not “fix” by
+  reverting to jewel/max.
+- Before any NS cutover, keep API-zone mail on Google Workspace (`smtp.google.com`). A Migadu
+  draft in the moved zone would break email if NS flipped blindly (mail was realigned 2026-08-05).
+- Free-plan **Moved** zones are deleted by Cloudflare after ~7 days — NS cutover is urgent.

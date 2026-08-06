@@ -324,6 +324,18 @@ function withLangPath(path) {
   return window.CalClaimLang?.withLang?.(path) || path;
 }
 
+function verifiedBadgeHtml(p) {
+  if (!p.emailVerified) return "";
+  const label =
+    p.accountType === "organization" && p.emailDomain
+      ? txt("partners.verifiedOrg", "Verified · @{domain}").replace(
+          "{domain}",
+          p.emailDomain,
+        )
+      : txt("partners.verifiedIndividual", "Verified email");
+  return `<span class="verified-badge" title="${escapeHtml(label)}">${escapeHtml(label)}</span>`;
+}
+
 function partnerRowHtml(p) {
   const href = withLangPath(`/partners/${encodeURIComponent(p.slug)}`);
   const trophy =
@@ -343,7 +355,10 @@ function partnerRowHtml(p) {
       <span class="partner-rank">${p.rank}</span>
       <img class="partner-logo" src="${escapeHtml(p.logo)}" alt="" width="48" height="48" />
       <div class="partner-meta">
-        <p class="partner-name">${escapeHtml(p.name)}</p>
+        <div class="partner-name-row">
+          <p class="partner-name">${escapeHtml(p.name)}</p>
+          ${verifiedBadgeHtml(p)}
+        </div>
         <p class="partner-city">${escapeHtml(p.city)} · ${escapeHtml(secondary)}</p>
       </div>
       <div class="partner-stat">

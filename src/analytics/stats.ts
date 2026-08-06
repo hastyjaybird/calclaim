@@ -4,6 +4,7 @@ import { getCampaign, loadCampaignsFile } from "./campaigns.js";
 import { FUNNEL_STAGES, type FunnelStageId } from "./funnel.js";
 import {
   getPartnerBySlug,
+  listLeaderboardPartners,
   listPartners,
   type Partner,
 } from "./partners.js";
@@ -385,7 +386,7 @@ function buildDemoProgramStats(programOpens: number, followThroughs: number): Pr
 
 function buildDemoMapPoints(): MapPoint[] {
   const points: MapPoint[] = [];
-  for (const partner of listPartners()) {
+  for (const partner of listLeaderboardPartners()) {
     const campaign = getCampaign(partner.campaignId);
     if (campaign?.lat == null || campaign.lng == null) continue;
     const reached = seriesTotal(buildSamplePartnerUsersPerDay(partner.slug));
@@ -666,6 +667,9 @@ export interface PartnerLeaderboardRow {
   logo: string;
   blurb: string;
   campaignId: string;
+  accountType: "organization" | "individual";
+  emailDomain: string;
+  emailVerified: boolean;
   peopleReached: number;
   botStarts: number;
   followThroughs: number;
@@ -683,6 +687,9 @@ export interface PartnerStats {
     logo: string;
     blurb: string;
     campaignId: string;
+    accountType: "organization" | "individual";
+    emailDomain: string;
+    emailVerified: boolean;
   };
   /** True for live signups (editable profile); false for library demo partners. */
   editable: boolean;
@@ -762,6 +769,9 @@ function rollupPartner(
     logo: partner.logo,
     blurb: partner.blurb,
     campaignId: partner.campaignId,
+    accountType: partner.accountType,
+    emailDomain: partner.emailDomain,
+    emailVerified: partner.emailVerified,
     peopleReached: awareness.length,
     botStarts: uniqueUsers(botStarts),
     followThroughs: uniqueUsers(followThroughs),
@@ -787,6 +797,9 @@ function demoPartnerRollup(partner: Partner): Omit<PartnerLeaderboardRow, "rank"
     logo: partner.logo,
     blurb: partner.blurb,
     campaignId: partner.campaignId,
+    accountType: partner.accountType,
+    emailDomain: partner.emailDomain,
+    emailVerified: partner.emailVerified,
     peopleReached,
     botStarts,
     followThroughs,
@@ -795,8 +808,10 @@ function demoPartnerRollup(partner: Partner): Omit<PartnerLeaderboardRow, "rank"
 }
 
 export function buildPartnerLeaderboard(): PartnerLeaderboardRow[] {
+  // Public front-page leaderboard: organizations only (individuals use private status URLs).
+  const partners = listLeaderboardPartners();
   if (impactStatsMode() === "demo") {
-    const rows = listPartners().map((p) => demoPartnerRollup(p));
+    const rows = partners.map((p) => demoPartnerRollup(p));
     rows.sort(
       (a, b) =>
         b.peopleReached - a.peopleReached ||
@@ -808,7 +823,7 @@ export function buildPartnerLeaderboard(): PartnerLeaderboardRow[] {
 
   const events = listEventsForStats();
   const userCampaign = firstBotStartCampaignByUser(events);
-  const rows = listPartners().map((p) => rollupPartner(p, events, userCampaign));
+  const rows = partners.map((p) => rollupPartner(p, events, userCampaign));
   rows.sort(
     (a, b) =>
       b.peopleReached - a.peopleReached ||
@@ -857,6 +872,9 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
         logo: partner.logo,
         blurb: partner.blurb,
         campaignId: partner.campaignId,
+        accountType: partner.accountType,
+        emailDomain: partner.emailDomain,
+        emailVerified: partner.emailVerified,
       },
       editable: Boolean(getSignedUpPartnerBySlug(partner.slug)),
       peopleReached: summary.peopleReached,
@@ -909,6 +927,9 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
       logo: partner.logo,
       blurb: partner.blurb,
       campaignId: partner.campaignId,
+      accountType: partner.accountType,
+      emailDomain: partner.emailDomain,
+      emailVerified: partner.emailVerified,
     },
     editable: Boolean(getSignedUpPartnerBySlug(partner.slug)),
     peopleReached: summary.peopleReached,

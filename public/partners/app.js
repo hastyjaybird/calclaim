@@ -265,6 +265,27 @@ function applyPartnerHeader(p) {
   el("partner-blurb").textContent =
     p.blurb || txt("partners.blurbFallback", "Community outreach partner");
 
+  const verifiedRow = el("partner-verified-row");
+  const verifiedBadge = el("partner-verified-badge");
+  if (verifiedRow && verifiedBadge) {
+    if (p.emailVerified) {
+      verifiedRow.hidden = false;
+      verifiedBadge.textContent =
+        p.accountType === "organization" && p.emailDomain
+          ? txt("partners.verifiedOrg", "Verified · @{domain}").replace(
+              "{domain}",
+              p.emailDomain,
+            )
+          : txt("partners.verifiedIndividual", "Verified email");
+    } else {
+      verifiedRow.hidden = false;
+      verifiedBadge.textContent = txt(
+        "partners.pendingVerification",
+        "Email verification pending",
+      );
+    }
+  }
+
   const qrHeading = el("partner-qr-heading");
   if (qrHeading) qrHeading.textContent = qrHeadingFor(p.name);
 
@@ -283,6 +304,9 @@ function renderPartner(stats) {
     city: p.city,
     logo: p.logo || "",
     blurb: p.blurb || "",
+    accountType: p.accountType || "organization",
+    emailDomain: p.emailDomain || "",
+    emailVerified: Boolean(p.emailVerified),
   };
 
   applyPartnerHeader(currentPartner);
