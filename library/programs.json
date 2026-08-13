@@ -1,5 +1,5 @@
 {
-  "version": "2026-08-03",
+  "version": "2026-08-12",
   "market": "California",
   "disclaimer": "Estimates only. Not affiliated with any agency or utility. Official agencies decide eligibility.",
   "programs": [
@@ -7,6 +7,7 @@
       "id": "medi_cal",
       "name": "Medi-Cal",
       "category": "health",
+      "jurisdiction": "state",
       "oneLiner": "Low- or no-cost health coverage",
       "maxBenefit": "Up to ~$400/mo coverage value (estimate; varies)",
       "applyUrl": "https://www.coveredca.com/",
@@ -50,6 +51,7 @@
       "id": "calfresh",
       "name": "CalFresh",
       "category": "food",
+      "jurisdiction": "both",
       "oneLiner": "Monthly grocery benefits (SNAP)",
       "maxBenefit": "Up to FFY2026 USDA max allotment for household size (estimate)",
       "applyUrl": "https://benefitscal.com/ApplyForBenefits/begin/ABOVR?lang=en",
@@ -106,6 +108,7 @@
       "id": "wic",
       "name": "WIC",
       "category": "food",
+      "jurisdiction": "both",
       "oneLiner": "Food and nutrition support for pregnancy / young kids",
       "maxBenefit": "Up to ~$52/mo cash-value food voucher (estimate; full food package value is often higher and varies by category)",
       "applyUrl": "https://www.cdph.ca.gov/Programs/CFH/DWICSN/Pages/Program-Landing1.aspx",
@@ -151,6 +154,7 @@
       "id": "ssi",
       "name": "SSI",
       "category": "cash",
+      "jurisdiction": "federal",
       "oneLiner": "Federal disability / aged income support",
       "maxBenefit": "Up to $994/mo federal SSI for an individual (2026; estimate)",
       "applyUrl": "https://www.ssa.gov/benefits/ssi/",
@@ -196,6 +200,7 @@
       "id": "calworks",
       "name": "CalWORKs",
       "category": "cash",
+      "jurisdiction": "state",
       "oneLiner": "Cash aid and employment services for families with kids",
       "maxBenefit": "Up to county MAP cash aid by household size (estimate)",
       "applyUrl": "https://www.cdss.ca.gov/calworks",
@@ -253,6 +258,7 @@
       "id": "capi",
       "name": "CAPI",
       "category": "cash",
+      "jurisdiction": "state",
       "oneLiner": "State cash aid for aged, blind, or disabled non-citizens ineligible for SSI/SSP solely due to immigration status",
       "maxBenefit": "Up to ~$1,234/mo SSI/SSP-equivalent for an individual (Jan 2026 CAPI standard; estimate)",
       "applyUrl": "https://benefitscal.com/ApplyForBenefits/begin/ABOVR?lang=en",
@@ -304,6 +310,7 @@
       "id": "ga_gr",
       "name": "GA/GR",
       "category": "cash",
+      "jurisdiction": "state",
       "oneLiner": "County General Assistance / General Relief cash aid for adults who do not qualify for other state or federal cash programs",
       "maxBenefit": "County-set; often ~$200–$400/mo for a single adult (LA GR ~$221; estimate – varies by county)",
       "applyUrl": "https://benefitscal.com/ApplyForBenefits/begin/ABOVR?lang=en",
@@ -354,6 +361,7 @@
       "id": "cmsp",
       "name": "CMSP",
       "category": "health",
+      "jurisdiction": "state",
       "oneLiner": "Temporary health coverage for low-income adults (21–64) in participating CMSP counties who are not eligible for other coverage",
       "maxBenefit": "Up to ~$400/mo coverage value (estimate; county CMSP / Connect to Care packages vary)",
       "applyUrl": "https://benefitscal.com/ApplyForBenefits/begin/ABOVR?lang=en",
@@ -378,7 +386,7 @@
       ],
       "yesOrder": 11,
       "noOrder": 11,
-      "gateFeeder": true,
+      "gateFeeder": false,
       "incomeGate": "careOrFeraBand",
       "requiresCmspCounty": true,
       "excludeIfAlreadyOn": [
@@ -402,6 +410,7 @@
       "id": "disaster_calfresh",
       "name": "Disaster CalFresh",
       "category": "food",
+      "jurisdiction": "both",
       "oneLiner": "Temporary food benefits after a federally declared disaster – only when your county opens a D-CalFresh application window",
       "maxBenefit": "Up to one month at the CalFresh max allotment for household size (estimate; disaster window only)",
       "applyUrl": "https://www.cdss.ca.gov/inforesources/calfresh/disaster-calfresh",
@@ -460,7 +469,8 @@
       "id": "lifeline",
       "name": "LifeLine",
       "category": "telecom",
-      "oneLiner": "Discount on phone or internet service",
+      "jurisdiction": "both",
+      "oneLiner": "Phone or internet discount for the person named on the account",
       "maxBenefit": "Up to ~$19/mo phone or internet discount (CA LifeLine estimate)",
       "applyUrl": "https://www.californialifeline.com/",
       "deadlines": [],
@@ -502,14 +512,14 @@
       "id": "care",
       "name": "CARE",
       "category": "energy",
-      "oneLiner": "Utility bill discount if you are with a participating CA utility (e.g. PG&E)",
+      "jurisdiction": "state",
+      "oneLiner": "Utility bill discount for the person named on the bill (PG&E, SDG&E, SCE, or SoCalGas)",
       "maxBenefit": "Up to ~$70/mo off electric (≈35% of ~$200 bill; estimate)",
       "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/california-alternate-rates-for-energy-program.html",
       "deadlines": [],
       "applySteps": [
-        "Confirm your utility (PG&E link is common Bay Area path)",
-        "Apply online for CARE/FERA shared form",
-        "Have account number or recent bill ready"
+        "Apply online through your utility's CARE page",
+        "Have your utility account number or recent bill ready"
       ],
       "docsNeeded": [
         "utilityBill",
@@ -554,12 +564,13 @@
       "id": "fera",
       "name": "FERA",
       "category": "energy",
-      "oneLiner": "Utility bill discount if you are with a participating CA utility (e.g. PG&E)",
+      "jurisdiction": "state",
+      "oneLiner": "Electric bill discount if CARE income is a bit too high (PG&E, SDG&E, or SCE)",
       "maxBenefit": "Up to ~$36/mo off electric (≈18% of ~$200 bill; estimate)",
       "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/family-electric-rate-assistance-program-fera.html",
       "deadlines": [],
       "applySteps": [
-        "Use the shared CARE/FERA application",
+        "Use your utility's CARE/FERA application (electric IOUs only)",
         "Have account number or recent bill ready"
       ],
       "docsNeeded": [
@@ -595,14 +606,14 @@
       "id": "esa",
       "name": "ESA",
       "category": "energy",
+      "jurisdiction": "state",
       "oneLiner": "Free home energy upgrades through your utility",
       "maxBenefit": "Up to ~$3,000 in free upgrades (estimate; utility measures)",
       "applyUrl": "https://www.pge.com/en/save-energy-and-money/energy-saving-programs/energy-savings-assistance-program.html",
       "deadlines": [],
       "applySteps": [
         "Apply or get referred through your utility ESA page",
-        "Schedule assessment if approved",
-        "Landlord permission may be needed if renting"
+        "Schedule assessment if approved"
       ],
       "docsNeeded": [
         "utilityBill",
@@ -638,6 +649,7 @@
       "id": "liheap",
       "name": "LIHEAP",
       "category": "energy",
+      "jurisdiction": "both",
       "oneLiner": "Help with heating/cooling bills (seasonal; county-run)",
       "maxBenefit": "Up to ~$1,500 one-time bill help (estimate; county/season/benefit type)",
       "applyUrl": "https://www.csd.ca.gov/Pages/LIHEAP.aspx",
@@ -686,6 +698,7 @@
       "id": "amp",
       "name": "AMP (Arrearage Management)",
       "category": "energy",
+      "jurisdiction": "state",
       "oneLiner": "Forgiveness path for past-due utility balances",
       "maxBenefit": "Up to ~$8,000 debt forgiveness over 12 months of on-time payments (estimate; utility-specific)",
       "applyUrl": "https://help.pge.com/s/article/Arrearage-Management-Plan-AMP",
@@ -728,7 +741,8 @@
       "id": "medical_baseline",
       "name": "Medical Baseline",
       "category": "energy",
-      "oneLiner": "Extra utility allowance for medical needs",
+      "jurisdiction": "state",
+      "oneLiner": "Extra utility allowance if a resident needs power for a qualifying medical condition or device; bill must be in your name",
       "maxBenefit": "Extra ~500 kWh / 25 therms per month at the lowest baseline rate – worth roughly $50/mo (estimate; varies widely by rate plan and usage)",
       "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/medical-baseline-program.html",
       "deadlines": [],
@@ -753,6 +767,7 @@
       "yesOrder": 96,
       "noOrder": 96,
       "gateFeeder": false,
+      "requiresMedicalDeviceOrCondition": true,
       "skipCascades": [],
       "skipReasons": [],
       "sources": [
@@ -765,56 +780,102 @@
       }
     },
     {
-      "id": "tax_credits",
-      "name": "Tax credits (info)",
-      "category": "tax",
-      "oneLiner": "Federal/state credits you may claim at tax time (info path)",
-      "maxBenefit": "Up to ~$4,000/yr combined credits for some households (estimate)",
-      "applyUrl": "https://www.irs.gov/credits-and-deductions-for-individuals",
-      "deadlines": [
-        {
-          "label": "Tax year 2026 federal filing deadline",
-          "date": "2027-04-15"
-        }
-      ],
+      "id": "ladwp_ez_save",
+      "name": "LADWP EZ-SAVE",
+      "category": "energy",
+      "jurisdiction": "state",
+      "oneLiner": "Bill discount for income-qualified LADWP customers (electric, water, sewer)",
+      "maxBenefit": "Up to ~$40/mo off LADWP charges (estimate; varies by usage)",
+      "applyUrl": "https://www.ladwp.com/EZSAVE",
+      "deadlines": [],
       "applySteps": [
-        "Gather income records and receipts (W-2s, 1099s, award letters)",
-        "Book a VITA / tax-preparer appointment – this usually means a real meeting",
-        "CalClaim does not file taxes"
+        "Confirm you are the LADWP customer of record at your primary residence",
+        "Apply online for EZ-SAVE at ladwp.com/EZSAVE"
       ],
       "docsNeeded": [
-        "taxForms",
-        "taxReturn"
+        "utilityBill",
+        "photoId"
       ],
       "docsReusableFromGate": [
-        "taxForms",
-        "taxReturn"
+        "utilityBill",
+        "photoId"
       ],
-      "timeToMoneyDays": 120,
-      "formFillMinutes": 90,
+      "timeToMoneyDays": 14,
+      "formFillMinutes": 10,
       "branches": [
         "yes",
-        "no",
-        "tax_only"
+        "no"
       ],
-      "yesOrder": 999,
-      "noOrder": 999,
+      "yesOrder": 61,
+      "noOrder": 61,
       "gateFeeder": false,
+      "incomeGate": "careBand",
       "skipCascades": [],
-      "skipReasons": [],
-      "sources": [
-        "https://www.irs.gov/credits-and-deductions-for-individuals"
+      "skipReasons": [
+        "not_my_bill",
+        "not_interested",
+        "remind_later"
       ],
-      "estAnnualUsd": 4000,
+      "sources": [
+        "https://www.ladwp.com/EZSAVE"
+      ],
+      "estAnnualUsd": 480,
       "maxBenefitUsd": {
-        "period": "year",
-        "amount": 4000
+        "period": "month",
+        "amount": 40
+      }
+    },
+    {
+      "id": "smud_eapr",
+      "name": "SMUD EAPR",
+      "category": "energy",
+      "jurisdiction": "state",
+      "oneLiner": "Monthly electric bill discount for income-qualified SMUD customers",
+      "maxBenefit": "Up to ~$105/mo off SMUD electric for the lowest-income tier (estimate)",
+      "applyUrl": "https://www.smud.org/lowincome",
+      "deadlines": [],
+      "applySteps": [
+        "Check EAPR income guidelines on SMUD's low-income page",
+        "Apply online through My Account or download the mail-in application"
+      ],
+      "docsNeeded": [
+        "utilityBill",
+        "photoId"
+      ],
+      "docsReusableFromGate": [
+        "utilityBill",
+        "photoId"
+      ],
+      "timeToMoneyDays": 14,
+      "formFillMinutes": 10,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 62,
+      "noOrder": 62,
+      "gateFeeder": false,
+      "incomeGate": "careBand",
+      "skipCascades": [],
+      "skipReasons": [
+        "not_my_bill",
+        "not_interested",
+        "remind_later"
+      ],
+      "sources": [
+        "https://www.smud.org/lowincome"
+      ],
+      "estAnnualUsd": 504,
+      "maxBenefitUsd": {
+        "period": "month",
+        "amount": 42
       }
     },
     {
       "id": "unemployment",
       "name": "Unemployment Insurance",
       "category": "cash",
+      "jurisdiction": "state",
       "oneLiner": "Weekly cash benefit (up to $450/wk) if you lost your job through no fault of your own",
       "maxBenefit": "Up to $450/wk for up to 26 weeks (2026; weekly cap unchanged since 2005)",
       "applyUrl": "https://edd.ca.gov/en/unemployment/",
@@ -859,6 +920,7 @@
       "id": "sdi",
       "name": "State Disability Insurance (SDI)",
       "category": "cash",
+      "jurisdiction": "state",
       "oneLiner": "Weekly wage-replacement benefit if illness, injury, or pregnancy keeps you from working",
       "maxBenefit": "Up to $1,765/wk for up to 52 weeks (2026)",
       "applyUrl": "https://edd.ca.gov/en/disability/",
@@ -902,6 +964,7 @@
       "id": "pfl",
       "name": "Paid Family Leave (PFL)",
       "category": "cash",
+      "jurisdiction": "state",
       "oneLiner": "Weekly wage-replacement benefit to bond with a new child or care for a seriously ill family member",
       "maxBenefit": "Up to $1,765/wk for up to 8 weeks in a 12-month period (2026)",
       "applyUrl": "https://edd.ca.gov/en/disability/paid-family-leave/",
@@ -945,6 +1008,7 @@
       "id": "ihss",
       "name": "In-Home Supportive Services (IHSS)",
       "category": "cash",
+      "jurisdiction": "state",
       "oneLiner": "Pays a caregiver (often a family member) to help an aged, blind, or disabled person stay safely at home",
       "maxBenefit": "Averages about 100 hrs/mo of paid care statewide, at your county's hourly rate ($16.90-$23.00/hr) – roughly $1,700-$2,300/mo (estimate; depends on your assessed hours and county wage)",
       "applyUrl": "https://www.cdss.ca.gov/in-home-supportive-services",
@@ -987,6 +1051,7 @@
       "id": "caleitc",
       "name": "CalEITC",
       "category": "tax",
+      "jurisdiction": "state",
       "oneLiner": "Cash-back state tax credit for working Californians with low to moderate income",
       "maxBenefit": "Up to $3,756 for tax year 2025 (3+ kids); up to $302 with no kids (income limit ~$32,900; figures adjust yearly)",
       "applyUrl": "https://www.ftb.ca.gov/file/personal/credits/california-earned-income-tax-credit.html",
@@ -1025,12 +1090,14 @@
       "maxBenefitUsd": {
         "period": "year",
         "amount": 3756
-      }
+      },
+      "incomeGate": "careOrFeraBand"
     },
     {
       "id": "young_child_tax_credit",
       "name": "Young Child Tax Credit (YCTC)",
       "category": "tax",
+      "jurisdiction": "state",
       "oneLiner": "Extra state tax credit for families with a child under 6, on top of CalEITC",
       "maxBenefit": "Up to $1,189 for tax year 2025 (must also qualify for CalEITC; figures adjust yearly)",
       "applyUrl": "https://www.ftb.ca.gov/file/personal/credits/young-child-tax-credit.html",
@@ -1070,6 +1137,980 @@
       "maxBenefitUsd": {
         "period": "year",
         "amount": 1189
+      },
+      "incomeGate": "careOrFeraBand"
+    },
+    {
+      "id": "myfirstev",
+      "name": "MyFirstEV",
+      "category": "transportation",
+      "jurisdiction": "state",
+      "oneLiner": "Instant rebate on your first electric or hydrogen vehicle at participating dealers",
+      "maxBenefit": "$3,500 off a qualifying new ZEV (MSRP up to $50,000) or $1,750 off a used ZEV ($25,000 or less); CA-headquartered ZEV-only makers are exempt from the price caps",
+      "applyUrl": "https://ww2.arb.ca.gov/myfirstev",
+      "deadlines": [
+        {
+          "label": "While participating manufacturers still have funds (one-time appropriation; statutory spend-by Sep 1, 2031)",
+          "date": null
+        }
+      ],
+      "applySteps": [
+        "Confirm the automaker is live – Hyundai, Lucid, and Tesla as of Aug 7, 2026; Ford, Chevrolet, Kia, and Rivian expected later in August; Toyota/Lexus, Honda, and Subaru in September; Mitsubishi in November; Nissan and Volvo TBD",
+        "Pick a qualifying battery-electric or hydrogen fuel-cell vehicle (not a plug-in hybrid) under the price cap, or a California-headquartered ZEV maker such as Lucid or Rivian",
+        "Complete CARB's first-time ZEV attestation (signed under penalty of perjury) and give the confirmation number to the dealer before you sign",
+        "Register the vehicle to a California address – the discount comes off the price at the dealership, not as a later tax credit"
+      ],
+      "docsNeeded": [
+        "photoId"
+      ],
+      "docsReusableFromGate": [
+        "photoId"
+      ],
+      "timeToMoneyDays": 7,
+      "formFillMinutes": 15,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 20,
+      "noOrder": 20,
+      "gateFeeder": false,
+      "requiresCaResidency": true,
+      "requiresBuyingEvThisYear": true,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://ww2.arb.ca.gov/myfirstev",
+        "https://ww2.arb.ca.gov/resources/fact-sheets/myfirstev-frequently-asked-questions",
+        "https://ww2.arb.ca.gov/myfirstev-participating-manufacturers",
+        "https://www.gov.ca.gov/2026/08/07/governor-newsom-announces-3500-instant-rebates-now-available-for-californians-buying-their-first-zero-emission-vehicle/"
+      ],
+      "estAnnualUsd": 3500,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 3500
+      },
+      "requiresFirstTimeZev": true
+    },
+    {
+      "id": "smartflex_rewards",
+      "name": "SmartFlex Rewards",
+      "category": "energy",
+      "jurisdiction": "state",
+      "oneLiner": "$25 from PG&E if you connect a Nest or other smart thermostat so it can use a little less energy on the hottest days",
+      "maxBenefit": "$25 signup bonus (plus a chance at monthly prizes; estimate)",
+      "applyUrl": "https://smartflexrewards.com/",
+      "deadlines": [],
+      "applySteps": [
+        "Confirm the PG&E electric bill is in your name and you have a Wi-Fi Nest, other eligible smart thermostat, or eligible EV charger",
+        "Sign up at smartflexrewards.com",
+        "Keep the device on Wi-Fi. On a few very hot or cold days it may briefly use less energy — you can opt out of any day"
+      ],
+      "docsNeeded": [
+        "utilityBill"
+      ],
+      "docsReusableFromGate": [
+        "utilityBill"
+      ],
+      "timeToMoneyDays": 14,
+      "formFillMinutes": 10,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 21,
+      "noOrder": 21,
+      "gateFeeder": false,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://smartflexrewards.com/",
+        "https://www.pge.com/en/save-energy-and-money/energy-saving-programs/automated-response-technology.html"
+      ],
+      "estAnnualUsd": 25,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 25
+      }
+    },
+    {
+      "id": "pge_preowned_ev",
+      "name": "PG&E Pre-Owned EV Rebate",
+      "category": "transportation",
+      "jurisdiction": "state",
+      "oneLiner": "Rebate for buying a qualifying used EV through PG&E's EV rebate portal",
+      "maxBenefit": "Up to $1,000 standard / up to $4,000 income-qualified (estimate; program rules)",
+      "applyUrl": "https://evrebates.pge.com/",
+      "deadlines": [
+        {
+          "label": "Standard pre-owned EV rebate applications due",
+          "date": "2026-09-30"
+        }
+      ],
+      "applySteps": [
+        "Confirm the used EV qualifies on PG&E's EV rebate portal",
+        "Apply at evrebates.pge.com before the deadline",
+        "Upload proof of purchase / registration as requested"
+      ],
+      "docsNeeded": [
+        "photoId"
+      ],
+      "docsReusableFromGate": [
+        "photoId"
+      ],
+      "timeToMoneyDays": 45,
+      "formFillMinutes": 20,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 22,
+      "noOrder": 22,
+      "gateFeeder": false,
+      "requiresCaResidency": true,
+      "requiresBuyingEvThisYear": true,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://evrebates.pge.com/"
+      ],
+      "estAnnualUsd": 1000,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 1000
+      }
+    },
+    {
+      "id": "pge_ev_charging",
+      "name": "PG&E Residential EV Charging Rebate",
+      "category": "transportation",
+      "jurisdiction": "state",
+      "oneLiner": "Rebate toward a Level 2 home EV charger / panel upgrades (PG&E EV Charge Network residential path)",
+      "maxBenefit": "Up to $5,000 for Plus / income-qualified paths (estimate; tier depends on eligibility)",
+      "applyUrl": "https://www.pge.com/en/clean-energy/electric-vehicles/getting-started-with-electric-vehicles/residential-electric-vehicle-charging-rebate.html",
+      "deadlines": [],
+      "applySteps": [
+        "Confirm you are a PG&E residential electric customer buying or owning an EV",
+        "Apply on PG&E's residential EV charging rebate page",
+        "Install a qualifying charger and submit invoices as required"
+      ],
+      "docsNeeded": [
+        "utilityBill",
+        "photoId"
+      ],
+      "docsReusableFromGate": [
+        "utilityBill",
+        "photoId"
+      ],
+      "timeToMoneyDays": 60,
+      "formFillMinutes": 25,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 23,
+      "noOrder": 23,
+      "gateFeeder": false,
+      "requiresBuyingEvThisYear": true,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.pge.com/en/clean-energy/electric-vehicles/getting-started-with-electric-vehicles/residential-electric-vehicle-charging-rebate.html"
+      ],
+      "estAnnualUsd": 5000,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 5000
+      }
+    },
+    {
+      "id": "pge_generator_battery",
+      "name": "PG&E Generator & Battery Rebate",
+      "category": "energy",
+      "jurisdiction": "state",
+      "oneLiner": "Rebate for a portable generator or battery for outage preparedness. Renters also qualify.",
+      "maxBenefit": "Up to $300 generator / up to $500 battery (estimate; PG&E program caps)",
+      "applyUrl": "https://www.pge.com/en/outages-and-safety/outage-preparedness-and-support/general-outage-resources/generator-and-battery-rebate-program.html",
+      "deadlines": [
+        {
+          "label": "Generator & battery rebate applications due",
+          "date": "2026-12-31"
+        }
+      ],
+      "applySteps": [
+        "Buy a qualifying generator or battery within the program window",
+        "Apply on PG&E's generator and battery rebate page",
+        "Upload receipt and account details"
+      ],
+      "docsNeeded": [
+        "utilityBill",
+        "photoId"
+      ],
+      "docsReusableFromGate": [
+        "utilityBill",
+        "photoId"
+      ],
+      "timeToMoneyDays": 45,
+      "formFillMinutes": 15,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 24,
+      "noOrder": 24,
+      "gateFeeder": false,
+      "requiresCaResidency": true,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.pge.com/en/outages-and-safety/outage-preparedness-and-support/general-outage-resources/generator-and-battery-rebate-program.html"
+      ],
+      "estAnnualUsd": 500,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 500
+      }
+    },
+    {
+      "id": "clean_cars_4_all",
+      "name": "Clean Cars 4 All",
+      "category": "transportation",
+      "jurisdiction": "state",
+      "oneLiner": "Scrap an older car for a grant toward a cleaner vehicle or mobility options",
+      "maxBenefit": "Up to ~$12,000 toward a qualifying cleaner vehicle (estimate; air district rules)",
+      "applyUrl": "https://ww2.arb.ca.gov/resources/fact-sheets/clean-cars-4-all",
+      "deadlines": [],
+      "applySteps": [
+        "Confirm your air district still has Clean Cars 4 All funding",
+        "Scrap a qualifying older vehicle and apply through the district program",
+        "Use the grant toward an eligible EV / hybrid / alternative mobility option"
+      ],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "photoId",
+        "categoricalProof"
+      ],
+      "timeToMoneyDays": 60,
+      "formFillMinutes": 40,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 25,
+      "noOrder": 25,
+      "gateFeeder": false,
+      "incomeGate": "careOrFeraBand",
+      "requiresBuyingEvThisYear": true,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://ww2.arb.ca.gov/resources/fact-sheets/clean-cars-4-all"
+      ],
+      "estAnnualUsd": 12000,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 12000
+      }
+    },
+    {
+      "id": "dcap",
+      "name": "Driving Clean Assistance Program (DCAP)",
+      "category": "transportation",
+      "jurisdiction": "state",
+      "oneLiner": "Point-of-sale grant for income-qualified Californians buying a cleaner vehicle",
+      "maxBenefit": "Up to ~$12,000 vehicle grant plus up to ~$2,000 charging / mobility add-ons (estimate)",
+      "applyUrl": "https://ww2.arb.ca.gov/our-work/programs/driving-clean-assistance-program/about",
+      "deadlines": [],
+      "applySteps": [
+        "Check income and vehicle eligibility on CARB's DCAP page",
+        "Get pre-approved before purchasing",
+        "Complete the purchase at a participating dealer"
+      ],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "photoId",
+        "categoricalProof"
+      ],
+      "timeToMoneyDays": 45,
+      "formFillMinutes": 35,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 26,
+      "noOrder": 26,
+      "gateFeeder": false,
+      "incomeGate": "careOrFeraBand",
+      "requiresBuyingEvThisYear": true,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://ww2.arb.ca.gov/our-work/programs/driving-clean-assistance-program/about"
+      ],
+      "estAnnualUsd": 14000,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 14000
+      }
+    },
+    {
+      "id": "foster_youth_tax_credit",
+      "name": "Foster Youth Tax Credit",
+      "category": "tax",
+      "jurisdiction": "state",
+      "oneLiner": "Extra California tax credit for former foster youth who also qualify for CalEITC",
+      "maxBenefit": "Up to $1,189 for tax year 2025 (figures adjust yearly; must also qualify for CalEITC)",
+      "applyUrl": "https://www.ftb.ca.gov/file/personal/credits/foster-youth-tax-credit.html",
+      "deadlines": [
+        {
+          "label": "Tax year 2026 California filing deadline (2025 figures shown; amounts adjust annually)",
+          "date": "2027-04-15"
+        }
+      ],
+      "applySteps": [
+        "File a California return and qualify for CalEITC (FTB Form 3514)",
+        "Confirm you meet foster-youth age and foster-care timing rules",
+        "Claim the Foster Youth Tax Credit on the same Form 3514"
+      ],
+      "docsNeeded": [
+        "taxReturn"
+      ],
+      "docsReusableFromGate": [
+        "taxReturn"
+      ],
+      "timeToMoneyDays": 120,
+      "formFillMinutes": 20,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 27,
+      "noOrder": 27,
+      "gateFeeder": false,
+      "incomeGate": "careOrFeraBand",
+      "requiresFosterYouth": true,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.ftb.ca.gov/file/personal/credits/foster-youth-tax-credit.html"
+      ],
+      "estAnnualUsd": 1189,
+      "maxBenefitUsd": {
+        "period": "year",
+        "amount": 1189
+      }
+    },
+    {
+      "id": "premium_tax_credit",
+      "name": "Premium Tax Credit (Covered California)",
+      "category": "health",
+      "jurisdiction": "federal",
+      "oneLiner": "Federal subsidy that lowers Covered California monthly premiums",
+      "maxBenefit": "Varies widely – often hundreds per month off marketplace premiums (estimate)",
+      "applyUrl": "https://www.coveredca.com/",
+      "deadlines": [],
+      "applySteps": [
+        "Apply or renew at CoveredCA.com",
+        "Report household income for APTC / Premium Tax Credit",
+        "Reconcile the credit on your federal tax return (Form 8962)"
+      ],
+      "docsNeeded": [
+        "incomeProof",
+        "photoId"
+      ],
+      "docsReusableFromGate": [
+        "incomeProof",
+        "photoId",
+        "categoricalProof"
+      ],
+      "timeToMoneyDays": 30,
+      "formFillMinutes": 30,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 30,
+      "noOrder": 30,
+      "gateFeeder": false,
+      "incomeGate": "careOrFeraBand",
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.coveredca.com/"
+      ],
+      "estAnnualUsd": 3600,
+      "maxBenefitUsd": {
+        "period": "month",
+        "amount": 300
+      }
+    },
+    {
+      "id": "sun_bucks",
+      "name": "SUN Bucks (Summer EBT)",
+      "category": "food",
+      "jurisdiction": "both",
+      "oneLiner": "Summer grocery benefit for school-age kids when school meals pause",
+      "maxBenefit": "$120 per eligible child for summer 2026 (estimate; CDSS publishes each year)",
+      "applyUrl": "https://www.cdss.ca.gov/sun-bucks",
+      "deadlines": [
+        {
+          "label": "Summer 2026 SUN Bucks application / issuance window ends",
+          "date": "2026-08-31"
+        }
+      ],
+      "applySteps": [
+        "Check if your child was auto-enrolled via school meal / CalFresh / Medi-Cal data",
+        "If not, apply on the CDSS SUN Bucks page before the seasonal deadline",
+        "Use benefits on an EBT card at authorized retailers"
+      ],
+      "docsNeeded": [
+        "photoId"
+      ],
+      "docsReusableFromGate": [
+        "photoId",
+        "categoricalProof"
+      ],
+      "timeToMoneyDays": 21,
+      "formFillMinutes": 15,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 31,
+      "noOrder": 31,
+      "gateFeeder": false,
+      "requiresChildInHousehold": true,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.cdss.ca.gov/sun-bucks"
+      ],
+      "estAnnualUsd": 120,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 120
+      }
+    },
+    {
+      "id": "ssdi",
+      "name": "Social Security Disability Insurance (SSDI)",
+      "category": "cash",
+      "jurisdiction": "federal",
+      "oneLiner": "Monthly disability benefit if you have enough work credits and meet SSA disability rules",
+      "maxBenefit": "Average ~$1,500/mo (individual amounts vary with earnings history; estimate)",
+      "applyUrl": "https://www.ssa.gov/disabilityssi/",
+      "deadlines": [],
+      "applySteps": [
+        "Apply online at ssa.gov or at a local Social Security office",
+        "Provide medical evidence and work history",
+        "Expect a multi-month decision; appeal if denied"
+      ],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "photoId"
+      ],
+      "timeToMoneyDays": 120,
+      "formFillMinutes": 60,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 32,
+      "noOrder": 32,
+      "gateFeeder": false,
+      "requiresAgedBlindOrDisabled": true,
+      "requiresCitizenOrEligibleImmigrant": true,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.ssa.gov/disabilityssi/"
+      ],
+      "estAnnualUsd": 18000,
+      "maxBenefitUsd": {
+        "period": "month",
+        "amount": 1500
+      }
+    },
+    {
+      "id": "rca",
+      "name": "Refugee Cash Assistance (RCA)",
+      "category": "cash",
+      "jurisdiction": "both",
+      "oneLiner": "Short-term cash aid for refugees and other eligible newcomers not on CalWORKs",
+      "maxBenefit": "Up to CalWORKs-equivalent grants for up to 4 months (estimate; county-administered)",
+      "applyUrl": "https://benefitscal.com/ApplyForBenefits/begin/ABOVR?lang=en",
+      "deadlines": [],
+      "applySteps": [
+        "Apply on BenefitsCal for Refugee Cash Assistance",
+        "Provide immigration / arrival documents",
+        "Aid is typically limited to the first months after arrival"
+      ],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "photoId"
+      ],
+      "timeToMoneyDays": 14,
+      "formFillMinutes": 30,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 33,
+      "noOrder": 33,
+      "gateFeeder": false,
+      "requiresCitizenOrEligibleImmigrant": true,
+      "requiresRefugeeOrAsylee": true,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en",
+        "https://www.cdss.ca.gov/inforesources/refugees/programs-and-info/cash-assistance"
+      ],
+      "estAnnualUsd": 2000,
+      "maxBenefitUsd": {
+        "period": "month",
+        "amount": 500
+      }
+    },
+    {
+      "id": "cfap",
+      "name": "California Food Assistance Program (CFAP)",
+      "category": "food",
+      "jurisdiction": "state",
+      "oneLiner": "State-funded food benefits for some immigrants who are income-eligible but not CalFresh-eligible",
+      "maxBenefit": "Same allotment scale as CalFresh for household size (estimate)",
+      "applyUrl": "https://www.cdss.ca.gov/inforesources/calfresh/california-food-assistance-program",
+      "deadlines": [],
+      "applySteps": [
+        "Apply on BenefitsCal – CFAP uses the CalFresh application path",
+        "County determines federal CalFresh ineligibility due to immigration status",
+        "If CFAP-eligible, benefits issue on an EBT card"
+      ],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "photoId",
+        "categoricalProof"
+      ],
+      "timeToMoneyDays": 14,
+      "formFillMinutes": 25,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 34,
+      "noOrder": 34,
+      "gateFeeder": false,
+      "incomeGate": "careOrFeraBand",
+      "requiresIneligibleImmigrantStatus": true,
+      "excludeIfAlreadyOn": [
+        "calfresh"
+      ],
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.cdss.ca.gov/inforesources/calfresh/california-food-assistance-program"
+      ],
+      "estAnnualUsd": 3576,
+      "maxBenefitUsd": {
+        "period": "month",
+        "byHouseholdSize": {
+          "1": 298,
+          "2": 546,
+          "3": 785,
+          "4": 994,
+          "5": 1183,
+          "6": 1421,
+          "7": 1571,
+          "8": 1789
+        },
+        "eachAdditional": 218
+      }
+    },
+    {
+      "id": "renters_credit",
+      "name": "California Nonrefundable Renters' Credit",
+      "category": "tax",
+      "jurisdiction": "state",
+      "oneLiner": "Small California tax credit if you paid rent on a CA home and meet income limits",
+      "maxBenefit": "$60 single / $120 joint or head of household (nonrefundable)",
+      "applyUrl": "https://www.ftb.ca.gov/file/personal/credits/nonrefundable-renters-credit.html",
+      "deadlines": [
+        {
+          "label": "Tax year 2026 California filing deadline",
+          "date": "2027-04-15"
+        }
+      ],
+      "applySteps": [
+        "File a California tax return",
+        "Claim the nonrefundable renters' credit if you paid qualifying rent",
+        "Keep rent receipts in case FTB asks"
+      ],
+      "docsNeeded": [
+        "taxReturn"
+      ],
+      "docsReusableFromGate": [
+        "taxReturn"
+      ],
+      "timeToMoneyDays": 120,
+      "formFillMinutes": 15,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 35,
+      "noOrder": 35,
+      "gateFeeder": false,
+      "incomeGate": "careOrFeraBand",
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.ftb.ca.gov/file/personal/credits/nonrefundable-renters-credit.html"
+      ],
+      "estAnnualUsd": 120,
+      "maxBenefitUsd": {
+        "period": "year",
+        "amount": 120
+      }
+    },
+    {
+      "id": "sgip",
+      "name": "Self-Generation Incentive Program (SGIP)",
+      "category": "energy",
+      "jurisdiction": "state",
+      "oneLiner": "Incentive for home battery storage (currently waitlisted / funds reserved)",
+      "maxBenefit": "Varies by system size and equity budget – often several thousand dollars when open (estimate)",
+      "applyUrl": "https://www.selfgenca.com/",
+      "deadlines": [],
+      "applySteps": [
+        "Check SGIP portal for open budget / waitlist status before applying",
+        "Work with an approved developer / installer",
+        "Submit reservation and claim paperwork through the SGIP portal"
+      ],
+      "docsNeeded": [
+        "utilityBill",
+        "photoId"
+      ],
+      "docsReusableFromGate": [
+        "utilityBill",
+        "photoId"
+      ],
+      "timeToMoneyDays": 180,
+      "formFillMinutes": 45,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 38,
+      "noOrder": 38,
+      "gateFeeder": false,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.selfgenca.com/",
+        "https://www.cpuc.ca.gov/sgip/"
+      ],
+      "estAnnualUsd": 5000,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 5000
+      }
+    },
+    {
+      "id": "heehra",
+      "name": "HEEHRA (Home Electrification / HOMES path)",
+      "category": "energy",
+      "jurisdiction": "both",
+      "oneLiner": "Federal home electrification rebate path in California (funds fully reserved as of Feb 2026)",
+      "maxBenefit": "Up to several thousand toward qualifying electrification upgrades when open (estimate)",
+      "applyUrl": "https://www.energy.ca.gov/",
+      "deadlines": [],
+      "applySteps": [
+        "Check California Energy Commission / contractor channels for reopen status",
+        "Do not apply expecting current funding – budgets were fully reserved Feb 24, 2026",
+        "If a waitlist or reopen is announced, follow the official contractor / portal path"
+      ],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "photoId",
+        "categoricalProof"
+      ],
+      "timeToMoneyDays": 180,
+      "formFillMinutes": 40,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 39,
+      "noOrder": 39,
+      "gateFeeder": false,
+      "incomeGate": "careOrFeraBand",
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.energy.ca.gov/"
+      ],
+      "estAnnualUsd": 4000,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 4000
+      }
+    },
+    {
+      "id": "tax_credits",
+      "name": "Tax credits (info)",
+      "category": "tax",
+      "jurisdiction": "federal",
+      "oneLiner": "Federal/state credits you may claim at tax time (info path)",
+      "maxBenefit": "Up to ~$4,000/yr combined credits for some households (estimate)",
+      "applyUrl": "https://www.irs.gov/credits-and-deductions-for-individuals",
+      "deadlines": [
+        {
+          "label": "Tax year 2026 federal filing deadline",
+          "date": "2027-04-15"
+        }
+      ],
+      "applySteps": [
+        "Gather income records and receipts (W-2s, 1099s, award letters)",
+        "Book a VITA / tax-preparer appointment – this usually means a real meeting",
+        "CalClaim does not file taxes"
+      ],
+      "docsNeeded": [
+        "taxForms",
+        "taxReturn"
+      ],
+      "docsReusableFromGate": [
+        "taxForms",
+        "taxReturn"
+      ],
+      "timeToMoneyDays": 120,
+      "formFillMinutes": 90,
+      "branches": [
+        "yes",
+        "no",
+        "tax_only"
+      ],
+      "yesOrder": 999,
+      "noOrder": 999,
+      "gateFeeder": false,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.irs.gov/credits-and-deductions-for-individuals"
+      ],
+      "estAnnualUsd": 4000,
+      "maxBenefitUsd": {
+        "period": "year",
+        "amount": 4000
+      }
+    },
+    {
+      "id": "federal_eitc",
+      "name": "Federal Earned Income Tax Credit (EITC)",
+      "category": "tax",
+      "jurisdiction": "federal",
+      "oneLiner": "Federal cash-back credit for working people with low to moderate income",
+      "maxBenefit": "Up to about $8,046 for tax year 2025 with 3+ kids (estimate; IRS publishes annual tables)",
+      "applyUrl": "https://www.irs.gov/credits-deductions/individuals/earned-income-tax-credit-eitc",
+      "deadlines": [
+        {
+          "label": "Tax year 2026 federal filing deadline",
+          "date": "2027-04-15"
+        }
+      ],
+      "applySteps": [
+        "File a federal tax return (free help via VITA)",
+        "Claim EITC on Form 1040 / Schedule EIC if you have qualifying children",
+        "Must have earned income and meet IRS income limits"
+      ],
+      "docsNeeded": [
+        "taxReturn",
+        "taxForms"
+      ],
+      "docsReusableFromGate": [
+        "taxReturn",
+        "taxForms"
+      ],
+      "timeToMoneyDays": 120,
+      "formFillMinutes": 45,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 28,
+      "noOrder": 28,
+      "gateFeeder": false,
+      "incomeGate": "careOrFeraBand",
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.irs.gov/credits-deductions/individuals/earned-income-tax-credit-eitc"
+      ],
+      "estAnnualUsd": 8046,
+      "maxBenefitUsd": {
+        "period": "year",
+        "amount": 8046
+      }
+    },
+    {
+      "id": "child_tax_credit",
+      "name": "Child Tax Credit (CTC)",
+      "category": "tax",
+      "jurisdiction": "federal",
+      "oneLiner": "Federal tax credit per qualifying child under 17",
+      "maxBenefit": "Up to $2,200 per qualifying child (tax year 2025+; phaseout starts high)",
+      "applyUrl": "https://www.irs.gov/credits-deductions/individuals/child-tax-credit",
+      "deadlines": [
+        {
+          "label": "Tax year 2026 federal filing deadline",
+          "date": "2027-04-15"
+        }
+      ],
+      "applySteps": [
+        "File a federal tax return listing each qualifying child",
+        "Claim the Child Tax Credit / Additional Child Tax Credit as applicable",
+        "Have SSNs for you and each qualifying child"
+      ],
+      "docsNeeded": [
+        "taxReturn",
+        "taxForms"
+      ],
+      "docsReusableFromGate": [
+        "taxReturn",
+        "taxForms"
+      ],
+      "timeToMoneyDays": 120,
+      "formFillMinutes": 30,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 29,
+      "noOrder": 29,
+      "gateFeeder": false,
+      "requiresChildInHousehold": true,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.irs.gov/credits-deductions/individuals/child-tax-credit"
+      ],
+      "estAnnualUsd": 2200,
+      "maxBenefitUsd": {
+        "period": "year",
+        "amount": 2200
+      }
+    },
+    {
+      "id": "cdcc",
+      "name": "Child and Dependent Care Credit",
+      "category": "tax",
+      "jurisdiction": "federal",
+      "oneLiner": "Federal credit for work-related child or dependent care expenses",
+      "maxBenefit": "Up to 35% of qualifying expenses (caps apply; estimate varies by income)",
+      "applyUrl": "https://www.irs.gov/credits-deductions/individuals/child-and-dependent-care-credit-information",
+      "deadlines": [
+        {
+          "label": "Tax year 2026 federal filing deadline",
+          "date": "2027-04-15"
+        }
+      ],
+      "applySteps": [
+        "Track qualifying care expenses and provider TINs",
+        "File Form 2441 with your federal return",
+        "Must have earned income and a qualifying child / dependent"
+      ],
+      "docsNeeded": [
+        "taxReturn",
+        "taxForms"
+      ],
+      "docsReusableFromGate": [
+        "taxReturn",
+        "taxForms"
+      ],
+      "timeToMoneyDays": 120,
+      "formFillMinutes": 30,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 36,
+      "noOrder": 36,
+      "gateFeeder": false,
+      "requiresChildInHousehold": true,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.irs.gov/credits-deductions/individuals/child-and-dependent-care-credit-information"
+      ],
+      "estAnnualUsd": 1050,
+      "maxBenefitUsd": {
+        "period": "year",
+        "amount": 1050
+      }
+    },
+    {
+      "id": "savers_credit",
+      "name": "Saver's Credit",
+      "category": "tax",
+      "jurisdiction": "federal",
+      "oneLiner": "Federal credit for contributing to an IRA or workplace retirement plan",
+      "maxBenefit": "Up to $1,000 single / $2,000 joint (estimate; rate depends on income)",
+      "applyUrl": "https://www.irs.gov/credits-deductions/individuals/save-for-retirement-if-youre-eligible-claim-the-saver-s-credit",
+      "deadlines": [
+        {
+          "label": "Tax year 2026 federal filing deadline",
+          "date": "2027-04-15"
+        }
+      ],
+      "applySteps": [
+        "Contribute to a qualifying IRA or workplace plan",
+        "Claim the credit on Form 8880 with your federal return",
+        "Income must be under the IRS Saver's Credit limits"
+      ],
+      "docsNeeded": [
+        "taxReturn",
+        "taxForms"
+      ],
+      "docsReusableFromGate": [
+        "taxReturn",
+        "taxForms"
+      ],
+      "timeToMoneyDays": 120,
+      "formFillMinutes": 20,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 37,
+      "noOrder": 37,
+      "gateFeeder": false,
+      "incomeGate": "careOrFeraBand",
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://www.irs.gov/credits-deductions/individuals/save-for-retirement-if-youre-eligible-claim-the-saver-s-credit"
+      ],
+      "estAnnualUsd": 1000,
+      "maxBenefitUsd": {
+        "period": "year",
+        "amount": 1000
       }
     }
   ]

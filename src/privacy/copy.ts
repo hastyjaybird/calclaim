@@ -21,12 +21,14 @@ export const PRIVACY_SHORT = `Privacy (short):
 • Home ZIP only when needed to check a county-specific program (e.g. CMSP).
 • Immigration status is asked only when needed for later programs – your answer is not stored and is not connected to your phone number.
 • Phone/location only if you share them in Telegram.
+• Street + city for the optional PG&E shut-off check is looked up once, then discarded (we keep only yes/no). If you share location, we snap to the nearest street for that same check and do not keep GPS or the street.
+• Friend-share links use an anonymous code so we can count clicks – not who you sent them to.
 • We do not sell your data or send it to third-party marketers.
 • Type STOP to pause reminders (keeps your data). Type erase to delete your data.
 
 Full policy: ${PRIVACY_POLICY_URL}`;
 
-export const ABOUT_TEXT = `CalClaim finds California programs you might be eligible for – food, health, phone discounts, energy bill help, and more – and gives you an Application Guide so you can apply.
+export const ABOUT_TEXT = `CalClaim finds help with food, health coverage, phone discounts, energy bills, and more – and gives you a personalized Application Guide for California and federal programs to make it easier to apply.
 
 Estimates only. Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, or any agency. Not tax, legal, or benefits advice. Official agencies decide eligibility.
 
@@ -38,6 +40,13 @@ export const THANKS_FEEDBACK = "Thanks for your feedback!";
 /** Shared household vs roommate blurb – reuse on every screen that says “household”. */
 export const HOUSEHOLD_EXPLAIN =
   "Your household = people who share money with you (buy food together, share bills, or depend on each other). Not roommates who keep their rent/food money separate.";
+
+/** Immigration-status gate – asked last; answer is process-memory only. */
+export const IMMIGRATION_STATUS_PROMPT = `A few programs are based on immigration status. There may be California programs available specifically for non-citizens.
+
+Are you a U.S. citizen or an eligible immigrant?
+
+Your answer is not stored and is not connected to your phone number – it is completely private. We only use it once to decide which programs to show you next.`;
 
 /** @deprecated use THANKS_FEEDBACK – kept for older docs references */
 export const THANKS_REDIRECT = THANKS_FEEDBACK;

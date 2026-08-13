@@ -1,0 +1,91 @@
+.util-main {
+  max-width: 1400px;
+  margin: 0 auto 3rem;
+  padding: 0 1.25rem;
+}
+
+.util-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: #fffdf8;
+}
+
+.util-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  min-width: 960px;
+}
+
+.util-table th,
+.util-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.55rem 0.65rem;
+  vertical-align: top;
+  text-align: left;
+}
+
+.util-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f3efe4;
+  font-weight: 600;
+  z-index: 1;
+}
+
+.util-table th.row-head,
+.util-table td.row-head {
+  position: sticky;
+  left: 0;
+  background: #f7f3ea;
+  font-weight: 600;
+  min-width: 11rem;
+  z-index: 2;
+}
+
+.util-table thead th.row-head {
+  z-index: 3;
+}
+
+.util-kind {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin-top: 0.15rem;
+}
+
+.util-cell-yes {
+  background: rgba(13, 122, 95, 0.08);
+}
+
+.util-cell-no {
+  color: #9a9488;
+}
+
+.util-cell-yes a {
+  color: #0b5c2e;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.util-cell-note {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  font-weight: 400;
+}
+
+.util-hint {
+  margin: 0.85rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.util-hint code {
+  font-size: 0.85em;
+}

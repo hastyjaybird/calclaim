@@ -1,0 +1,33 @@
+---
+description: Keep local CalClaim /dev web server durable (avoid unable to connect)
+alwaysApply: true
+---
+
+# Local `dev-web` server (avoid “unable to connect”)
+
+## Root cause (do not reintroduce)
+
+On this machine `npx` / `npm` are aliased to **Socket** (`socket npx`). Agents used to start CalClaim with `npx tsx -e '…'` (or `npm run dev`) **inside Cursor agent shells**. Those shells get torn down (cleanup, process-group kill, later `pkill`). Socket then prints `✖ Unexpected error: command failed`, the Node process dies, and the browser shows **unable to connect** to `localhost:3000`.
+
+Sandbox-started listeners are also sometimes unreachable from the host browser.
+
+## Required pattern
+
+- To serve `/dev`, `/dev/tree`, or any local CalClaim web UI:
+
+```bash
+./scripts/dev-web.sh ensure
+```
+
+- Run that command with **full host permissions** (`all` / no sandbox) so the port is reachable from the browser.
+- Check with `./scripts/dev-web.sh status` or `curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/impact`.
+
+## Do not
+
+- Do **not** start the web UI with `npx tsx -e`, `socket npx`, or one-off inline eval servers.
+- Do **not** `pkill -f 'tsx'` / `fuser -k 3000` as a routine step — that kills the durable daemon. Use `./scripts/dev-web.sh stop` or `restart` only when intentionally bouncing.
+- Do **not** rely on `npm run dev` (Telegram bot + web) for `/dev/tree` review; prefer web-only via `dev-web.sh`.
+
+## Package scripts
+
+- `npm run dev:web` → `./scripts/dev-web.sh ensure` (still prefer invoking the shell script directly so Socket aliases cannot wrap the daemon).

@@ -88,7 +88,14 @@ export async function analyzeProgramWithLlm(
     docsNeeded: program.docsNeeded,
     incomeGate: program.incomeGate ?? null,
     requiresPastDue: program.requiresPastDue ?? false,
+    requiresCaResidency: program.requiresCaResidency ?? false,
+    requiresBuyingEvThisYear: program.requiresBuyingEvThisYear ?? false,
+    requiresFirstTimeZev: program.requiresFirstTimeZev ?? false,
     requiresChildInHousehold: program.requiresChildInHousehold ?? false,
+    requiresFosterYouth: program.requiresFosterYouth ?? false,
+    requiresRefugeeOrAsylee: program.requiresRefugeeOrAsylee ?? false,
+    requiresMedicalDeviceOrCondition:
+      program.requiresMedicalDeviceOrCondition ?? false,
   };
 
   const pages = pageTexts.map((p) => ({

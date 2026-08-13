@@ -135,9 +135,9 @@ Cite library docs internally; document sources in README. Never invent $ or dead
 
 ## Voice examples
 
-**Opt-in:** “CalClaim helps you find California benefits and bill help you may qualify for – food, health, phone, energy discounts, and more. Estimates only. Not affiliated with any agency. [ Start ]”
+**Opt-in:** “CalClaim finds help with food, health coverage, phone discounts, energy bills, and more – and gives you a personalized Application Guide for California and federal programs to make it easier to apply. At any time, text about an issue, correction or suggest an improvement. Estimates only. Not affiliated with any agency. Type 'help' for more options. [ Start ]”
 
-**Gate:** “Is anyone in your household already on Medi-Cal, CalFresh, SSI, CalWORKs, CAPI, GA/GR, CMSP, or WIC?” (multiselect + Done / None)
+**Gate:** “Is anyone in your household already on any of these?” Buttons: Medi-Cal, CalFresh, Supplemental Security Income (SSI), CalWORKs, Cash Assistance Program for Immigrants (CAPI), General Assistance / General Relief (GA/GR), County Medical Services Program (CMSP), Women, Infants, and Children (WIC). (multiselect + Done / None)
 
 **Offer card (example – not energy-special):** “CalFresh – grocery help. Est. up to ~$X/mo (~$Y/person) if eligible. [ Sign up ] [ Already enrolled ] [ Remind me later ] [ Skip ]”
 

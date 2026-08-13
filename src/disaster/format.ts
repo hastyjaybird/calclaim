@@ -125,7 +125,42 @@ export function describeArea(window: DisasterWindow, maxZips = 24): string[] {
   return lines;
 }
 
-/** How to apply – per-event phone or URL, never a generic CalFresh link. */
+/**
+ * First triage question while a Disaster CalFresh window is offerable.
+ * Lists every active window so Yes / No / Not sure can be answered against
+ * the real geography.
+ */
+export function disasterImpactQuestion(windows: DisasterWindow[]): string {
+  const lines = [
+    "Was your residence or your place of work impacted by any of the following disasters?",
+  ];
+  for (const window of windows) {
+    lines.push("");
+    const range = formatIncidentRange(window.incidentBegin, window.incidentEnd);
+    lines.push(range ? `${window.label} (${range})` : window.label);
+    for (const line of describeArea(window)) lines.push(line);
+  }
+  lines.push(
+    "",
+    "Yes if anyone in your household lived or worked there – a job in the area counts even if you live somewhere else.",
+  );
+  return lines.join("\n");
+}
+
+export function disasterZipConfirmPrompt(): string {
+  return "What's the ZIP code for the residence or workplace that may have been impacted? (5 digits – used only to check the disaster area.)";
+}
+
+/** Prefer work ZIP when we already know home is out of state. */
+export function disasterWorkZipConfirmPrompt(): string {
+  return "What's the ZIP code for the California workplace that may have been impacted? (5 digits – used only to check the disaster area.)";
+}
+
+/**
+ * How to apply – per-event phone or URL, never a generic CalFresh link.
+ * Includes web URLs, so do not put this on offer cards (those stay in-chat
+ * until the list is done; official links belong in the Application Guide PDF).
+ */
 export function formatApplyChannel(window: DisasterWindow): string | null {
   if (window.applyPhone && window.applyUrl) {
     return `Apply by phone at ${window.applyPhone} or online at ${window.applyUrl}`;

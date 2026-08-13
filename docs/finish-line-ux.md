@@ -21,12 +21,13 @@ We do **not** auto-submit to agencies. We do **not** make energy/PG&E the only f
 
 1. **One job per screen** in chat – usually one offer card or one confirm.  
 2. **The file is the durable finish line** – one Application Guide PDF is updated and re-sent after meaningful actions.  
-3. **Same button shapes** on every offer: I'm already enrolled · Add to My Application Guide · Skip program.  
-4. **Official apply links live in the finish summary + PDF** – not on offer cards (keeps people in chat).  
+3. **Same button shapes** on every offer: Add to My Application Guide · I'm already enrolled · Skip program · and, once the Application Guide has at least one open item, **Exit & print My Application Guide now**.  
+4. **Official apply links and documents needed live in the Application Guide PDF** (clickable URLs, e.g. “Apply via PG&E”) – not on offer cards (keeps people in chat until they are through the list).  
 5. **No auto-submit** (v2).  
 6. **Forgiving STOP / erase** – user can wipe everything.  
 7. **Reminders never invent deadlines** – only library/session dates.  
 8. **Multi-category** – a “finished” demo must not look like a PG&E-only checklist.
+9. **Early exit** – tapping exit-and-print ends the offer queue and runs the same finish path as end-of-queue.
 
 ---
 
@@ -34,17 +35,18 @@ We do **not** auto-submit to agencies. We do **not** make energy/PG&E the only f
 
 ### Phase 1 – Offer → action
 
-User sees one program card (any category). They tap Already enrolled / Add to My Application Guide / Skip program.
+User sees one program card (any category). They tap Add to My Application Guide / Already enrolled / Skip program. Once the guide has an open item, later cards also offer **Exit & print My Application Guide now** to leave early and get the PDF.
 
 ### Phase 2 – Finish summary + living Application Guide
 
 When the queue ends **and** there is at least one open to-do:
 
-1. Abbreviated chat summary (total $, docs → $, programs + signup URLs)  
+1. Abbreviated chat summary (total $, docs → $, apply-now programs, and a short pointer at the PDF’s tax-preparer box when tax-season credits are on the guide)  
 2. Send `calclaim-application-guide.pdf` (caption: “Click to download your Application Guide”):
    - Header + “You may qualify for a total of ~$X this year”  
    - **Step 1 – Find your documents** (deduped, with est. $ unlocked)  
-   - **Step 2 – Open applications** (program, est. minutes, **clickable** apply link, deadline, status)  
+   - **Step 2 – Apply now** (programs you can submit today; full official URL, clickable)  
+   - **For your tax preparer** (boxed handout, only when the guide has tax-season credits – print and give to VITA, a paid preparer, or software; claim on the return, not applications to submit today. Premium Tax Credit / Covered CA stays in Step 2.)  
    - Closest deadline · Already on · disclaimer  
 
 If there are **no** open to-dos: skip the guide; nudge share-with-a-friend.
@@ -77,7 +79,7 @@ Reminder message: closest/due item + deep link or “open your latest Applicatio
 
 ## Add-to-list handoff
 
-Stay in chat. Ack briefly (“Added to your Application Guide.”) and advance. Official URLs appear in the finish summary + PDF.
+Stay in chat. Ack briefly (“Added to your Application Guide.”) and advance. Official URLs appear in the Application Guide PDF after they finish the list (or exit early to print).
 
 ---
 

@@ -27,6 +27,7 @@ const PAPER = "#ffffff";
 type BannerShared = {
   partnerName: string;
   partnerId: string;
+  eventName?: string;
   qrPng: Buffer;
   calclaimBuf: Buffer | null;
   partnerLogoBuf: Buffer | null;
@@ -250,6 +251,20 @@ function drawBannerLayout(
     cy = doc.y + 10 * scale;
   }
 
+  if (input.eventName) {
+    doc
+      .fillColor(INK)
+      .font("Helvetica-Bold")
+      .fontSize(Math.max(12, 18 * scale))
+      .text(input.eventName, x + margin, cy, {
+        width: contentW,
+        align: "center",
+        height: Math.max(16, 24 * scale),
+        ellipsis: true,
+      });
+    cy = doc.y + 8 * scale;
+  }
+
   // Keep tagline in the band above the centered QR
   if (cy > headerBottom - 36 * scale) {
     cy = Math.min(cy, headerBottom - 36 * scale);
@@ -352,6 +367,7 @@ export async function renderPartnerBoothBannerPdf(input: {
   partnerId: string;
   qrTargetUrl: string;
   partnerLogoPath?: string | null;
+  eventName?: string;
 }): Promise<Buffer> {
   const qrPng = await renderBlackQrPng(input.qrTargetUrl);
   const calclaimBuf = fs.existsSync(CALCLAIM_LOGO)
@@ -364,7 +380,9 @@ export async function renderPartnerBoothBannerPdf(input: {
     layout: "portrait",
     margins: { top: 0, bottom: 0, left: 0, right: 0 },
     info: {
-      Title: `CalClaim booth banner – ${input.partnerName}`,
+      Title: input.eventName
+        ? `CalClaim event banner – ${input.partnerName} – ${input.eventName}`
+        : `CalClaim booth banner – ${input.partnerName}`,
       Author: "CalClaim",
     },
   });
@@ -373,6 +391,7 @@ export async function renderPartnerBoothBannerPdf(input: {
   const shared: BannerShared = {
     partnerName: input.partnerName,
     partnerId: input.partnerId,
+    eventName: input.eventName?.trim() || undefined,
     qrPng,
     calclaimBuf,
     partnerLogoBuf,

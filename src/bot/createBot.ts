@@ -23,6 +23,8 @@ import {
 } from "./interpret.js";
 import {
   handleCallback,
+  handleShutoffAddressText,
+  handleShutoffLocation,
   resetSession,
   resumeRemindersAfterMessage,
   sendOptIn,
@@ -155,6 +157,11 @@ async function handleInterpretedText(
 
   if (intent.kind === "step_answer") {
     await handleCallback(ctx, session, intent.callback);
+    return true;
+  }
+
+  if (intent.kind === "shutoff_address") {
+    await handleShutoffAddressText(ctx, session, intent.query);
     return true;
   }
 
@@ -378,12 +385,36 @@ export function createBot(token: string): Bot {
     await reorient(ctx, session, mediaAck(session.step));
   });
 
+  bot.on(["message:location", "message:venue"], async (ctx) => {
+    const uid = ctx.from?.id;
+    if (!uid) {
+      await safeReply(ctx, errorAck());
+      return;
+    }
+    const session = getOrCreateSession(uid);
+    const loc = ctx.message.location ?? ctx.message.venue?.location;
+    if (
+      loc &&
+      (session.step === "has_shutoff_zone" ||
+        session.step === "has_shutoff_address")
+    ) {
+      if (resumeRemindersAfterMessage(session)) await noteRemindersResumed(ctx);
+      await handleShutoffLocation(ctx, session, loc.latitude, loc.longitude);
+      return;
+    }
+    if (resumeRemindersAfterMessage(session)) await noteRemindersResumed(ctx);
+    recordAlphaFeedback({
+      session,
+      text: "[non-text message: location]",
+      source: "text",
+    });
+    await reorient(ctx, session, mediaAck(session.step));
+  });
+
   // Other media: already logged by middleware; treat as soft feedback
   bot.on(
     [
       "message:contact",
-      "message:location",
-      "message:venue",
       "message:photo",
       "message:document",
       "message:sticker",

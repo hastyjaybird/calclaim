@@ -84,6 +84,12 @@
       if (value) el.setAttribute("alt", value);
     });
 
+    document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+      const key = el.getAttribute("data-i18n-placeholder");
+      const value = t(lang, key);
+      if (value) el.setAttribute("placeholder", value);
+    });
+
     const page = document.body.getAttribute("data-page");
     if (page && CALCLAIM_I18N[lang]?.meta?.[`${page}Title`]) {
       document.title = CALCLAIM_I18N[lang].meta[`${page}Title`];

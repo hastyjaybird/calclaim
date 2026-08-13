@@ -3,10 +3,12 @@ import path from "node:path";
 import { LIBRARY_DIR } from "../config.js";
 import {
   getSignedUpPartnerByCampaignId,
+  getSignedUpPartnerById,
   getSignedUpPartnerBySlug,
   listSignedUpPartners,
   type SignedUpPartner,
 } from "../partners/db.js";
+import { getPartnerEventByCampaignId } from "../partners/events.js";
 import type { PartnerAccountType } from "../partners/emailDomains.js";
 
 export interface Partner {
@@ -121,7 +123,18 @@ export function getPartnerByCampaignId(campaignId: string): Partner | undefined 
     (campaignId.includes("-")
       ? getSignedUpPartnerByCampaignId(campaignId.replaceAll("-", "_"))
       : undefined);
-  return signed ? asPartner(signed) : undefined;
+  if (signed) return asPartner(signed);
+
+  const event = getPartnerEventByCampaignId(campaignId);
+  if (!event) return undefined;
+  const fromEventLibrary = libraryPartners().find(
+    (p) => p.id === event.partnerId || p.slug === event.partnerSlug,
+  );
+  if (fromEventLibrary) return fromEventLibrary;
+  const eventPartner =
+    getSignedUpPartnerById(event.partnerId) ??
+    getSignedUpPartnerBySlug(event.partnerSlug);
+  return eventPartner ? asPartner(eventPartner) : undefined;
 }
 
 export function partnerCampaignIds(): Set<string> {

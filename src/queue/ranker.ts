@@ -1,10 +1,15 @@
 import {
   getImmigrationAnswer,
+  passesImmigrationGate,
   type ImmigrationAnswer,
 } from "./immigrationMemory.js";
 import { missingDocs } from "../library/docs.js";
 import { isCmspCounty } from "../library/geo.js";
 import { getProgram, loadPrograms } from "../library/load.js";
+import {
+  isHeldFromOffer,
+  programAvailability,
+} from "../library/requirements.js";
 import type {
   Branch,
   DocId,
@@ -12,6 +17,24 @@ import type {
   Program,
   SessionState,
 } from "../library/types.js";
+import { passesCaHomeGate, programNeedsCaHome } from "../library/residency.js";
+import {
+  programNeedsShutoffZone,
+  sessionHasPgeBill,
+  shutoffZoneAnswered,
+} from "../library/pgeShutoff.js";
+import {
+  ALL_UTILITY_BILLS,
+  hasNoBillsInName,
+  passesBillInNameGate,
+  programNeedsBillInName,
+  utilityBillsAnswered,
+} from "../library/utilityBills.js";
+import {
+  meterSharingAnswered,
+  passesMeterSharingGate,
+  programNeedsMeterSharingGate,
+} from "../library/sharedMeter.js";
 import {
   daysUntilOpen,
   hasOfferableDisasterWindow,
@@ -23,13 +46,28 @@ export type { ImmigrationAnswer };
 export interface BuildQueueOptions {
   /** Override process-memory answer (probes / applying a just-tapped answer). */
   immigrationStatus?: ImmigrationAnswer | null;
+  /**
+   * Include waitlisted / paused / closed programs in the queue so callers can
+   * discover who would qualify if enrollment reopened. Default false = hold
+   * them out of the offer tree.
+   */
+  includeHeld?: boolean;
 }
 
 /** Deferred triage questions asked only when they unlock the next offer wave. */
 export type TriageGateId =
   | "income"
   | "past_due"
+  | "utility_bills"
+  | "shared_meter"
+  | "shutoff_zone"
+  | "ca_residency"
+  | "buying_ev"
+  | "first_time_zev"
   | "child"
+  | "foster_youth"
+  | "refugee"
+  | "medical_need"
   | "abd"
   | "work"
   | "disaster"
@@ -85,19 +123,6 @@ function resolveImmigrationStatus(
   return getImmigrationAnswer(session.telegramUserId);
 }
 
-function passesImmigrationGate(
-  program: Program,
-  status: ImmigrationAnswer | null,
-): boolean {
-  if (program.requiresCitizenOrEligibleImmigrant) {
-    return status === "eligible";
-  }
-  if (program.requiresIneligibleImmigrantStatus) {
-    return status === "ineligible";
-  }
-  return true;
-}
-
 export function buildQueue(
   session: SessionState,
   opts?: BuildQueueOptions,
@@ -106,14 +131,6 @@ export function buildQueue(
   if (!branch) return [];
 
   const immigrationStatus = resolveImmigrationStatus(session, opts);
-
-  const notMyBillIds = session.billNotInMyName
-    ? new Set<string>([
-        "care",
-        "fera",
-        ...(getProgram("care")?.skipCascades ?? []),
-      ])
-    : null;
 
   // Disaster CalFresh only exists around a county application window; with no
   // approved window it cannot be applied for by anyone, so it leaves the queue.
@@ -127,7 +144,38 @@ export function buildQueue(
       if (session.inDisasterArea !== true) return false;
     }
     if (p.requiresPastDue && session.pastDue !== true) return false;
+    if (!passesCaHomeGate(p, session.residencyTie)) return false;
+    if (programNeedsBillInName(p)) {
+      if (!utilityBillsAnswered(session)) return false;
+      if (!passesBillInNameGate(p, session.billsInMyName)) return false;
+    }
+    if (programNeedsMeterSharingGate(p)) {
+      if (!meterSharingAnswered(session)) return false;
+      if (!passesMeterSharingGate(p, session.meterSharing)) return false;
+    }
+    if (programNeedsShutoffZone(p)) {
+      if (!shutoffZoneAnswered(session)) return false;
+      if (session.inShutoffZone !== true) return false;
+    }
+    if (p.requiresBuyingEvThisYear && session.buyingEvThisYear !== true) {
+      return false;
+    }
+    if (p.requiresFirstTimeZev && session.firstTimeZev !== true) {
+      return false;
+    }
     if (p.requiresChildInHousehold && session.hasChildInHousehold !== true) {
+      return false;
+    }
+    if (p.requiresFosterYouth && session.isFosterYouth !== true) {
+      return false;
+    }
+    if (p.requiresRefugeeOrAsylee && session.isRefugeeOrAsylee !== true) {
+      return false;
+    }
+    if (
+      p.requiresMedicalDeviceOrCondition &&
+      session.hasMedicalDeviceOrCondition !== true
+    ) {
       return false;
     }
     if (
@@ -146,11 +194,18 @@ export function buildQueue(
     if (p.requiresCmspCounty && !isCmspCounty(session.residenceCounty)) {
       return false;
     }
-    if (notMyBillIds?.has(p.id)) return false;
     if (!passesIncomeGate(p, session.incomeBand, branch)) return false;
     if (session.alreadyOn.includes(p.id)) return false;
     if (
       p.excludeIfAlreadyOn?.some((id) => session.alreadyOn.includes(id))
+    ) {
+      return false;
+    }
+    // Waitlisted / paused / enrollment closed – held out of the offer tree
+    // unless a reopen-watch probe asks to include them.
+    if (
+      !opts?.includeHeld &&
+      isHeldFromOffer(programAvailability(p).status)
     ) {
       return false;
     }
@@ -201,7 +256,23 @@ function withOptimisticGates(
       session.incomeBand ??
       (session.branch === "no" ? "careBand" : session.incomeBand),
     pastDue: session.pastDue ?? true,
+    utilityBillsAsked: true,
+    billsInMyName:
+      utilityBillsAnswered(session) && session.billsInMyName.length > 0
+        ? session.billsInMyName
+        : [...ALL_UTILITY_BILLS],
+    billNotInMyName: false,
+    meterSharing: session.meterSharing ?? "own",
+    inShutoffZone: session.inShutoffZone ?? true,
+    shutoffAddressChoices: null,
+    residencyTie: session.residencyTie ?? "ca_home",
+    isCaResident: session.isCaResident ?? true,
+    buyingEvThisYear: session.buyingEvThisYear ?? true,
+    firstTimeZev: session.firstTimeZev ?? true,
     hasChildInHousehold: session.hasChildInHousehold ?? true,
+    isFosterYouth: session.isFosterYouth ?? true,
+    isRefugeeOrAsylee: session.isRefugeeOrAsylee ?? true,
+    hasMedicalDeviceOrCondition: session.hasMedicalDeviceOrCondition ?? true,
     hasAgedBlindOrDisabled: session.hasAgedBlindOrDisabled ?? true,
     workDisruption: session.workDisruption ?? "job_loss",
     inDisasterArea: session.inDisasterArea ?? true,
@@ -221,7 +292,31 @@ export function remainingTriageQuestions(
     n += session.householdSize == null ? 2 : 1;
   }
   if (program.requiresPastDue && session.pastDue === null) n += 1;
+  if (programNeedsBillInName(program) && !utilityBillsAnswered(session)) n += 1;
+  if (programNeedsMeterSharingGate(program) && !meterSharingAnswered(session)) {
+    n += 1;
+  }
+  if (programNeedsShutoffZone(program) && !shutoffZoneAnswered(session)) n += 1;
+  if (programNeedsCaHome(program) && session.residencyTie === null) n += 1;
+  if (program.requiresBuyingEvThisYear && session.buyingEvThisYear === null) {
+    n += 1;
+  }
+  if (program.requiresFirstTimeZev && session.firstTimeZev === null) {
+    n += 1;
+  }
   if (program.requiresChildInHousehold && session.hasChildInHousehold === null) {
+    n += 1;
+  }
+  if (program.requiresFosterYouth && session.isFosterYouth === null) {
+    n += 1;
+  }
+  if (program.requiresRefugeeOrAsylee && session.isRefugeeOrAsylee === null) {
+    n += 1;
+  }
+  if (
+    program.requiresMedicalDeviceOrCondition &&
+    session.hasMedicalDeviceOrCondition === null
+  ) {
     n += 1;
   }
   if (
@@ -248,8 +343,34 @@ function gateStillOpen(gate: TriageGateId, session: SessionState): boolean {
       return session.branch === "no" && session.incomeBand === null;
     case "past_due":
       return session.pastDue === null;
+    case "utility_bills":
+      return !utilityBillsAnswered(session);
+    case "shared_meter":
+      return (
+        session.meterSharing === null &&
+        utilityBillsAnswered(session) &&
+        !hasNoBillsInName(session)
+      );
+    case "shutoff_zone":
+      return (
+        !shutoffZoneAnswered(session) &&
+        utilityBillsAnswered(session) &&
+        sessionHasPgeBill(session)
+      );
+    case "ca_residency":
+      return session.residencyTie === null && session.step !== "has_ca_work";
+    case "buying_ev":
+      return session.buyingEvThisYear === null;
+    case "first_time_zev":
+      return session.firstTimeZev === null;
     case "child":
       return session.hasChildInHousehold === null;
+    case "foster_youth":
+      return session.isFosterYouth === null;
+    case "refugee":
+      return session.isRefugeeOrAsylee === null;
+    case "medical_need":
+      return session.hasMedicalDeviceOrCondition === null;
     case "abd":
       return session.hasAgedBlindOrDisabled === null;
     case "work":
@@ -257,7 +378,11 @@ function gateStillOpen(gate: TriageGateId, session: SessionState): boolean {
     case "disaster":
       return session.inDisasterArea === null && hasOfferableDisasterWindow();
     case "zip":
-      return session.residenceZip === null;
+      // Home ZIP only helps CA-home county programs (CMSP).
+      return (
+        session.residenceZip === null &&
+        (session.residencyTie === null || session.residencyTie === "ca_home")
+      );
   }
 }
 
@@ -271,8 +396,26 @@ function programUsesGate(
       return session.branch === "no" && Boolean(program.incomeGate);
     case "past_due":
       return program.requiresPastDue === true;
+    case "utility_bills":
+      return programNeedsBillInName(program);
+    case "shared_meter":
+      return programNeedsMeterSharingGate(program);
+    case "shutoff_zone":
+      return programNeedsShutoffZone(program);
+    case "ca_residency":
+      return programNeedsCaHome(program);
+    case "buying_ev":
+      return program.requiresBuyingEvThisYear === true;
+    case "first_time_zev":
+      return program.requiresFirstTimeZev === true;
     case "child":
       return program.requiresChildInHousehold === true;
+    case "foster_youth":
+      return program.requiresFosterYouth === true;
+    case "refugee":
+      return program.requiresRefugeeOrAsylee === true;
+    case "medical_need":
+      return program.requiresMedicalDeviceOrCondition === true;
     case "abd":
       return program.requiresAgedBlindOrDisabled === true;
     case "work":
@@ -319,8 +462,39 @@ function programsUnlockedByGate(
     case "past_due":
       overrides.pastDue = true;
       break;
+    case "utility_bills":
+      overrides.utilityBillsAsked = true;
+      overrides.billsInMyName = [...ALL_UTILITY_BILLS];
+      overrides.billNotInMyName = false;
+      break;
+    case "shared_meter":
+      overrides.meterSharing = "own";
+      break;
+    case "shutoff_zone":
+      overrides.inShutoffZone = true;
+      overrides.shutoffAddressChoices = null;
+      break;
+    case "ca_residency":
+      overrides.residencyTie = "ca_home";
+      overrides.isCaResident = true;
+      break;
+    case "buying_ev":
+      overrides.buyingEvThisYear = true;
+      break;
+    case "first_time_zev":
+      overrides.firstTimeZev = true;
+      break;
     case "child":
       overrides.hasChildInHousehold = true;
+      break;
+    case "foster_youth":
+      overrides.isFosterYouth = true;
+      break;
+    case "refugee":
+      overrides.isRefugeeOrAsylee = true;
+      break;
+    case "medical_need":
+      overrides.hasMedicalDeviceOrCondition = true;
       break;
     case "abd":
       overrides.hasAgedBlindOrDisabled = true;
@@ -343,17 +517,33 @@ function programsUnlockedByGate(
 }
 
 /**
- * Next question to ask: the open gate that unlocks programs with the fewest
- * remaining triage questions (so dropouts still hear about easy wins first).
+ * Next question to ask. Live Disaster CalFresh windows jump the queue – the
+ * application period is short, so ask before other triage. Otherwise pick the
+ * open gate that unlocks programs with the fewest remaining triage questions.
  */
 export function pickNextTriageGate(session: SessionState): TriageGateId | null {
+  if (
+    gateStillOpen("disaster", session) &&
+    programsUnlockedByGate(session, "disaster").length > 0
+  ) {
+    return "disaster";
+  }
+
   const gates: TriageGateId[] = [
     "income",
+    "ca_residency",
+    "utility_bills",
+    "shared_meter",
+    "shutoff_zone",
     "past_due",
+    "medical_need",
+    "buying_ev",
+    "first_time_zev",
     "child",
+    "foster_youth",
+    "refugee",
     "abd",
     "work",
-    "disaster",
     "zip",
   ];
 
@@ -391,6 +581,150 @@ export function extendOfferQueue(
     session.queue.push(id);
     have.add(id);
   }
+}
+
+/**
+ * Programs still ahead on offer cards: the current card, later cards in the
+ * queue (not yet seen), and programs still locked behind unanswered gates
+ * (not yet unlocked). Mutually exclusive forks (work disruption, immigration)
+ * count each program at most once via a union of favorable probes.
+ */
+export function countRemainingOfferPrograms(session: SessionState): number {
+  const done = new Set<string>(session.items.map((i) => i.programId));
+  for (const id of session.alreadyOn) done.add(id);
+  for (let i = 0; i < session.queueIndex; i++) {
+    const id = session.queue[i];
+    if (id) done.add(id);
+  }
+
+  const remaining = new Set<string>();
+  const addIfOpen = (id: string): void => {
+    if (!done.has(id)) remaining.add(id);
+  };
+
+  for (let i = session.queueIndex; i < session.queue.length; i++) {
+    const id = session.queue[i];
+    if (id) addIfOpen(id);
+  }
+
+  const probe = withOptimisticGates(session);
+  for (const id of buildQueue(probe)) addIfOpen(id);
+
+  if (session.workDisruption === null) {
+    for (const reason of ["job_loss", "health", "family_care"] as const) {
+      for (const id of buildQueue(
+        withOptimisticGates(session, { workDisruption: reason }),
+      )) {
+        addIfOpen(id);
+      }
+    }
+  }
+
+  if (getImmigrationAnswer(session.telegramUserId) === null) {
+    for (const status of ["eligible", "ineligible"] as const) {
+      for (const id of buildQueue(probe, { immigrationStatus: status })) {
+        addIfOpen(id);
+      }
+    }
+  }
+
+  return remaining.size;
+}
+
+/** Parenthetical for offer cards, e.g. "(3 programs remaining)". */
+export function formatProgramsRemaining(session: SessionState): string {
+  const n = countRemainingOfferPrograms(session);
+  return n === 1 ? "(1 program remaining)" : `(${n} programs remaining)`;
+}
+
+/**
+ * Upper-bound count of experience screens still ahead after the current one
+ * (open triage gates on the max path, remaining offer cards, immigration /
+ * reopen prompts, and the finish screen). Used for percent-through analytics.
+ */
+export function estimateMaxScreensRemaining(session: SessionState): number {
+  if (session.step === "idle") return 0;
+
+  let gates = 0;
+  const gateOrder: TriageGateId[] = [
+    "disaster",
+    "income",
+    "ca_residency",
+    "utility_bills",
+    "shared_meter",
+    "shutoff_zone",
+    "past_due",
+    "medical_need",
+    "buying_ev",
+    "first_time_zev",
+    "child",
+    "foster_youth",
+    "refugee",
+    "abd",
+    "work",
+    "zip",
+  ];
+
+  for (const gate of gateOrder) {
+    if (!gateStillOpen(gate, session)) continue;
+    if (programsUnlockedByGate(session, gate).length === 0) continue;
+    if (gate === "income") {
+      gates += session.householdSize == null ? 2 : 1;
+    } else if (
+      gate === "ca_residency" ||
+      gate === "shutoff_zone" ||
+      gate === "disaster"
+    ) {
+      // Parent gate + possible follow-up (work / address / disaster ZIP).
+      gates += 2;
+    } else {
+      gates += 1;
+    }
+  }
+
+  // Follow-ups already in progress (parent gate closed, child step open).
+  if (session.step === "has_ca_work") gates += 1;
+  if (session.step === "has_shutoff_address") gates += 1;
+  if (session.step === "has_disaster_zip") gates += 1;
+  if (session.step === "household_size_custom") gates += 1;
+
+  let offers = countRemainingOfferPrograms(session);
+  // Current offer card is being seen now – count only cards after this one.
+  if (session.step === "offer" && offers > 0) offers -= 1;
+
+  // Current gate screen is being seen now – don't double-count it in remaining.
+  const nonGateSteps = new Set([
+    "offer",
+    "opt_in",
+    "gate",
+    "has_immigration_status",
+    "has_reopen_notify",
+    "help_menu",
+    "confirm_stop",
+    "confirm_erase",
+  ]);
+  if (!nonGateSteps.has(session.step) && gates > 0) gates -= 1;
+
+  let n = gates + offers;
+
+  if (
+    session.step === "has_immigration_status" ||
+    queueNeedsStatusGate(session)
+  ) {
+    // If we're on the immigration screen, it is current (not remaining).
+    if (session.step !== "has_immigration_status") n += 1;
+  }
+
+  if (session.step === "has_reopen_notify") {
+    // current – not remaining
+  } else if (session.reopenNotifyOptIn === null) {
+    // May still ask; cheap upper bound (+1) when finish is reachable.
+    n += 1;
+  }
+
+  // Finish / Application Guide screen.
+  n += 1;
+  return Math.max(0, n);
 }
 
 /**
@@ -462,6 +796,55 @@ export function queueNeedsPastDueGate(session: SessionState): boolean {
   return (
     gateStillOpen("past_due", session) &&
     programsUnlockedByGate(session, "past_due").length > 0
+  );
+}
+
+export function queueNeedsCaResidencyGate(session: SessionState): boolean {
+  return (
+    gateStillOpen("ca_residency", session) &&
+    programsUnlockedByGate(session, "ca_residency").length > 0
+  );
+}
+
+export function queueNeedsBuyingEvGate(session: SessionState): boolean {
+  return (
+    gateStillOpen("buying_ev", session) &&
+    programsUnlockedByGate(session, "buying_ev").length > 0
+  );
+}
+
+export function queueNeedsFirstTimeZevGate(session: SessionState): boolean {
+  return (
+    gateStillOpen("first_time_zev", session) &&
+    programsUnlockedByGate(session, "first_time_zev").length > 0
+  );
+}
+
+export function queueNeedsFosterYouthGate(session: SessionState): boolean {
+  return (
+    gateStillOpen("foster_youth", session) &&
+    programsUnlockedByGate(session, "foster_youth").length > 0
+  );
+}
+
+export function queueNeedsRefugeeGate(session: SessionState): boolean {
+  return (
+    gateStillOpen("refugee", session) &&
+    programsUnlockedByGate(session, "refugee").length > 0
+  );
+}
+
+export function queueNeedsMedicalNeedGate(session: SessionState): boolean {
+  return (
+    gateStillOpen("medical_need", session) &&
+    programsUnlockedByGate(session, "medical_need").length > 0
+  );
+}
+
+export function queueNeedsSharedMeterGate(session: SessionState): boolean {
+  return (
+    gateStillOpen("shared_meter", session) &&
+    programsUnlockedByGate(session, "shared_meter").length > 0
   );
 }
 

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <title>CalClaim – Gate chart review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/impact/styles.css" />
+  <link rel="stylesheet" href="/dev/styles.css" />
+  <link rel="stylesheet" href="/dev/tree/styles.css" />
+  <link rel="stylesheet" href="/dev/tree/chart/styles.css" />
+</head>
+<body>
+  <div class="banner" role="banner">
+    <div class="banner-inner">
+      <a class="banner-brand" href="/impact" aria-label="CalClaim home">
+        <img
+          class="banner-mark"
+          src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
+          alt="CalClaim"
+          width="180"
+          height="63"
+        />
+      </a>
+      <span class="banner-sep" aria-hidden="true"></span>
+      <nav class="site-nav" aria-label="Site">
+        <a href="/impact">Impact</a>
+        <a href="/dev">Developer</a>
+        <a href="/dev/tree">Message tree</a>
+        <a href="/dev/tree/chart" aria-current="page">Gate chart</a>
+        <a href="/dev/tree/flowchart">Flowchart</a>
+        <a href="/dev/tree/utilities">Utilities</a>
+        <button type="button" class="nav-logout" id="btn-logout">Log out</button>
+      </nav>
+      <span class="banner-line">Temporary review · not linked from public pages</span>
+    </div>
+  </div>
+
+  <header class="hero hero-dev tree-hero chart-hero">
+    <p class="eyebrow">Temporary developer review</p>
+    <h1>Gate chart</h1>
+    <p class="lede">
+      Programs on the left in message-tree offer order (<code>yesOrder</code> /
+      <code>noOrder</code>); triage questions and place/status bars across the top
+      (CA address, CA utility, ZIP/county, immigration). Each program is tagged
+      Federal, State, or Fed · State. Drag rows to try a different offer order;
+      filled cells are qualifications that program still needs. Immigration
+      status sits last on purpose. For the full conversation diagram, open
+      <a href="/dev/tree/flowchart">Flowchart</a>.
+    </p>
+    <div class="tree-toolbar chart-toolbar">
+      <div class="branch-toggle" role="group" aria-label="Branch">
+        <button type="button" class="cta" data-branch="yes" id="btn-branch-yes" aria-pressed="true">YES arm</button>
+        <button type="button" class="cta cta-ghost" data-branch="no" id="btn-branch-no" aria-pressed="false">NO arm</button>
+      </div>
+      <button type="button" class="cta cta-ghost" id="btn-reset">Reset row &amp; column order</button>
+      <button type="button" class="cta" id="btn-save" disabled>Save order to library</button>
+      <a class="cta cta-ghost" href="/dev/tree/flowchart">Whole flowchart</a>
+      <label class="chart-check">
+        <input type="checkbox" id="chk-feeders-first" />
+        Keep gate-feeders at the front
+      </label>
+    </div>
+    <p class="scan-status" id="status-line" aria-live="polite"></p>
+  </header>
+
+  <section class="chart-feeders" aria-labelledby="feeders-heading">
+    <div class="chart-feeders-inner">
+      <h2 id="feeders-heading">Automatic unlocks</h2>
+      <p class="chart-feeders-banner" id="feeders-banner"></p>
+      <div class="feeder-grid" id="feeder-grid"></div>
+    </div>
+  </section>
+
+  <aside class="chart-question" id="question-panel" hidden>
+    <p class="chart-question-label" id="question-label"></p>
+    <p class="chart-question-text" id="question-text"></p>
+    <p class="chart-question-note" id="question-note"></p>
+  </aside>
+
+  <main class="chart-main">
+    <div class="chart-scroll" id="chart-scroll">
+      <table class="chart-table" id="chart-table">
+        <thead id="chart-head"></thead>
+        <tbody id="chart-body"></tbody>
+      </table>
+    </div>
+    <p class="chart-hint">
+      Click a column’s sort control (⇅) to order rows by that gate — needed
+      cells first, then detail text; click again to reverse, again to clear.
+      Program sorts A–Z. Drag a program handle to reorder rows, or drag an
+      eligibility column header to try a different ask order — both stay in
+      that order after refresh. Click a column (without dragging) to pin that
+      question. Save writes program <code>yesOrder</code> /
+      <code>noOrder</code> into <code>library/programs.json</code>; column
+      order is review-only in the browser until you reset with the button
+      above.
+    </p>
+  </main>
+
+  <script src="/dev/tree/chart/app.js"></script>
+</body>
+</html>

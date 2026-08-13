@@ -3,25 +3,20 @@ import { InputFile } from "grammy";
 import { recordEvent } from "../analytics/db.js";
 import { getCampaign } from "../analytics/campaigns.js";
 import { trackFunnel } from "../analytics/funnel.js";
+import { trackReportCreated } from "../analytics/screens.js";
 import { fromCampaignPin } from "../analytics/geo.js";
 import { countyFromZip, parseZipCode } from "../library/geo.js";
-import {
-  formatMaxBenefitEstimate,
-  formatUsd,
-} from "../library/benefitEstimate.js";
-import { HIGH_FRICTION_TIME_DAYS, docLabel, missingDocs } from "../library/docs.js";
-import { formatFormFillEstimate } from "../library/formFill.js";
 import { getProgram } from "../library/load.js";
-import type { IncomeBand, Program, SessionState } from "../library/types.js";
+import { applyResidencyTie } from "../library/residency.js";
+import type { IncomeBand, MeterSharing, SessionState } from "../library/types.js";
 import {
   deleteSession,
   emptySession,
   saveSession,
 } from "../db/session.js";
 import {
-  docsSavingsTable,
+  formatReportSummary,
   markGateAlreadyOn,
-  openProgramsAnnualUsd,
   openTodos,
   upsertItem,
 } from "../nextsteps/model.js";
@@ -35,6 +30,7 @@ import {
   ABOUT_TEXT,
   HELP_MENU_TEXT,
   HOUSEHOLD_EXPLAIN,
+  IMMIGRATION_STATUS_PROMPT,
   PRIVACY_SHORT,
 } from "../privacy/copy.js";
 import { eraseUserQc } from "../qc/responses.js";
@@ -42,36 +38,49 @@ import {
   applySkipCascade,
   currentProgram,
   extendOfferQueue,
+  formatProgramsRemaining,
   pickNextTriageGate,
   queueNeedsStatusGate,
   type ImmigrationAnswer,
   type TriageGateId,
 } from "../queue/ranker.js";
-import type { DisasterWindow } from "../disaster/db.js";
-import {
-  describeArea,
-  formatApplyChannel,
-  formatCounties,
-  formatIncidentRange,
-  formatWindowTiming,
-} from "../disaster/format.js";
-import {
-  isOpenToday,
-  offerableDisasterWindows,
-  windowForProgram,
-} from "../disaster/liveWindow.js";
-import { trackedApplyUrl, type AppConfig } from "../config.js";
 import {
   clearImmigrationAnswer,
+  getImmigrationAnswer,
   markAwaitingImmigrationPrompt,
   setImmigrationAnswer,
 } from "../queue/immigrationMemory.js";
+import {
+  formatHeldProgramList,
+  listHeldQualifyingPrograms,
+} from "../reopen/qualify.js";
+import {
+  disasterImpactQuestion,
+  disasterWorkZipConfirmPrompt,
+  disasterZipConfirmPrompt,
+} from "../disaster/format.js";
+import {
+  hasOfferableDisasterWindow,
+  offerableDisasterWindows,
+  zipInOfferableDisasterArea,
+} from "../disaster/liveWindow.js";
+import { trackedApplyUrl, type AppConfig } from "../config.js";
 import { staleCallbackAck } from "./interpret.js";
 import {
+  GATE_NONE_ID,
   GATE_OPTIONS,
   abdHouseholdKeyboard,
+  buyingEvKeyboard,
+  firstTimeZevKeyboard,
+  fosterYouthKeyboard,
+  refugeeStatusKeyboard,
+  medicalNeedKeyboard,
+  sharedMeterKeyboard,
+  caResidencyKeyboard,
+  caWorkKeyboard,
   childHouseholdKeyboard,
   disasterAreaKeyboard,
+  disasterZipKeyboard,
   immigrationStatusKeyboard,
   workDisruptionKeyboard,
   zipKeyboard,
@@ -86,12 +95,33 @@ import {
   optInKeyboard,
   pastDueKeyboard,
   programSitesKeyboard,
+  reopenNotifyKeyboard,
   shareKeyboard,
+  REMOVE_REPLY_KEYBOARD,
+  shutoffAddressReplyKeyboard,
+  shutoffZoneKeyboard,
+  utilityBillsKeyboard,
 } from "./keyboards.js";
+import {
+  SHUTOFF_ADDRESS_PROMPT,
+  resolveShutoffZone,
+  resolveShutoffZoneFromCoords,
+} from "../library/pgeShutoff.js";
+import {
+  UTILITY_BILL_NONE_ID,
+  UTILITY_BILL_OPTIONS,
+} from "../library/utilityBills.js";
+import { SHARED_METER_PROMPT } from "../library/sharedMeter.js";
+import { primaryTerritoryForProgram } from "../library/utilityTerritory.js";
+import { formatOfferCardBody } from "./offerCard.js";
 import { replyTracked, repeatLastMessage } from "./reply.js";
 import {
+  getOrCreatePeerShareCampaigns,
   SHARE_LINK_CAMPAIGN,
   SHARE_QR_CAMPAIGN,
+  trackShareOut,
+} from "../analytics/peerShare.js";
+import {
   buildShareMenuText,
   renderShareQrPng,
   shareTargetUrl,
@@ -106,6 +136,20 @@ export function setFlowConfig(config: AppConfig): void {
 
 function hasOpenReport(session: SessionState): boolean {
   return openTodos(session).length > 0;
+}
+
+function peerShareCampaignsOrFallback(telegramUserId: number): {
+  linkCampaignId: string;
+  qrCampaignId: string;
+} {
+  try {
+    return getOrCreatePeerShareCampaigns(telegramUserId);
+  } catch {
+    return {
+      linkCampaignId: SHARE_LINK_CAMPAIGN,
+      qrCampaignId: SHARE_QR_CAMPAIGN,
+    };
+  }
 }
 
 /** Telegram rejects localhost / private / non-https URLs on inline URL buttons. */
@@ -131,6 +175,13 @@ function telegramSafeUrl(url: string): boolean {
   }
 }
 
+function escapeTelegramHtml(s: string): string {
+  return s
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
 /** Public site linked from the opt-in message (Telegram HTML <a>). */
 const CALCLAIM_SITE_FALLBACK = "https://calclaim.jayhasty.com";
 
@@ -146,9 +197,9 @@ export async function sendOptIn(
   await replyTracked(
     ctx,
     session,
-    `<a href="${siteUrl}">CalClaim</a> finds California programs you might be eligible for – help with bills, food, health, phone discounts, energy bills, and more – and gives you an Application Guide so you can apply.
+    `<a href="${siteUrl}">CalClaim</a> finds help with food, health coverage, phone discounts, energy bills, and more – and gives you a personalized Application Guide for California and federal programs to make it easier to apply.
 
-At any time, text or send a voice message to report an issue or suggest an improvement ✨
+At any time, text about an issue, correction or suggest an improvement.
 
 Estimates only. Not affiliated with any agency.
 Type 'help' for more options.`,
@@ -167,7 +218,7 @@ export async function sendGate(ctx: Context, session: SessionState): Promise<voi
 
 ${HOUSEHOLD_EXPLAIN}
 
-Tap all that apply, then Done – or None.`,
+Tap all that apply (or None), then Done.`,
     { reply_markup: gateKeyboard([]) },
   );
 }
@@ -198,6 +249,7 @@ async function sendNextStepsFile(ctx: Context, session: SessionState): Promise<v
     new InputFile(buf, "calclaim-application-guide.pdf"),
     { caption: "Click to download your Application Guide" },
   );
+  trackReportCreated(session.telegramUserId, session.campaignId);
 }
 
 /** Resolve Telegram-safe apply URLs (prefer tracked /r/:id when public base is https). */
@@ -206,9 +258,13 @@ function programSiteButtons(
 ): { label: string; url: string }[] {
   const sites: { label: string; url: string }[] = [];
   for (const item of openTodos(session)) {
+    const program = getProgram(item.programId);
+    const territory = program
+      ? primaryTerritoryForProgram(program, session)
+      : null;
     const tracked =
       appConfig?.publicBaseUrl &&
-      trackedApplyUrl(appConfig.publicBaseUrl, item.programId);
+      trackedApplyUrl(appConfig.publicBaseUrl, item.programId, territory);
     const url =
       (tracked && telegramSafeUrl(tracked) && tracked) ||
       (telegramSafeUrl(item.link) ? item.link : null);
@@ -238,45 +294,12 @@ async function sendReportBundle(
   await promptVisitProgramSites(ctx, session);
 }
 
-/** Abbreviated chat summary before the PDF (docs → $, total, program names). */
-function formatReportSummary(session: SessionState): string {
-  const total = openProgramsAnnualUsd(session);
-  const totalLabel = formatUsd(total);
-  const docs = docsSavingsTable(session);
-  const todos = openTodos(session);
-
-  const lines = [
-    "You're through the list.",
-    "",
-    `You may qualify for a total of ~${totalLabel} this year (estimates only).`,
-  ];
-
-  if (docs.length > 0) {
-    lines.push("", "Documents that unlock aid:");
-    for (const d of docs) {
-      lines.push(`• ${d.label} – up to ~${formatUsd(d.annualUsd)}/yr`);
-    }
-  }
-
-  if (todos.length > 0) {
-    lines.push("", "Programs on your Application Guide:");
-    for (const item of todos) {
-      lines.push(`• ${item.programName}`);
-    }
-  }
-
-  lines.push("", "Your Application Guide PDF coming next ↓");
-  return lines.join("\n");
-}
-
 function formatFinishClosingMessage(): string {
-  return `We'd really appreciate any feedback – just send a text or voice message anytime.
-
-For more help, visit BenefitsCal at https://benefitscal.com/`;
+  return "For more help, visit BenefitsCal at https://benefitscal.com/";
 }
 
 function formatStopOptOutMessage(): string {
-  return "Say STOP if you do not want any infrequent updates for benefit updates and changes.";
+  return "Say STOP anytime to pause deadline reminders and reopen alerts. Say erase to delete your saved answers and exit.";
 }
 
 function formatEmptyQueueMessage(): string {
@@ -287,7 +310,7 @@ Know someone who might need benefits help? Share CalClaim with a friend.
 ${formatFinishClosingMessage()}`;
 }
 
-/** Pause deadline reminders only – keeps session, todos, and data. */
+/** Pause deadline reminders + reopen alerts – keeps session, todos, and data. */
 export async function stopRemindersOnly(
   ctx: Context,
   session: SessionState,
@@ -302,7 +325,7 @@ export async function stopRemindersOnly(
   await replyTracked(
     ctx,
     session,
-    "Reminders stopped. Your Application Guide and data stay. Message me anytime to turn reminders back on – or say 'guide' for your guide, help for more info.",
+    "Alerts stopped (deadline reminders and waitlist reopen texts). Your Application Guide and saved answers stay. Message me anytime to turn alerts back on – or say 'guide' for your guide, help for more info. Tap Update my answers if your situation changed.",
     { reply_markup: idleKeyboard(hasOpenReport(session)) },
   );
 }
@@ -315,7 +338,10 @@ export function resumeRemindersAfterMessage(session: SessionState): boolean {
   return true;
 }
 
-async function finishQueue(ctx: Context, session: SessionState): Promise<void> {
+async function completeFinish(
+  ctx: Context,
+  session: SessionState,
+): Promise<void> {
   clearImmigrationAnswer(session.telegramUserId);
   session.step = "idle";
   session.remindersEnabled = true;
@@ -338,6 +364,28 @@ async function finishQueue(ctx: Context, session: SessionState): Promise<void> {
   await replyTracked(ctx, session, formatStopOptOutMessage(), {
     reply_markup: idleKeyboard(true),
   });
+}
+
+/**
+ * End of offer tree. If the user qualifies for waitlisted/paused programs,
+ * ask once whether to text them when enrollment reopens – then finish.
+ */
+async function finishQueue(ctx: Context, session: SessionState): Promise<void> {
+  const held = listHeldQualifyingPrograms(session);
+  if (held.length && session.reopenNotifyOptIn === null) {
+    session.step = "has_reopen_notify";
+    session.reopenWatchProgramIds = held.map((p) => p.id);
+    saveSession(session);
+    await replyTracked(
+      ctx,
+      session,
+      `A few programs you may qualify for are waitlisted or closed to new enrollments right now (not shown above):\n\n${formatHeldProgramList(held)}\n\nWant a text if one of these opens and you still qualify on your saved answers?\n\nWe'll keep your profile for that check. You can say STOP anytime to pause alerts, or erase to delete your data.`,
+      { reply_markup: reopenNotifyKeyboard() },
+    );
+    return;
+  }
+
+  await completeFinish(ctx, session);
 }
 
 export async function presentOffer(ctx: Context, session: SessionState): Promise<void> {
@@ -368,129 +416,37 @@ export async function presentOffer(ctx: Context, session: SessionState): Promise
   session.step = "offer";
   saveSession(session);
 
-  const window = windowForProgram(program);
-  const openToday = window ? isOpenToday(window) : false;
-  const supplement = isDisasterSupplement(program, session);
+  const remaining = formatProgramsRemaining(session);
+  const body = escapeTelegramHtml(formatOfferCardBody(program, session));
+  const remainingHtml = `<i>${escapeTelegramHtml(remaining)}</i>`;
 
-  const lines = [
-    window && !openToday
-      ? `${program.name} is coming to your area.`
-      : `You may qualify for ${program.name}.`,
-    "",
-    window
-      ? `${program.name} – ${disasterOneLiner(window, supplement)}`
-      : `${program.name} – ${program.oneLiner}`,
-    formatFormFillEstimate(program, session.docsInHand),
-    "",
-    supplement
-      ? "Est. a one-time top-up to the maximum food benefit for your household size"
-      : formatMaxBenefitEstimate(program, session.householdSize),
-  ];
-
-  if (window) {
-    // Dates and apply channel are per event and per county – the library deadline
-    // and apply URL are both wrong during a real window.
-    const timing = formatWindowTiming(window.applyPeriods, openToday);
-    if (timing) lines.push(timing);
-    const channel = formatApplyChannel(window);
-    if (channel) lines.push(channel);
-    else if (!openToday) {
-      lines.push("Your county publishes the phone number when the window opens.");
-    }
-  } else {
-    const deadline = program.deadlines[0];
-    if (deadline?.label) {
-      lines.push(
-        deadline.date
-          ? `Deadline: ${deadline.label} (${deadline.date})`
-          : `Deadline: ${deadline.label}`,
-      );
-    }
-  }
-
-  const frictionDocs = highFrictionDocsNeeded(program, session);
-  if (frictionDocs.length > 0) {
-    lines.push("", "You'll likely need:");
-    for (const d of frictionDocs) {
-      lines.push(`• ${docLabel(d)}`);
-    }
-  }
-
-  await replyTracked(ctx, session, lines.join("\n"), {
-    reply_markup: offerKeyboard(program.id),
+  await replyTracked(ctx, session, `${body}\n\n${remainingHtml}`, {
+    reply_markup: offerKeyboard(program.id, {
+      canExitGuide: hasOpenReport(session),
+    }),
+    parse_mode: "HTML",
   });
-}
-
-/** Docs still needed for slower programs (time-to-money ≥ 21 days). */
-function highFrictionDocsNeeded(
-  program: Program,
-  session: SessionState,
-): Program["docsNeeded"] {
-  if (program.timeToMoneyDays < HIGH_FRICTION_TIME_DAYS) return [];
-  return missingDocs(program.docsNeeded, session.docsInHand);
-}
-
-/**
- * Households already on CalFresh are not excluded – CDSS gives them a
- * supplemental payment up to the maximum allotment instead of a full month.
- */
-function isDisasterSupplement(program: Program, session: SessionState): boolean {
-  return (
-    program.requiresActiveDisasterWindow === true &&
-    session.alreadyOn.includes("calfresh")
-  );
-}
-
-function disasterOneLiner(window: DisasterWindow, supplement: boolean): string {
-  const area = window.counties.length
-    ? formatCounties(window.counties)
-    : window.label;
-  return supplement
-    ? `Extra food benefits on your existing CalFresh card for households hit by the disaster in ${area}`
-    : `One month of food benefits for households that lived or worked in ${area} during the disaster`;
-}
-
-/**
- * The legal test is home *or* work location, for any household member, so one
- * yes/no over the named areas fits it exactly – and nothing about the user's
- * location needs storing.
- */
-function disasterAreaQuestion(windows: DisasterWindow[]): string {
-  const single = windows.length === 1 ? windows[0]! : null;
-  const singleRange = single
-    ? formatIncidentRange(single.incidentBegin, single.incidentEnd)
-    : null;
-  const lines = [
-    singleRange
-      ? `Did you live or work in any of these areas during ${singleRange}?`
-      : "Did you live or work in any of these disaster areas?",
-  ];
-
-  for (const window of windows) {
-    lines.push("");
-    if (!single) {
-      const range = formatIncidentRange(window.incidentBegin, window.incidentEnd);
-      lines.push(range ? `${window.label} (${range})` : window.label);
-    }
-    for (const line of describeArea(window)) lines.push(line);
-  }
-
-  lines.push(
-    "",
-    "Say yes if anyone in your household lived or worked there – a job in the area counts even if you live somewhere else.",
-  );
-  return lines.join("\n");
 }
 
 /**
  * Offer programs eligible with answers so far (fewest extra questions first via
- * wave order). When the current wave is empty, ask the next gate that unlocks
- * the cheapest remaining programs – never front-load the full quiz.
+ * wave order). When a Disaster CalFresh window is offerable and unanswered, ask
+ * that first – before any offers – so the short window is not buried. Otherwise
+ * when the current wave is empty, ask the next gate that unlocks more programs.
  */
 async function beginOfferQueue(
   ctx: Context,
   session: SessionState,
 ): Promise<void> {
+  if (
+    session.inDisasterArea === null &&
+    hasOfferableDisasterWindow() &&
+    session.step !== "has_disaster_zip"
+  ) {
+    await askTriageGate(ctx, session, "disaster");
+    return;
+  }
+
   extendOfferQueue(session);
 
   if (session.queueIndex < session.queue.length) {
@@ -524,11 +480,7 @@ async function askImmigrationStatus(
   await replyTracked(
     ctx,
     session,
-    `A few more programs check immigration status. There may also be California programs available specifically for non-citizens.
-
-Are you (or the person applying) a U.S. citizen or an eligible immigrant?
-
-Your answer is not stored and is not connected to your phone number – it is completely private. We only use it once to decide which programs to show next.`,
+    IMMIGRATION_STATUS_PROMPT,
     { reply_markup: immigrationStatusKeyboard() },
   );
 }
@@ -550,7 +502,7 @@ async function askTriageGate(
 
 ${HOUSEHOLD_EXPLAIN}
 
-Tap a number:`,
+Tap a number (or More):`,
           { reply_markup: householdKeyboard() },
         );
         return;
@@ -575,6 +527,69 @@ Add up income for everyone you just counted.`,
         reply_markup: pastDueKeyboard(),
       });
       return;
+    case "utility_bills":
+      session.step = "has_utility_bills";
+      session.billsInMyName = [];
+      saveSession(session);
+      await replyTracked(
+        ctx,
+        session,
+        `Which bills do you have in your name?
+
+Tap all that apply (or None), then Done.`,
+        { reply_markup: utilityBillsKeyboard([]) },
+      );
+      return;
+    case "shared_meter":
+      session.step = "has_shared_meter";
+      saveSession(session);
+      await replyTracked(ctx, session, SHARED_METER_PROMPT, {
+        reply_markup: sharedMeterKeyboard(),
+      });
+      return;
+    case "shutoff_zone":
+      session.step = "has_shutoff_zone";
+      session.shutoffAddressChoices = null;
+      saveSession(session);
+      await replyTracked(
+        ctx,
+        session,
+        `PG&E has rebates for a portable generator or battery if your home is in a shut-off or high fire-risk area. Renters also qualify.
+
+Do you already know whether you're in one of those areas?`,
+        { reply_markup: shutoffZoneKeyboard() },
+      );
+      return;
+    case "ca_residency":
+      session.step = "has_ca_residency";
+      saveSession(session);
+      await replyTracked(
+        ctx,
+        session,
+        "Where do you live most of the year?",
+        { reply_markup: caResidencyKeyboard() },
+      );
+      return;
+    case "buying_ev":
+      session.step = "has_buying_ev";
+      saveSession(session);
+      await replyTracked(
+        ctx,
+        session,
+        "Are you trying to buy an electric vehicle (or a hydrogen car) this year?",
+        { reply_markup: buyingEvKeyboard() },
+      );
+      return;
+    case "first_time_zev":
+      session.step = "has_first_time_zev";
+      saveSession(session);
+      await replyTracked(
+        ctx,
+        session,
+        "Would this be your first battery-electric or hydrogen vehicle (not a plug-in hybrid)?",
+        { reply_markup: firstTimeZevKeyboard() },
+      );
+      return;
     case "child":
       session.step = "has_child";
       saveSession(session);
@@ -585,6 +600,36 @@ Add up income for everyone you just counted.`,
 
 ${HOUSEHOLD_EXPLAIN}`,
         { reply_markup: childHouseholdKeyboard() },
+      );
+      return;
+    case "foster_youth":
+      session.step = "has_foster_youth";
+      saveSession(session);
+      await replyTracked(
+        ctx,
+        session,
+        "Are you (or someone filing) a former foster youth age 18–25 who was in foster care on or after their 18th birthday?",
+        { reply_markup: fosterYouthKeyboard() },
+      );
+      return;
+    case "refugee":
+      session.step = "has_refugee_status";
+      saveSession(session);
+      await replyTracked(
+        ctx,
+        session,
+        "Are you a refugee, asylee, or similar eligible newcomer (SIV holder, Afghan or Ukrainian parolee, Cuban/Haitian entrant, or certified trafficking victim)?",
+        { reply_markup: refugeeStatusKeyboard() },
+      );
+      return;
+    case "medical_need":
+      session.step = "has_medical_need";
+      saveSession(session);
+      await replyTracked(
+        ctx,
+        session,
+        "Does anyone living in the home have a qualifying medical condition or device that needs extra electricity or gas (for example life-support equipment, dialysis, asthma, or extra heating or cooling)?",
+        { reply_markup: medicalNeedKeyboard() },
       );
       return;
     case "abd":
@@ -605,7 +650,9 @@ ${HOUSEHOLD_EXPLAIN}`,
       await replyTracked(
         ctx,
         session,
-        "Has anything affected your ability to work in the last few months?",
+        session.residencyTie === "out_of_state_ca_work"
+          ? "About your California job – has anything affected your ability to work in the last few months?"
+          : "Has anything affected your ability to work in the last few months?",
         { reply_markup: workDisruptionKeyboard() },
       );
       return;
@@ -618,7 +665,7 @@ ${HOUSEHOLD_EXPLAIN}`,
       }
       session.step = "has_disaster_area";
       saveSession(session);
-      await replyTracked(ctx, session, disasterAreaQuestion(windows), {
+      await replyTracked(ctx, session, disasterImpactQuestion(windows), {
         reply_markup: disasterAreaKeyboard(),
       });
       return;
@@ -691,6 +738,54 @@ async function promptEmailToComputer(
   await replyTracked(ctx, session, emailCopy, {
     reply_markup: emailReportKeyboard(shareUrl),
     link_preview_options: { is_disabled: true },
+  });
+}
+
+/** Free-text street + city → PG&E map pre-check. Does not persist the address. */
+export async function handleShutoffAddressText(
+  ctx: Context,
+  session: SessionState,
+  query: string,
+): Promise<void> {
+  const { inZone, message } = await resolveShutoffZone(query);
+  session.inShutoffZone = inZone;
+  session.shutoffAddressChoices = null;
+  await ctx.reply(message, { reply_markup: REMOVE_REPLY_KEYBOARD });
+  await beginOfferQueue(ctx, session);
+}
+
+/** GPS → nearest street → PG&E map. Does not persist coords or the street. */
+export async function handleShutoffLocation(
+  ctx: Context,
+  session: SessionState,
+  lat: number,
+  lng: number,
+): Promise<void> {
+  const result = await resolveShutoffZoneFromCoords(lat, lng);
+  if (result.kind === "unresolved") {
+    session.step = "has_shutoff_address";
+    session.shutoffAddressChoices = null;
+    saveSession(session);
+    await replyTracked(ctx, session, result.message, {
+      reply_markup: shutoffAddressReplyKeyboard(),
+    });
+    return;
+  }
+  session.inShutoffZone = result.inZone;
+  session.shutoffAddressChoices = null;
+  await ctx.reply(result.message, { reply_markup: REMOVE_REPLY_KEYBOARD });
+  await beginOfferQueue(ctx, session);
+}
+
+async function promptShutoffAddress(
+  ctx: Context,
+  session: SessionState,
+): Promise<void> {
+  session.step = "has_shutoff_address";
+  session.shutoffAddressChoices = null;
+  saveSession(session);
+  await replyTracked(ctx, session, SHUTOFF_ADDRESS_PROMPT, {
+    reply_markup: shutoffAddressReplyKeyboard(),
   });
 }
 
@@ -792,11 +887,19 @@ export async function handleCallback(
 
   if (data.startsWith("gate:toggle:")) {
     const id = data.slice("gate:toggle:".length);
-    if (GATE_OPTIONS.some((o) => o.id === id)) {
+    const isProgram = GATE_OPTIONS.some((o) => o.id === id);
+    const isNone = id === GATE_NONE_ID;
+    if (isProgram || isNone) {
       if (session.alreadyOn.includes(id)) {
         session.alreadyOn = session.alreadyOn.filter((x) => x !== id);
+      } else if (isNone) {
+        // None clears any program picks (and vice versa below).
+        session.alreadyOn = [GATE_NONE_ID];
       } else {
-        session.alreadyOn = [...session.alreadyOn, id];
+        session.alreadyOn = [
+          ...session.alreadyOn.filter((x) => x !== GATE_NONE_ID),
+          id,
+        ];
       }
       saveSession(session);
       await ctx.editMessageReplyMarkup({
@@ -809,16 +912,21 @@ export async function handleCallback(
 
   if (data === "gate:done") {
     if (session.alreadyOn.length === 0) {
-      await ctx.reply("Pick at least one, or tap None.");
+      await ctx.reply("Pick at least one program, or check None.");
       return;
     }
     trackFunnel("gate_done", session.telegramUserId, {
       campaignId: session.campaignId,
     });
-    await continueAfterGateYes(ctx, session);
+    if (session.alreadyOn.includes(GATE_NONE_ID)) {
+      await continueAfterGateNo(ctx, session);
+    } else {
+      await continueAfterGateYes(ctx, session);
+    }
     return;
   }
 
+  // Stale inline button / voice "none" shortcut – same as check None + Done.
   if (data === "gate:none") {
     trackFunnel("gate_done", session.telegramUserId, {
       campaignId: session.campaignId,
@@ -827,8 +935,31 @@ export async function handleCallback(
     return;
   }
 
+  if (data === "hh:more") {
+    session.step = "household_size_custom";
+    saveSession(session);
+    await replyTracked(
+      ctx,
+      session,
+      "Type how many people are in your household (9 or more):",
+    );
+    return;
+  }
+
   if (data.startsWith("hh:")) {
     const n = Number(data.slice(3));
+    if (!Number.isFinite(n) || n < 1 || n > 30 || !Number.isInteger(n)) {
+      const onCustom = session.step === "household_size_custom";
+      await replyTracked(
+        ctx,
+        session,
+        onCustom
+          ? "Please type a whole number between 9 and 30."
+          : "Please tap a number 1–8, or More.",
+        onCustom ? undefined : { reply_markup: householdKeyboard() },
+      );
+      return;
+    }
     session.householdSize = n;
     session.step = "income_band";
     saveSession(session);
@@ -854,16 +985,78 @@ Add up income for everyone you just counted.`,
     return;
   }
 
-  if (
-    data === "pastdue:yes" ||
-    data === "pastdue:no" ||
-    data === "pastdue:not_my_name"
-  ) {
-    session.billNotInMyName = data === "pastdue:not_my_name";
+  if (data === "pastdue:yes" || data === "pastdue:no") {
     session.pastDue = data === "pastdue:yes";
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
+  if (data.startsWith("bills:toggle:")) {
+    const id = data.slice("bills:toggle:".length);
+    const isBill = UTILITY_BILL_OPTIONS.some((o) => o.id === id);
+    const isNone = id === UTILITY_BILL_NONE_ID;
+    if (isBill || isNone) {
+      if (session.billsInMyName.includes(id)) {
+        session.billsInMyName = session.billsInMyName.filter((x) => x !== id);
+      } else if (isNone) {
+        session.billsInMyName = [UTILITY_BILL_NONE_ID];
+      } else {
+        session.billsInMyName = [
+          ...session.billsInMyName.filter((x) => x !== UTILITY_BILL_NONE_ID),
+          id,
+        ];
+      }
+      saveSession(session);
+      await ctx
+        .editMessageReplyMarkup({
+          reply_markup: utilityBillsKeyboard(session.billsInMyName),
+        })
+        .catch(() => undefined);
+      return;
+    }
+  }
+
+  if (data === "bills:done") {
+    if (session.billsInMyName.length === 0) {
+      await ctx.reply("Pick at least one bill type, or check None.");
+      return;
+    }
+    session.utilityBillsAsked = true;
+    session.billNotInMyName = session.billsInMyName.includes(
+      UTILITY_BILL_NONE_ID,
+    );
     if (session.billNotInMyName) {
       session.docsInHand = session.docsInHand.filter((d) => d !== "utilityBill");
     }
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
+  if (data === "shutoff:yes") {
+    session.inShutoffZone = true;
+    session.shutoffAddressChoices = null;
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
+  if (data === "shutoff:unsure" || data === "shutoff:locate") {
+    await promptShutoffAddress(ctx, session);
+    return;
+  }
+
+  if (data === "shutoff:no") {
+    session.inShutoffZone = false;
+    session.shutoffAddressChoices = null;
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
+  if (data === "shutoffaddr:skip") {
+    session.inShutoffZone = false;
+    session.shutoffAddressChoices = null;
+    await ctx.reply("Okay, skipping the map check.", {
+      reply_markup: REMOVE_REPLY_KEYBOARD,
+    });
     await beginOfferQueue(ctx, session);
     return;
   }
@@ -874,14 +1067,155 @@ Add up income for everyone you just counted.`,
     return;
   }
 
+  if (data === "home:ca") {
+    applyResidencyTie(session, "ca_home");
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
+  if (data === "home:visit") {
+    applyResidencyTie(session, "visitor");
+    await replyTracked(
+      ctx,
+      session,
+      "Most California food and health programs need you to live here. Check benefits in the state where you live for those – we'll only show programs that don't need a California home.",
+    );
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
+  if (data === "home:other") {
+    session.step = "has_ca_work";
+    saveSession(session);
+    await replyTracked(
+      ctx,
+      session,
+      "Do you work in California (commute, job site, or CA employer wages)?",
+      { reply_markup: caWorkKeyboard() },
+    );
+    return;
+  }
+
+  if (data === "cawork:yes") {
+    applyResidencyTie(session, "out_of_state_ca_work");
+    await replyTracked(
+      ctx,
+      session,
+      "Most California food and health programs need you to live here. We'll check California work-based programs (like unemployment or disability from a CA job).",
+    );
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
+  if (data === "cawork:no") {
+    applyResidencyTie(session, "out_of_state");
+    await replyTracked(
+      ctx,
+      session,
+      "Most California programs need you to live or work here. Check benefits in the state where you live – we'll only show programs that don't need a California home.",
+    );
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
+  if (data === "buyingev:yes" || data === "buyingev:no") {
+    session.buyingEvThisYear = data === "buyingev:yes";
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
+  if (data === "firstzev:yes" || data === "firstzev:no") {
+    session.firstTimeZev = data === "firstzev:yes";
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
   if (data === "abd:yes" || data === "abd:no") {
     session.hasAgedBlindOrDisabled = data === "abd:yes";
     await beginOfferQueue(ctx, session);
     return;
   }
 
+  if (data === "foster:yes" || data === "foster:no") {
+    session.isFosterYouth = data === "foster:yes";
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
+  if (data === "refugee:yes" || data === "refugee:no") {
+    session.isRefugeeOrAsylee = data === "refugee:yes";
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
+  if (data === "medneed:yes" || data === "medneed:no") {
+    session.hasMedicalDeviceOrCondition = data === "medneed:yes";
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
+  if (
+    data === "meter:own" ||
+    data === "meter:shared" ||
+    data === "meter:landlord"
+  ) {
+    const sharing: MeterSharing =
+      data === "meter:own"
+        ? "own"
+        : data === "meter:shared"
+          ? "shared"
+          : "landlord_bill";
+    session.meterSharing = sharing;
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
   if (data === "disaster:yes" || data === "disaster:no") {
     session.inDisasterArea = data === "disaster:yes";
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
+  if (data === "disaster:unsure") {
+    session.step = "has_disaster_zip";
+    saveSession(session);
+    const zipPrompt =
+      session.residencyTie === "out_of_state_ca_work"
+        ? disasterWorkZipConfirmPrompt()
+        : disasterZipConfirmPrompt();
+    await replyTracked(ctx, session, zipPrompt, {
+      reply_markup: disasterZipKeyboard(),
+    });
+    return;
+  }
+
+  if (data === "disasterzip:skip") {
+    session.inDisasterArea = false;
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
+  if (data.startsWith("disasterzip:")) {
+    const zip = parseZipCode(data.slice("disasterzip:".length));
+    if (!zip) {
+      await replyTracked(
+        ctx,
+        session,
+        "Please send a 5-digit ZIP code, or tap Skip.",
+        { reply_markup: disasterZipKeyboard() },
+      );
+      return;
+    }
+    if (!countyFromZip(zip)) {
+      await replyTracked(
+        ctx,
+        session,
+        "I couldn't match that to a California ZIP. Try again, or tap Skip.",
+        { reply_markup: disasterZipKeyboard() },
+      );
+      return;
+    }
+    session.inDisasterArea = zipInOfferableDisasterArea(zip);
     await beginOfferQueue(ctx, session);
     return;
   }
@@ -996,10 +1330,53 @@ Add up income for everyone you just counted.`,
     await presentOffer(ctx, session);
     return;
   }
+  if (data === "offer:exit_guide") {
+    if (!hasOpenReport(session)) {
+      await presentOffer(ctx, session);
+      return;
+    }
+    await finishQueue(ctx, session);
+    return;
+  }
+
+  if (data === "reopen:yes" || data === "reopen:no") {
+    const held = listHeldQualifyingPrograms(session);
+    session.reopenNotifyOptIn = data === "reopen:yes";
+    if (session.reopenNotifyOptIn) {
+      session.reopenWatchProgramIds = held.map((p) => p.id);
+      const imm = getImmigrationAnswer(session.telegramUserId);
+      session.savedImmigrationStatus =
+        imm === "eligible" || imm === "ineligible" ? imm : null;
+      saveSession(session);
+      await replyTracked(
+        ctx,
+        session,
+        held.length
+          ? `Got it – we'll text you if ${held.length === 1 ? "this program opens" : "one of these opens"} and you still qualify. Your answers stay saved for that check.`
+          : "Got it – we'll text you if a waitlisted program you qualify for opens.",
+      );
+    } else {
+      session.reopenWatchProgramIds = [];
+      session.savedImmigrationStatus = null;
+      saveSession(session);
+      await replyTracked(
+        ctx,
+        session,
+        "No problem – we won't text you about waitlisted programs.",
+      );
+    }
+    await completeFinish(ctx, session);
+    return;
+  }
 
   if (data === "idle:restart") {
     const uid = session.telegramUserId;
     const fresh = resetSession(uid);
+    await replyTracked(
+      ctx,
+      fresh,
+      "Starting over – this rewrites your saved profile (including any waitlist alerts). Answer with what's true now.",
+    );
     await sendOptIn(ctx, fresh);
     return;
   }
@@ -1068,7 +1445,8 @@ async function sendShareMenu(
     );
     return;
   }
-  const linkUrl = shareTargetUrl(appConfig, SHARE_LINK_CAMPAIGN);
+  const campaigns = peerShareCampaignsOrFallback(session.telegramUserId);
+  const linkUrl = shareTargetUrl(appConfig, campaigns.linkCampaignId);
   if (!linkUrl) {
     await replyTracked(
       ctx,
@@ -1078,6 +1456,11 @@ async function sendShareMenu(
     );
     return;
   }
+  trackShareOut({
+    telegramUserId: session.telegramUserId,
+    campaignId: campaigns.linkCampaignId,
+    source: "link",
+  });
   // t.me/share/url is always Telegram-safe; the target may be /go or t.me deep link.
   const shareHref = telegramShareUrl(linkUrl);
   await replyTracked(ctx, session, buildShareMenuText(linkUrl), {
@@ -1101,8 +1484,9 @@ async function sendShareQr(
     );
     return;
   }
-  const qrUrl = shareTargetUrl(appConfig, SHARE_QR_CAMPAIGN);
-  const linkUrl = shareTargetUrl(appConfig, SHARE_LINK_CAMPAIGN);
+  const campaigns = peerShareCampaignsOrFallback(session.telegramUserId);
+  const qrUrl = shareTargetUrl(appConfig, campaigns.qrCampaignId);
+  const linkUrl = shareTargetUrl(appConfig, campaigns.linkCampaignId);
   if (!qrUrl) {
     await replyTracked(
       ctx,
@@ -1112,6 +1496,11 @@ async function sendShareQr(
     );
     return;
   }
+  trackShareOut({
+    telegramUserId: session.telegramUserId,
+    campaignId: campaigns.qrCampaignId,
+    source: "qr",
+  });
   const shareHref = linkUrl ? telegramShareUrl(linkUrl) : null;
   const markup = shareKeyboard(shareHref);
   try {

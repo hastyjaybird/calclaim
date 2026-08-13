@@ -1,0 +1,267 @@
+.flowchart-hero {
+  padding-bottom: 1.25rem;
+}
+
+.flowchart-main {
+  max-width: 1400px;
+  margin: 0 auto 4rem;
+  padding: 0 1.25rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.flowchart-diagram,
+.flowchart-orders {
+  background: #f7f3ea;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 1.1rem 1.2rem 1.35rem;
+}
+
+.flowchart-diagram h2,
+.flowchart-orders h2,
+.flow-arm h3,
+.flow-gates h3,
+.order-col h3 {
+  font-family: var(--font-display);
+  margin: 0 0 0.35rem;
+}
+
+.flowchart-diagram h2,
+.flowchart-orders h2 {
+  font-size: 1.35rem;
+}
+
+.order-col h3,
+.flow-arm h3 {
+  font-size: 1.1rem;
+}
+
+.flowchart-lede {
+  margin: 0 0 1rem;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.flow-chart {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.flow-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.flow-node {
+  position: relative;
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  column-gap: 0.65rem;
+  row-gap: 0.15rem;
+  padding: 0.7rem 0.85rem 0.7rem 1.35rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(16, 36, 31, 0.12);
+  background: #fffdf8;
+}
+
+.flow-node::before {
+  content: "";
+  position: absolute;
+  left: 0.45rem;
+  top: 1rem;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: rgba(16, 36, 31, 0.28);
+}
+
+.flow-node + .flow-node::after,
+.flow-steps + .flow-branch::before,
+.flow-branch + .flow-steps::before,
+.flow-steps + .flow-gates::before,
+.flow-gates + .flow-steps::before {
+  content: "";
+  position: absolute;
+  left: 0.62rem;
+  top: -0.55rem;
+  width: 1px;
+  height: 0.55rem;
+  background: rgba(16, 36, 31, 0.18);
+}
+
+.flow-branch,
+.flow-gates {
+  position: relative;
+}
+
+.flow-node.is-screen::before,
+.flow-node.is-loop::before {
+  background: var(--leaf);
+}
+
+.flow-node.is-global {
+  opacity: 0.85;
+}
+
+.flow-kind {
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.flow-label {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.flow-note {
+  grid-column: 2;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.flow-branch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  padding-left: 0.15rem;
+}
+
+.flow-arm {
+  background: linear-gradient(145deg, rgba(13, 122, 95, 0.1), #fffdf8);
+  border: 1px solid rgba(13, 122, 95, 0.28);
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.flow-arm p {
+  margin: 0.25rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.flow-gates {
+  background: #fffdf8;
+  border: 1px solid rgba(16, 36, 31, 0.12);
+  border-radius: 0.85rem;
+  padding: 0.9rem 1rem 1rem;
+}
+
+.flow-gates h3 span {
+  font-family: var(--font-body, Figtree, sans-serif);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.gate-grid {
+  list-style: none;
+  margin: 0.65rem 0 0.55rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.45rem;
+}
+
+.gate-grid li {
+  padding: 0.45rem 0.55rem;
+  border-radius: 0.45rem;
+  background: rgba(13, 122, 95, 0.06);
+  border: 1px solid rgba(13, 122, 95, 0.14);
+  font-size: 0.86rem;
+  line-height: 1.35;
+  color: var(--ink-soft);
+}
+
+.gate-grid li strong {
+  display: block;
+  color: var(--ink);
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+
+.gate-grid li.is-last {
+  background: rgba(138, 75, 18, 0.08);
+  border-color: rgba(138, 75, 18, 0.28);
+}
+
+.flow-gates-return {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--leaf);
+  font-weight: 600;
+}
+
+.order-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.order-col {
+  background: #fffdf8;
+  border: 1px solid rgba(16, 36, 31, 0.12);
+  border-radius: 0.75rem;
+  padding: 0.85rem 0.95rem 1rem;
+}
+
+.order-list {
+  margin: 0;
+  padding: 0 0 0 1.25rem;
+  color: var(--ink);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.order-list li {
+  margin: 0.28rem 0;
+}
+
+.order-list .tag {
+  display: inline-block;
+  margin-left: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--leaf);
+  vertical-align: middle;
+}
+
+.order-list .is-held {
+  color: var(--ink-soft);
+}
+
+.order-list .is-held .tag-held {
+  color: #8a4b12;
+}
+
+@media (max-width: 800px) {
+  .flow-branch,
+  .order-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .flow-node {
+    grid-template-columns: 1fr;
+  }
+
+  .flow-kind {
+    grid-row: auto;
+  }
+
+  .flow-note {
+    grid-column: 1;
+  }
+}

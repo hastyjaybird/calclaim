@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <title>CalClaim – Utility territories</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/impact/styles.css" />
+  <link rel="stylesheet" href="/dev/styles.css" />
+  <link rel="stylesheet" href="/dev/tree/styles.css" />
+  <link rel="stylesheet" href="/dev/tree/utilities/styles.css" />
+</head>
+<body>
+  <div class="banner" role="banner">
+    <div class="banner-inner">
+      <a class="banner-brand" href="/impact" aria-label="CalClaim home">
+        <img
+          class="banner-mark"
+          src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
+          alt="CalClaim"
+          width="180"
+          height="63"
+        />
+      </a>
+      <span class="banner-sep" aria-hidden="true"></span>
+      <nav class="site-nav" aria-label="Site">
+        <a href="/impact">Impact</a>
+        <a href="/dev">Developer</a>
+        <a href="/dev/tree">Message tree</a>
+        <a href="/dev/tree/chart">Gate chart</a>
+        <a href="/dev/tree/flowchart">Flowchart</a>
+        <a href="/dev/tree/utilities" aria-current="page">Utilities</a>
+        <button type="button" class="nav-logout" id="btn-logout">Log out</button>
+      </nav>
+      <span class="banner-line">Temporary review · not linked from public pages</span>
+    </div>
+  </div>
+
+  <header class="hero hero-dev tree-hero">
+    <p class="eyebrow">Temporary developer review</p>
+    <h1>Utility territories</h1>
+    <p class="lede">
+      What each bills-in-name selection unlocks, with official apply links.
+      IOUs share CARE / FERA / ESA / AMP / Medical Baseline; munis have their
+      own discount programs. San Diego → SDG&E row.
+    </p>
+    <p class="scan-status" id="status-line" aria-live="polite"></p>
+  </header>
+
+  <main class="util-main">
+    <div class="util-scroll" id="util-scroll">
+      <table class="util-table" id="util-table">
+        <thead id="util-head"></thead>
+        <tbody id="util-body"></tbody>
+      </table>
+    </div>
+    <p class="util-hint">
+      Links come from <code>library/utility-territories.json</code>. Empty cells
+      mean that bill selection does not unlock that program family.
+    </p>
+  </main>
+
+  <script src="/dev/tree/utilities/app.js"></script>
+</body>
+</html>

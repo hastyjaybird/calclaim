@@ -1,12 +1,23 @@
 import type { SessionState, StepId } from "../library/types.js";
 import { THANKS_FEEDBACK } from "../privacy/copy.js";
-import { GATE_OPTIONS } from "./keyboards.js";
+import {
+  GATE_NONE_ID,
+  GATE_OPTIONS,
+  SHUTOFF_ADDRESS_SKIP_LABEL,
+  SHUTOFF_LOCATION_BUTTON,
+} from "./keyboards.js";
+import {
+  UTILITY_BILL_NONE_ID,
+  UTILITY_BILL_OPTIONS,
+} from "../library/utilityBills.js";
 
 /** What we believe the user meant after normalization + fuzzy matching. */
 export type TextIntent =
   | { kind: "command"; command: CommandName }
   | { kind: "greeting" }
   | { kind: "step_answer"; callback: string }
+  /** Free-text street + city for PG&E shut-off map lookup (not a callback). */
+  | { kind: "shutoff_address"; query: string }
   | { kind: "suggest"; suggestion: CommandName; display: string }
   | { kind: "unknown" };
 
@@ -301,20 +312,35 @@ function parseYesNo(normalized: string): "yes" | "no" | null {
   return null;
 }
 
+const MAX_HOUSEHOLD_SIZE = 30;
+
 function parseHouseholdSize(normalized: string): number | null {
   if (/^\d+$/.test(normalized)) {
     const n = Number(normalized);
-    if (n >= 1 && n <= 8) return n;
+    if (n >= 1 && n <= MAX_HOUSEHOLD_SIZE) return n;
     return null;
   }
   if (WORD_NUMBERS[normalized] != null) return WORD_NUMBERS[normalized]!;
-  // "4 people", "family of 3"
-  const m = normalized.match(/\b([1-8])\b/);
-  if (m) return Number(m[1]);
+  // "4 people", "family of 12"
+  const m = normalized.match(/\b([1-9]\d?)\b/);
+  if (m) {
+    const n = Number(m[1]);
+    if (n >= 1 && n <= MAX_HOUSEHOLD_SIZE) return n;
+  }
   for (const [word, n] of Object.entries(WORD_NUMBERS)) {
     if (normalized.includes(word)) return n;
   }
   return null;
+}
+
+function wantsHouseholdMore(normalized: string): boolean {
+  return (
+    normalized === "more" ||
+    normalized === "9+" ||
+    normalized === "other" ||
+    normalized.includes("more than 8") ||
+    normalized.includes("more than eight")
+  );
 }
 
 function matchGateProgram(normalized: string): string | null {
@@ -340,7 +366,12 @@ function matchGateProgram(normalized: string): string | null {
       "county medical services",
       "county medical services program",
     ],
-    wic: ["wic"],
+    wic: [
+      "wic",
+      "women infants",
+      "women, infants, and children",
+      "women infants and children",
+    ],
   };
   for (const opt of GATE_OPTIONS) {
     const list = aliases[opt.id] ?? [opt.label.toLowerCase()];
@@ -349,6 +380,72 @@ function matchGateProgram(normalized: string): string | null {
       if (a.length >= 3 && editDistance(normalized, a) <= 1) return opt.id;
     }
   }
+  return null;
+}
+
+function matchUtilityBill(normalized: string): string | null {
+  const aliases: Record<string, string[]> = {
+    pge: [
+      "pge",
+      "pg&e",
+      "pge bill",
+      "pg&e bill",
+      "pge electric",
+      "pg&e electric",
+      "pge gas",
+      "pg&e gas",
+    ],
+    sdge: [
+      "sdge",
+      "sdg&e",
+      "sdg and e",
+      "san diego gas",
+      "san diego",
+    ],
+    sce: [
+      "sce",
+      "edison",
+      "southern california edison",
+      "socal edison",
+    ],
+    socalgas: ["socalgas", "so cal gas", "southern california gas", "gas company"],
+    ladwp: ["ladwp", "la department of water", "los angeles water"],
+    smud: ["smud", "sacramento municipal"],
+    other_ca_utility: ["other ca utility", "other utility"],
+    heating_fuel: [
+      "heating",
+      "heating fuel",
+      "heating bill",
+      "propane",
+      "oil heat",
+      "oil bill",
+      "wood",
+      "firewood",
+    ],
+    phone_internet: [
+      "phone or internet bill",
+      "phone and/or internet",
+      "phone or internet",
+      "phone and internet",
+      "phone",
+      "phone bill",
+      "cell",
+      "cellphone",
+      "mobile bill",
+      "internet",
+      "internet bill",
+      "broadband",
+      "wifi bill",
+      "wi-fi bill",
+    ],
+  };
+  for (const opt of UTILITY_BILL_OPTIONS) {
+    const list = aliases[opt.id] ?? [opt.label.toLowerCase()];
+    for (const a of list) {
+      if (normalized === a || normalized.includes(a)) return opt.id;
+    }
+  }
+  if (/\bpge\b|\bpg&e\b/.test(normalized)) return "pge";
   return null;
 }
 
@@ -390,13 +487,21 @@ function interpretStepAnswer(
       ) ||
       yn === "no"
     ) {
-      return { kind: "step_answer", callback: "gate:none" };
+      return { kind: "step_answer", callback: `gate:toggle:${GATE_NONE_ID}` };
     }
     const prog = matchGateProgram(normalized);
     if (prog) return { kind: "step_answer", callback: `gate:toggle:${prog}` };
   }
 
   if (step === "household_size") {
+    if (wantsHouseholdMore(normalized)) {
+      return { kind: "step_answer", callback: "hh:more" };
+    }
+    const n = parseHouseholdSize(normalized);
+    if (n != null) return { kind: "step_answer", callback: `hh:${n}` };
+  }
+
+  if (step === "household_size_custom") {
     const n = parseHouseholdSize(normalized);
     if (n != null) return { kind: "step_answer", callback: `hh:${n}` };
   }
@@ -426,15 +531,122 @@ function interpretStepAnswer(
   }
 
   if (step === "past_due") {
-    if (
-      /\b(not (in )?my name|someone else|roommate|landlord)\b/.test(normalized)
-    ) {
-      return { kind: "step_answer", callback: "pastdue:not_my_name" };
-    }
     if (yn === "yes" || /\bpast due\b/.test(normalized)) {
       return { kind: "step_answer", callback: "pastdue:yes" };
     }
     if (yn === "no") return { kind: "step_answer", callback: "pastdue:no" };
+  }
+
+  if (step === "has_shutoff_zone") {
+    if (
+      yn === "yes" ||
+      /\b(i'?m in|in (a |the )?(shut[- ]?off|psps|epss|fire[- ]?risk|high fire))\b/.test(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "shutoff:yes" };
+    }
+    if (
+      ["not sure", "unsure", "dont know", "don't know", "idk", "maybe", "check"].includes(
+        normalized,
+      ) ||
+      /\b(not sure|check (my )?address|look( it)? up)\b/.test(normalized)
+    ) {
+      return { kind: "step_answer", callback: "shutoff:unsure" };
+    }
+    if (
+      normalized === "use my location" ||
+      normalized === normalizeText(SHUTOFF_LOCATION_BUTTON)
+    ) {
+      return { kind: "step_answer", callback: "shutoff:locate" };
+    }
+    if (yn === "no") return { kind: "step_answer", callback: "shutoff:no" };
+  }
+
+  if (step === "has_shutoff_address") {
+    if (
+      ["skip", "no", "nope", "cancel", "nevermind", "never mind"].includes(
+        normalized,
+      ) ||
+      normalized === normalizeText(SHUTOFF_ADDRESS_SKIP_LABEL)
+    ) {
+      return { kind: "step_answer", callback: "shutoffaddr:skip" };
+    }
+  }
+
+  if (step === "has_utility_bills") {
+    if (["done", "finish", "finished", "next", "continue"].includes(normalized)) {
+      return { kind: "step_answer", callback: "bills:done" };
+    }
+    if (
+      ["none", "no", "nope", "nothing", "none of these", "neither"].includes(
+        normalized,
+      ) ||
+      /\b(not (in )?my name|someone else|roommate|landlord)\b/.test(normalized)
+    ) {
+      return {
+        kind: "step_answer",
+        callback: `bills:toggle:${UTILITY_BILL_NONE_ID}`,
+      };
+    }
+    const bill = matchUtilityBill(normalized);
+    if (bill) return { kind: "step_answer", callback: `bills:toggle:${bill}` };
+  }
+
+  if (step === "has_ca_residency") {
+    if (
+      yn === "yes" ||
+      /\b(in california|live in ca|california|ca home|ca resident)\b/.test(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "home:ca" };
+    }
+    if (
+      /\b(visit|visiting|neither|tourist|just here)\b/.test(normalized)
+    ) {
+      return { kind: "step_answer", callback: "home:visit" };
+    }
+    if (
+      yn === "no" ||
+      /\b(another state|other state|nevada|out of state|out-of-state|not california)\b/.test(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "home:other" };
+    }
+  }
+
+  if (step === "has_ca_work") {
+    if (
+      yn === "yes" ||
+      /\b(work|works|working|commute|job|employer)\b/.test(normalized)
+    ) {
+      return { kind: "step_answer", callback: "cawork:yes" };
+    }
+    if (yn === "no") return { kind: "step_answer", callback: "cawork:no" };
+  }
+
+  if (step === "has_buying_ev") {
+    if (
+      yn === "yes" ||
+      /\b(buy|buying|purchase|ev|electric|hydrogen|zev|car)\b/.test(normalized)
+    ) {
+      return { kind: "step_answer", callback: "buyingev:yes" };
+    }
+    if (yn === "no") return { kind: "step_answer", callback: "buyingev:no" };
+  }
+
+  if (step === "has_first_time_zev") {
+    if (
+      yn === "yes" ||
+      /\b(first|first.?time|never (owned|bought|had)|no (prior|previous))\b/.test(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "firstzev:yes" };
+    }
+    if (yn === "no") return { kind: "step_answer", callback: "firstzev:no" };
   }
 
   if (step === "has_child") {
@@ -442,6 +654,66 @@ function interpretStepAnswer(
       return { kind: "step_answer", callback: "child:yes" };
     }
     if (yn === "no") return { kind: "step_answer", callback: "child:no" };
+  }
+
+  if (step === "has_foster_youth") {
+    if (
+      yn === "yes" ||
+      /\b(foster|foster care|former foster)\b/.test(normalized)
+    ) {
+      return { kind: "step_answer", callback: "foster:yes" };
+    }
+    if (yn === "no") return { kind: "step_answer", callback: "foster:no" };
+  }
+
+  if (step === "has_refugee_status") {
+    if (
+      yn === "yes" ||
+      /\b(refugee|asylee|asylum|siv|parolee|trafficking|cuban|haitian)\b/.test(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "refugee:yes" };
+    }
+    if (yn === "no") return { kind: "step_answer", callback: "refugee:no" };
+  }
+
+  if (step === "has_shared_meter") {
+    if (
+      /\b(landlord|submeter|sub-meter|building bill|they bill me|sends my bill)\b/.test(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "meter:landlord" };
+    }
+    if (
+      yn === "yes" ||
+      /\b(share|shared|another (family|household)|duplex|two families|split (house|bill))\b/.test(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "meter:shared" };
+    }
+    if (
+      yn === "no" ||
+      /\b(just us|just me|only us|only me|my household|our household)\b/.test(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "meter:own" };
+    }
+  }
+
+  if (step === "has_medical_need") {
+    if (
+      yn === "yes" ||
+      /\b(medical|life.?support|dialysis|asthma|apnea|oxygen|ventilator|wheelchair)\b/.test(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "medneed:yes" };
+    }
+    if (yn === "no") return { kind: "step_answer", callback: "medneed:no" };
   }
 
   if (step === "has_abd") {
@@ -499,6 +771,30 @@ function interpretStepAnswer(
     ) {
       return { kind: "step_answer", callback: "disaster:no" };
     }
+    if (
+      ["not sure", "unsure", "dont know", "don't know", "idk", "maybe"].includes(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "disaster:unsure" };
+    }
+  }
+
+  if (step === "has_disaster_zip") {
+    if (
+      ["skip", "not sure", "unsure", "dont know", "don't know", "idk"].includes(
+        normalized,
+      )
+    ) {
+      return { kind: "step_answer", callback: "disasterzip:skip" };
+    }
+    const digits = normalized.replace(/\D/g, "");
+    if (digits.length === 5 || digits.length === 9) {
+      return {
+        kind: "step_answer",
+        callback: `disasterzip:${digits.slice(0, 5)}`,
+      };
+    }
   }
 
   if (step === "has_immigration_status") {
@@ -525,6 +821,18 @@ function interpretStepAnswer(
     }
   }
 
+  if (step === "has_reopen_notify") {
+    if (yn === "yes") {
+      return { kind: "step_answer", callback: "reopen:yes" };
+    }
+    if (
+      yn === "no" ||
+      /\b(no thanks|skip|dont|don't|not now)\b/.test(normalized)
+    ) {
+      return { kind: "step_answer", callback: "reopen:no" };
+    }
+  }
+
   if (step === "has_zip") {
     if (
       ["skip", "not sure", "unsure", "dont know", "don't know", "idk"].includes(
@@ -543,6 +851,14 @@ function interpretStepAnswer(
   if (step === "offer") {
     const programId = session.queue[session.queueIndex];
     if (!programId) return null;
+    if (
+      /\b(exit|print guide|print application|enough|done with)\b/.test(
+        normalized,
+      ) ||
+      /\b(finish|stop) (the )?(list|queue|offers)\b/.test(normalized)
+    ) {
+      return { kind: "step_answer", callback: "offer:exit_guide" };
+    }
     if (
       /\b(skip|pass|no thanks|not now|next)\b/.test(normalized) ||
       yn === "no"
@@ -599,7 +915,7 @@ const COMMAND_DISPLAY: Record<CommandName, string> = {
 
 /**
  * Best-effort intent from free text. Case-insensitive, typo-tolerant,
- * and willing to guess common step answers (yes/no, 1–8, etc.).
+ * and willing to guess common step answers (yes/no, household size, etc.).
  */
 export function interpretMessage(
   raw: string,
@@ -607,6 +923,28 @@ export function interpretMessage(
 ): TextIntent {
   const normalized = normalizeText(raw);
   if (!normalized) return { kind: "unknown" };
+
+  // Street + city for PG&E map – use raw text (normalize strips commas / case).
+  if (session.step === "has_shutoff_address") {
+    if (
+      ["skip", "no", "nope", "cancel", "nevermind", "never mind"].includes(
+        normalized,
+      ) ||
+      normalized === normalizeText(SHUTOFF_ADDRESS_SKIP_LABEL)
+    ) {
+      return { kind: "step_answer", callback: "shutoffaddr:skip" };
+    }
+    if (
+      normalized === "use my location" ||
+      normalized === normalizeText(SHUTOFF_LOCATION_BUTTON)
+    ) {
+      return { kind: "unknown" };
+    }
+    const query = raw.trim().replace(/\s+/g, " ");
+    if (query.length >= 5 && !/^(yes|no|y|n)$/i.test(query)) {
+      return { kind: "shutoff_address", query };
+    }
+  }
 
   // On the Start screen, "start"/"begin" means tap Start – not /restart.
   if (session.step === "opt_in") {
@@ -658,31 +996,59 @@ export function stepNudge(step: StepId): string {
     case "opt_in":
       return "Whenever you're ready, tap Start below – or type help for options.";
     case "gate":
-      return "Tap any programs you're already on, then Done – or None if none of those.";
+      return "Tap any programs you're already on (or None), then Done.";
     case "household_size":
-      return "Tap a number for how many people share money with you (not separate roommates).";
+      return "Tap a number 1–8 for how many people share money with you, or More if there are more.";
+    case "household_size_custom":
+      return "Type how many people are in your household (a whole number, up to 30).";
     case "income_band":
       return "Pick the income range that fits best – rough is fine.";
     case "past_due":
-      return "Quick yes/no on whether the utility bill is past due (or say the bill isn't in your name).";
+      return "Quick yes/no on whether the utility bill is past due.";
+    case "has_utility_bills":
+      return "Tap which bills are in your name (or None), then Done.";
+    case "has_shared_meter":
+      return "Tap No (just us), Yes (we share the meter), or Landlord bills me.";
+    case "has_shutoff_zone":
+      return "Tap whether you're already in a shut-off / high fire-risk area, Use my location, No, or Not sure to check an address.";
+    case "has_shutoff_address":
+      return "Tap Use my location, type street and city (example: 123 Main St, Santa Rosa), or Skip.";
+    case "has_ca_residency":
+      return "Tap where you live most of the year – In California, In another state, or Just visiting / neither.";
+    case "has_ca_work":
+      return "Tap Yes if you work in California (commute, job site, or CA wages), or No.";
+    case "has_buying_ev":
+      return "Tap Yes or No – are you trying to buy an EV (or hydrogen car) this year?";
+    case "has_first_time_zev":
+      return "Tap Yes or No – would this be your first battery-electric or hydrogen vehicle?";
     case "has_child":
       return "Tap Yes or No – kids under 18 or pregnancy in the household.";
+    case "has_foster_youth":
+      return "Tap Yes or No – former foster youth age 18–25 who was in care on/after 18.";
+    case "has_refugee_status":
+      return "Tap Yes or No – refugee, asylee, or similar eligible newcomer (SIV, parolee, Cuban/Haitian entrant, or certified trafficking victim).";
+    case "has_medical_need":
+      return "Tap Yes or No – anyone in the home with a qualifying medical condition or device that needs extra electricity or gas.";
     case "has_abd":
       return "Tap Yes or No – anyone 65+, blind, or disabled in the household.";
     case "has_work_disruption":
       return "Tap the option that fits – lost a job, can't work for health reasons, caring for family, or none of these.";
     case "has_disaster_area":
-      return "Tap Yes or No – did anyone in the household live or work in the disaster area?";
+      return "Tap Yes, No, or Not sure – was your residence or workplace impacted by any of the listed disasters?";
+    case "has_disaster_zip":
+      return "Type the 5-digit ZIP for the residence or workplace that may have been impacted, or tap Skip.";
     case "has_immigration_status":
       return "Tap Yes (citizen or eligible immigrant), No, or Prefer not to say – your answer is not stored.";
+    case "has_reopen_notify":
+      return "Tap Yes to get a text if a waitlisted program opens, or No thanks.";
     case "has_zip":
       return "Type your 5-digit home ZIP code, or tap Skip if you're not sure.";
     case "offer":
-      return "Use the buttons – add to your Application Guide, say you're already enrolled, or skip.";
+      return "Use the buttons – add to your Application Guide, say you're already enrolled, skip, or exit and print your guide if you have one.";
     case "idle":
-      return "You're all set for now. Restart, share with a friend, email your Application Guide to a computer, or more info.";
+      return "You're all set for now. Update my answers (rewrites your profile), share with a friend, email your Application Guide to a computer, or more info.";
     case "confirm_stop":
-      return "Want me to pause reminders? Tap Yes or No below.";
+      return "Want me to pause reminders and reopen alerts? Tap Yes or No below.";
     case "confirm_erase":
       return "This would delete your CalClaim data. Tap Yes or No below.";
     case "help_menu":

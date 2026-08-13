@@ -1,0 +1,215 @@
+{
+  "version": "1",
+  "territories": {
+    "pge": { "id": "pge", "label": "PG&E", "kind": "iou" },
+    "sdge": { "id": "sdge", "label": "SDG&E", "kind": "iou" },
+    "sce": { "id": "sce", "label": "SCE", "kind": "iou" },
+    "socalgas": { "id": "socalgas", "label": "SoCalGas", "kind": "iou" },
+    "ladwp": { "id": "ladwp", "label": "LADWP", "kind": "muni" },
+    "smud": { "id": "smud", "label": "SMUD", "kind": "muni" }
+  },
+  "programLinks": {
+    "care": {
+      "pge": {
+        "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/california-alternate-rates-for-energy-program.html",
+        "applySteps": [
+          "Apply online for CARE on your PG&E account (shared CARE/FERA form)",
+          "Have your PG&E account number or recent bill ready"
+        ],
+        "sources": [
+          "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/california-alternate-rates-for-energy-program.html"
+        ]
+      },
+      "sdge": {
+        "applyUrl": "https://www.sdge.com/care",
+        "applySteps": [
+          "Apply online for CARE at sdge.com/care (no documents up front)",
+          "Have your SDG&E account number ready; call 1-877-646-5525 if you prefer phone"
+        ],
+        "sources": ["https://www.sdge.com/care"]
+      },
+      "sce": {
+        "applyUrl": "https://www.sce.com/carefera",
+        "applySteps": [
+          "Apply online for CARE/FERA at sce.com/carefera",
+          "Have your SCE account number ready; automated phone: 1-800-798-5723"
+        ],
+        "sources": ["https://www.sce.com/carefera"]
+      },
+      "socalgas": {
+        "applyUrl": "https://www.socalgas.com/billing-payment/assistance-programs/california-alternate-rates-for-energy",
+        "applySteps": [
+          "Apply online for CARE on your SoCalGas bill",
+          "Have your SoCalGas account number ready"
+        ],
+        "sources": [
+          "https://www.socalgas.com/billing-payment/assistance-programs/california-alternate-rates-for-energy"
+        ]
+      }
+    },
+    "fera": {
+      "pge": {
+        "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/family-electric-rate-assistance-program-fera.html",
+        "applySteps": [
+          "Use the shared CARE/FERA application on your PG&E account",
+          "Have your PG&E account number or recent bill ready"
+        ],
+        "sources": [
+          "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/family-electric-rate-assistance-program-fera.html"
+        ]
+      },
+      "sdge": {
+        "applyUrl": "https://www.sdge.com/FERA",
+        "applySteps": [
+          "Apply online for FERA at sdge.com/FERA (CARE applicants are auto-checked for FERA)",
+          "Have your SDG&E account number ready"
+        ],
+        "sources": ["https://www.sdge.com/FERA"]
+      },
+      "sce": {
+        "applyUrl": "https://www.sce.com/carefera",
+        "applySteps": [
+          "Apply online for CARE/FERA at sce.com/carefera",
+          "Have your SCE account number ready"
+        ],
+        "sources": ["https://www.sce.com/carefera"]
+      }
+    },
+    "esa": {
+      "pge": {
+        "applyUrl": "https://www.pge.com/en/save-energy-and-money/energy-saving-programs/energy-savings-assistance-program.html",
+        "applySteps": [
+          "Apply or get referred through the PG&E ESA page",
+          "Schedule an assessment if approved"
+        ],
+        "sources": [
+          "https://www.pge.com/en/save-energy-and-money/energy-saving-programs/energy-savings-assistance-program.html"
+        ]
+      },
+      "sdge": {
+        "applyUrl": "https://www.sdge.com/esa",
+        "applySteps": [
+          "Apply for Energy Savings Assistance at sdge.com/esa (often screened with CARE/FERA)",
+          "An authorized contractor may call to schedule an in-home visit"
+        ],
+        "sources": ["https://www.sdge.com/esa"]
+      },
+      "sce": {
+        "applyUrl": "https://www.sce.com/esa",
+        "applySteps": [
+          "Apply for ESA at sce.com/esa (My Account login may be required)",
+          "Schedule assessment if approved"
+        ],
+        "sources": ["https://www.sce.com/esa"]
+      },
+      "socalgas": {
+        "applyUrl": "https://www.socalgas.com/billing-payment/assistance-programs/energy-savings-assistance-program",
+        "applySteps": [
+          "Submit the SoCalGas ESA interest form online or call 1-800-331-7593",
+          "A contractor will contact you about no-cost gas energy upgrades"
+        ],
+        "sources": [
+          "https://www.socalgas.com/billing-payment/assistance-programs/energy-savings-assistance-program"
+        ]
+      }
+    },
+    "amp": {
+      "pge": {
+        "applyUrl": "https://help.pge.com/s/article/Arrearage-Management-Plan-AMP",
+        "applySteps": [
+          "Confirm you have a qualifying past-due balance and CARE or FERA enrollment",
+          "Enroll via PG&E AMP / assistance pages and keep on-time payments"
+        ],
+        "sources": [
+          "https://help.pge.com/s/article/Arrearage-Management-Plan-AMP"
+        ]
+      },
+      "sdge": {
+        "applyUrl": "https://www.sdge.com/residential/pay-bill/get-payment-bill-assistance/amp",
+        "applySteps": [
+          "Confirm CARE or FERA enrollment and a qualifying past-due balance",
+          "Enroll via SDG&E’s AMP page (virtual assistant) or call 1-800-411-7343"
+        ],
+        "sources": [
+          "https://www.sdge.com/residential/pay-bill/get-payment-bill-assistance/amp"
+        ]
+      },
+      "sce": {
+        "applyUrl": "https://www.sce.com/amp",
+        "applySteps": [
+          "Confirm CARE or FERA enrollment and a qualifying past-due balance",
+          "Apply for SCE Arrearage Management Plan at sce.com/amp"
+        ],
+        "sources": ["https://www.sce.com/amp"]
+      },
+      "socalgas": {
+        "applyUrl": "https://www.socalgas.com/billing-payment/assistance-programs/forgiveness",
+        "applySteps": [
+          "Confirm you are enrolled in SoCalGas CARE with a qualifying past-due balance",
+          "Apply online for the Arrearage Management Plan at socalgas.com/forgiveness"
+        ],
+        "sources": [
+          "https://www.socalgas.com/billing-payment/assistance-programs/forgiveness"
+        ]
+      }
+    },
+    "medical_baseline": {
+      "pge": {
+        "applyUrl": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/medical-baseline-program.html",
+        "applySteps": [
+          "Get licensed medical practitioner certification",
+          "Submit the Medical Baseline application to PG&E"
+        ],
+        "sources": [
+          "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/medical-baseline-program.html"
+        ]
+      },
+      "sdge": {
+        "applyUrl": "https://www.sdge.com/medical",
+        "applySteps": [
+          "Complete the SDG&E Medical Baseline application with practitioner certification",
+          "Email to medicalbaseline@sdge.com or mail to the address on the form"
+        ],
+        "sources": ["https://www.sdge.com/medical"]
+      },
+      "sce": {
+        "applyUrl": "https://www.sce.com/mbl",
+        "applySteps": [
+          "Apply online at sce.com/mbl (form routes to your medical provider for signature)",
+          "Or mail the paper application after practitioner certification"
+        ],
+        "sources": ["https://www.sce.com/mbl"]
+      },
+      "socalgas": {
+        "applyUrl": "https://www.socalgas.com/billing-payment/assistance-programs/medical-baseline-allowance",
+        "applySteps": [
+          "Apply online at socalgas.com/medical (provider completes Part 2 by email)",
+          "Or email/mail/fax the completed form to SoCalGas Medical Baseline"
+        ],
+        "sources": [
+          "https://www.socalgas.com/billing-payment/assistance-programs/medical-baseline-allowance"
+        ]
+      }
+    },
+    "ladwp_ez_save": {
+      "ladwp": {
+        "applyUrl": "https://www.ladwp.com/EZSAVE",
+        "applySteps": [
+          "Confirm you are the LADWP customer of record at your primary residence",
+          "Apply online for EZ-SAVE at ladwp.com/EZSAVE"
+        ],
+        "sources": ["https://www.ladwp.com/EZSAVE"]
+      }
+    },
+    "smud_eapr": {
+      "smud": {
+        "applyUrl": "https://www.smud.org/lowincome",
+        "applySteps": [
+          "Check EAPR income guidelines on SMUD’s low-income page",
+          "Apply online through My Account or download the mail-in application"
+        ],
+        "sources": ["https://www.smud.org/lowincome"]
+      }
+    }
+  }
+}

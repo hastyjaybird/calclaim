@@ -1,5 +1,5 @@
 {
-  "version": "2026-08-03",
+  "version": "2026-08-12",
   "notes": "Operational requirements matrix for the /dev page. The bot does not read this file – it exists so a human can rank programs by how hard they actually are to finish, track what has been verified, and see which programs open the door to others. Every row started as a draft assembled from the official pages listed in reviewRefs and is marked needs_review until a person confirms it. Edited through /dev, so changes land here as a git diff.",
   "programs": {
     "medi_cal": {
@@ -20,7 +20,9 @@
         "care",
         "esa",
         "liheap",
-        "ihss"
+        "ihss",
+        "premium_tax_credit",
+        "sun_bucks"
       ],
       "prerequisites": [],
       "difficultyOverride": null,
@@ -62,7 +64,10 @@
         "esa",
         "lifeline",
         "liheap",
-        "wic"
+        "wic",
+        "sun_bucks",
+        "cfap",
+        "premium_tax_credit"
       ],
       "prerequisites": [],
       "difficultyOverride": null,
@@ -80,7 +85,7 @@
           "url": "https://www.getcalfresh.org/"
         }
       ],
-      "notes": "An interview is required on every initial application – usually by phone, and it is the single most common reason applications stall. California has no asset test for most households (one still applies to some over-200%-FPL elderly and disabled households). Expedited service can issue benefits within 3 days for very low income or resources.",
+      "notes": "An interview is required on every initial application – usually by phone, and it is the single most common reason applications stall. California has no asset test for most households (one still applies to some over-200%-FPL elderly and disabled households). Expedited service can issue benefits within 3 days for very low income or resources. Identity can be verified with a birth certificate or collateral contact when photo ID is unavailable; people experiencing homelessness are not required to verify a residence address. H.R.1 / federal status changes may push some households toward CFAP rather than federal CalFresh – see cfap.",
       "lastReviewedAt": null,
       "reviewedBy": null
     },
@@ -374,6 +379,7 @@
     "lifeline": {
       "eligibility": [
         "ca_residency",
+        "account_in_your_name",
         "categorical_or_income",
         "income_limit",
         "one_per_household"
@@ -409,13 +415,16 @@
       "eligibility": [
         "participating_utility",
         "account_in_your_name",
+        "lives_at_service_address",
+        "not_tax_dependent",
+        "no_shared_meter",
         "categorical_or_income",
         "income_limit",
-        "one_per_household"
+        "one_per_household",
+        "usage_under_baseline_cap"
       ],
       "documents": [
-        "utilityBill",
-        "utilityAccountNumber"
+        "none"
       ],
       "interview": "none",
       "unlocks": [
@@ -427,7 +436,7 @@
       "availabilityOverride": null,
       "availabilityNote": "",
       "reviewStatus": "needs_review",
-      "confidencePct": 85,
+      "confidencePct": 90,
       "reviewRefs": [
         {
           "label": "PG&E – CARE program",
@@ -436,9 +445,17 @@
         {
           "label": "PG&E tariff – CARE/FERA income limits",
           "url": "https://www.pge.com/tariffs/assets/pdf/tariffbook/ELEC_FORMS_62-1477.pdf"
+        },
+        {
+          "label": "PG&E CARE/FERA application (PDF)",
+          "url": "https://www.pge.com/assets/pge/localized/en/docs/account/billing-and-assistance/care-fera-application-lp.pdf"
+        },
+        {
+          "label": "PG&E CARE/FERA submetered application (PDF)",
+          "url": "https://www.pge.com/assets/pge/localized/en/docs/account/billing-and-assistance/care-fera-application-sub-meter-lp.pdf"
         }
       ],
-      "notes": "The easiest real win in the library: self-certified online in a few minutes with no documents uploaded up front, though the utility can ask for post-enrollment verification later. Enrollment in Medi-Cal, CalFresh, WIC, SSI, CalWORKs, or LIHEAP qualifies you without any income test. CARE (or FERA) enrollment is what makes AMP available and is a qualifying path into ESA. Re-certification comes every 2 or 4 years.",
+      "notes": "Easiest real win in the library, but not zero-qual: you still need a participating-utility bill in your name, to live at that service address, not be claimed as someone else's tax dependent, and not share a meter with another household. Two families on one residential meter are out (PG&E: each family must have a separate meter). Submetered tenants — landlord holds the master meter and bills you from your own submeter — still qualify via the paper CARE/FERA submetered application (landlord completes a section; online apply is not allowed). The bot asks a shared-meter question after a bill in the applicant's name: another household on this meter hides CARE; landlord-billed (submeter) still offers CARE. Qualify by income OR a listed assistance program (Medi-Cal, CalFresh, WIC, SSI, CalWORKs, LIHEAP, etc.). Direct-metered online apply is self-certified with no documents up front; PG&E can demand post-enrollment verification. Monthly electric usage must stay under 6× Tier 1. CARE (or FERA) unlocks AMP and is a path into ESA. Re-certify every 2 or 4 years.",
       "lastReviewedAt": null,
       "reviewedBy": null
     },
@@ -446,12 +463,15 @@
       "eligibility": [
         "participating_utility",
         "account_in_your_name",
+        "lives_at_service_address",
+        "not_tax_dependent",
+        "no_shared_meter",
         "fera_household_3_plus",
-        "income_limit"
+        "income_limit",
+        "one_per_household"
       ],
       "documents": [
-        "utilityBill",
-        "utilityAccountNumber"
+        "none"
       ],
       "interview": "none",
       "unlocks": [
@@ -462,14 +482,22 @@
       "availabilityOverride": null,
       "availabilityNote": "",
       "reviewStatus": "needs_review",
-      "confidencePct": 80,
+      "confidencePct": 85,
       "reviewRefs": [
         {
           "label": "PG&E – FERA program",
           "url": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/family-electric-rate-assistance-program-fera.html"
+        },
+        {
+          "label": "PG&E CARE/FERA application (PDF)",
+          "url": "https://www.pge.com/assets/pge/localized/en/docs/account/billing-and-assistance/care-fera-application-lp.pdf"
+        },
+        {
+          "label": "PG&E CARE/FERA submetered application (PDF)",
+          "url": "https://www.pge.com/assets/pge/localized/en/docs/account/billing-and-assistance/care-fera-application-sub-meter-lp.pdf"
         }
       ],
-      "notes": "FERA is income-only – there is no categorical program path – and it requires a household of three or more, which is the rule most often missed. FERA income sits above the CARE limit, so a FERA household does not automatically meet ESA's income guidelines. Electric discount only, no gas.",
+      "notes": "Shares the CARE application and the same account / service-address / not-tax-dependent / own-meter rules. Two households on one meter are out; submetered tenants with their own submeter still qualify via the paper submetered form (same as CARE). The bot asks a shared-meter question after a bill in the applicant's name (same answers as CARE). FERA is income-only – no categorical program path – and requires a household of three or more, which is the rule most often missed. FERA income sits above the CARE limit, so a FERA household does not automatically meet ESA's income guidelines. Electric discount only, no gas. No documents up front for direct-metered; post-enrollment verification possible.",
       "lastReviewedAt": null,
       "reviewedBy": null
     },
@@ -501,7 +529,7 @@
           "url": "https://www.pge.com/en/save-energy-and-money/energy-saving-programs/energy-savings-assistance-program.html"
         }
       ],
-      "notes": "Short form, long process: a contractor assesses the home before any work happens, so this is a multi-visit program with scheduling as the real cost. Renters need the property owner's signature, and the dwelling itself has to qualify (some homes are excluded for prior participation or type). CARE enrollment or income at or below the ESA guideline satisfies the income test.",
+      "notes": "Short form, long process: a contractor assesses the home before any work happens, so this is a multi-visit program with scheduling as the real cost. Renters need the property owner's signature, and the dwelling itself has to qualify (some homes are excluded for prior participation or type). Master-metered buildings are eligible (statewide ESA manual: active account/meter includes a master meter); this is not a CARE-style shared-meter disqualifier. CARE enrollment or income at or below the ESA guideline satisfies the income test.",
       "lastReviewedAt": null,
       "reviewedBy": null
     },
@@ -542,7 +570,7 @@
           "url": "https://www.csd.ca.gov/Pages/Find-Services-in-My-County.aspx"
         }
       ],
-      "notes": "Delivered by local providers who each set their own appointment process, document list, and funding window, so intake varies widely by county – treat this row as a generalization. Funding runs out mid-season in many counties, which matters more than the eligibility rules. LIHEAP receipt is a qualifying program for CARE, ESA, and CA LifeLine.",
+      "notes": "Delivered by local providers who each set their own appointment process, document list, and funding window, so intake varies widely by county – treat this row as a generalization. Funding runs out mid-season in many counties, which matters more than the eligibility rules. Shared / master meters do not disqualify: California's LIHEAP plan pays the client directly when utilities are in rent or submetered. LIHEAP receipt is a qualifying program for CARE, ESA, and CA LifeLine.",
       "lastReviewedAt": null,
       "reviewedBy": null
     },
@@ -550,6 +578,7 @@
       "eligibility": [
         "participating_utility",
         "account_in_your_name",
+        "not_master_metered",
         "enrolled_care_or_fera",
         "past_due_balance",
         "payment_plan_compliance"
@@ -577,9 +606,13 @@
         {
           "label": "PG&E – will PG&E forgive my balance",
           "url": "https://help.pge.com/s/article/Will-PGE-forgive-all-or-a-portion-of-my-owed-balance"
+        },
+        {
+          "label": "SCE – AMP (master-meter exclusion)",
+          "url": "https://www.sce.com/customer-service-center/help-center/rebate-savings/care-fera-financial-assistance/arrearage-management-plan"
         }
       ],
-      "notes": "Prerequisite is CARE or FERA – either one, not both – plus a qualifying past-due balance that is generally at least 90 days old. Signing up is quick; the hard part is the 12 months of on-time payments on current charges, since debt is forgiven in monthly increments and missed payments can drop you from the plan.",
+      "notes": "Prerequisite is CARE or FERA – either one, not both – plus a qualifying past-due balance that is generally at least 90 days old. Stricter than CARE on metering: PG&E and SCE both exclude master-metered accounts, and PG&E also excludes master-metered accounts with submetered tenants, so a tenant who gets CARE through the landlord still cannot use AMP. Individually metered tenants who are the customer of record are fine. The bot's shared-meter question hides AMP on “we share this meter” and “landlord bills me”; only “just us” keeps AMP. NEM is also out. Signing up is quick; the hard part is the 12 months of on-time payments on current charges, since debt is forgiven in monthly increments and missed payments can drop you from the plan.",
       "lastReviewedAt": null,
       "reviewedBy": null
     },
@@ -608,41 +641,67 @@
           "url": "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/medical-baseline-program.html"
         }
       ],
-      "notes": "No income test at all – the only real gate is a licensed practitioner signing the certification form, which is why this ranks harder than its short form suggests. Renewal certification is required periodically (PG&E asks every one to two years depending on the condition). Stacks with CARE rather than competing with it.",
+      "notes": "No income test at all – the only real gate is a licensed practitioner signing the certification form, which is why this ranks harder than its short form suggests. Bot asks a Yes/No on qualifying medical condition or device before showing the card. Master-metered tenants can qualify; the landlord must pass Medical Baseline quantities through on submetered bills (PG&E Electric Rule 19). Renewal certification is required periodically (PG&E asks every one to two years depending on the condition). Stacks with CARE rather than competing with it. Apply URL is territory-resolved (PG&E / SDG&E / SCE / SoCalGas).",
       "lastReviewedAt": null,
       "reviewedBy": null
     },
-    "tax_credits": {
+    "ladwp_ez_save": {
       "eligibility": [
-        "must_file_tax_return",
-        "ssn_or_itin",
-        "income_limit"
+        "participating_utility",
+        "account_in_your_name",
+        "lives_at_service_address",
+        "income_limit",
+        "one_per_household"
       ],
       "documents": [
-        "photoId",
-        "ssnProof",
-        "taxForms",
-        "incomeProof"
+        "utilityBill",
+        "photoId"
       ],
-      "interview": "appointment_required",
+      "interview": "none",
       "unlocks": [],
       "prerequisites": [],
       "difficultyOverride": null,
       "availabilityOverride": null,
       "availabilityNote": "",
       "reviewStatus": "needs_review",
-      "confidencePct": 50,
+      "confidencePct": 75,
       "reviewRefs": [
         {
-          "label": "IRS – credits and deductions for individuals",
-          "url": "https://www.irs.gov/credits-and-deductions-for-individuals"
-        },
-        {
-          "label": "IRS – free tax prep (VITA)",
-          "url": "https://www.irs.gov/individuals/free-tax-return-preparation-for-qualifying-taxpayers"
+          "label": "LADWP – EZ-SAVE",
+          "url": "https://www.ladwp.com/EZSAVE"
         }
       ],
-      "notes": "Lowest confidence in the matrix because this is an informational card covering several federal credits with different rules, not one program. The practical path is a VITA appointment or free filing software, and CalClaim does not file taxes. Consider splitting into specific credits before anyone signs off on this row.",
+      "notes": "Municipal discount (not statewide CARE). Applicant must be the LADWP customer of record. No separate shared-meter rule in the EZ-SAVE materials – if the meter is in the landlord's name, account-in-your-name already drops it. Income-qualified; seniors/disabled may have a separate Lifeline path on LADWP's site. Gated on an LADWP bill selection.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "smud_eapr": {
+      "eligibility": [
+        "participating_utility",
+        "account_in_your_name",
+        "lives_at_service_address",
+        "income_limit",
+        "one_per_household"
+      ],
+      "documents": [
+        "utilityBill",
+        "photoId"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 75,
+      "reviewRefs": [
+        {
+          "label": "SMUD – Energy Assistance Program Rate",
+          "url": "https://www.smud.org/lowincome"
+        }
+      ],
+      "notes": "Municipal EAPR discount (not statewide CARE). Discount tiers by % of federal poverty level. No CARE-style shared-meter disqualifier; SMUD Rule 18 requires master-meter mobile home parks to pass low-income discounts through to qualifying tenants. Gated on a SMUD bill selection.",
       "lastReviewedAt": null,
       "reviewedBy": null
     },
@@ -807,7 +866,9 @@
       ],
       "interview": "none",
       "unlocks": [
-        "young_child_tax_credit"
+        "young_child_tax_credit",
+        "foster_youth_tax_credit",
+        "federal_eitc"
       ],
       "prerequisites": [],
       "difficultyOverride": null,
@@ -861,6 +922,649 @@
       "notes": "Rides on the CalEITC claim – same Form 3514, plus a qualifying child under 6 at year end – so it costs almost nothing extra once CalEITC is being claimed. Since 2022 households with zero earned income can still qualify if they otherwise meet CalEITC rules, which is easy to get wrong in copy.",
       "lastReviewedAt": null,
       "reviewedBy": null
+    },
+    "myfirstev": {
+      "eligibility": [
+        "ca_residency",
+        "buying_ev_this_year",
+        "first_time_zev",
+        "qualifying_zev",
+        "participating_oem",
+        "one_per_person",
+        "seasonal_window"
+      ],
+      "documents": [
+        "photoId",
+        "residencyProof"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "Live as of 2026-08-07 through Hyundai, Lucid, and Tesla. Ford, Chevrolet, Kia, and Rivian expected later in August; Toyota/Lexus, Honda, and Subaru in September; Mitsubishi in November; Nissan and Volvo TBD. Funds are limited and can run out before the statutory Sep 1, 2031 spend-by date.",
+      "reviewStatus": "needs_review",
+      "confidencePct": 85,
+      "reviewRefs": [
+        {
+          "label": "CARB – MyFirstEV",
+          "url": "https://ww2.arb.ca.gov/myfirstev"
+        },
+        {
+          "label": "CARB – MyFirstEV FAQ",
+          "url": "https://ww2.arb.ca.gov/resources/fact-sheets/myfirstev-frequently-asked-questions"
+        },
+        {
+          "label": "CARB – participating manufacturers",
+          "url": "https://ww2.arb.ca.gov/myfirstev-participating-manufacturers"
+        },
+        {
+          "label": "Governor Newsom – MyFirstEV launch (Aug 7, 2026)",
+          "url": "https://www.gov.ca.gov/2026/08/07/governor-newsom-announces-3500-instant-rebates-now-available-for-californians-buying-their-first-zero-emission-vehicle/"
+        }
+      ],
+      "notes": "Point-of-sale rebate, not a tax credit: $3,500 new / $1,750 used, split 50/50 between the state and the OEM. No income limit. Bot triage order: CA resident/address → buying an EV this year → then the MyFirstEV offer card. Battery-electric and hydrogen fuel-cell only – PHEVs do not qualify. New MSRP cap $50,000 and used purchase-price cap $25,000, waived for California-headquartered ZEV-only manufacturers (Lucid, Rivian). Used vehicles must be at least two model years older, model year 2026+, and sold through the manufacturer's certified pre-owned program – private-party and independent lots do not count. Used leases do not qualify. Buyer signs a first-time-ZEV attestation under penalty of perjury and gives CARB's confirmation number to the dealer before closing. Vehicle must be registered in California; curb weight over 8,500 lb is excluded. CARB says it can stack with DCAP and Clean Cars 4 All if every program approves the same transaction. One incentive per person for the life of the program.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "smartflex_rewards": {
+      "eligibility": [
+        "participating_utility",
+        "account_in_your_name",
+        "smart_device"
+      ],
+      "documents": [
+        "utilityBill",
+        "utilityAccountNumber"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 78,
+      "reviewRefs": [
+        {
+          "label": "SmartFlex Rewards",
+          "url": "https://smartflexrewards.com/"
+        },
+        {
+          "label": "PG&E – Automated Response Technology",
+          "url": "https://www.pge.com/en/save-energy-and-money/energy-saving-programs/automated-response-technology.html"
+        }
+      ],
+      "notes": "PG&E SmartFlex (Uplight; formerly ART Nest). Needs a PG&E electric account in the applicant's name (dropped when utility-bills gate is None or has no PG&E bill). $25 signup bonus plus monthly prize drawings; device must stay on Wi-Fi. Official site said enrollment was temporarily paused as of 2026-08-12.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "pge_preowned_ev": {
+      "eligibility": [
+        "ca_residency",
+        "buying_ev_this_year",
+        "preowned_ev",
+        "participating_utility"
+      ],
+      "documents": [
+        "photoId",
+        "residencyProof"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 82,
+      "reviewRefs": [
+        {
+          "label": "PG&E EV rebates",
+          "url": "https://evrebates.pge.com/"
+        }
+      ],
+      "notes": "Standard pre-owned EV rebate path currently lists a Sep 30, 2026 application deadline. Income-qualified tier can be higher ($4k) but CARE/FERA band is not required for the standard $1k path in the bot model.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "pge_ev_charging": {
+      "eligibility": [
+        "participating_utility",
+        "account_in_your_name",
+        "buying_ev_this_year",
+        "renter_landlord_permission"
+      ],
+      "documents": [
+        "utilityBill",
+        "photoId",
+        "utilityAccountNumber"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 80,
+      "reviewRefs": [
+        {
+          "label": "PG&E Residential EV Charging Rebate",
+          "url": "https://www.pge.com/en/clean-energy/electric-vehicles/getting-started-with-electric-vehicles/residential-electric-vehicle-charging-rebate.html"
+        }
+      ],
+      "notes": "Uses buying-EV triage as a proxy for owning/buying an EV. Account must be in the applicant's name. Renters can apply; installing a charger needs owner sign-off. Plus / income-qualified tiers can reach ~$5,000.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "pge_generator_battery": {
+      "eligibility": [
+        "ca_residency",
+        "participating_utility",
+        "account_in_your_name",
+        "fire_threat_district"
+      ],
+      "documents": [
+        "utilityBill",
+        "photoId"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 80,
+      "reviewRefs": [
+        {
+          "label": "PG&E Generator and Battery Rebate",
+          "url": "https://www.pge.com/en/outages-and-safety/outage-preparedness-and-support/general-outage-resources/generator-and-battery-rebate-program.html"
+        }
+      ],
+      "notes": "Deadline Dec 31, 2026 for the current rebate window. $300 generator / $500 battery caps. Renters also qualify. Needs PG&E bill in name plus HFTD Tier 2/3, HFRA, or EPSS (map gbrp_eligible). Optional street+city or Use-my-location shut-off gate; GPS snaps to the nearest street. Sloppy addresses are standardized when ≥90% sure, then checked on PG&E's map. A confident not-in-zone hides the offer. Street and GPS are not stored.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "clean_cars_4_all": {
+      "eligibility": [
+        "ca_residency",
+        "income_limit",
+        "buying_ev_this_year",
+        "scrap_vehicle"
+      ],
+      "documents": [
+        "photoId",
+        "incomeProof",
+        "residencyProof"
+      ],
+      "interview": "phone_optional",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 75,
+      "reviewRefs": [
+        {
+          "label": "CARB – Clean Cars 4 All fact sheet",
+          "url": "https://ww2.arb.ca.gov/resources/fact-sheets/clean-cars-4-all"
+        }
+      ],
+      "notes": "True income limit is often ~300% FPL by air district; CARE/FERA band under-offers eligible households. Requires retiring a qualifying older vehicle. Funding and rules vary by air district.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "dcap": {
+      "eligibility": [
+        "ca_residency",
+        "income_limit",
+        "buying_ev_this_year"
+      ],
+      "documents": [
+        "photoId",
+        "incomeProof",
+        "residencyProof"
+      ],
+      "interview": "phone_optional",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 78,
+      "reviewRefs": [
+        {
+          "label": "CARB – Driving Clean Assistance Program",
+          "url": "https://ww2.arb.ca.gov/our-work/programs/driving-clean-assistance-program/about"
+        }
+      ],
+      "notes": "Point-of-sale grant; CARE/FERA incomeGate is a conservative proxy for DCAP income screening. Can stack with MyFirstEV when every program approves the same deal.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "foster_youth_tax_credit": {
+      "eligibility": [
+        "ca_residency",
+        "qualifies_for_caleitc",
+        "foster_youth_18_25",
+        "must_file_tax_return",
+        "income_limit"
+      ],
+      "documents": [
+        "ssnProof",
+        "taxForms",
+        "taxReturn"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [
+        "caleitc"
+      ],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 85,
+      "reviewRefs": [
+        {
+          "label": "FTB – Foster Youth Tax Credit",
+          "url": "https://www.ftb.ca.gov/file/personal/credits/foster-youth-tax-credit.html"
+        }
+      ],
+      "notes": "Claimed on FTB Form 3514 with CalEITC. Ages 18–25 and must have been in foster care on or after their 18th birthday. Same max dollar figure as YCTC in recent years (~$1,189).",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "premium_tax_credit": {
+      "eligibility": [
+        "ca_residency",
+        "income_limit",
+        "covered_ca_plan",
+        "no_other_coverage"
+      ],
+      "documents": [
+        "incomeProof",
+        "photoId",
+        "ssnProof"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 80,
+      "reviewRefs": [
+        {
+          "label": "Covered California",
+          "url": "https://www.coveredca.com/"
+        }
+      ],
+      "notes": "CARE/FERA band under-offers vs the true PTC range (up to ~400% FPL / applicable percentage tables). Households already on Medi-Cal usually do not need PTC for the same coverage.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "sun_bucks": {
+      "eligibility": [
+        "ca_residency",
+        "school_age_child",
+        "seasonal_window",
+        "categorical_or_income"
+      ],
+      "documents": [
+        "photoId",
+        "householdProof"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 82,
+      "reviewRefs": [
+        {
+          "label": "CDSS – SUN Bucks",
+          "url": "https://www.cdss.ca.gov/sun-bucks"
+        }
+      ],
+      "notes": "Summer 2026 window ends Aug 31, 2026. Many kids are auto-enrolled via NSLP / CalFresh / Medi-Cal; application is for those missed. $120/child for 2026.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "ssdi": {
+      "eligibility": [
+        "blind_or_disabled",
+        "work_credits_ssdi",
+        "citizen_or_eligible_immigrant"
+      ],
+      "documents": [
+        "photoId",
+        "ssnProof",
+        "medicalCertification"
+      ],
+      "interview": "phone_optional",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 80,
+      "reviewRefs": [
+        {
+          "label": "SSA – Disability",
+          "url": "https://www.ssa.gov/disabilityssi/"
+        }
+      ],
+      "notes": "Distinct from SSI: SSDI is insurance based on work credits, not a needs-tested cash grant. Bot uses the ABD triage gate shared with SSI/CAPI/IHSS.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "rca": {
+      "eligibility": [
+        "ca_residency",
+        "refugee_or_asylee",
+        "citizen_or_eligible_immigrant",
+        "income_limit"
+      ],
+      "documents": [
+        "photoId",
+        "immigrationDocs",
+        "incomeProof"
+      ],
+      "interview": "phone_required",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 75,
+      "reviewRefs": [
+        {
+          "label": "BenefitsCal program descriptions",
+          "url": "https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en"
+        }
+      ],
+      "notes": "Typically up to 4 months of cash aid for refugees and similarly eligible newcomers who are not on CalWORKs. Requires eligible immigration status (same status gate as CalFresh/UI) plus a dedicated refugee/asylee Yes – US citizens who are not refugees should not see this card.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "cfap": {
+      "eligibility": [
+        "ca_residency",
+        "income_limit",
+        "ssi_denied_for_status"
+      ],
+      "documents": [
+        "photoId",
+        "immigrationDocs",
+        "incomeProof"
+      ],
+      "interview": "phone_required",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 78,
+      "reviewRefs": [
+        {
+          "label": "CDSS – California Food Assistance Program",
+          "url": "https://www.cdss.ca.gov/inforesources/calfresh/california-food-assistance-program"
+        }
+      ],
+      "notes": "State-funded food aid for immigrants who meet CalFresh financial rules but are ineligible for federal SNAP due to status. Bot offers after “No” or “Prefer not to say” on the immigration-status question (requiresIneligibleImmigrantStatus) – decline shows the card without treating the household as confirmed ineligible. Note: H.R.1 / federal changes mean many newly ineligible households are NOT automatically CFAP-eligible – CFAP has its own narrower status list.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "renters_credit": {
+      "eligibility": [
+        "ca_residency",
+        "rents_home",
+        "must_file_tax_return",
+        "income_limit"
+      ],
+      "documents": [
+        "taxReturn"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 85,
+      "reviewRefs": [
+        {
+          "label": "FTB – Nonrefundable Renters' Credit",
+          "url": "https://www.ftb.ca.gov/file/personal/credits/nonrefundable-renters-credit.html"
+        }
+      ],
+      "notes": "Nonrefundable – only reduces tax owed. $60 / $120. CARE/FERA band is a rough proxy for FTB's renter income limits.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "sgip": {
+      "eligibility": [
+        "participating_utility",
+        "dwelling_eligibility",
+        "renter_landlord_permission"
+      ],
+      "documents": [
+        "utilityBill",
+        "photoId"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": "paused",
+      "availabilityNote": "SGIP equity / residential budgets are fully reserved / waitlisted – do not advertise as open until the portal shows capacity.",
+      "reviewStatus": "verified_online",
+      "confidencePct": 85,
+      "reviewRefs": [
+        {
+          "label": "Self-Generation Incentive Program portal",
+          "url": "https://www.selfgenca.com/"
+        },
+        {
+          "label": "CPUC – SGIP",
+          "url": "https://www.cpuc.ca.gov/sgip/"
+        }
+      ],
+      "notes": "WAITLIST – fully reserved. availabilityOverride paused so the /dev matrix and bot availability badge show paused rather than open.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "heehra": {
+      "eligibility": [
+        "ca_residency",
+        "income_limit",
+        "dwelling_eligibility",
+        "renter_landlord_permission"
+      ],
+      "documents": [
+        "photoId",
+        "incomeProof"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": "paused",
+      "availabilityNote": "HEEHRA / California home electrification rebate funds fully reserved as of Feb 24, 2026.",
+      "reviewStatus": "verified_online",
+      "confidencePct": 80,
+      "reviewRefs": [
+        {
+          "label": "California Energy Commission",
+          "url": "https://www.energy.ca.gov/"
+        }
+      ],
+      "notes": "WAITLIST – funds fully reserved Feb 24, 2026. Keep paused until CEC / implementers announce a reopen.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "tax_credits": {
+      "eligibility": [
+        "must_file_tax_return",
+        "ssn_or_itin",
+        "income_limit"
+      ],
+      "documents": [
+        "photoId",
+        "ssnProof",
+        "taxForms",
+        "incomeProof"
+      ],
+      "interview": "appointment_required",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "needs_review",
+      "confidencePct": 50,
+      "reviewRefs": [
+        {
+          "label": "IRS – credits and deductions for individuals",
+          "url": "https://www.irs.gov/credits-and-deductions-for-individuals"
+        },
+        {
+          "label": "IRS – free tax prep (VITA)",
+          "url": "https://www.irs.gov/individuals/free-tax-return-preparation-for-qualifying-taxpayers"
+        }
+      ],
+      "notes": "Lowest confidence in the matrix because this is an informational card covering several federal credits with different rules, not one program. The practical path is a VITA appointment or free filing software, and CalClaim does not file taxes. Consider splitting into specific credits before anyone signs off on this row.",
+      "lastReviewedAt": null,
+      "reviewedBy": null
+    },
+    "federal_eitc": {
+      "eligibility": [
+        "must_file_tax_return",
+        "earned_income_required",
+        "income_limit",
+        "ssn_or_itin"
+      ],
+      "documents": [
+        "ssnProof",
+        "taxForms",
+        "taxReturn"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 88,
+      "reviewRefs": [
+        {
+          "label": "IRS – Earned Income Tax Credit",
+          "url": "https://www.irs.gov/credits-deductions/individuals/earned-income-tax-credit-eitc"
+        }
+      ],
+      "notes": "CARE/FERA incomeGate under-offers vs the true federal EITC ceiling (which is higher, especially with kids). Bot still uses careOrFeraBand so high earners are not offered a credit they likely cannot claim.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "child_tax_credit": {
+      "eligibility": [
+        "must_file_tax_return",
+        "child_under_18",
+        "ssn_or_itin"
+      ],
+      "documents": [
+        "ssnProof",
+        "taxForms",
+        "taxReturn",
+        "householdProof"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 88,
+      "reviewRefs": [
+        {
+          "label": "IRS – Child Tax Credit",
+          "url": "https://www.irs.gov/credits-deductions/individuals/child-tax-credit"
+        }
+      ],
+      "notes": "No incomeGate in programs.json – phaseout starts high; a $200k single filer is near/at the cliff, so income triage would wrongly drop many eligible households. Refundable Additional CTC still needs earned income.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "cdcc": {
+      "eligibility": [
+        "must_file_tax_return",
+        "child_under_18",
+        "earned_income_required"
+      ],
+      "documents": [
+        "taxForms",
+        "taxReturn",
+        "householdProof"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 82,
+      "reviewRefs": [
+        {
+          "label": "IRS – Child and Dependent Care Credit",
+          "url": "https://www.irs.gov/credits-deductions/individuals/child-and-dependent-care-credit-information"
+        }
+      ],
+      "notes": "Work-related care expenses only. No incomeGate – credit percentage phases down with income but does not hard-cut at CARE/FERA levels.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "savers_credit": {
+      "eligibility": [
+        "must_file_tax_return",
+        "retirement_contribution",
+        "income_limit"
+      ],
+      "documents": [
+        "taxForms",
+        "taxReturn"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "",
+      "reviewStatus": "verified_online",
+      "confidencePct": 85,
+      "reviewRefs": [
+        {
+          "label": "IRS – Saver's Credit",
+          "url": "https://www.irs.gov/credits-deductions/individuals/save-for-retirement-if-youre-eligible-claim-the-saver-s-credit"
+        }
+      ],
+      "notes": "CARE/FERA band approximates the Saver's Credit income ceiling. Requires an actual retirement contribution in the tax year.",
+      "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
     }
   }
 }

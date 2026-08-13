@@ -5,7 +5,10 @@ export type AnalyticsEventType =
   | "bot_start"
   | "program_open"
   | "follow_through"
-  | "funnel";
+  | "funnel"
+  | "screen_view"
+  | "report_created"
+  | "share_out";
 
 export type AnalyticsSource = "qr" | "link" | "bot" | "unknown";
 
@@ -18,6 +21,7 @@ export interface AnalyticsEventInput {
   lat?: number | null;
   lng?: number | null;
   label?: string | null;
+  meta?: Record<string, unknown> | null;
 }
 
 export interface AnalyticsEventRow {
@@ -30,10 +34,24 @@ export interface AnalyticsEventRow {
   lat: number | null;
   lng: number | null;
   label: string | null;
+  meta_json: string | null;
   created_at: string;
 }
 
 let analyticsDb: Database.Database | null = null;
+
+function ensureColumn(
+  database: Database.Database,
+  table: string,
+  column: string,
+  type: string,
+): void {
+  const cols = database.prepare(`PRAGMA table_info(${table})`).all() as Array<{
+    name: string;
+  }>;
+  if (cols.some((c) => c.name === column)) return;
+  database.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+}
 
 export function initAnalytics(db: Database.Database): void {
   analyticsDb = db;
@@ -54,6 +72,7 @@ export function initAnalytics(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_analytics_created ON analytics_events(created_at);
     CREATE INDEX IF NOT EXISTS idx_analytics_program ON analytics_events(program_id);
   `);
+  ensureColumn(db, "analytics_events", "meta_json", "TEXT");
 }
 
 function getDb(): Database.Database {
@@ -63,11 +82,13 @@ function getDb(): Database.Database {
 
 export function recordEvent(input: AnalyticsEventInput): void {
   const createdAt = new Date().toISOString();
+  const metaJson =
+    input.meta == null ? null : JSON.stringify(input.meta);
   getDb()
     .prepare(
       `INSERT INTO analytics_events
-        (event_type, source, campaign_id, program_id, telegram_user_id, lat, lng, label, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (event_type, source, campaign_id, program_id, telegram_user_id, lat, lng, label, meta_json, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       input.eventType,
@@ -78,6 +99,7 @@ export function recordEvent(input: AnalyticsEventInput): void {
       input.lat ?? null,
       input.lng ?? null,
       input.label ?? null,
+      metaJson,
       createdAt,
     );
 }
@@ -86,7 +108,7 @@ export function listEvents(): AnalyticsEventRow[] {
   return getDb()
     .prepare(
       `SELECT id, event_type, source, campaign_id, program_id, telegram_user_id,
-              lat, lng, label, created_at
+              lat, lng, label, meta_json, created_at
        FROM analytics_events
        ORDER BY created_at ASC`,
     )

@@ -31,6 +31,93 @@ function renderMetrics(stats) {
   el("disclaimer").textContent = txt("impact.disclaimer", stats.disclaimer);
 }
 
+function channelPct(part, whole) {
+  if (!whole) return 0;
+  return Math.round((part / whole) * 1000) / 10;
+}
+
+function renderSharing(stats) {
+  const sharing = stats.sharing;
+  if (!sharing) return;
+
+  const org = sharing.organizations || {};
+  const friends = sharing.friends || {};
+  const website = sharing.website || {};
+  const orgN = org.peopleReached || 0;
+  const friendN = friends.peopleReached || 0;
+  const webN = website.peopleReached || 0;
+  const total = orgN + friendN + webN || stats.peopleReached || 0;
+
+  el("m-org-reached").textContent = number.format(orgN);
+  el("m-friend-reached").textContent = number.format(friendN);
+  el("m-org-detail").textContent = `${number.format(org.botStarts || 0)} ${txt(
+    "impact.partnersBotStarts",
+    "started",
+  )} · ${number.format(org.followThroughs || 0)} ${txt(
+    "impact.partnersFollows",
+    "follow-throughs",
+  )} · ${channelPct(orgN, total)}%`;
+  el("m-friend-detail").textContent = `${number.format(friends.botStarts || 0)} ${txt(
+    "impact.partnersBotStarts",
+    "started",
+  )} · ${number.format(friends.followThroughs || 0)} ${txt(
+    "impact.partnersFollows",
+    "follow-throughs",
+  )} · ${channelPct(friendN, total)}%`;
+
+  const orgCard = el("spread-org");
+  const friendCard = el("spread-friends");
+  orgCard?.classList.toggle("is-ahead", orgN > friendN);
+  friendCard?.classList.toggle("is-ahead", friendN > orgN);
+
+  const verdict = el("spread-verdict");
+  if (verdict) {
+    if (!total) {
+      verdict.hidden = true;
+      verdict.textContent = "";
+    } else {
+      verdict.hidden = false;
+      const orgPct = channelPct(orgN, total);
+      const friendPct = channelPct(friendN, total);
+      if (friendN > orgN) {
+        verdict.textContent = txt(
+          "impact.spreadVerdictFriends",
+          "Friend-to-friend sharing is reaching more people than organization QR codes ({friendPct}% vs {orgPct}%).",
+        )
+          .replace("{friendPct}", String(friendPct))
+          .replace("{orgPct}", String(orgPct));
+      } else {
+        verdict.textContent = txt(
+          "impact.spreadVerdictOrgs",
+          "Organizations still account for most reach ({orgPct}%). Friend shares are {friendPct}% – the signal for word-of-mouth growth.",
+        )
+          .replace("{orgPct}", String(orgPct))
+          .replace("{friendPct}", String(friendPct));
+      }
+    }
+  }
+
+  el("m-sharers").textContent = number.format(sharing.peopleWhoShared || 0);
+  el("m-friend-clicks").textContent = number.format(sharing.friendClicks || 0);
+  el("m-viral").textContent = number.format(sharing.clicksPerSharer || 0);
+
+  const webNote = el("spread-website");
+  if (webNote) {
+    if (webN > 0) {
+      webNote.hidden = false;
+      webNote.textContent = txt(
+        "impact.spreadWebsite",
+        "Also: {n} people found CalClaim from the website.",
+      ).replace("{n}", number.format(webN));
+    } else {
+      webNote.hidden = true;
+      webNote.textContent = "";
+    }
+  }
+
+  renderSpreadChart(sharing.usersPerDayByChannel || []);
+}
+
 const PROGRAMS_PREVIEW = 10;
 const PARTNERS_PREVIEW = 8;
 
@@ -307,6 +394,66 @@ function renderCharts(series) {
   );
 }
 
+function renderSpreadChart(series) {
+  const canvas = el("chart-spread");
+  if (!canvas) return;
+  const labels = series.length ? series.map((d) => d.date) : ["–"];
+  const org = series.length ? series.map((d) => d.organizations) : [0];
+  const friends = series.length ? series.map((d) => d.friends) : [0];
+  const dense = labels.length > 40;
+  return new Chart(canvas, {
+    type: "line",
+    data: {
+      labels: labels.map(formatChartLabel),
+      datasets: [
+        {
+          label: txt("impact.spreadOrgs", "Organizations"),
+          data: org,
+          borderColor: "#0d7a5f",
+          backgroundColor: "rgba(13, 122, 95, 0.12)",
+          fill: true,
+          tension: 0.3,
+          pointRadius: dense ? 0 : 3,
+          pointHoverRadius: 4,
+          pointBackgroundColor: "#084d3d",
+        },
+        {
+          label: txt("impact.spreadFriends", "Friends sharing"),
+          data: friends,
+          borderColor: "#2a6f8f",
+          backgroundColor: "rgba(42, 111, 143, 0.12)",
+          fill: true,
+          tension: 0.3,
+          pointRadius: dense ? 0 : 3,
+          pointHoverRadius: 4,
+          pointBackgroundColor: "#1d4f66",
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true, position: "bottom" },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            maxTicksLimit: dense ? 8 : 12,
+            maxRotation: 0,
+            autoSkip: true,
+          },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { precision: 0 },
+          grid: { color: "rgba(16, 36, 31, 0.08)" },
+        },
+      },
+    },
+  });
+}
+
 // Bold star (not a cup) – reads clearly at leaderboard size
 const TROPHY_SVG = `<svg class="partner-trophy" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
   <defs>
@@ -319,6 +466,35 @@ const TROPHY_SVG = `<svg class="partner-trophy" viewBox="0 0 24 24" aria-hidden=
   <path fill="url(#trophy-shine)" stroke="#8a5f06" stroke-width="0.6" stroke-linejoin="round"
     d="M12 2.2l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 15.4 6.7 18.4l1.1-5.9-4.3-4.1 5.9-.8z"/>
 </svg>`;
+
+/** Teal medal + speech bubble – most credited feedback tickets. */
+function feedbackAwardSvg(title) {
+  const label = escapeHtml(title);
+  return `<svg class="partner-feedback-award" viewBox="0 0 24 24" role="img" aria-label="${label}" focusable="false">
+  <title>${label}</title>
+  <path fill="#0a6b53" d="M8.2 15.6 6.4 22l5.6-2.4 5.6 2.4-1.8-6.4z"/>
+  <circle cx="12" cy="10.2" r="7.35" fill="#1aa37c" stroke="#084d3d" stroke-width="0.7"/>
+  <circle cx="12" cy="10.2" r="5.55" fill="#eef8f4"/>
+  <path fill="#0d7a5f" d="M8.15 8.05h7.7c.85 0 1.55.7 1.55 1.55v3.05c0 .85-.7 1.55-1.55 1.55h-3.35L9.2 16.1v-1.9h-1.05c-.85 0-1.55-.7-1.55-1.55V9.6c0-.85.7-1.55 1.55-1.55z"/>
+  <circle cx="10.15" cy="11.15" r=".7" fill="#eef8f4"/>
+  <circle cx="12" cy="11.15" r=".7" fill="#eef8f4"/>
+  <circle cx="13.85" cy="11.15" r=".7" fill="#eef8f4"/>
+</svg>`;
+}
+
+function slugsWithMostFeedback(partners) {
+  let max = 0;
+  for (const p of partners) {
+    const n = Number(p.feedbackTickets) || 0;
+    if (n > max) max = n;
+  }
+  if (max <= 0) return new Set();
+  return new Set(
+    partners
+      .filter((p) => (Number(p.feedbackTickets) || 0) === max)
+      .map((p) => p.slug),
+  );
+}
 
 function withLangPath(path) {
   return window.CalClaimLang?.withLang?.(path) || path;
@@ -336,18 +512,29 @@ function verifiedBadgeHtml(p) {
   return `<span class="verified-badge" title="${escapeHtml(label)}">${escapeHtml(label)}</span>`;
 }
 
-function partnerRowHtml(p) {
+function partnerRowHtml(p, feedbackAwardSlugs) {
   const href = withLangPath(`/partners/${encodeURIComponent(p.slug)}`);
-  const trophy =
-    p.rank === 1
-      ? TROPHY_SVG
-      : `<span class="partner-trophy-spacer" aria-hidden="true"></span>`;
+  const awards = [];
+  if (p.rank === 1) awards.push(TROPHY_SVG);
+  if (feedbackAwardSlugs.has(p.slug)) {
+    awards.push(
+      feedbackAwardSvg(
+        txt("impact.feedbackAwardTitle", "Most feedback tickets"),
+      ),
+    );
+  }
+  const trophy = awards.length
+    ? awards.join("")
+    : `<span class="partner-trophy-spacer" aria-hidden="true"></span>`;
   const secondary = `${number.format(p.botStarts)} ${txt(
     "impact.partnersBotStarts",
     "started",
   )} · ${number.format(p.followThroughs)} ${txt(
     "impact.partnersFollows",
     "follow-throughs",
+  )} · ${number.format(p.feedbackTickets || 0)} ${txt(
+    "impact.partnersTickets",
+    "dev tickets",
   )}`;
   return `<li>
     <a class="partner-row" href="${escapeHtml(href)}">
@@ -387,13 +574,16 @@ function renderPartnerBoard(partners) {
   }
 
   let expanded = false;
+  const feedbackAwardSlugs = slugsWithMostFeedback(partners);
 
   function paint() {
     const visible =
       expanded || partners.length <= PARTNERS_PREVIEW
         ? partners
         : partners.slice(0, PARTNERS_PREVIEW);
-    board.innerHTML = visible.map(partnerRowHtml).join("");
+    board.innerHTML = visible
+      .map((p) => partnerRowHtml(p, feedbackAwardSlugs))
+      .join("");
 
     if (!expandBtn) return;
     if (partners.length <= PARTNERS_PREVIEW) {
@@ -556,6 +746,7 @@ async function main() {
   if (!statsRes.ok) throw new Error("Failed to load stats");
   const stats = await statsRes.json();
   renderMetrics(stats);
+  renderSharing(stats);
   renderTable(stats.programs);
   renderMap(stats.mapPoints);
   renderCharts(stats.usersPerDay);

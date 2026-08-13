@@ -15,10 +15,9 @@ export function issuePartnerEditToken(
   return `${exp}.${sig}`;
 }
 
-export function verifyPartnerEditToken(
+function verifySignedToken(
   secret: string,
-  partnerId: string,
-  slug: string,
+  payload: string,
   token: string,
 ): boolean {
   const cleaned = String(token || "").trim();
@@ -30,7 +29,6 @@ export function verifyPartnerEditToken(
   if (!Number.isFinite(exp) || exp < Math.floor(Date.now() / 1000)) return false;
   if (!sig) return false;
 
-  const payload = `${partnerId.toLowerCase()}:${slug.toLowerCase()}:${exp}`;
   const expected = createHmac("sha256", secret).update(payload).digest("base64url");
   try {
     const a = Buffer.from(sig);
@@ -40,4 +38,53 @@ export function verifyPartnerEditToken(
   } catch {
     return false;
   }
+}
+
+export function verifyPartnerEditToken(
+  secret: string,
+  partnerId: string,
+  slug: string,
+  token: string,
+): boolean {
+  const cleaned = String(token || "").trim();
+  const dot = cleaned.indexOf(".");
+  if (dot <= 0) return false;
+  const expStr = cleaned.slice(0, dot);
+  const exp = Number(expStr);
+  if (!Number.isFinite(exp)) return false;
+  const payload = `${partnerId.toLowerCase()}:${slug.toLowerCase()}:${exp}`;
+  return verifySignedToken(secret, payload, cleaned);
+}
+
+/** Longer-lived grant for generating event QRs on the partner status page (30 days). */
+const OWNER_TTL_SEC = 30 * 24 * 60 * 60;
+
+export function issuePartnerOwnerToken(
+  secret: string,
+  partnerId: string,
+  slug: string,
+  ttlSec = OWNER_TTL_SEC,
+): string {
+  const exp = Math.floor(Date.now() / 1000) + ttlSec;
+  const payload = `owner:${partnerId.toLowerCase()}:${slug.toLowerCase()}:${exp}`;
+  const sig = createHmac("sha256", secret).update(payload).digest("base64url");
+  return `own.${exp}.${sig}`;
+}
+
+export function verifyPartnerOwnerToken(
+  secret: string,
+  partnerId: string,
+  slug: string,
+  token: string,
+): boolean {
+  const cleaned = String(token || "").trim();
+  if (!cleaned.startsWith("own.")) return false;
+  const rest = cleaned.slice(4);
+  const dot = rest.indexOf(".");
+  if (dot <= 0) return false;
+  const expStr = rest.slice(0, dot);
+  const exp = Number(expStr);
+  if (!Number.isFinite(exp)) return false;
+  const payload = `owner:${partnerId.toLowerCase()}:${slug.toLowerCase()}:${exp}`;
+  return verifySignedToken(secret, payload, rest);
 }

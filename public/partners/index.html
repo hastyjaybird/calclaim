@@ -9,7 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="/partners/styles.css?v=20260805-verify" />
+  <link rel="stylesheet" href="/partners/styles.css?v=20260813-events" />
+  <link rel="stylesheet" href="/donate/donate.css?v=20260812-donate" />
 </head>
 <body data-page="partner">
   <div class="banner" role="banner">
@@ -30,6 +31,7 @@
         <a href="/impact#about" data-i18n="nav.about">About</a>
         <a href="/impact#contact" data-i18n="nav.contact">Contact</a>
         <a href="/impact#privacy" data-i18n="nav.privacy">Privacy</a>
+        <button type="button" class="nav-donate" data-donate-open data-i18n="nav.donate">Donate</button>
       </nav>
       <div id="lang-switch" class="lang-switch"></div>
     </div>
@@ -74,13 +76,79 @@
           download
           data-i18n="partners.downloadBanner"
         >Download booth banner</a>
+        <button
+          type="button"
+          class="cta cta-ghost"
+          id="partner-login-open"
+          hidden
+          data-i18n="partners.signIn"
+        >Sign in to manage events</button>
+        <p class="owner-signed-in" id="owner-signed-in" hidden>
+          <span data-i18n="partners.signedIn">Signed in</span>
+          <button type="button" class="text-btn" id="partner-sign-out" data-i18n="partners.signOut">Sign out</button>
+        </p>
       </div>
     </header>
+
+    <section class="panel owner-login-panel" id="owner-login-panel" hidden>
+      <div class="panel-head">
+        <h2 data-i18n="partners.signInHeading">This is your organization?</h2>
+        <p data-i18n="partners.signInBody">
+          Enter the partner ID from your welcome email to create event QR codes and see how each event performed.
+        </p>
+      </div>
+      <form id="owner-login-form" class="owner-login-form" novalidate>
+        <label class="field" for="owner-partner-id">
+          <span data-i18n="partners.partnerIdLabel">Partner ID</span>
+          <input
+            id="owner-partner-id"
+            name="partnerId"
+            type="text"
+            autocomplete="username"
+            spellcheck="false"
+            required
+            data-i18n-placeholder="partners.partnerIdHelp"
+            placeholder="From your CalClaim welcome email."
+          />
+        </label>
+        <div class="owner-login-actions">
+          <button type="submit" class="cta" data-i18n="partners.signInSubmit">Sign in</button>
+          <button type="button" class="cta cta-ghost" id="owner-login-cancel" data-i18n="partners.editCancel">Cancel</button>
+          <p class="owner-login-status" id="owner-login-status" hidden></p>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel owner-events-panel" id="owner-events-panel" hidden>
+      <div class="panel-head">
+        <h2 data-i18n="partners.eventsHeading">Event QR codes</h2>
+        <p data-i18n="partners.eventsBody">
+          Create a code for a booth, pantry day, or outreach shift. Scans still credit you on the public leaderboard, and rank here by how the event did.
+        </p>
+      </div>
+      <form id="event-create-form" class="event-create-form" novalidate>
+        <label class="field" for="event-name">
+          <span data-i18n="partners.eventNameLabel">Event name</span>
+          <input
+            id="event-name"
+            name="name"
+            type="text"
+            maxlength="80"
+            required
+            data-i18n-placeholder="partners.eventNamePlaceholder"
+            placeholder="Saturday pantry – Aug 15"
+          />
+        </label>
+        <button type="submit" class="cta" data-i18n="partners.eventCreate">Generate event QR</button>
+        <p class="event-create-status" id="event-create-status" hidden></p>
+      </form>
+      <ol class="event-board" id="event-board" data-i18n-aria="partners.eventsAria" aria-label="Event leaderboard"></ol>
+    </section>
 
     <section class="slide-body">
       <aside class="qr-panel">
         <h2 id="partner-qr-heading">Partner unique QR code</h2>
-        <p data-i18n="partners.qrBody">
+        <p id="partner-qr-body" data-i18n="partners.qrBody">
           Print or share this code – every scan credits this partner on the leaderboard.
         </p>
         <img
@@ -111,7 +179,42 @@
           <p class="metric-label" data-i18n="partners.estAid">Est. aid unlocked</p>
           <p class="metric-value" id="m-dollars">–</p>
         </article>
+        <article class="metric">
+          <p class="metric-label" data-i18n="partners.feedbackMessages">Feedback messages</p>
+          <p class="metric-value" id="m-feedback-messages">–</p>
+        </article>
+        <article class="metric">
+          <p class="metric-label" data-i18n="partners.feedbackTickets">Dev tickets from feedback</p>
+          <p class="metric-value" id="m-feedback-tickets">–</p>
+        </article>
       </section>
+    </section>
+
+    <section class="panel feedback-panel" aria-labelledby="partner-feedback-heading">
+      <div class="panel-head">
+        <h2 id="partner-feedback-heading" data-i18n="partners.feedbackHeading">Share feedback</h2>
+        <p data-i18n="partners.feedbackBody">
+          Ideas, bugs, or friction you noticed – each distinct point becomes a developer ticket and credits this organization.
+        </p>
+      </div>
+      <form id="partner-feedback-form" class="partner-feedback-form" novalidate>
+        <label class="field" for="partner-feedback-text">
+          <span class="visually-hidden" data-i18n="partners.feedbackLabel">Your feedback</span>
+          <textarea
+            id="partner-feedback-text"
+            name="text"
+            rows="5"
+            maxlength="4000"
+            required
+            data-i18n-placeholder="partners.feedbackPlaceholder"
+            placeholder="What should we improve?"
+          ></textarea>
+        </label>
+        <div class="partner-feedback-actions">
+          <button type="submit" class="cta" data-i18n="partners.feedbackSubmit">Send feedback</button>
+          <p class="partner-feedback-status" id="partner-feedback-status" hidden></p>
+        </div>
+      </form>
     </section>
 
     <section class="charts" data-i18n-aria="partners.chartsAria" aria-label="Partner usage over time">
@@ -160,8 +263,9 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="/i18n/messages.js?v=20260805-verify"></script>
+  <script src="/i18n/messages.js?v=20260813-lede2"></script>
   <script src="/i18n/lang.js"></script>
-  <script src="/partners/app.js?v=20260805-verify"></script>
+  <script src="/donate/donate.js?v=20260812-donate"></script>
+  <script src="/partners/app.js?v=20260813-events"></script>
 </body>
 </html>

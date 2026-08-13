@@ -51,6 +51,19 @@ export function loadConfig() {
     process.env.DEVELOPER_SESSION_SECRET ??
     process.env.WEBHOOK_SECRET ??
     "calclaim-dev-session";
+  // Local: no password page. Deploy (NODE_ENV=production): require login.
+  // Override with DEVELOPER_AUTH=0|1 if needed.
+  const authOverride = (process.env.DEVELOPER_AUTH ?? "").trim().toLowerCase();
+  const developerAuthRequired =
+    authOverride === "1" ||
+    authOverride === "true" ||
+    authOverride === "on"
+      ? true
+      : authOverride === "0" ||
+          authOverride === "false" ||
+          authOverride === "off"
+        ? false
+        : process.env.NODE_ENV === "production";
   return {
     token: env("TELEGRAM_BOT_TOKEN"),
     mode,
@@ -62,9 +75,18 @@ export function loadConfig() {
     /** Public origin for QR landings, apply redirects, and funder site */
     publicBaseUrl,
     botUsername: process.env.TELEGRAM_BOT_USERNAME ?? "",
-    /** Password for /dev (empty = developer login always fails) */
+    /** Password for /dev (empty = developer login always fails when auth required) */
     developerPassword,
     developerSessionSecret,
+    /** When false (local default), /dev skips password + CAPTCHA */
+    developerAuthRequired,
+    stripeSecretKey: (process.env.STRIPE_SECRET_KEY ?? "").trim(),
+    stripePublishableKey: (process.env.STRIPE_PUBLISHABLE_KEY ?? "").trim(),
+    stripeWebhookSecret: (process.env.STRIPE_WEBHOOK_SECRET ?? "").trim(),
+    /** Apple Pay domain association file contents from Stripe Dashboard. */
+    stripeApplePayAssociation: (
+      process.env.STRIPE_APPLE_PAY_ASSOCIATION ?? ""
+    ).trim(),
   };
 }
 
@@ -79,8 +101,14 @@ export function getBotUsername(configUsername?: string): string {
   return resolvedBotUsername || (configUsername ?? "").replace(/^@/, "");
 }
 
-export function trackedApplyUrl(publicBaseUrl: string, programId: string): string {
-  return `${publicBaseUrl}/r/${encodeURIComponent(programId)}`;
+export function trackedApplyUrl(
+  publicBaseUrl: string,
+  programId: string,
+  territoryId?: string | null,
+): string {
+  const base = `${publicBaseUrl}/r/${encodeURIComponent(programId)}`;
+  if (!territoryId) return base;
+  return `${base}?t=${encodeURIComponent(territoryId)}`;
 }
 
 export function campaignLandingUrl(publicBaseUrl: string, campaignId: string): string {

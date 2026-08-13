@@ -6,8 +6,10 @@ import {
 } from "../config.js";
 
 /** Tracked landings for peer shares from Help → Share. */
-export const SHARE_LINK_CAMPAIGN = "link_share";
-export const SHARE_QR_CAMPAIGN = "qr_peer_share";
+export {
+  SHARE_LINK_CAMPAIGN,
+  SHARE_QR_CAMPAIGN,
+} from "../analytics/peerShare.js";
 
 const SHARE_BLURB =
   "Find California benefits help with CalClaim – food, health, phone, energy bill programs, and more.";

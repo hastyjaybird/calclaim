@@ -1,7 +1,19 @@
 import { getProgram, loadPrograms } from "../library/load.js";
+import { countPartnerFeedbackMetrics } from "../feedback/todos.js";
 import { listEvents, type AnalyticsEventRow } from "./db.js";
 import { getCampaign, loadCampaignsFile } from "./campaigns.js";
 import { FUNNEL_STAGES, type FunnelStageId } from "./funnel.js";
+import {
+  buildJourneyProgress,
+  buildScreenDropout,
+  buildScreenTiming,
+  emptyScreenTiming,
+  type JourneyProgressStats,
+  type ScreenDropoutStats,
+  type ScreenTimingStats,
+} from "./screens.js";
+import { reachChannelForCampaign, type ReachChannel } from "./channels.js";
+import { isPeerShareCampaignId } from "./peerShare.js";
 import {
   getPartnerBySlug,
   listLeaderboardPartners,
@@ -9,6 +21,12 @@ import {
   type Partner,
 } from "./partners.js";
 import { getSignedUpPartnerBySlug } from "../partners/db.js";
+import {
+  campaignIdsForPartner,
+  getPartnerEventBySlug,
+  listPartnerEventsByPartnerSlug,
+  type PartnerEvent,
+} from "../partners/events.js";
 
 export interface DailyCount {
   date: string;
@@ -58,6 +76,35 @@ export interface FunnelStats {
 
 export type StatsSource = "demo" | "live";
 
+export interface ReachChannelStats {
+  peopleReached: number;
+  botStarts: number;
+  followThroughs: number;
+  estDollarsUnlocked: number;
+}
+
+export interface ChannelDailyCount {
+  date: string;
+  organizations: number;
+  friends: number;
+  website: number;
+}
+
+export interface SharingStats {
+  /** Unique people who opened Share in the bot. */
+  peopleWhoShared: number;
+  /** Landings from friend-share links / QRs (including individual partner QRs). */
+  friendClicks: number;
+  /** Distinct friend-share codes that received at least one click. */
+  activeSharers: number;
+  /** Friend-link clicks per person who shared (0 if nobody shared). */
+  clicksPerSharer: number;
+  organizations: ReachChannelStats;
+  friends: ReachChannelStats;
+  website: ReachChannelStats;
+  usersPerDayByChannel: ChannelDailyCount[];
+}
+
 export interface ImpactStats {
   generatedAt: string;
   /** Which dataset the public site is currently serving. */
@@ -69,6 +116,7 @@ export interface ImpactStats {
   programOpens: number;
   followThroughs: number;
   estDollarsUnlocked: number;
+  sharing: SharingStats;
   /** Series shown on the charts (demo sample or live). */
   usersPerDay: DailyCount[];
   /** Always the live analytics series – kept so we can flip back later. */
@@ -78,6 +126,16 @@ export interface ImpactStats {
   programs: ProgramStat[];
   mapPoints: MapPoint[];
   funnel: FunnelStats;
+  /** Application Guide PDFs delivered (live only; 0 in demo). */
+  reportsCreated: number;
+  /** Unique people who received at least one PDF (live only). */
+  reportRecipients: number;
+  /** Percent-through / dropout bands from screen_view events (live). */
+  journey: JourneyProgressStats;
+  /** Per tree-location dropout for developer feedback (live). */
+  screenDropout: ScreenDropoutStats;
+  /** Time-on-question + time-to-finish for developer UX (live). */
+  screenTiming: ScreenTimingStats;
   disclaimer: string;
 }
 
@@ -270,7 +328,7 @@ function estForProgram(programId: string): number {
 }
 
 const IMPACT_DISCLAIMER =
-  "Estimates only. Dollar totals use library annual benefit estimates × follow-through taps – not verified agency payouts. Map shows QR placement sites and coarse city-level IP when available; never street addresses. Funnel counts unique people per stage (QR/link reach is event count).";
+  "Estimates only. Dollar totals use library annual benefit estimates × follow-through taps – not verified agency payouts. Map shows QR placement sites and coarse city-level IP when available; never street addresses. Funnel counts unique people per stage (QR/link reach is event count). Friend-share links use anonymous per-person codes – we count clicks, not names.";
 
 function seriesTotal(series: DailyCount[]): number {
   return series.length ? series[series.length - 1]!.cumulative : 0;
@@ -421,7 +479,250 @@ function buildDemoFunnel(peopleReached: number, botStarts: number, programOpens:
   counts.set("apply_open", programOpens);
   counts.set("follow_through", followThroughs);
   counts.set("finished", Math.round(followThroughs * 0.72));
+  counts.set("report_created", Math.round(followThroughs * 0.58));
   return funnelFromStageCounts(counts);
+}
+
+function emptyChannelStats(): ReachChannelStats {
+  return {
+    peopleReached: 0,
+    botStarts: 0,
+    followThroughs: 0,
+    estDollarsUnlocked: 0,
+  };
+}
+
+function round1(n: number): number {
+  return Math.round(n * 10) / 10;
+}
+
+function splitByChannelShare(
+  total: number,
+  orgN: number,
+  friendN: number,
+  websiteN: number,
+): { organizations: number; friends: number; website: number } {
+  const denom = orgN + friendN + websiteN;
+  if (total <= 0 || denom <= 0) {
+    return { organizations: 0, friends: 0, website: 0 };
+  }
+  const organizations = Math.round((total * orgN) / denom);
+  const friends = Math.round((total * friendN) / denom);
+  const website = Math.max(0, total - organizations - friends);
+  return { organizations, friends, website };
+}
+
+/** Demo: friend shares start small and proliferate; orgs stay the larger channel. */
+function splitSampleUsersPerDay(usersPerDay: DailyCount[]): ChannelDailyCount[] {
+  const rnd = mulberry32(hashSeed("channel-split"));
+  const n = usersPerDay.length;
+  return usersPerDay.map((d, i) => {
+    const t = n <= 1 ? 1 : i / (n - 1);
+    const friendsShare = 0.08 + 0.2 * t * t;
+    const websiteShare = 0.07 - 0.02 * t;
+    const users = d.users;
+    let friends = Math.round(users * friendsShare * (0.88 + rnd() * 0.24));
+    let website = Math.round(users * websiteShare * (0.88 + rnd() * 0.24));
+    friends = Math.max(0, Math.min(friends, users));
+    website = Math.max(0, Math.min(website, users - friends));
+    const organizations = Math.max(0, users - friends - website);
+    return { date: d.date, organizations, friends, website };
+  });
+}
+
+function sumChannelDays(days: ChannelDailyCount[], key: Exclude<ReachChannel, "other">): number {
+  return days.reduce((s, d) => s + d[key], 0);
+}
+
+function scaleChannelStats(
+  people: { organizations: number; friends: number; website: number },
+  botStarts: number,
+  followThroughs: number,
+  estDollarsUnlocked: number,
+): Pick<SharingStats, "organizations" | "friends" | "website"> {
+  const bots = splitByChannelShare(
+    botStarts,
+    people.organizations,
+    people.friends,
+    people.website,
+  );
+  const follows = splitByChannelShare(
+    followThroughs,
+    people.organizations,
+    people.friends,
+    people.website,
+  );
+  const dollars = splitByChannelShare(
+    estDollarsUnlocked,
+    people.organizations,
+    people.friends,
+    people.website,
+  );
+  return {
+    organizations: {
+      peopleReached: people.organizations,
+      botStarts: bots.organizations,
+      followThroughs: follows.organizations,
+      estDollarsUnlocked: dollars.organizations,
+    },
+    friends: {
+      peopleReached: people.friends,
+      botStarts: bots.friends,
+      followThroughs: follows.friends,
+      estDollarsUnlocked: dollars.friends,
+    },
+    website: {
+      peopleReached: people.website,
+      botStarts: bots.website,
+      followThroughs: follows.website,
+      estDollarsUnlocked: dollars.website,
+    },
+  };
+}
+
+function buildDemoSharingStats(
+  usersPerDay: DailyCount[],
+  botStarts: number,
+  followThroughs: number,
+  estDollarsUnlocked: number,
+): SharingStats {
+  const usersPerDayByChannel = splitSampleUsersPerDay(usersPerDay);
+  const people = {
+    organizations: sumChannelDays(usersPerDayByChannel, "organizations"),
+    friends: sumChannelDays(usersPerDayByChannel, "friends"),
+    website: sumChannelDays(usersPerDayByChannel, "website"),
+  };
+  const peopleWhoShared = Math.max(1, Math.round(people.friends / 1.6));
+  return {
+    peopleWhoShared,
+    friendClicks: people.friends,
+    activeSharers: Math.max(1, Math.round(peopleWhoShared * 0.62)),
+    clicksPerSharer: round1(people.friends / peopleWhoShared),
+    ...scaleChannelStats(people, botStarts, followThroughs, estDollarsUnlocked),
+    usersPerDayByChannel,
+  };
+}
+
+function channelOfEvent(
+  e: AnalyticsEventRow,
+  userCampaign: Map<number, string>,
+): ReachChannel {
+  if (e.campaign_id) return reachChannelForCampaign(e.campaign_id);
+  if (e.telegram_user_id != null) {
+    return reachChannelForCampaign(userCampaign.get(e.telegram_user_id) ?? null);
+  }
+  return "other";
+}
+
+function buildLiveSharingStats(
+  events: AnalyticsEventRow[],
+  userCampaign: Map<number, string>,
+): SharingStats {
+  const shareOut = events.filter((e) => e.event_type === "share_out");
+  const awareness = events.filter((e) => e.event_type === "awareness");
+  const botStarts = events.filter((e) => e.event_type === "bot_start");
+  const followThroughs = events.filter((e) => e.event_type === "follow_through");
+
+  const channels: Record<Exclude<ReachChannel, "other">, ReachChannelStats> = {
+    organizations: emptyChannelStats(),
+    friends: emptyChannelStats(),
+    website: emptyChannelStats(),
+  };
+
+  const addReached = (channel: ReachChannel) => {
+    if (channel === "other") return;
+    channels[channel].peopleReached += 1;
+  };
+  for (const e of awareness) {
+    addReached(reachChannelForCampaign(e.campaign_id));
+  }
+
+  const addUnique = (
+    key: "botStarts" | "followThroughs",
+    list: AnalyticsEventRow[],
+  ) => {
+    const seen: Record<Exclude<ReachChannel, "other">, Set<string>> = {
+      organizations: new Set(),
+      friends: new Set(),
+      website: new Set(),
+    };
+    for (const e of list) {
+      const channel = channelOfEvent(e, userCampaign);
+      if (channel === "other") continue;
+      const id =
+        e.telegram_user_id != null ? `u:${e.telegram_user_id}` : `a:${e.id}`;
+      if (seen[channel].has(id)) continue;
+      seen[channel].add(id);
+      channels[channel][key] += 1;
+    }
+  };
+  addUnique("botStarts", botStarts);
+  addUnique("followThroughs", followThroughs);
+
+  for (const e of followThroughs) {
+    const channel = channelOfEvent(e, userCampaign);
+    if (channel === "other" || !e.program_id) continue;
+    channels[channel].estDollarsUnlocked += estForProgram(e.program_id);
+  }
+
+  const friendAwareness = awareness.filter((e) =>
+    isPeerShareCampaignId(e.campaign_id),
+  );
+  // Share-button landings only (individual partner QRs still count on the Friends card).
+  const friendClicks = friendAwareness.length;
+  const activeSharers = new Set(
+    friendAwareness
+      .map((e) => e.campaign_id)
+      .filter((id): id is string => Boolean(id)),
+  ).size;
+  const peopleWhoShared = uniqueUsers(shareOut);
+  const sharerBase = peopleWhoShared || activeSharers;
+
+  const byDay = new Map<string, ChannelDailyCount>();
+  for (const e of awareness) {
+    const date = dayKey(e.created_at);
+    let row = byDay.get(date);
+    if (!row) {
+      row = { date, organizations: 0, friends: 0, website: 0 };
+      byDay.set(date, row);
+    }
+    const channel = reachChannelForCampaign(e.campaign_id);
+    if (channel !== "other") row[channel] += 1;
+  }
+  const usersPerDayByChannel = [...byDay.values()].sort((a, b) =>
+    a.date.localeCompare(b.date),
+  );
+
+  return {
+    peopleWhoShared,
+    friendClicks,
+    activeSharers,
+    clicksPerSharer: sharerBase === 0 ? 0 : round1(friendClicks / sharerBase),
+    organizations: channels.organizations,
+    friends: channels.friends,
+    website: channels.website,
+    usersPerDayByChannel,
+  };
+}
+
+function emptyJourney(): JourneyProgressStats {
+  return {
+    starters: 0,
+    finishers: 0,
+    reportsCreated: 0,
+    reportRecipients: 0,
+    buckets: [],
+    avgPctThrough: 0,
+  };
+}
+
+function emptyScreenDropout(): ScreenDropoutStats {
+  return {
+    starters: 0,
+    screens: [],
+    biggestDropId: null,
+    biggestDropPct: 0,
+  };
 }
 
 function buildDemoImpactStats(usersPerDayLive: DailyCount[]): ImpactStats {
@@ -435,6 +736,13 @@ function buildDemoImpactStats(usersPerDayLive: DailyCount[]): ImpactStats {
   const programs = buildDemoProgramStats(programOpens, followThroughs);
   const estDollarsUnlocked = programs.reduce((s, p) => s + p.estDollarsUnlocked, 0);
 
+  const reportsCreated = Math.round(followThroughs * 0.58);
+  const sharing = buildDemoSharingStats(
+    usersPerDay,
+    botStarts,
+    followThroughs,
+    estDollarsUnlocked,
+  );
   return {
     generatedAt: new Date().toISOString(),
     statsSource: "demo",
@@ -445,12 +753,18 @@ function buildDemoImpactStats(usersPerDayLive: DailyCount[]): ImpactStats {
     programOpens,
     followThroughs,
     estDollarsUnlocked,
+    sharing,
     usersPerDay,
     usersPerDayLive,
     chartSeriesSource: "sample",
     programs,
     mapPoints: buildDemoMapPoints(),
     funnel: buildDemoFunnel(peopleReached, botStarts, programOpens, followThroughs),
+    reportsCreated,
+    reportRecipients: reportsCreated,
+    journey: emptyJourney(),
+    screenDropout: emptyScreenDropout(),
+    screenTiming: emptyScreenTiming(),
     disclaimer: IMPACT_DISCLAIMER,
   };
 }
@@ -470,6 +784,10 @@ function buildLiveImpactStats(events: AnalyticsEventRow[]): ImpactStats {
   }
 
   const usersPerDayLive = buildUsersPerDay(awareness);
+  const journey = buildJourneyProgress(events);
+  const screenDropout = buildScreenDropout(events);
+  const screenTiming = buildScreenTiming(events);
+  const sharing = buildLiveSharingStats(events, firstBotStartCampaignByUser(events));
 
   return {
     generatedAt: new Date().toISOString(),
@@ -481,12 +799,18 @@ function buildLiveImpactStats(events: AnalyticsEventRow[]): ImpactStats {
     programOpens,
     followThroughs: followThroughs.length,
     estDollarsUnlocked,
+    sharing,
     usersPerDay: usersPerDayLive,
     usersPerDayLive,
     chartSeriesSource: "live",
     programs: buildProgramStats(events),
     mapPoints: buildMapPoints(awareness),
     funnel: buildFunnel(events),
+    reportsCreated: journey.reportsCreated,
+    reportRecipients: journey.reportRecipients,
+    journey,
+    screenDropout,
+    screenTiming,
     disclaimer: IMPACT_DISCLAIMER,
   };
 }
@@ -535,6 +859,10 @@ function buildFunnel(events: AnalyticsEventRow[]): FunnelStats {
     "follow_through",
     uniqueUsers(events.filter((e) => e.event_type === "follow_through")),
   );
+  byStage.set(
+    "report_created",
+    uniqueUsers(events.filter((e) => e.event_type === "report_created")),
+  );
 
   const funnelEvents = events.filter((e) => e.event_type === "funnel" && e.label);
   for (const stage of FUNNEL_STAGES) {
@@ -542,7 +870,8 @@ function buildFunnel(events: AnalyticsEventRow[]): FunnelStats {
       stage.id === "reached" ||
       stage.id === "bot_start" ||
       stage.id === "apply_open" ||
-      stage.id === "follow_through"
+      stage.id === "follow_through" ||
+      stage.id === "report_created"
     ) {
       continue;
     }
@@ -604,7 +933,10 @@ function buildProgramStats(events: AnalyticsEventRow[]): ProgramStat[] {
   return rows;
 }
 
-function buildMapPoints(awareness: AnalyticsEventRow[]): MapPoint[] {
+function buildMapPoints(
+  awareness: AnalyticsEventRow[],
+  opts?: { ghostPins?: boolean },
+): MapPoint[] {
   const buckets = new Map<string, MapPoint>();
 
   for (const e of awareness) {
@@ -641,6 +973,9 @@ function buildMapPoints(awareness: AnalyticsEventRow[]): MapPoint[] {
   }
 
   // Ensure known QR placements appear even with zero scans (ghost pins for demo context)
+  if (opts?.ghostPins === false) {
+    return [...buckets.values()].sort((a, b) => b.count - a.count);
+  }
   for (const c of loadCampaignsFile().campaigns) {
     if (c.kind !== "qr" || c.lat == null || c.lng == null) continue;
     const key = `${c.lat.toFixed(2)},${c.lng.toFixed(2)}`;
@@ -674,6 +1009,10 @@ export interface PartnerLeaderboardRow {
   botStarts: number;
   followThroughs: number;
   estDollarsUnlocked: number;
+  /** Feedback submissions that still have ≥1 credited (non-disqualified) ticket. */
+  feedbackMessages: number;
+  /** Dev tickets created from feedback; disqualified tickets are excluded. */
+  feedbackTickets: number;
 }
 
 export interface PartnerStats {
@@ -698,6 +1037,8 @@ export interface PartnerStats {
   programOpens: number;
   followThroughs: number;
   estDollarsUnlocked: number;
+  feedbackMessages: number;
+  feedbackTickets: number;
   usersPerDay: DailyCount[];
   usersPerDayLive: DailyCount[];
   /** @deprecated Use statsSource – "sample" means demo charts. */
@@ -708,7 +1049,10 @@ export interface PartnerStats {
 }
 
 const PARTNER_DISCLAIMER =
-  "Partner stats credit people reached via this partner’s unique QR code. Downstream metrics use session attribution from that QR. Estimates only – not verified agency payouts.";
+  "Partner stats credit people reached via this partner’s unique QR code and any event QR codes they generate. Downstream metrics use session attribution from those QRs. Feedback tickets come from this page’s feedback box and from testers who started via a partner or event QR; disqualified tickets are removed from the tally. Estimates only – not verified agency payouts.";
+
+const EVENT_DISCLAIMER =
+  "Event stats count scans of this event’s QR code. Those same scans still credit the parent partner on the public community leaderboard. Estimates only – not verified agency payouts.";
 
 /** Map telegram users → first bot_start campaign (sticky attribution fallback). */
 function firstBotStartCampaignByUser(
@@ -726,16 +1070,64 @@ function firstBotStartCampaignByUser(
   return map;
 }
 
-function eventMatchesCampaign(
+function eventMatchesCampaignSet(
   e: AnalyticsEventRow,
-  campaignId: string,
+  campaignIds: Set<string>,
   userCampaign: Map<number, string>,
 ): boolean {
-  if (e.campaign_id === campaignId) return true;
+  if (e.campaign_id && campaignIds.has(e.campaign_id)) return true;
   if (e.telegram_user_id != null) {
-    return userCampaign.get(e.telegram_user_id) === campaignId;
+    const cid = userCampaign.get(e.telegram_user_id);
+    return Boolean(cid && campaignIds.has(cid));
   }
   return false;
+}
+
+function campaignIdSetForPartner(partner: Partner): Set<string> {
+  return new Set(campaignIdsForPartner(partner));
+}
+
+function rollupCampaignSet(
+  campaignIds: Set<string>,
+  events: AnalyticsEventRow[],
+  userCampaign: Map<number, string>,
+): {
+  peopleReached: number;
+  botStarts: number;
+  followThroughs: number;
+  estDollarsUnlocked: number;
+  feedbackMessages: number;
+  feedbackTickets: number;
+} {
+  const awareness = events.filter(
+    (e) =>
+      e.event_type === "awareness" &&
+      e.campaign_id != null &&
+      campaignIds.has(e.campaign_id),
+  );
+  const botStarts = events.filter(
+    (e) =>
+      e.event_type === "bot_start" &&
+      eventMatchesCampaignSet(e, campaignIds, userCampaign),
+  );
+  const followThroughs = events.filter(
+    (e) =>
+      e.event_type === "follow_through" &&
+      eventMatchesCampaignSet(e, campaignIds, userCampaign),
+  );
+  let estDollarsUnlocked = 0;
+  for (const e of followThroughs) {
+    if (e.program_id) estDollarsUnlocked += estForProgram(e.program_id);
+  }
+  const feedback = countPartnerFeedbackMetrics([...campaignIds]);
+  return {
+    peopleReached: awareness.length,
+    botStarts: uniqueUsers(botStarts),
+    followThroughs: uniqueUsers(followThroughs),
+    estDollarsUnlocked,
+    feedbackMessages: feedback.feedbackMessages,
+    feedbackTickets: feedback.feedbackTickets,
+  };
 }
 
 function rollupPartner(
@@ -743,24 +1135,11 @@ function rollupPartner(
   events: AnalyticsEventRow[],
   userCampaign: Map<number, string>,
 ): Omit<PartnerLeaderboardRow, "rank"> {
-  const cid = partner.campaignId;
-  const awareness = events.filter(
-    (e) => e.event_type === "awareness" && e.campaign_id === cid,
+  const summary = rollupCampaignSet(
+    campaignIdSetForPartner(partner),
+    events,
+    userCampaign,
   );
-  const botStarts = events.filter(
-    (e) =>
-      e.event_type === "bot_start" &&
-      eventMatchesCampaign(e, cid, userCampaign),
-  );
-  const followThroughs = events.filter(
-    (e) =>
-      e.event_type === "follow_through" &&
-      eventMatchesCampaign(e, cid, userCampaign),
-  );
-  let estDollarsUnlocked = 0;
-  for (const e of followThroughs) {
-    if (e.program_id) estDollarsUnlocked += estForProgram(e.program_id);
-  }
   return {
     id: partner.id,
     slug: partner.slug,
@@ -772,10 +1151,7 @@ function rollupPartner(
     accountType: partner.accountType,
     emailDomain: partner.emailDomain,
     emailVerified: partner.emailVerified,
-    peopleReached: awareness.length,
-    botStarts: uniqueUsers(botStarts),
-    followThroughs: uniqueUsers(followThroughs),
-    estDollarsUnlocked,
+    ...summary,
   };
 }
 
@@ -789,6 +1165,8 @@ function demoPartnerRollup(partner: Partner): Omit<PartnerLeaderboardRow, "rank"
     followThroughs,
   );
   const estDollarsUnlocked = programs.reduce((s, p) => s + p.estDollarsUnlocked, 0);
+  // Feedback metrics are always live (real tickets), even when funnel stats are demo.
+  const feedback = countPartnerFeedbackMetrics(campaignIdsForPartner(partner));
   return {
     id: partner.id,
     slug: partner.slug,
@@ -804,6 +1182,8 @@ function demoPartnerRollup(partner: Partner): Omit<PartnerLeaderboardRow, "rank"
     botStarts,
     followThroughs,
     estDollarsUnlocked,
+    feedbackMessages: feedback.feedbackMessages,
+    feedbackTickets: feedback.feedbackTickets,
   };
 }
 
@@ -839,12 +1219,15 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
 
   const events = listEventsForStats();
   const userCampaign = firstBotStartCampaignByUser(events);
-  const cid = partner.campaignId;
+  const campaignIds = campaignIdSetForPartner(partner);
   const awarenessLive = events.filter(
-    (e) => e.event_type === "awareness" && e.campaign_id === cid,
+    (e) =>
+      e.event_type === "awareness" &&
+      e.campaign_id != null &&
+      campaignIds.has(e.campaign_id),
   );
   const usersPerDayLive = buildUsersPerDay(awarenessLive);
-  const campaign = getCampaign(cid);
+  const campaign = getCampaign(partner.campaignId);
 
   if (impactStatsMode() === "demo") {
     const summary = demoPartnerRollup(partner);
@@ -882,6 +1265,8 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
       programOpens,
       followThroughs: summary.followThroughs,
       estDollarsUnlocked: summary.estDollarsUnlocked,
+      feedbackMessages: summary.feedbackMessages,
+      feedbackTickets: summary.feedbackTickets,
       usersPerDay,
       usersPerDayLive,
       chartSeriesSource: "sample",
@@ -893,7 +1278,7 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
 
   const summary = rollupPartner(partner, events, userCampaign);
   const attributed = events.filter((e) =>
-    eventMatchesCampaign(e, cid, userCampaign),
+    eventMatchesCampaignSet(e, campaignIds, userCampaign),
   );
   const programOpens = attributed.filter((e) => e.event_type === "program_open");
 
@@ -937,6 +1322,8 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
     programOpens: programOpens.length,
     followThroughs: summary.followThroughs,
     estDollarsUnlocked: summary.estDollarsUnlocked,
+    feedbackMessages: summary.feedbackMessages,
+    feedbackTickets: summary.feedbackTickets,
     usersPerDay: usersPerDayLive,
     usersPerDayLive,
     chartSeriesSource: "live",
@@ -945,5 +1332,163 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
       (p) => p.opens > 0 || p.followThroughs > 0,
     ),
     disclaimer: PARTNER_DISCLAIMER,
+  };
+}
+
+export interface PartnerEventLeaderboardRow {
+  rank: number;
+  id: string;
+  slug: string;
+  name: string;
+  campaignId: string;
+  createdAt: string;
+  peopleReached: number;
+  botStarts: number;
+  followThroughs: number;
+  estDollarsUnlocked: number;
+  feedbackMessages: number;
+  feedbackTickets: number;
+}
+
+export interface PartnerEventStats {
+  generatedAt: string;
+  statsSource: "live";
+  partner: PartnerStats["partner"];
+  event: {
+    id: string;
+    slug: string;
+    name: string;
+    campaignId: string;
+    createdAt: string;
+  };
+  peopleReached: number;
+  botStarts: number;
+  programOpens: number;
+  followThroughs: number;
+  estDollarsUnlocked: number;
+  feedbackMessages: number;
+  feedbackTickets: number;
+  usersPerDay: DailyCount[];
+  mapPoints: MapPoint[];
+  programs: ProgramStat[];
+  disclaimer: string;
+}
+
+function eventToRow(
+  event: PartnerEvent,
+  summary: ReturnType<typeof rollupCampaignSet>,
+  rank: number,
+): PartnerEventLeaderboardRow {
+  return {
+    rank,
+    id: event.id,
+    slug: event.slug,
+    name: event.name,
+    campaignId: event.campaignId,
+    createdAt: event.createdAt,
+    ...summary,
+  };
+}
+
+/** Always live – event boards should reflect real scans even when the public site is in demo mode. */
+export function buildPartnerEventLeaderboard(
+  partnerSlug: string,
+): PartnerEventLeaderboardRow[] | null {
+  const partner = getPartnerBySlug(partnerSlug);
+  if (!partner) return null;
+  const events = listEventsForStats();
+  const userCampaign = firstBotStartCampaignByUser(events);
+  const rows = listPartnerEventsByPartnerSlug(partner.slug).map((event) => {
+    const summary = rollupCampaignSet(
+      new Set([event.campaignId]),
+      events,
+      userCampaign,
+    );
+    return eventToRow(event, summary, 0);
+  });
+  rows.sort(
+    (a, b) =>
+      b.peopleReached - a.peopleReached ||
+      b.botStarts - a.botStarts ||
+      b.createdAt.localeCompare(a.createdAt),
+  );
+  return rows.map((row, i) => ({ ...row, rank: i + 1 }));
+}
+
+export function buildPartnerEventStats(
+  partnerSlug: string,
+  eventSlug: string,
+): PartnerEventStats | null {
+  const partner = getPartnerBySlug(partnerSlug);
+  if (!partner) return null;
+  const event = getPartnerEventBySlug(partner.slug, eventSlug);
+  if (!event) return null;
+
+  const events = listEventsForStats();
+  const userCampaign = firstBotStartCampaignByUser(events);
+  const campaignIds = new Set([event.campaignId]);
+  const summary = rollupCampaignSet(campaignIds, events, userCampaign);
+  const awarenessLive = events.filter(
+    (e) => e.event_type === "awareness" && e.campaign_id === event.campaignId,
+  );
+  const attributed = events.filter((e) =>
+    eventMatchesCampaignSet(e, campaignIds, userCampaign),
+  );
+  const programOpens = attributed.filter((e) => e.event_type === "program_open");
+  const campaign = getCampaign(event.campaignId);
+  const mapPoints = buildMapPoints(awarenessLive, { ghostPins: false });
+  if (
+    campaign?.lat != null &&
+    campaign.lng != null &&
+    !mapPoints.some(
+      (p) =>
+        Math.abs(p.lat - campaign.lat!) < 0.01 &&
+        Math.abs(p.lng - campaign.lng!) < 0.01,
+    )
+  ) {
+    mapPoints.push({
+      lat: campaign.lat,
+      lng: campaign.lng,
+      label: campaign.label ?? event.name,
+      count: awarenessLive.length,
+      kind: "qr",
+    });
+  }
+
+  return {
+    generatedAt: new Date().toISOString(),
+    statsSource: "live",
+    partner: {
+      id: partner.id,
+      slug: partner.slug,
+      name: partner.name,
+      city: partner.city,
+      logo: partner.logo,
+      blurb: partner.blurb,
+      campaignId: partner.campaignId,
+      accountType: partner.accountType,
+      emailDomain: partner.emailDomain,
+      emailVerified: partner.emailVerified,
+    },
+    event: {
+      id: event.id,
+      slug: event.slug,
+      name: event.name,
+      campaignId: event.campaignId,
+      createdAt: event.createdAt,
+    },
+    peopleReached: summary.peopleReached,
+    botStarts: summary.botStarts,
+    programOpens: programOpens.length,
+    followThroughs: summary.followThroughs,
+    estDollarsUnlocked: summary.estDollarsUnlocked,
+    feedbackMessages: summary.feedbackMessages,
+    feedbackTickets: summary.feedbackTickets,
+    usersPerDay: buildUsersPerDay(awarenessLive),
+    mapPoints,
+    programs: buildProgramStats(attributed).filter(
+      (p) => p.opens > 0 || p.followThroughs > 0,
+    ),
+    disclaimer: EVENT_DISCLAIMER,
   };
 }

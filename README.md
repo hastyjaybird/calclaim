@@ -27,6 +27,13 @@ cp .env.example .env
 npm run dev
 ```
 
+For local `/dev` and `/dev/tree` only (no Telegram polling), use the durable web daemon so the port survives agent shell cleanup:
+
+```bash
+./scripts/dev-web.sh ensure
+# → http://localhost:3000/dev/tree
+```
+
 4. Open Telegram, tap your bot, send `/start`.  
 5. Open the funder dashboard: [http://localhost:3000/impact](http://localhost:3000/impact)  
 6. Open the developer library watch: [http://localhost:3000/dev](http://localhost:3000/dev)
@@ -66,14 +73,14 @@ Print QR codes to `/go/<campaignId>` (see `library/campaigns.json`). Apply butto
 
 ## Developer library watch
 
-Page at `/dev` (password + CAPTCHA; **humans only**) runs an advisory agent over each program’s apply URL and source citations: link health, deadlines, eligibility language, apply-process changes, funding/closed signals, max amounts, and CARE/FERA income bands. Optional LLM analysis if an API key is set. Findings never edit the frozen library – developers update `library/programs.json` by hand. Set `DEVELOPER_PASSWORD` in `.env`. Details: [`docs/developer-library-watch.md`](docs/developer-library-watch.md).
+Page at `/dev` (open locally; password + CAPTCHA on deploy; **humans only**) runs an advisory agent over each program’s apply URL and source citations: link health, deadlines, eligibility language, apply-process changes, funding/closed signals, max amounts, and CARE/FERA income bands. Optional LLM analysis if an API key is set. Findings never edit the frozen library – developers update `library/programs.json` by hand. Set `DEVELOPER_PASSWORD` in `.env` for production. Details: [`docs/developer-library-watch.md`](docs/developer-library-watch.md).
 
 ## What the bot does
 
 1. **Opt-in** – multi-category disclaimer  
 2. **Gate** – already on Medi-Cal / CalFresh / SSI / CalWORKs / WIC?  
 3. **YES / NO queues** – ranked by new docs + time-to-money (CARE is not hard-coded first for “energy” reasons)  
-4. **Offer cards** – I'm already enrolled · Add to My Application Guide · Skip program (apply links stay in the report, not on the card)  
+4. **Offer cards** – Add to My Application Guide · I'm already enrolled · Skip program · Exit & print My Application Guide now once the guide has an item (apply links stay in the report, not on the card)  
 5. **Finish** – abbreviated text summary + Application Guide PDF when there are open tasks; if none, nudge to share with a friend  
 6. **Finish** – summary + PDF, then email-to-computer (Mail app auto-opens with a download link). Idle: Email · Share · Restart · More info  
 7. **Reminders** – daily 12:00 PT scan (Tue closest + T-3 + T-1)  

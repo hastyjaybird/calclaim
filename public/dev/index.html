@@ -46,7 +46,10 @@
     </p>
     <div class="cta-row">
       <button type="button" class="cta" id="btn-scan">Run library check</button>
-      <a class="cta cta-ghost" href="#matrix">Requirements matrix</a>
+      <a class="cta cta-ghost" href="#matrix">Requirements</a>
+      <a class="cta cta-ghost" href="/dev/tree">Message tree (temp)</a>
+      <a class="cta cta-ghost" href="/dev/tree/chart">Gate chart (temp)</a>
+      <a class="cta cta-ghost" href="/dev/tree/flowchart">Flowchart (temp)</a>
       <a class="cta cta-ghost" href="#checklist">Watch checklist</a>
     </div>
     <p class="scan-status" id="scan-status" aria-live="polite"></p>
@@ -73,6 +76,16 @@
         <p class="metric-label">LLM analysis</p>
         <p class="metric-value metric-value-sm" id="m-llm">–</p>
         <p class="metric-note">Optional via API key in env</p>
+      </article>
+      <article class="metric">
+        <p class="metric-label">Reports created</p>
+        <p class="metric-value" id="m-reports">–</p>
+        <p class="metric-note"><span id="m-report-people">0</span> people received a guide</p>
+      </article>
+      <article class="metric">
+        <p class="metric-label">Median time to finish</p>
+        <p class="metric-value metric-value-sm" id="m-finish-time">–</p>
+        <p class="metric-note" id="m-finish-time-note">Active answering time</p>
       </article>
     </section>
 
@@ -107,12 +120,115 @@
       </div>
     </section>
 
+    <section class="panel" id="journey" aria-labelledby="journey-heading">
+      <div class="panel-head">
+        <h2 id="journey-heading">Journey progress &amp; dropout</h2>
+        <p>
+          Overall view: how far people get through the experience.
+          Progress = screens seen ÷ (screens seen + max screens still ahead on their path).
+          Dropout in a band = people whose furthest progress landed there and who never finished.
+        </p>
+      </div>
+      <p class="journey-summary" id="journey-summary">Loading…</p>
+      <div class="funnel-layout">
+        <div class="funnel-chart-wrap">
+          <canvas id="chart-journey" height="320"></canvas>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>% through</th>
+                <th class="num">People</th>
+                <th class="num">Dropped here</th>
+                <th class="num">Still in</th>
+              </tr>
+            </thead>
+            <tbody id="journey-rows">
+              <tr><td colspan="4">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="screen-dropout" aria-labelledby="screen-dropout-heading">
+      <div class="panel-head">
+        <h2 id="screen-dropout-heading">Dropout by tree location</h2>
+        <p>
+          Granular developer view: drop-off at each message-tree screen.
+          “Dropped here” means this was the last screen they saw and they never reached Finish.
+        </p>
+      </div>
+      <p class="funnel-callout" id="screen-dropout-callout" hidden></p>
+      <div class="funnel-layout">
+        <div class="funnel-chart-wrap">
+          <canvas id="chart-screen-dropout" height="420"></canvas>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Screen</th>
+                <th class="num">Reached</th>
+                <th class="num">Dropped</th>
+                <th class="num">Drop %</th>
+                <th class="num">Avg left</th>
+              </tr>
+            </thead>
+            <tbody id="screen-dropout-rows">
+              <tr><td colspan="5">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="screen-timing" aria-labelledby="screen-timing-heading">
+      <div class="panel-head">
+        <h2 id="screen-timing-heading">Time on questions</h2>
+        <p>
+          How long people spend on each tree screen, and how long finishers take
+          for the whole walk. Time is the gap from one screen shown to the next.
+          Gaps over 30 minutes are treated as pauses and left out so overnight
+          drop-offs do not look like a slow question.
+        </p>
+      </div>
+      <p class="journey-summary" id="screen-timing-summary">Loading…</p>
+      <p class="timing-callout" id="screen-timing-callout" hidden></p>
+      <div class="funnel-layout">
+        <div class="funnel-chart-wrap">
+          <canvas id="chart-screen-timing" height="420"></canvas>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Screen</th>
+                <th class="num">Answers</th>
+                <th class="num">Median</th>
+                <th class="num">P90</th>
+                <th class="num">Mean</th>
+              </tr>
+            </thead>
+            <tbody id="screen-timing-rows">
+              <tr><td colspan="5">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <section class="panel" aria-labelledby="feedback-heading">
       <div class="panel-head panel-head-row">
         <div>
           <h2 id="feedback-heading">Alpha user feedback – to do</h2>
           <p>
-            Text and voice notes from testers, plus web contact form messages.
+            Text and voice notes from testers, web contact form messages,
+            partner landing-page feedback, and developer requests pinned from the
+            message-tree review. Multi-point partner feedback is split into one
+            ticket per point and credited on that organization’s metrics.
+            Disqualify junk or non-feedback so it drops out of partner tallies.
             Voice is transcribed to text when <code>OPENAI_API_KEY</code> is set.
             Mark done after you act on it.
           </p>
@@ -123,6 +239,7 @@
             <option value="open">Open</option>
             <option value="all">All</option>
             <option value="done">Done</option>
+            <option value="disqualified">Disqualified</option>
           </select>
         </label>
       </div>
@@ -212,13 +329,13 @@
     <section class="panel" id="matrix" aria-labelledby="matrix-heading">
       <div class="panel-head panel-head-row">
         <div>
-          <h2 id="matrix-heading">Program requirements matrix</h2>
+          <h2 id="matrix-heading">Program requirements</h2>
           <p>
-            Every program ranked easiest to hardest to actually finish – one or two documents
-            and no interview at the top, full interviews and home visits at the bottom.
-            Cells are editable: pick from the dropdowns and checklists, and each change saves
-            straight to <code>library/program-requirements.json</code> so it shows up as a git diff.
-            Rows start as drafts marked <em>needs review</em> until a human confirms them.
+            Two views of the same data in <code>library/program-requirements.json</code>.
+            <em>Edit rows</em> is the ranked spreadsheet with dropdowns.
+            <em>Coverage grid</em> is the scan view: every program down the side, every
+            eligibility rule and document across the top – including
+            <em>this document OR that document</em> alternatives as one column.
           </p>
         </div>
         <div class="matrix-controls">
@@ -265,31 +382,83 @@
           </div>
         </div>
       </div>
+
+      <div class="matrix-tabs" role="tablist" aria-label="Requirements views">
+        <button
+          type="button"
+          class="matrix-tab"
+          role="tab"
+          id="tab-matrix-edit"
+          aria-selected="true"
+          aria-controls="matrix-edit-panel"
+          data-matrix-tab="edit"
+        >
+          Edit rows
+        </button>
+        <button
+          type="button"
+          class="matrix-tab"
+          role="tab"
+          id="tab-matrix-grid"
+          aria-selected="false"
+          aria-controls="matrix-grid-panel"
+          data-matrix-tab="grid"
+        >
+          Coverage grid
+        </button>
+      </div>
+
       <p class="matrix-summary" id="matrix-summary">Loading…</p>
       <p class="scan-status" id="matrix-save-status" aria-live="polite"></p>
-      <div class="table-wrap table-wrap-matrix">
-        <table class="matrix-table">
-          <thead>
-            <tr>
-              <th class="num" title="Rank by difficulty score, easiest first">#</th>
-              <th>Program</th>
-              <th title="Whether someone could apply today">Open now?</th>
-              <th>Difficulty</th>
-              <th>Eligibility requirements</th>
-              <th>Documents needed</th>
-              <th>Interview</th>
-              <th>Also qualifies you for</th>
-              <th>Needs first</th>
-              <th>Review status</th>
-              <th>Review references</th>
-              <th>Notes</th>
-            </tr>
-          </thead>
-          <tbody id="matrix-rows">
-            <tr><td colspan="12">Loading…</td></tr>
-          </tbody>
-        </table>
+
+      <div id="matrix-edit-panel" role="tabpanel" aria-labelledby="tab-matrix-edit">
+        <div class="table-wrap table-wrap-matrix">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th class="num" title="Rank by difficulty score, easiest first">#</th>
+                <th>Program</th>
+                <th title="Whether someone could apply today">Open now?</th>
+                <th>Difficulty</th>
+                <th>Eligibility requirements</th>
+                <th>Documents needed</th>
+                <th>Interview</th>
+                <th>Also qualifies you for</th>
+                <th>Needs first</th>
+                <th>Review status</th>
+                <th>Review references</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="matrix-rows">
+              <tr><td colspan="12">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      <div id="matrix-grid-panel" role="tabpanel" aria-labelledby="tab-matrix-grid" hidden>
+        <p class="coverage-lede">
+          Checkmarks are required. An <span class="coverage-or-mark">OR</span> cell means
+          the program accepts either document path (bring one, not both). Empty cells are
+          not required for that program. Only rules and documents that appear on at least
+          one program are shown.
+        </p>
+        <div class="coverage-toggles">
+          <label><input type="checkbox" id="coverage-show-eligibility" checked /> Eligibility</label>
+          <label><input type="checkbox" id="coverage-show-documents" checked /> Documents</label>
+          <label><input type="checkbox" id="coverage-show-interview" checked /> Interview</label>
+        </div>
+        <div class="table-wrap table-wrap-coverage">
+          <table class="coverage-table" id="coverage-table">
+            <thead id="coverage-head"></thead>
+            <tbody id="coverage-rows">
+              <tr><td>Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <details class="matrix-legend">
         <summary>How the difficulty rank and the open/closed status are worked out</summary>
         <p>
@@ -314,9 +483,10 @@
           tier dropdown on a row to pin a tier when the score reads wrong.
         </p>
         <p>
-          In the <strong>Documents needed</strong> column, programs that accept either path show
-          <em>Award letter OR pay stubs</em> as one chip. Tax credits list a <em>filed tax return</em>
-          explicitly – that is not the same as pay-stub income proof.
+          In the <strong>Documents needed</strong> column and on the coverage grid, programs that
+          accept either path show <em>Award letter OR pay stubs</em> as one chip / column. Tax
+          credits list a <em>filed tax return</em> explicitly – that is not the same as pay-stub
+          income proof.
         </p>
         <p>
           <strong>Also qualifies you for</strong> is the categorical-eligibility graph: enrolling

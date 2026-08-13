@@ -28,6 +28,7 @@ const campaignWeights: { id: string; weight: number }[] = [
   { id: "qr_la_family_resource", weight: 16 },
   { id: "qr_sf_mission", weight: 12 },
   { id: "link_share", weight: 6 },
+  { id: "qr_peer_share", weight: 4 },
   { id: "link_website", weight: 2 },
   { id: "qr_website", weight: 5 },
 ];
@@ -113,6 +114,21 @@ for (let day = daysBack; day >= 0; day--) {
       pin.label,
       created,
     );
+
+    // ~1 in 5 people who opened the bot also share with a friend.
+    if ((day * 5 + i) % 5 === 0) {
+      insert.run(
+        "share_out",
+        "link",
+        "link_share",
+        null,
+        uid,
+        null,
+        null,
+        null,
+        created,
+      );
+    }
 
     // How far this user gets (0 = only bot_start … 7 = finished)
     // Bias: most die between bot_start→started and first_offer→apply

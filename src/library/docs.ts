@@ -11,9 +11,6 @@ export const DOC_LABELS: Record<DocId, string> = {
   taxForms: "W-2s and 1099s",
 };
 
-/** Programs this slow (or slower) surface a docs checklist on the offer card. */
-export const HIGH_FRICTION_TIME_DAYS = 21;
-
 export function docLabel(id: DocId): string {
   return DOC_LABELS[id] ?? id;
 }

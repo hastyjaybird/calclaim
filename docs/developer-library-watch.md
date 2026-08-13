@@ -1,10 +1,25 @@
 # Developer library watch
 
 **URL (local):** `http://localhost:3000/dev`  
+**Temporary tree review:** `http://localhost:3000/dev/tree` – walk the Telegram message tree and see which program requirements are met at each point. Use **Developer request** to pin a note to the current tree location; those land in the Alpha user feedback queue on `/dev`.  
+**Gate chart:** `http://localhost:3000/dev/tree/chart` – programs × triage questions matrix (citizen / CA address / immigrant status included). Rows follow message-tree offer order (`yesOrder` / `noOrder`); optional feeders-first toggle.  
+**Flowchart:** `http://localhost:3000/dev/tree/flowchart` – whole conversation diagram plus YES/NO program lists in tree order.  
 **Nav:** Impact · Developer  
-**Access:** Password + CAPTCHA + human attestation (humans only – see PRIVACY.md)
+**Access:** Open on local (`NODE_ENV` unset). On deploy (`NODE_ENV=production`), password + CAPTCHA + human attestation (humans only – see PRIVACY.md). Override with `DEVELOPER_AUTH=0|1`.
 
 Advisory tooling so developers can refresh the **frozen** program library (`library/programs.json`, `library/income-bands.json`) without inventing eligibility at runtime.
+
+### Experience metrics on `/dev`
+
+Live-only panels (never the public demo dataset):
+
+| Panel | What it shows |
+|---|---|
+| **Reports created** | Application Guide PDFs delivered (+ unique recipients) |
+| **Pipeline fall-off** | Coarse funnel (reach → finish → report) |
+| **Journey progress & dropout** | Percent-through bands from screens seen ÷ (seen + max screens left on path) |
+| **Dropout by tree location** | Per message-tree screen: reached vs last-screen dropouts |
+| **Time on questions** | Median / p90 / mean dwell per tree screen, plus median active time to finish. Gaps over 30 minutes are treated as pauses |
 
 The agent **never writes** to the library. Humans review findings and edit JSON, then redeploy.
 
@@ -30,7 +45,7 @@ For each program (apply URL + `sources[]`):
 
 ## API
 
-Auth cookie required for all routes below except captcha/login/logout/session.
+Auth cookie required in production for all routes below except captcha/login/logout/session. Locally (`NODE_ENV` unset), `/dev` and `/api/dev/*` are open.
 
 | Route | Method | Purpose |
 |---|---|---|
@@ -38,6 +53,7 @@ Auth cookie required for all routes below except captcha/login/logout/session.
 | `/api/dev/login` | POST | `{ password, captchaId, captchaAnswer, humanAttestation: true }` |
 | `/api/dev/logout` | POST | Clear session |
 | `/api/dev/session` | GET | `{ authenticated }` |
+| `/api/dev/stats` | GET | Live funnel + journey percent-through, per-screen dropout, time-on-question / time-to-finish, reports created (never the public demo dataset) |
 | `/api/dev/status` | GET | Library overview, open findings, recent scans, LLM on/off |
 | `/api/dev/scan` | POST | Start a scan (202; 409 if already running) |
 | `/api/dev/scan/:id` | GET | Scan progress + findings for that run |
@@ -45,14 +61,30 @@ Auth cookie required for all routes below except captcha/login/logout/session.
 | `/api/dev/findings/:id` | PATCH | `{ "status": "acknowledged" \| "dismissed" \| "fixed" \| "open" }` |
 | `/api/dev/disaster-windows?status=` | GET | `all` (default), `pending`, `active`, `expired`, `dismissed` |
 | `/api/dev/disaster-windows/:id` | PATCH | `{ "status": "active" \| "dismissed" \| "pending" \| "expired" }` and/or `{ "applyPeriods": [{ "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" }] }` |
-| `/api/dev/program-matrix` | GET | Requirements matrix: every program with derived difficulty rank, reverse unlocks, and the editing vocabularies |
+| `/api/dev/tree` | GET / POST | Temporary message-tree review: `{ actions: string[] }` replays bot callbacks in memory and returns the screen, facts, and per-program requirement status at that point |
+| `/api/dev/tree/chart` | GET | Programs × triage-gate chart (questions + unlock edges) for `/dev/tree/chart` |
+| `/api/dev/tree/chart/order` | PUT | `{ branch: "yes"\|"no", order: string[] }` rewrites `yesOrder` / `noOrder` in `library/programs.json` |
+| `/api/dev/feedback-todos` | GET / POST | Alpha feedback + tree-review developer requests. GET supports `?status=open|done|disqualified|all` and `?source=`. POST `{ source: "tree", text, actions, step, screenTitle }` pins a request to a tree location |
+| `/api/dev/feedback-todos/:id` | PATCH | `{ status: "open" \| "done" \| "disqualified" }`. Disqualified tickets are excluded from partner feedback metrics |
+| `/api/partners/:slug/feedback` | POST | Public partner landing feedback box. Body `{ text }`. Splits multi-point messages into tickets and credits the org |
+
+| `/api/dev/program-matrix` | GET | Requirements matrix: every program with derived difficulty rank, reverse unlocks, document OR-groups, and the editing vocabularies |
 | `/api/dev/program-matrix/:programId` | PATCH | Any subset of `eligibility`, `documents`, `interview`, `unlocks`, `prerequisites`, `difficultyOverride`, `reviewStatus`, `confidencePct`, `reviewRefs`, `notes`, `reviewedBy`. Unknown tag or program ids are rejected with 400. |
 
 ## Program requirements matrix
 
-An editable table on `/dev` (`#matrix`) that answers "how hard is this program to actually finish, and what does it open up." Data lives in **`library/program-requirements.json`**, a companion file the bot never reads – it is operational metadata, not eligibility truth. Unlike `programs.json`, this file *is* written by the dev page: each cell edit saves immediately and atomically, so changes show up as a reviewable git diff. The loader re-reads on mtime change, so hand-editing the file in an editor is still safe.
+Two views on `/dev` (`#matrix`):
 
-Per program:
+| Tab | Purpose |
+|---|---|
+| **Edit rows** | Ranked spreadsheet with dropdowns/checklists. Each cell edit saves immediately to `library/program-requirements.json`. |
+| **Coverage grid** | Scan matrix: programs down the side, every used eligibility rule and document across the top. Checkmarks are required; an **OR** cell means “bring either document path, not both.” |
+
+Data lives in **`library/program-requirements.json`**, a companion file the bot never reads – it is operational metadata, not eligibility truth. Unlike `programs.json`, this file *is* written by the Edit-rows view: each cell edit saves immediately and atomically, so changes show up as a reviewable git diff. The loader re-reads on mtime change, so hand-editing the file in an editor is still safe.
+
+**Document OR groups:** when a program lists every member of a defined alternative set (today: `categoricalProof` + `incomeProof`), the coverage grid collapses them into one **Award letter OR pay stubs** column and difficulty scores the harder path once. Listing only one member keeps it as a required single. Add more groups in `DOCUMENT_OR_GROUPS` in `src/library/requirements.ts`.
+
+Per program (Edit rows):
 
 | Column | Meaning |
 |---|---|
@@ -104,7 +136,8 @@ Because FNS approves an operation roughly two weeks before applications open, a 
 
 | Variable | Purpose |
 |---|---|
-| `DEVELOPER_PASSWORD` | Required for `/dev` login |
+| `DEVELOPER_PASSWORD` | Required for `/dev` login when auth is on (production) |
+| `DEVELOPER_AUTH` | Optional `0`/`1` override; default is off locally, on when `NODE_ENV=production` |
 | `DEVELOPER_SESSION_SECRET` | Optional; falls back to `WEBHOOK_SECRET` |
 | `OPENROUTER_API_KEY` | Enable LLM findings via OpenRouter |
 | `OPENROUTER_MODEL` | Default `openai/gpt-4o-mini` |
@@ -119,18 +152,18 @@ Without a key, scans still run **link + heuristic** checks.
 Your original list – **plus** fields that break ranking, PDFs, or funder math when stale:
 
 1. Important dates / filing windows (`deadlines`)  
-2. Qualifications / eligibility (`oneLiner`, `incomeGate`, `requiresPastDue`, `requiresChildInHousehold`, `applySteps`)  
+2. Qualifications / eligibility (`oneLiner`, `incomeGate`, `requiresPastDue`, `requiresCaResidency`, `requiresBuyingEvThisYear`, `requiresChildInHousehold`, `applySteps`)  
 3. Application process (`applySteps`)  
 4. Funds exhausted / paused delivery (`deadlines`, `oneLiner`)  
 5. Max amounts per person/household (`maxBenefitUsd`, `maxBenefit`, `estAnnualUsd`)  
-6. Application form URLs (`applyUrl`, `sources`)  
+6. Application form URLs (`applyUrl`, `sources`) — and per-utility links in `library/utility-territories.json` (CARE/FERA/ESA/AMP/Medical Baseline + muni rows)  
 7. **Required documents** – ranker + PDF checklist (`docsNeeded`, `docsReusableFromGate`)  
 8. **CARE/FERA income thresholds** (`income-bands.json`)  
 9. **Open / closed / waitlist** – no first-class status field yet; label or remove closed rows  
 10. **Program name / portal branding** (CoveredCA, BenefitsCal, utility renames)  
 11. **Source citation health** (`sources[]` audit trail)  
 12. **Time-to-money** (`timeToMoneyDays` – second ranking key)  
-13. **Skip cascades / bill-not-in-name** (`skipCascades`, `skipReasons`, `requiresPastDue`)  
+13. **Skip cascades / bills-in-name gate** (`skipCascades`, `skipReasons`, `requiresPastDue`, `account_in_your_name` → `has_utility_bills`)  
 14. **New or sunset programs** (expansion watchlist + agency announcements)
 
 Aging rule (same as [`expansion-watchlist.md`](expansion-watchlist.md)): if library `version` is **>90 days** old, or a major benefits announcement lands, re-run assessment before further engineering.

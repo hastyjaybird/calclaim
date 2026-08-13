@@ -1,7 +1,29 @@
-import { getImmigrationAnswer } from "./immigrationMemory.js";
+import {
+  getImmigrationAnswer,
+  passesImmigrationGate,
+} from "./immigrationMemory.js";
 import { isCmspCounty } from "../library/geo.js";
 import { loadPrograms } from "../library/load.js";
+import {
+  isHeldFromOffer,
+  programAvailability,
+} from "../library/requirements.js";
 import type { Program, SessionState, TodoStatus } from "../library/types.js";
+import { passesCaHomeGate, programNeedsCaHome } from "../library/residency.js";
+import {
+  programNeedsShutoffZone,
+  shutoffZoneAnswered,
+} from "../library/pgeShutoff.js";
+import {
+  passesBillInNameGate,
+  programNeedsBillInName,
+  utilityBillsAnswered,
+} from "../library/utilityBills.js";
+import {
+  meterSharingAnswered,
+  passesMeterSharingGate,
+  programNeedsMeterSharingGate,
+} from "../library/sharedMeter.js";
 import { hasOfferableDisasterWindow } from "../disaster/liveWindow.js";
 
 /** Session-wide status for a single program, for QC / support logging. */
@@ -12,6 +34,7 @@ export type ProgramLogStatus =
   | "ALREADY_ENROLLED"
   | "SNOOZED"
   | "SKIPPED"
+  | "HELD_WAITLIST"
   | "NOT_IN_QUEUE";
 
 export interface ProgramLogRow {
@@ -58,6 +81,35 @@ function explainEligibility(
           : "Utility bill is not past due",
     };
   }
+  if (!passesCaHomeGate(program, session.residencyTie)) {
+    return {
+      eligible: false,
+      reason:
+        session.residencyTie === null
+          ? "Waiting on where you live (California home)"
+          : programNeedsCaHome(program)
+            ? "Needs a California home address (work-only in CA is not enough)"
+            : "Not eligible on California residency",
+    };
+  }
+  if (program.requiresBuyingEvThisYear && session.buyingEvThisYear !== true) {
+    return {
+      eligible: false,
+      reason:
+        session.buyingEvThisYear === null
+          ? "Waiting on buying-EV-this-year answer"
+          : "Not buying an EV this year",
+    };
+  }
+  if (program.requiresFirstTimeZev && session.firstTimeZev !== true) {
+    return {
+      eligible: false,
+      reason:
+        session.firstTimeZev === null
+          ? "Waiting on first-time ZEV answer"
+          : "Not a first-time zero-emission vehicle buyer",
+    };
+  }
   if (
     program.requiresChildInHousehold &&
     session.hasChildInHousehold !== true
@@ -68,6 +120,36 @@ function explainEligibility(
         session.hasChildInHousehold === null
           ? "Waiting on child/pregnancy answer"
           : "No children under 18 / pregnancy in household",
+    };
+  }
+  if (program.requiresFosterYouth && session.isFosterYouth !== true) {
+    return {
+      eligible: false,
+      reason:
+        session.isFosterYouth === null
+          ? "Waiting on foster-youth answer"
+          : "Not a qualifying former foster youth",
+    };
+  }
+  if (program.requiresRefugeeOrAsylee && session.isRefugeeOrAsylee !== true) {
+    return {
+      eligible: false,
+      reason:
+        session.isRefugeeOrAsylee === null
+          ? "Waiting on refugee / asylee answer"
+          : "Not a refugee, asylee, or similarly eligible newcomer",
+    };
+  }
+  if (
+    program.requiresMedicalDeviceOrCondition &&
+    session.hasMedicalDeviceOrCondition !== true
+  ) {
+    return {
+      eligible: false,
+      reason:
+        session.hasMedicalDeviceOrCondition === null
+          ? "Waiting on qualifying medical condition / device answer"
+          : "No qualifying medical condition or device for extra energy",
     };
   }
   if (
@@ -124,11 +206,45 @@ function explainEligibility(
       };
     }
   }
-  if (
-    session.billNotInMyName &&
-    (program.id === "care" || program.id === "fera")
-  ) {
-    return { eligible: false, reason: "Utility bill is not in user's name" };
+  if (programNeedsBillInName(program)) {
+    if (!utilityBillsAnswered(session)) {
+      return { eligible: false, reason: "Waiting on bills in user's name" };
+    }
+    if (!passesBillInNameGate(program, session.billsInMyName)) {
+      return {
+        eligible: false,
+        reason: session.billNotInMyName
+          ? "Bill is not in user's name"
+          : "No matching bill in user's name",
+      };
+    }
+  }
+  if (programNeedsMeterSharingGate(program)) {
+    if (!meterSharingAnswered(session)) {
+      return { eligible: false, reason: "Waiting on shared-meter answer" };
+    }
+    if (!passesMeterSharingGate(program, session.meterSharing)) {
+      return {
+        eligible: false,
+        reason:
+          session.meterSharing === "shared"
+            ? "Another household shares this utility meter"
+            : session.meterSharing === "landlord_bill"
+              ? "Landlord sends a separate bill (submeter) – AMP not available"
+              : "Meter sharing does not match this program",
+      };
+    }
+  }
+  if (programNeedsShutoffZone(program)) {
+    if (!shutoffZoneAnswered(session)) {
+      return { eligible: false, reason: "Waiting on shut-off zone check" };
+    }
+    if (session.inShutoffZone !== true) {
+      return {
+        eligible: false,
+        reason: "Not in PG&E shut-off / fire-threat pre-qualify zone (or skipped)",
+      };
+    }
   }
   if (!program.incomeGate || branch === "yes") {
     // no income gate on this arm
@@ -169,31 +285,28 @@ function explainEligibility(
     program.requiresCitizenOrEligibleImmigrant ||
     program.requiresIneligibleImmigrantStatus
   ) {
-    const status = getImmigrationAnswer(session.telegramUserId);
+    const status =
+      session.savedImmigrationStatus ??
+      getImmigrationAnswer(session.telegramUserId);
     if (status === null) {
       return {
         eligible: false,
         reason: "Waiting on immigration status answer",
       };
     }
-    if (
-      program.requiresCitizenOrEligibleImmigrant &&
-      status !== "eligible"
-    ) {
+    if (!passesImmigrationGate(program, status)) {
       return {
         eligible: false,
         reason: "Not offered after immigration status gate",
       };
     }
-    if (
-      program.requiresIneligibleImmigrantStatus &&
-      status !== "ineligible"
-    ) {
-      return {
-        eligible: false,
-        reason: "Not offered after immigration status gate",
-      };
-    }
+  }
+  if (isHeldFromOffer(programAvailability(program).status)) {
+    return {
+      eligible: true,
+      reason:
+        "Qualifies on profile, but program is waitlisted / paused / closed – held out of offer tree",
+    };
   }
   return { eligible: true, reason: "" };
 }
@@ -226,6 +339,16 @@ export function buildProgramStatusRows(session: SessionState): ProgramLogRow[] {
         programName: program.name,
         category: program.category,
         status,
+        reason,
+      };
+    }
+
+    if (reason.includes("held out of offer tree")) {
+      return {
+        programId: program.id,
+        programName: program.name,
+        category: program.category,
+        status: "HELD_WAITLIST",
         reason,
       };
     }

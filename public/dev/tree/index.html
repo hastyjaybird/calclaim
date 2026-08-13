@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <title>CalClaim – Message tree review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/impact/styles.css" />
+  <link rel="stylesheet" href="/dev/styles.css" />
+  <link rel="stylesheet" href="/dev/tree/styles.css" />
+</head>
+<body>
+  <div class="banner" role="banner">
+    <div class="banner-inner">
+      <a class="banner-brand" href="/impact" aria-label="CalClaim home">
+        <img
+          class="banner-mark"
+          src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
+          alt="CalClaim"
+          width="180"
+          height="63"
+        />
+      </a>
+      <span class="banner-sep" aria-hidden="true"></span>
+      <nav class="site-nav" aria-label="Site">
+        <a href="/impact">Impact</a>
+        <a href="/dev">Developer</a>
+        <a href="/dev/tree" aria-current="page">Message tree</a>
+        <a href="/dev/tree/chart">Gate chart</a>
+        <a href="/dev/tree/flowchart">Flowchart</a>
+        <a href="/dev/tree/utilities">Utilities</a>
+        <button type="button" class="nav-logout" id="btn-logout">Log out</button>
+      </nav>
+      <span class="banner-line">Temporary review · not linked from public pages</span>
+    </div>
+  </div>
+
+  <header class="hero hero-dev tree-hero">
+    <p class="eyebrow">Temporary developer review</p>
+    <h1>Message tree</h1>
+    <p class="lede">
+      Walk the Telegram conversation with the real ranker. At each point you can
+      see the bot copy, why that screen appeared, and whether each program’s
+      requirements are met, still unknown, or already eliminated for this user.
+    </p>
+    <div class="tree-toolbar" id="presets"></div>
+    <div class="tree-toolbar">
+      <button type="button" class="cta cta-ghost" id="btn-undo">Undo last tap</button>
+      <button type="button" class="cta cta-ghost" id="btn-skip-rest">Skip rest of wave</button>
+      <button type="button" class="cta cta-ghost" id="btn-add-rest">Add rest of wave</button>
+      <button type="button" class="cta cta-ghost" id="btn-copy">Copy link to this point</button>
+      <button type="button" class="cta" id="btn-request">Developer request</button>
+    </div>
+    <p class="scan-status" id="status-line" aria-live="polite"></p>
+  </header>
+
+  <main class="tree-layout">
+    <section class="tree-col tree-col-flow" aria-labelledby="flow-heading">
+      <h2 id="flow-heading">Canonical flow</h2>
+      <p class="tree-col-lede">
+        Order of screens. Highlight is where this simulated user is now.
+        Gates only appear when they unlock the next cheapest wave.
+      </p>
+      <ol class="flow-list" id="flow-list"></ol>
+    </section>
+
+    <section class="tree-col tree-col-phone" aria-labelledby="phone-heading">
+      <h2 id="phone-heading">What the user sees</h2>
+      <p class="why" id="why"></p>
+      <article class="phone" id="phone">
+        <p class="phone-step" id="phone-step"></p>
+        <pre class="phone-text" id="phone-text"></pre>
+        <p class="phone-note" id="phone-note" hidden></p>
+        <div class="phone-buttons" id="phone-buttons"></div>
+        <form class="phone-zip" id="zip-form" hidden>
+          <label for="zip-input">Type a 5-digit ZIP</label>
+          <div class="zip-row">
+            <input id="zip-input" name="zip" inputmode="numeric" maxlength="10" autocomplete="off" />
+            <button type="submit" class="cta">Send ZIP</button>
+          </div>
+        </form>
+      </article>
+      <aside class="facts" aria-labelledby="facts-heading">
+        <h3 id="facts-heading">Known about this user</h3>
+        <dl id="facts"></dl>
+      </aside>
+    </section>
+
+    <section class="tree-col tree-col-reqs" aria-labelledby="reqs-heading">
+      <div class="reqs-head">
+        <h2 id="reqs-heading">Requirements at this point</h2>
+        <p class="tree-col-lede" id="counts"></p>
+      </div>
+      <div class="filter-row" id="filters" role="tablist" aria-label="Filter programs"></div>
+      <div class="program-list" id="programs"></div>
+    </section>
+  </main>
+
+  <dialog class="tree-request-dialog" id="request-dialog" aria-labelledby="request-dialog-title">
+    <form class="tree-request-form" id="request-form">
+      <div class="tree-request-head">
+        <h2 id="request-dialog-title">Developer request</h2>
+        <button type="button" class="tree-request-close" id="request-dialog-close" aria-label="Close">×</button>
+      </div>
+      <p class="tree-request-lede">
+        Note something to fix or rethink. Saving pins this request to the tree
+        location you are on right now.
+      </p>
+      <p class="tree-request-location" id="request-location" aria-live="polite"></p>
+      <label class="tree-request-field" for="request-text">
+        Request
+        <textarea
+          id="request-text"
+          name="text"
+          rows="5"
+          maxlength="4000"
+          required
+          placeholder="What should change at this point in the tree?"
+        ></textarea>
+      </label>
+      <div class="tree-request-actions">
+        <button type="button" class="cta cta-ghost" id="request-cancel">Cancel</button>
+        <button type="submit" class="cta" id="request-save">Save request</button>
+      </div>
+      <p class="tree-request-status" id="request-status" aria-live="polite"></p>
+      <div class="tree-request-list-wrap">
+        <h3>Open tree requests</h3>
+        <div class="tree-request-list" id="request-list"></div>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/dev/tree/app.js"></script>
+</body>
+</html>

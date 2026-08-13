@@ -22,7 +22,7 @@ Energy / utility programs (CARE, FERA, ESA, LIHEAP, AMP, …) are **offers in th
 |---|---|---|
 | **Memorized / known** | Gate + income band (NO arm) | Already on Medi-Cal/CalFresh/…; rough income × HH band |
 | **Look up / official** | Inside Application Guide PDF + offer “Sign up” | Account #, award letters, pay stubs – listed in **file**, not a mega triage quiz |
-| **Apply** | Official site via Sign up URL | User applies; we do not auto-submit |
+| **Apply** | Official site via Application Guide PDF (after the list) | User applies; we do not auto-submit |
 
 **Rules:**
 - Triage stays short (opt-in → gate → first offer as soon as possible).  
@@ -58,6 +58,7 @@ Library is source of truth. Every program that enters a user’s queue must reso
 | Wage-replacement insurance (EDD, gated by `workDisruption`) | `unemployment` (job loss), `sdi` (illness/injury/pregnancy), `pfl` (family care/bonding) |
 | Cash aid, ABD-gated | `ihss` (paid caregiver hours, alongside SSI/CAPI) |
 | Tax | `tax_credits` (info-only, never enters queue), `caleitc`, `young_child_tax_credit` |
+| Transportation | `myfirstev` (point-of-sale ZEV rebate; no income gate) |
 | Nested employment (not separate offer cards) | CalWORKs → WtW; LA GA/GR → GROW (noted in apply steps) |
 
 **BenefitsCal coverage:** Library rows cover every program on [BenefitsCal program descriptions](https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en). `excludeIfAlreadyOn` drops Disaster CalFresh if already on CalFresh, CMSP if already on Medi-Cal, CAPI if already on SSI, and GA/GR if already on CalWORKs/SSI/CAPI.
@@ -113,13 +114,12 @@ GLOBAL anytime: Help | STOP | free-form QC fallback
 ### OPT_IN
 
 ```text
-CalClaim finds California programs you might be eligible for – help with bills,
-food, health, phone discounts, energy bills, and more – and gives you an
-Application Guide so you can apply.
+CalClaim finds help with food, health coverage, phone discounts, energy bills,
+and more – and gives you a personalized Application Guide for California and
+federal programs to make it easier to apply.
 (CalClaim is a link to the public site / PUBLIC_BASE_URL when https-safe.)
 
-At any time, text or send a voice message to report an issue or suggest an
-improvement ✨
+At any time, text about an issue, correction or suggest an improvement.
 
 Estimates only. Not affiliated with any agency.
 Type 'help' for more options.
@@ -139,7 +139,15 @@ Is anyone in your household already on any of these?
 
 Your household = people who share money with you (buy food together, share bills, or depend on each other). Not roommates who keep their rent/food money separate.
 
-[ tap programs… ] [ Done ] / [ None ]
+[ Medi-Cal ]
+[ CalFresh ]
+[ Supplemental Security Income (SSI) ]
+[ CalWORKs ]
+[ Cash Assistance Program for Immigrants (CAPI) ]
+[ General Assistance / General Relief (GA/GR) ]
+[ County Medical Services Program (CMSP) ]
+[ Women, Infants, and Children (WIC) ]
+[ None ] [ Done ]
 ```
 
 | Control | Logic |
@@ -154,8 +162,10 @@ How many people are in your household?
 
 Your household = people who share money with you (buy food together, share bills, or depend on each other). Not roommates who keep their rent/food money separate.
 
-Tap a number:
+Tap a number (or More):
 ```
+
+Buttons: **1–8** and **More**. More asks them to type the count (9–30).
 
 ### INCOME_BAND (NO arm, after household size when needed)
 
@@ -175,17 +185,98 @@ Bands from frozen CARE/FERA-style tables × household size (library). Purpose: e
 | FERA band (per library HH rules) | Append newly eligible programs; continue waves |
 | CARE band | Append newly eligible programs; continue waves |
 
-Asked only when the next unlockable programs need an income band (NO arm) – after any zero-question offers (LifeLine, LIHEAP, …) so a dropout still heard about at least one program.
+Asked only when the next unlockable programs need an income band (NO arm) – after any zero-income-question offers (Medical Baseline, CalEITC, …) so a dropout still heard about at least one program. Bills-gated offers (LifeLine, LIHEAP, CARE, …) wait on HAS_UTILITY_BILLS first.
+
+### HAS_UTILITY_BILLS (when an account-in-name program would unlock)
+
+Asked after CA home when CARE / FERA / ESA / LIHEAP / AMP / Medical Baseline / SmartFlex / PG&E rebate / muni discount / LifeLine cards would otherwise enter the queue. Multiselect like the categorical gate. PG&E gas + electric are one bill. Named IOUs/munis get their own CARE-family or municipal discount apply links (`library/utility-territories.json`). Phone/internet is one option (company does not matter for LifeLine).
+
+```text
+Which bills do you have in your name?
+
+Tap all that apply (or None), then Done.
+
+[ PG&E bill ]
+[ SDG&E bill ]
+[ SCE bill ]
+[ SoCalGas bill ]
+[ LADWP bill ]
+[ SMUD bill ]
+[ Other CA electric or gas utility ]
+[ Heating fuel bill (propane, oil, wood, etc.) ]
+[ Phone or internet bill ]
+[ None ]
+[ — Done — ]
+```
+
+| Answer | Next |
+|---|---|
+| PG&E bill | Unlock CARE family + PG&E-only rebates/SmartFlex (+ LIHEAP); apply links → PG&E |
+| SDG&E / SCE bill | Unlock CARE / FERA / ESA / AMP / Medical Baseline (+ LIHEAP); apply links → that IOU |
+| SoCalGas bill | Unlock CARE / ESA / AMP / Medical Baseline (+ LIHEAP); **not** FERA; apply links → SoCalGas |
+| LADWP bill | Unlock LADWP EZ-SAVE (+ LIHEAP) |
+| SMUD bill | Unlock SMUD EAPR (+ LIHEAP) |
+| Other CA utility and/or heating fuel only | Unlock LIHEAP only |
+| Phone or internet bill | Unlock LifeLine |
+| None | Drop account-in-name energy + LifeLine; strip utility bill from docs in hand |
+
+**San Diego example:** SDG&E bill → CARE at sdge.com/care → ESA / Medical Baseline / AMP as gates allow → LIHEAP; no PG&E SmartFlex or EV rebates.
 
 ### PAST_DUE (when AMP would be the next unlock)
 
 ```text
 Is your utility bill past due?
 
-[ Yes ] [ No ] / bill not in my name
+[ Yes ] [ No ]
 ```
 
-Gates AMP only – asked in the offer loop when past-due is the cheapest remaining gate, not right after the gate.
+Gates AMP only – after bills-in-name. Asked in the offer loop when past-due is the cheapest remaining gate, not right after the gate.
+
+### HAS_CA_HOME (only if a CA-home program would enter the queue)
+
+Asked when unlocking programs that need California home residency, county residency, or a CA utility-at-home account – not only MyFirstEV. Same unlock-gated pattern as past-due / child. Not asked automatically after Gate or Disaster.
+
+```text
+Where do you live most of the year?
+
+[ In California ] [ In another state ] [ Just visiting / neither ]
+```
+
+| Control | Logic |
+|---|---|
+| In California | `residencyTie=ca_home` → normal CA unlocks (including MyFirstEV path) |
+| In another state | Ask HAS_CA_WORK next |
+| Just visiting / neither | `residencyTie=visitor` → drop CA-home programs; short handoff |
+
+Work address alone is never treated as California home.
+
+### HAS_CA_WORK (only after “In another state”)
+
+```text
+Do you work in California (commute, job site, or CA employer wages)?
+
+[ Yes – I work in California ] [ No ]
+```
+
+| Control | Logic |
+|---|---|
+| Yes | `residencyTie=out_of_state_ca_work` → keep UI/SDI/PFL + Disaster CalFresh (if area matched); drop CA-home / utility-at-home cards; handoff line about food/health |
+| No | `residencyTie=out_of_state` → drop CA-home set; handoff to home-state benefits |
+
+### HAS_BUYING_EV (only if a `requiresBuyingEvThisYear` program would enter the queue)
+
+```text
+Are you trying to buy an electric vehicle (or a hydrogen car) this year?
+
+[ Yes ] [ No ]
+```
+
+| Control | Logic |
+|---|---|
+| Yes | `buyingEvThisYear=true` → include MyFirstEV (if CA home already met) |
+| No | Drop programs with `requiresBuyingEvThisYear` (`NOT_IN_QUEUE`) |
+
+Asked after HAS_CA_HOME when MyFirstEV is the next unlock. Then the MyFirstEV offer card is presented in the queue.
 
 ### HAS_CHILD (only if a `requiresChildInHousehold` program would enter the queue)
 
@@ -262,13 +353,14 @@ Asked in the offer loop when it is the cheapest remaining gate for still-unlocka
 You may qualify for {Program name}.
 
 {Program name} – {one-line plain benefit}
+Est. up to ~${max from maxBenefitUsd for this household} (~$/person when size>1).
 Est. ~{formFillMinutes, discounted if docs already in hand} min to fill out form.
-Est. up to ~${max from maxBenefitUsd for this household} (~$/person when size>1). Deadline: {label (YYYY-MM-DD) or label-only / “check site”}.
-[If timeToMoneyDays ≥ 21:] Docs / numbers you'll likely need: • …
+Deadline: {label (YYYY-MM-DD) or label-only / “check site”}.
 
-[ I'm already enrolled ]
 [ Add to My Application Guide ]
+[ I'm already enrolled ]
 [ Skip program ]
+[ Exit & print My Application Guide now ]   ← only once the guide has ≥1 open item
 ```
 
 | Control | Logic |
@@ -276,9 +368,12 @@ Est. up to ~${max from maxBenefitUsd for this household} (~$/person when size>1)
 | Add to My Application Guide | Mark `in_progress` → next offer (apply URL lives in the finish summary + PDF only) |
 | Already enrolled | Mark done → next offer |
 | Skip program | Apply skip cascade if any → next offer |
+| Exit & print My Application Guide now | End the queue early → same finish summary + PDF as end-of-queue (only when open to-dos exist) |
 | Help / STOP | Global handlers |
 
 **No “Open apply page now” on the card** – outbound links during the queue caused drop-off.
+
+**Documents needed live in the Application Guide PDF**, not on the offer card.
 
 **CARE Skip sub-branch** (when user Skips CARE – CARE is still just one program):
 
@@ -292,8 +387,8 @@ Est. up to ~${max from maxBenefitUsd for this household} (~$/person when size>1)
 
 | Wave | Examples | Extra questions before this wave |
 |---|---|---|
-| 0 | LifeLine, LIHEAP, Medical Baseline, CalEITC; on YES also CARE/ESA/unsigned gate feeders (income skipped) | None after gate |
-| 1 | AMP; unemployment / SDI / PFL; disaster CalFresh; CMSP (ZIP) | One of: past-due, work, disaster, ZIP |
+| 0 | LifeLine, LIHEAP, Medical Baseline, CalEITC; on YES also CARE/ESA/muni discounts/unsigned gate feeders (income skipped) | Bills-in-name when needed (phone+net → LifeLine; energy/fuel → LIHEAP; IOU/muni → CARE-family or EZ-SAVE/EAPR) |
+| 1 | AMP; unemployment / SDI / PFL; disaster CalFresh; CMSP (ZIP); MyFirstEV (CA home → buying EV this year) | One of: past-due, work, disaster, ZIP; or CA home + buying-EV for MyFirstEV |
 | 2+ | NO-arm Medi-Cal / CalFresh / CARE / FERA (household + income); then WIC / CalWORKs (child); SSI / CAPI / IHSS (ABD) | Income block, then child / ABD as needed |
 
 Inside a wave: `newDocs ASC` → `timeToMoney ASC` → library order.  
@@ -303,20 +398,20 @@ On the Application Guide / PDF: open programs sorted **easy → hard** via `prog
 
 ### NO arm note
 
-Zero-question programs (LifeLine, LIHEAP, …) are offered **before** household/income so a dropout still heard about at least one match. Income-gated programs wait for the income wave.
+Programs that do not need an income band are offered **before** household/income when their other gates are already satisfied (e.g. phone or internet bill for LifeLine, energy/fuel bill for LIHEAP) so a dropout still heard about at least one match. Income-gated programs wait for the income wave.
 
 ---
 
 ## Finish (end of offer queue)
 
 **If open to-do items exist:**
-1. Abbreviated text summary – total $ this year · docs that unlock $ · program list with signup URLs  
+1. Abbreviated text summary – total $ this year · docs that unlock $ · apply-now programs · tax-season credits pointed at the PDF’s “For your tax preparer” box  
 2. Send `calclaim-application-guide.pdf`  
 3. Auto-prompt email-to-computer (Mail app + 7-day download link). Idle: Email · Share · Restart · More info
 
 **If no open to-do items:** do **not** generate an Application Guide. Push share-with-a-friend. Idle without Email.
 
-PDF contents: first line total (“You may qualify for a total of ~$X this year”) · **Step 1 find your docs** · **Step 2 open applications** (program, est. minutes, clickable link, deadline, status) · closest deadline · already on · disclaimer.  
+PDF contents: first line total (“You may qualify for a total of ~$X this year”) · **Step 1 find your docs** · **Step 2 apply now** (programs you can submit today; Premium Tax Credit / Covered CA stays here) · **For your tax preparer** (boxed handout when tax-season credits are on the guide – print and give to VITA / a paid preparer / software; claim on the return, not applications to submit today) · closest deadline · already on · disclaimer.  
 Filename: `calclaim-application-guide.pdf`.
 
 ---

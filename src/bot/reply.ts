@@ -1,6 +1,8 @@
 import type { Context } from "grammy";
+import { trackExperienceScreen } from "../analytics/screens.js";
 import type { LastBotMessage, SessionState } from "../library/types.js";
 import { saveSession } from "../db/session.js";
+import { shutoffAddressReplyKeyboard } from "./keyboards.js";
 
 type ReplyExtra = Parameters<Context["reply"]>[1];
 
@@ -32,6 +34,7 @@ export async function replyTracked(
       ? { parseMode }
       : {}),
   };
+  trackExperienceScreen(session);
   saveSession(session);
 }
 
@@ -41,10 +44,14 @@ export async function repeatLastMessage(
 ): Promise<boolean> {
   const last = session.lastBotMessage;
   if (!last?.text) return false;
+  const replyMarkup =
+    session.step === "has_shutoff_address"
+      ? shutoffAddressReplyKeyboard()
+      : last.replyMarkup
+        ? (last.replyMarkup as never)
+        : undefined;
   await ctx.reply(last.text, {
-    ...(last.replyMarkup
-      ? { reply_markup: last.replyMarkup as never }
-      : {}),
+    ...(replyMarkup ? { reply_markup: replyMarkup } : {}),
     ...(last.parseMode ? { parse_mode: last.parseMode } : {}),
   });
   return true;

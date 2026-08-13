@@ -76,6 +76,38 @@ button.cta:disabled {
   font-size: clamp(1.35rem, 3vw, 1.85rem) !important;
 }
 
+.journey-summary {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.journey-summary strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.timing-callout {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(180, 130, 20, 0.1);
+  border: 1px solid rgba(180, 130, 20, 0.28);
+  color: #6b4e12;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.timing-callout[hidden] {
+  display: none;
+}
+
+.timing-slow {
+  color: #8a4a10;
+  font-weight: 600;
+}
+
 .panel-head-row {
   display: flex;
   flex-wrap: wrap;
@@ -331,6 +363,193 @@ button.cta:disabled {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--ink-soft);
+}
+
+.matrix-tabs {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin: 0 0 0.75rem;
+  padding: 0.2rem;
+  border-radius: 999px;
+  background: rgba(15, 61, 44, 0.06);
+  border: 1px solid rgba(15, 61, 44, 0.12);
+}
+
+.matrix-tab {
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.matrix-tab[aria-selected="true"] {
+  background: #fff;
+  color: var(--leaf-deep);
+  box-shadow: 0 1px 2px rgba(15, 61, 44, 0.12);
+}
+
+.matrix-tab:hover:not([aria-selected="true"]) {
+  color: var(--leaf-deep);
+}
+
+.coverage-lede {
+  margin: 0 0 0.65rem;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  line-height: 1.45;
+  max-width: 52rem;
+}
+
+.coverage-or-mark {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.05rem 0.35rem;
+  border-radius: 0.3rem;
+  background: rgba(11, 92, 46, 0.12);
+  color: #0b5c2e;
+  vertical-align: 0.05em;
+}
+
+.coverage-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin: 0 0 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.coverage-toggles label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.table-wrap-coverage {
+  max-height: 78vh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.coverage-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.78rem;
+  min-width: 100%;
+}
+
+.coverage-table th,
+.coverage-table td {
+  padding: 0.35rem 0.3rem;
+  border-bottom: 1px solid rgba(15, 61, 44, 0.08);
+  border-right: 1px solid rgba(15, 61, 44, 0.06);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.coverage-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #eaf2ee;
+  box-shadow: inset 0 -1px 0 var(--line);
+  font-weight: 600;
+  color: var(--leaf-deep);
+  vertical-align: bottom;
+}
+
+.coverage-table thead th.coverage-corner {
+  left: 0;
+  z-index: 4;
+  text-align: left;
+  min-width: 7.5rem;
+}
+
+.coverage-table thead th.coverage-group {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: #dfeae4;
+}
+
+.coverage-table thead th.coverage-req {
+  max-width: 4.2rem;
+  height: 7.5rem;
+  padding: 0.4rem 0.15rem 0.5rem;
+}
+
+.coverage-table thead th.coverage-req span {
+  display: inline-block;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  max-height: 6.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.74rem;
+  line-height: 1.15;
+}
+
+.coverage-table thead th.coverage-or {
+  background: #dff0e6;
+  color: #0b5c2e;
+}
+
+.coverage-table tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  text-align: left;
+  background: #f4f8f6;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 7.5rem;
+  max-width: 10rem;
+  padding-left: 0.55rem;
+  box-shadow: inset -1px 0 0 var(--line);
+}
+
+.coverage-table tbody tr:hover th,
+.coverage-table tbody tr:hover td {
+  background: rgba(31, 107, 74, 0.06);
+}
+
+.coverage-table tbody tr:hover th {
+  background: #e8f1ec;
+}
+
+.coverage-yes {
+  color: #0b5c2e;
+  font-weight: 700;
+}
+
+.coverage-or-cell {
+  color: #0b5c2e;
+  font-weight: 800;
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  background: rgba(11, 92, 46, 0.08);
+}
+
+.coverage-interview {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  white-space: normal;
+  max-width: 5.5rem;
+  line-height: 1.2;
 }
 
 .table-wrap-matrix {

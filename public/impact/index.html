@@ -9,7 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="/impact/styles.css?v=20260805-verify" />
+  <link rel="stylesheet" href="/impact/styles.css?v=20260812-share-channels" />
+  <link rel="stylesheet" href="/donate/donate.css?v=20260812-donate" />
 </head>
 <body data-page="impact">
   <div class="banner" role="banner">
@@ -30,6 +31,7 @@
         <a href="#about" data-i18n="nav.about">About</a>
         <a href="#contact" data-i18n="nav.contact">Contact</a>
         <a href="#privacy" data-i18n="nav.privacy">Privacy</a>
+        <button type="button" class="nav-donate" data-donate-open data-i18n="nav.donate">Donate</button>
       </nav>
       <div id="lang-switch" class="lang-switch"></div>
     </div>
@@ -49,10 +51,11 @@
           />
         </h1>
         <p class="lede" data-i18n="impact.lede">
-          A California financial aid navigator – food, health, phone discounts, energy bill help, and more.
+          CalClaim finds help with food, health coverage, phone discounts, energy bills, and more – and gives you a personalized Application Guide for California and federal programs to make it easier to apply.
         </p>
         <p class="hero-actions">
           <a class="cta" href="/partners/signup" data-i18n="impact.partnerSignupCta">Sign up to be a partner</a>
+          <button type="button" class="cta cta-ghost" data-donate-open data-i18n="donate.cta">Donate</button>
         </p>
         <p class="partner-signup-note" data-i18n="impact.partnerSignupBody">
           Organizations and individuals sign up the same way and verify by email. Organizations need a real work domain and appear on the public leaderboard; individuals get a private stats page.
@@ -104,6 +107,53 @@
       </article>
     </section>
 
+    <section class="panel" id="spread" aria-labelledby="spread-heading">
+      <div class="panel-head">
+        <h2 id="spread-heading" data-i18n="impact.spreadHeading">How CalClaim spreads</h2>
+        <p data-i18n="impact.spreadBody">
+          Organization QR codes versus people sharing with friends. Each person who shares gets an anonymous link, so we can see whether word of mouth is growing – without collecting who they sent it to.
+        </p>
+      </div>
+      <div class="spread-compare" data-i18n-aria="impact.spreadCompareAria" aria-label="Organizations compared with friend shares">
+        <article class="spread-card" id="spread-org">
+          <p class="metric-label" data-i18n="impact.spreadOrgs">Organizations</p>
+          <p class="metric-value" id="m-org-reached">–</p>
+          <p class="metric-note" data-i18n="impact.spreadOrgsNote">Partner QR codes and events</p>
+          <p class="spread-sub" id="m-org-detail"></p>
+        </article>
+        <article class="spread-card spread-card-friends" id="spread-friends">
+          <p class="metric-label" data-i18n="impact.spreadFriends">Friends sharing</p>
+          <p class="metric-value" id="m-friend-reached">–</p>
+          <p class="metric-note" data-i18n="impact.spreadFriendsNote">People sending CalClaim to someone they know</p>
+          <p class="spread-sub" id="m-friend-detail"></p>
+        </article>
+      </div>
+      <p class="spread-verdict" id="spread-verdict"></p>
+      <div class="spread-meta">
+        <article>
+          <p class="metric-label" data-i18n="impact.spreadSharers">People who shared</p>
+          <p class="metric-value" id="m-sharers">–</p>
+          <p class="metric-note" data-i18n="impact.spreadSharersNote">Opened Share in CalClaim</p>
+        </article>
+        <article>
+          <p class="metric-label" data-i18n="impact.spreadClicks">Friend-link clicks</p>
+          <p class="metric-value" id="m-friend-clicks">–</p>
+          <p class="metric-note" data-i18n="impact.spreadClicksNote">New people reached through those shares</p>
+        </article>
+        <article>
+          <p class="metric-label" data-i18n="impact.spreadViral">Clicks per person who shared</p>
+          <p class="metric-value" id="m-viral">–</p>
+          <p class="metric-note" data-i18n="impact.spreadViralNote">How far each share travels</p>
+        </article>
+      </div>
+      <p class="spread-website" id="spread-website" hidden></p>
+      <div class="spread-chart-wrap">
+        <h3 class="spread-chart-title" data-i18n="impact.spreadChart">People reached per day</h3>
+        <p class="spread-chart-note" data-i18n="impact.spreadChartNote">Organizations vs friends sharing</p>
+        <canvas id="chart-spread" height="220"></canvas>
+      </div>
+    </section>
+
     <section class="panel" aria-labelledby="map-heading">
       <div class="panel-head">
         <h2 id="map-heading" data-i18n="impact.mapHeading">Where people found CalClaim</h2>
@@ -116,7 +166,7 @@
       <div class="panel-head">
         <h2 id="partners-heading" data-i18n="impact.partnersHeading">Community partners</h2>
         <p data-i18n="impact.partnersBody">
-          Verified organizations hosting CalClaim QR codes – ranked by people reached through their unique code. Individuals partner privately and are not listed here.
+          Verified organizations hosting CalClaim QR codes – ranked by people reached through their unique code and any event codes they generate. The star marks the outreach leader; the medal marks the most feedback. Individuals partner privately and are not listed here.
         </p>
       </div>
       <ol class="partner-board" id="partner-board" data-i18n-aria="impact.partnersAria" aria-label="Partner leaderboard">
@@ -242,25 +292,29 @@
             <li data-i18n="privacy.collect1">Answers you choose while finding programs (household size, income band, ZIP when needed for county programs, offer actions)</li>
             <li data-i18n="privacy.collect2">Your Application Guide items derived from our program list</li>
             <li data-i18n="privacy.collect3">Optional free-form text or voice notes you send as alpha feedback</li>
-            <li data-i18n="privacy.collect4">Aggregate impact events: QR scans, shared-link clicks, apply-page opens, follow-throughs</li>
+            <li data-i18n="privacy.collect4">Aggregate impact events: QR scans, friend-share and partner-link clicks, apply-page opens, follow-throughs (friend-share links use anonymous codes – not names)</li>
             <li data-i18n="privacy.collect5">Coarse location only (poster sites and city-level IP for the map – never street addresses)</li>
             <li data-i18n="privacy.collect6">Optional email and comments you submit on the contact form</li>
             <li data-i18n="privacy.collect7">Organization name, work email, and optional city if you sign up as a community partner (to send your QR kit and show your status page)</li>
+            <li data-i18n="privacy.collect8">Street + city typed for the optional PG&E shut-off check is looked up once (US Census standardizer + PG&E map), then discarded – we keep only yes/no, never the street address</li>
+            <li data-i18n="privacy.collect9">If you give, the gift amount, whether it is monthly, and Stripe’s payment id – not your card or bank numbers</li>
           </ul>
 
           <h3 data-i18n="privacy.notCollectHeading">What we do not collect</h3>
           <ul>
             <li data-i18n="privacy.not1">Required document uploads (ID, pay stubs, bills)</li>
-            <li data-i18n="privacy.not2">Payment information</li>
+            <li data-i18n="privacy.not2">Card numbers, bank account numbers, or PayPal passwords (optional gifts are processed by Stripe and PayPal; we do not store them)</li>
             <li data-i18n="privacy.not3">Marketing email lists</li>
             <li data-i18n="privacy.not4">Precise GPS unless you choose to share a location</li>
             <li data-i18n="privacy.not5">Immigration status answers (asked only when needed – not stored, not linked to your phone number)</li>
+            <li data-i18n="privacy.not6">Stored street addresses (the PG&E shut-off lookup does not keep them)</li>
           </ul>
 
           <h3 data-i18n="privacy.useHeading">How we use data</h3>
           <p data-i18n="privacy.useBody">
             We use your data anonymously to run your session, send next-steps and reminders,
             improve the demo UX, and publish aggregate impact metrics on the public dashboard.
+            Optional gifts are processed by Stripe and PayPal; we do not store card or bank numbers.
             We do not give or sell your data.
           </p>
 
@@ -302,8 +356,9 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="/i18n/messages.js?v=20260805-lb-orgs"></script>
+  <script src="/i18n/messages.js?v=20260813-lede2"></script>
   <script src="/i18n/lang.js"></script>
-  <script src="/impact/app.js?v=20260805-lb-orgs"></script>
+  <script src="/donate/donate.js?v=20260812-donate"></script>
+  <script src="/impact/app.js?v=20260812-share-channels"></script>
 </body>
 </html>

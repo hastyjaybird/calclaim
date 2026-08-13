@@ -40,6 +40,13 @@ export function loadPrograms(): Program[] {
   return programsCache;
 }
 
+/** After a developer writes programs.json (order edits), force the next read. */
+export function clearProgramsCache(): void {
+  programsCache = null;
+  programsMeta = null;
+  disclaimerCache = "";
+}
+
 export function getLibraryMeta(): { version: string; market: string; disclaimer: string } {
   loadPrograms();
   return programsMeta!;

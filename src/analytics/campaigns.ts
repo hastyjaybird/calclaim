@@ -2,7 +2,9 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { LIBRARY_DIR } from "../config.js";
 import { getSignedUpPartnerByCampaignId } from "../partners/db.js";
+import { getPartnerEventByCampaignId } from "../partners/events.js";
 import type { AnalyticsSource } from "./db.js";
+import { lookupPeerShareCampaign } from "./peerShare.js";
 
 export interface Campaign {
   id: string;
@@ -50,10 +52,28 @@ function lookupSignedCampaign(id: string): Campaign | undefined {
   };
 }
 
+function lookupEventCampaign(id: string): Campaign | undefined {
+  const event = getPartnerEventByCampaignId(id);
+  if (!event) return undefined;
+  return {
+    id: event.campaignId,
+    name: event.name,
+    kind: "qr",
+    lat: null,
+    lng: null,
+    label: event.name,
+    zip: null,
+  };
+}
+
 export function getCampaign(id: string): Campaign | undefined {
   const fromFile = loadCampaignsFile().campaigns.find((c) => c.id === id);
   if (fromFile) return fromFile;
-  return lookupSignedCampaign(id);
+  return (
+    lookupSignedCampaign(id) ??
+    lookupEventCampaign(id) ??
+    lookupPeerShareCampaign(id)
+  );
 }
 
 export function campaignSource(campaign: Campaign | undefined): AnalyticsSource {

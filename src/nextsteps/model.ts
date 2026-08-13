@@ -1,13 +1,20 @@
-import { annualizeMaxBenefitUsd } from "../library/benefitEstimate.js";
+import {
+  annualizeMaxBenefitUsd,
+  formatUsd,
+} from "../library/benefitEstimate.js";
 import { docLabel, hasDoc } from "../library/docs.js";
 import { getProgram } from "../library/load.js";
-import { programDifficulty } from "../library/requirements.js";
+import {
+  getProgramRequirements,
+  programDifficulty,
+} from "../library/requirements.js";
 import type {
   DocId,
   NextStepsItem,
   SessionState,
   TodoStatus,
 } from "../library/types.js";
+import { resolveProgramPresentation } from "../library/utilityTerritory.js";
 import { formatApplyPeriods } from "../disaster/format.js";
 import { lastApplyDay, windowForProgram } from "../disaster/liveWindow.js";
 
@@ -37,12 +44,26 @@ function deadlineFields(programId: string): {
   };
 }
 
+/**
+ * Credits claimed on a tax return (federal or CA) – not an application you
+ * submit today. Premium Tax Credit / Covered CA enrollment is apply-now.
+ */
+export function isTaxSeasonClaim(programId: string): boolean {
+  const program = getProgram(programId);
+  if (!program) return false;
+  if (program.category === "tax") return true;
+  return getProgramRequirements(programId).eligibility.includes(
+    "must_file_tax_return",
+  );
+}
+
 /** Per-event phone or URL beats the library apply link during a window. */
-function applyLink(programId: string): string {
+function applyLink(programId: string, session: SessionState): string {
   const p = getProgram(programId);
   if (!p) return "";
   const window = windowForProgram(p);
-  return window?.applyUrl ?? p.applyUrl;
+  if (window?.applyUrl) return window.applyUrl;
+  return resolveProgramPresentation(p, session).applyUrl;
 }
 
 export function upsertItem(
@@ -60,7 +81,9 @@ export function upsertItem(
   const applyAction =
     window?.applyPhone && !window.applyUrl
       ? `Apply for ${program.name} by phone at ${window.applyPhone}`
-      : `Apply for ${program.name}`;
+      : isTaxSeasonClaim(programId)
+        ? `Claim ${program.name} when you file your tax return – not an application you submit today`
+        : `Apply for ${program.name}`;
   const action =
     actionOverride ??
     (status === "done"
@@ -75,7 +98,7 @@ export function upsertItem(
   if (existing) {
     existing.status = status;
     existing.action = action;
-    existing.link = applyLink(programId);
+    existing.link = applyLink(programId, session);
     existing.deadlineLabel = deadlineLabel;
     existing.deadlineDate = deadlineDate;
     return;
@@ -86,7 +109,7 @@ export function upsertItem(
     programName: program.name,
     category: program.category,
     action,
-    link: applyLink(programId),
+    link: applyLink(programId, session),
     deadlineLabel,
     deadlineDate,
     status,
@@ -156,6 +179,16 @@ export function docsSavingsTable(session: SessionState): DocSavingsRow[] {
     .sort((a, b) => b.annualUsd - a.annualUsd || a.label.localeCompare(b.label));
 }
 
+/** Amount-first chat lines, space-padded so the $ column lines up. */
+export function formatDocsUnlockLines(docs: DocSavingsRow[]): string[] {
+  const amounts = docs.map((d) => `${formatUsd(d.annualUsd)}/yr`);
+  const width = Math.max(0, ...amounts.map((a) => a.length));
+  return docs.map((d, i) => {
+    const amt = amounts[i]!.padStart(width, " ");
+    return `• ${amt}  for ${d.label}`;
+  });
+}
+
 /** Unique open-program annual total (not a sum of per-doc rows). */
 export function openProgramsAnnualUsd(session: SessionState): number {
   let total = 0;
@@ -194,4 +227,46 @@ export function openTodos(session: SessionState): NextStepsItem[] {
     if (da.score !== db.score) return da.score - db.score;
     return a.programName.localeCompare(b.programName);
   });
+}
+
+/** Abbreviated chat / tree summary before the Application Guide PDF. */
+export function formatReportSummary(session: SessionState): string {
+  const total = openProgramsAnnualUsd(session);
+  const totalLabel = formatUsd(total);
+  const docs = docsSavingsTable(session);
+  const todos = openTodos(session);
+
+  const lines = [
+    "You're through the list.",
+    "",
+    `You may qualify for a total of ~${totalLabel} this year (estimates only).`,
+  ];
+
+  if (docs.length > 0) {
+    lines.push("", "Documents that unlock aid up to:");
+    lines.push(...formatDocsUnlockLines(docs));
+  }
+
+  if (todos.length > 0) {
+    const applyNow = todos.filter((item) => !isTaxSeasonClaim(item.programId));
+    const taxSeason = todos.filter((item) => isTaxSeasonClaim(item.programId));
+    if (applyNow.length > 0) {
+      lines.push("", "Apply now:");
+      for (const item of applyNow) {
+        lines.push(`• ${item.programName}`);
+      }
+    }
+    if (taxSeason.length > 0) {
+      lines.push(
+        "",
+        "For your tax preparer (boxed section in the PDF – do not apply now):",
+      );
+      for (const item of taxSeason) {
+        lines.push(`• ${item.programName}`);
+      }
+    }
+  }
+
+  lines.push("", "Your Application Guide PDF coming next ↓");
+  return lines.join("\n");
 }

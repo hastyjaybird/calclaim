@@ -6,6 +6,10 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "dev:web": "./scripts/dev-web.sh ensure",
+    "dev:web:status": "./scripts/dev-web.sh status",
+    "dev:web:stop": "./scripts/dev-web.sh stop",
+    "dev:web:restart": "./scripts/dev-web.sh restart",
     "start": "tsx src/index.ts",
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
@@ -24,6 +28,7 @@
     "pdfkit": "^0.16.0",
     "pngjs": "^7.0.0",
     "qrcode": "^1.5.4",
+    "stripe": "^22.5.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {

@@ -9,13 +9,14 @@
 
 1. **Banner** – CalClaim + one-line demo framing  
 2. **People reached** – QR scans + shared-link clicks (`/go/:campaign`)  
-3. **Programs accessed** – clicks from chat → official apply sites via `/r/:programId`  
-4. **Follow-throughs** – “Add to My Application Guide” taps  
-5. **Est. aid unlocked** – sum of library `estAnnualUsd` × follow-throughs  
-6. **Map** – QR placement pins + coarse city-level IP (never street address)  
-7. **Community partners leaderboard** – orgs ranked by people reached via their unique QR; #1 gets a subtle trophy; each row links to a partner stats slide  
-8. **Charts** – users/day and cumulative people reached  
-9. **Program table** – opens, follow-throughs, estimated $  
+3. **How it spreads** – organization QR / event codes vs friend-to-friend shares (anonymous per-person links); people who shared, friend-link clicks, clicks per sharer  
+4. **Programs accessed** – clicks from chat → official apply sites via `/r/:programId`  
+5. **Follow-throughs** – “Add to My Application Guide” taps  
+6. **Est. aid unlocked** – sum of library `estAnnualUsd` × follow-throughs  
+7. **Map** – QR placement pins + coarse city-level IP (never street address)  
+8. **Community partners leaderboard** – orgs ranked by people reached via their unique QR; #1 gets a subtle trophy; each row links to a partner stats slide  
+9. **Charts** – users/day and cumulative people reached  
+10. **Program table** – opens, follow-throughs, estimated $  
 
 Pipeline fall-off (CX tree funnel) lives behind [developer login](developer-library-watch.md).
 
@@ -54,6 +55,7 @@ Demo partners live in [`library/partners.json`](../library/partners.json) (linke
 | Route | Event | Then |
 |---|---|---|
 | `GET /go/:campaignId` | `awareness` (qr or link) | 302 → `t.me/<bot>?start=<campaignId>` |
+| Help / finish-line **Share** | `share_out` + unique `sl_` / `sq_` campaign | Friend gets `/go/sl_…` or `/go/sq_…` |
 | `GET /r/:programId` | `program_open` | 302 → official `applyUrl` |
 | Telegram `/start <payload>` | `bot_start` + session `campaignId` | opt-in flow |
 | Offer “Add to My Application Guide” | `follow_through` (with session campaign) | next-steps PDF |

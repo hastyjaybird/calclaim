@@ -6,6 +6,30 @@
 
 export type ImmigrationAnswer = "eligible" | "ineligible" | "declined";
 
+/** Program fields the immigration gate reads. */
+export type ImmigrationGatedProgram = {
+  requiresCitizenOrEligibleImmigrant?: boolean;
+  requiresIneligibleImmigrantStatus?: boolean;
+};
+
+/**
+ * Citizen-gated programs (CalFresh, SSI, …) unlock only on Yes.
+ * Non-citizen programs (CAPI, CFAP) unlock on No *or* Prefer not to say –
+ * decline shows those offerings without treating the household as ineligible.
+ */
+export function passesImmigrationGate(
+  program: ImmigrationGatedProgram,
+  status: ImmigrationAnswer | null,
+): boolean {
+  if (program.requiresCitizenOrEligibleImmigrant) {
+    return status === "eligible";
+  }
+  if (program.requiresIneligibleImmigrantStatus) {
+    return status === "ineligible" || status === "declined";
+  }
+  return true;
+}
+
 const answers = new Map<number, ImmigrationAnswer>();
 /** Users currently on the immigration-status prompt – text replies are not logged. */
 const awaitingPrompt = new Set<number>();

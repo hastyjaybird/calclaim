@@ -1,3 +1,4 @@
+import { countyFromZip, parseZipCode } from "../library/geo.js";
 import type { Program } from "../library/types.js";
 import {
   hasDisasterDb,
@@ -90,4 +91,37 @@ export function daysUntilOpen(
   const ms =
     Date.parse(`${first}T12:00:00Z`) - Date.parse(`${today}T12:00:00Z`);
   return Math.max(0, Math.round(ms / (24 * 60 * 60 * 1000)));
+}
+
+/**
+ * Whether a ZIP is inside any listed disaster area. ZIP-scoped windows match
+ * only listed ZIPs; otherwise county-of-ZIP is enough. Work and home ZIPs both
+ * count – callers should not treat a match as proof of home county for CMSP.
+ */
+export function zipMatchesDisasterWindows(
+  zip: string,
+  windows: DisasterWindow[],
+): boolean {
+  const normalized = parseZipCode(zip);
+  if (!normalized || !windows.length) return false;
+  const county = countyFromZip(normalized);
+  for (const window of windows) {
+    if (window.zips?.length) {
+      if (window.zips.includes(normalized)) return true;
+      continue;
+    }
+    if (
+      county &&
+      window.counties.some(
+        (c) => c.trim().toLowerCase() === county.trim().toLowerCase(),
+      )
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function zipInOfferableDisasterArea(zip: string): boolean {
+  return zipMatchesDisasterWindows(zip, offerableDisasterWindows());
 }

@@ -14,6 +14,8 @@ import {
   buildPartnerLeaderboard,
   impactStatsMode,
   buildPartnerStats,
+  buildPartnerEventLeaderboard,
+  buildPartnerEventStats,
 } from "../analytics/stats.js";
 import type { AppConfig } from "../config.js";
 import { campaignLandingUrl, getBotUsername, ROOT } from "../config.js";
@@ -24,6 +26,14 @@ import {
   type AvailabilityContext,
   type RequirementsPatch,
 } from "../library/requirements.js";
+import { resolveApplyUrlForTerritory } from "../library/utilityTerritory.js";
+import { simulateTreeReview } from "../dev/treeReview.js";
+import {
+  buildTreeChart,
+  saveProgramBranchOrder,
+  type ChartBranch,
+} from "../dev/treeChart.js";
+import { buildUtilityTree } from "../dev/utilityTree.js";
 import { renderShareQrPng } from "../bot/share.js";
 import {
   getReportPdf,
@@ -31,6 +41,8 @@ import {
   reportDownloadUrl,
 } from "../nextsteps/reportLinks.js";
 import {
+  ingestPartnerLandingFeedback,
+  insertTreeFeedbackTodo,
   listFeedbackTodos,
   setFeedbackTodoStatus,
   type FeedbackTodoStatus,
@@ -54,6 +66,15 @@ import {
   listSignedUpPartners,
   RESERVED_PARTNER_SLUGS,
 } from "../partners/db.js";
+import {
+  createPartnerEvent,
+  getPartnerEventBySlug,
+} from "../partners/events.js";
+import {
+  issuePartnerOwnerToken,
+  verifyPartnerEditToken,
+  verifyPartnerOwnerToken,
+} from "../partners/editToken.js";
 import { readPartnerSignupMultipart } from "../partners/logoUpload.js";
 import {
   parsePartnerProfileUpdate,
@@ -74,6 +95,7 @@ import {
   verifyCaptcha,
   verifyDeveloperPassword,
 } from "./devAuth.js";
+import { handleDonateRequest } from "../donate/http.js";
 
 const PUBLIC_DIR = path.join(ROOT, "public");
 
@@ -147,6 +169,30 @@ function developerNoIndexHeaders(): Record<string, string> {
   };
 }
 
+function readPartnerOwnerToken(
+  req: http.IncomingMessage,
+  body?: { ownerToken?: unknown },
+): string {
+  const header = req.headers["x-partner-owner"];
+  if (typeof header === "string" && header.trim()) return header.trim();
+  if (Array.isArray(header) && header[0]?.trim()) return header[0].trim();
+  if (typeof body?.ownerToken === "string") return body.ownerToken.trim();
+  return "";
+}
+
+function partnerOwnerAuthorized(
+  secret: string,
+  partnerId: string,
+  slug: string,
+  token: string,
+): boolean {
+  if (!token) return false;
+  return (
+    verifyPartnerOwnerToken(secret, partnerId, slug, token) ||
+    verifyPartnerEditToken(secret, partnerId, slug, token)
+  );
+}
+
 /** Public pages may be served under /es/... or /zh/... ; developer pages are English-only. */
 function stripPublicLangPrefix(urlPath: string): { lang: "es" | "zh" | null; path: string } {
   const m = urlPath.match(/^\/(es|zh)(?=\/|$)/);
@@ -163,6 +209,16 @@ function serveStatic(
   let rel = urlPath;
   if (rel === "/" || rel === "/impact" || rel === "/impact/") rel = "/impact/index.html";
   if (rel === "/dev" || rel === "/dev/") rel = "/dev/index.html";
+  if (rel === "/dev/tree" || rel === "/dev/tree/") rel = "/dev/tree/index.html";
+  if (rel === "/dev/tree/chart" || rel === "/dev/tree/chart/") {
+    rel = "/dev/tree/chart/index.html";
+  }
+  if (rel === "/dev/tree/flowchart" || rel === "/dev/tree/flowchart/") {
+    rel = "/dev/tree/flowchart/index.html";
+  }
+  if (rel === "/dev/tree/utilities" || rel === "/dev/tree/utilities/") {
+    rel = "/dev/tree/utilities/index.html";
+  }
   // Partner deck template: /partners and /partners/:slug → partners/index.html
   // Signup / verify forms live at /partners/signup and /partners/verify
   if (rel === "/partners/signup" || rel === "/partners/signup/") {
@@ -171,7 +227,9 @@ function serveStatic(
     rel = "/partners/verify/index.html";
   } else if (rel === "/partners" || rel === "/partners/") {
     rel = "/partners/index.html";
-  } else if (/^\/partners\/[A-Za-z0-9_-]+\/?$/.test(rel)) {
+  } else if (
+    /^\/partners\/[A-Za-z0-9_-]+(\/events\/[A-Za-z0-9_-]+)?\/?$/.test(rel)
+  ) {
     rel = "/partners/index.html";
   }
   const safe = path.normalize(rel).replace(/^(\.\.[/\\])+/, "");
@@ -293,11 +351,17 @@ async function handleDevAuthApi(
   }
 
   if (pathname === "/api/dev/session" && req.method === "GET") {
-    const ok = isDeveloperAuthed(req, config.developerSessionSecret);
+    const ok =
+      !config.developerAuthRequired ||
+      isDeveloperAuthed(req, config.developerSessionSecret);
     send(
       res,
       200,
-      JSON.stringify({ authenticated: ok, policy: DEVELOPER_ACCESS_POLICY }),
+      JSON.stringify({
+        authenticated: ok,
+        authRequired: config.developerAuthRequired,
+        policy: DEVELOPER_ACCESS_POLICY,
+      }),
       "application/json; charset=utf-8",
       noIndex,
     );
@@ -313,6 +377,7 @@ function requireDeveloperAuth(
   config: AppConfig,
   pathname: string,
 ): boolean {
+  if (!config.developerAuthRequired) return true;
   if (isDeveloperAuthed(req, config.developerSessionSecret)) return true;
 
   const noIndex = developerNoIndexHeaders();
@@ -492,6 +557,86 @@ async function handleDevApi(
     return true;
   }
 
+  if (pathname === "/api/dev/tree" && req.method === "GET") {
+    send(
+      res,
+      200,
+      JSON.stringify(await simulateTreeReview([])),
+      "application/json; charset=utf-8",
+      noIndex,
+    );
+    return true;
+  }
+
+  if (pathname === "/api/dev/tree" && req.method === "POST") {
+    try {
+      const body = (await readJsonBody(req, 32_768)) as { actions?: unknown };
+      const actions = Array.isArray(body.actions)
+        ? body.actions.map((a) => String(a))
+        : [];
+      send(
+        res,
+        200,
+        JSON.stringify(await simulateTreeReview(actions)),
+        "application/json; charset=utf-8",
+        noIndex,
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      send(
+        res,
+        400,
+        JSON.stringify({ error: message }),
+        "application/json; charset=utf-8",
+        noIndex,
+      );
+    }
+    return true;
+  }
+
+  if (pathname === "/api/dev/tree/chart" && req.method === "GET") {
+    send(
+      res,
+      200,
+      JSON.stringify(buildTreeChart()),
+      "application/json; charset=utf-8",
+      noIndex,
+    );
+    return true;
+  }
+
+  if (pathname === "/api/dev/tree/utilities" && req.method === "GET") {
+    send(
+      res,
+      200,
+      JSON.stringify(buildUtilityTree()),
+      "application/json; charset=utf-8",
+      noIndex,
+    );
+    return true;
+  }
+
+  if (pathname === "/api/dev/tree/chart/order" && req.method === "PUT") {
+    try {
+      const body = (await readJsonBody(req, 32_768)) as {
+        branch?: unknown;
+        order?: unknown;
+      };
+      const branch = body.branch === "no" ? "no" : body.branch === "yes" ? "yes" : null;
+      if (!branch) throw new Error('branch must be "yes" or "no"');
+      if (!Array.isArray(body.order)) throw new Error("order must be an array of program ids");
+      const chart = saveProgramBranchOrder(
+        branch as ChartBranch,
+        body.order.map((id) => String(id)),
+      );
+      send(res, 200, JSON.stringify(chart), "application/json; charset=utf-8", noIndex);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      send(res, 400, JSON.stringify({ error: message }), "application/json; charset=utf-8", noIndex);
+    }
+    return true;
+  }
+
   if (pathname === "/api/dev/program-matrix" && req.method === "GET") {
     send(
       res,
@@ -659,16 +804,84 @@ async function handleDevApi(
     const url = new URL(req.url ?? "/", `http://${host}`);
     const statusParam = url.searchParams.get("status") ?? "open";
     const status =
-      statusParam === "all" || statusParam === "open" || statusParam === "done"
+      statusParam === "all" ||
+      statusParam === "open" ||
+      statusParam === "done" ||
+      statusParam === "disqualified"
         ? statusParam
         : "open";
+    const sourceParam = url.searchParams.get("source");
+    const todos = listFeedbackTodos({ status, limit: 200 }).filter((t) =>
+      sourceParam ? t.source === sourceParam : true,
+    );
     send(
       res,
       200,
-      JSON.stringify({ todos: listFeedbackTodos({ status, limit: 200 }) }),
+      JSON.stringify({ todos }),
       "application/json; charset=utf-8",
       noIndex,
     );
+    return true;
+  }
+
+  if (pathname === "/api/dev/feedback-todos" && req.method === "POST") {
+    try {
+      const body = (await readJsonBody(req, 16_384)) as {
+        text?: unknown;
+        actions?: unknown;
+        step?: unknown;
+        screenTitle?: unknown;
+        whyThisScreen?: unknown;
+        source?: unknown;
+      };
+      if (body.source != null && body.source !== "tree") {
+        send(
+          res,
+          400,
+          JSON.stringify({ error: "Only source=tree is accepted from this endpoint" }),
+          "application/json; charset=utf-8",
+          noIndex,
+        );
+        return true;
+      }
+      const text = typeof body.text === "string" ? body.text.trim() : "";
+      if (!text) {
+        send(
+          res,
+          400,
+          JSON.stringify({ error: "text is required" }),
+          "application/json; charset=utf-8",
+          noIndex,
+        );
+        return true;
+      }
+      if (text.length > 4000) {
+        send(
+          res,
+          400,
+          JSON.stringify({ error: "text must be 4000 characters or fewer" }),
+          "application/json; charset=utf-8",
+          noIndex,
+        );
+        return true;
+      }
+      const actions = Array.isArray(body.actions)
+        ? body.actions.map((a) => String(a)).slice(0, 200)
+        : [];
+      const todo = insertTreeFeedbackTodo({
+        text,
+        actions,
+        step: typeof body.step === "string" ? body.step : "tree_review",
+        screenTitle:
+          typeof body.screenTitle === "string" ? body.screenTitle : "Message tree",
+        whyThisScreen:
+          typeof body.whyThisScreen === "string" ? body.whyThisScreen : undefined,
+      });
+      send(res, 201, JSON.stringify({ todo }), "application/json; charset=utf-8", noIndex);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      send(res, 400, JSON.stringify({ error: message }), "application/json; charset=utf-8", noIndex);
+    }
     return true;
   }
 
@@ -676,12 +889,12 @@ async function handleDevApi(
   if (feedbackMatch && req.method === "PATCH") {
     try {
       const body = (await readJsonBody(req)) as { status?: string };
-      const allowed: FeedbackTodoStatus[] = ["open", "done"];
+      const allowed: FeedbackTodoStatus[] = ["open", "done", "disqualified"];
       if (!body.status || !allowed.includes(body.status as FeedbackTodoStatus)) {
         send(
           res,
           400,
-          JSON.stringify({ error: "status must be open|done" }),
+          JSON.stringify({ error: "status must be open|done|disqualified" }),
           "application/json; charset=utf-8",
           noIndex,
         );
@@ -1005,6 +1218,10 @@ async function handleApplyRedirect(
     return;
   }
 
+  const url = new URL(req.url ?? "/", "http://localhost");
+  const territory = url.searchParams.get("t");
+  const applyUrl = resolveApplyUrlForTerritory(program, territory);
+
   const ip = clientIp(
     { get: (n) => {
       const v = req.headers[n];
@@ -1023,7 +1240,7 @@ async function handleApplyRedirect(
     label: geo.label,
   });
 
-  redirect(res, program.applyUrl);
+  redirect(res, applyUrl);
 }
 
 export type RequestHandler = (
@@ -1040,6 +1257,10 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
 
       if (pathname === "/health") {
         send(res, 200, "ok", "text/plain; charset=utf-8");
+        return;
+      }
+
+      if (await handleDonateRequest(req, res, config, pathname)) {
         return;
       }
 
@@ -1225,6 +1446,257 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
         const rest = pathname.slice("/api/partners/".length);
         const parts = rest.split("/").filter(Boolean);
         const slug = decodeURIComponent(parts[0] ?? "");
+        if (parts[1] === "login") {
+          if (req.method !== "POST") {
+            send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
+            return;
+          }
+          try {
+            const signed = getSignedUpPartnerBySlug(slug);
+            if (!signed) {
+              send(
+                res,
+                403,
+                JSON.stringify({ error: "login_unavailable" }),
+                "application/json; charset=utf-8",
+              );
+              return;
+            }
+            const body = (await readJsonBody(req, 4096)) as {
+              partnerId?: unknown;
+              editToken?: unknown;
+              ownerToken?: unknown;
+            };
+            const partnerId =
+              typeof body.partnerId === "string" ? body.partnerId.trim() : "";
+            const editToken =
+              typeof body.editToken === "string" ? body.editToken.trim() : "";
+            const existingOwner = readPartnerOwnerToken(req, body);
+            const idOk =
+              partnerId && partnerId.toLowerCase() === signed.id.toLowerCase();
+            const tokenOk = partnerOwnerAuthorized(
+              config.developerSessionSecret,
+              signed.id,
+              signed.slug,
+              editToken || existingOwner,
+            );
+            if (!idOk && !tokenOk) {
+              send(
+                res,
+                403,
+                JSON.stringify({
+                  error: partnerId ? "partner_id_mismatch" : "unauthorized",
+                }),
+                "application/json; charset=utf-8",
+              );
+              return;
+            }
+            const ownerToken = issuePartnerOwnerToken(
+              config.developerSessionSecret,
+              signed.id,
+              signed.slug,
+            );
+            send(
+              res,
+              200,
+              JSON.stringify({
+                ok: true,
+                ownerToken,
+                partnerId: signed.id,
+                slug: signed.slug,
+                emailVerified: Boolean(signed.emailVerifiedAt),
+              }),
+              "application/json; charset=utf-8",
+            );
+          } catch {
+            send(
+              res,
+              400,
+              JSON.stringify({ error: "bad_request" }),
+              "application/json; charset=utf-8",
+            );
+          }
+          return;
+        }
+        if (parts[1] === "events") {
+          const eventSlug = decodeURIComponent(parts[2] ?? "");
+          const signed = getSignedUpPartnerBySlug(slug);
+          if (!signed) {
+            send(
+              res,
+              404,
+              JSON.stringify({ error: "not_found" }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          if (parts[2] && parts[3] === "banner") {
+            if (req.method !== "GET") {
+              send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
+              return;
+            }
+            const event = getPartnerEventBySlug(signed.slug, eventSlug);
+            if (!event) {
+              send(res, 404, "Event not found", "text/plain; charset=utf-8");
+              return;
+            }
+            const partner = getPartnerBySlug(signed.slug);
+            const target = campaignLandingUrl(
+              config.publicBaseUrl,
+              event.campaignId,
+            );
+            const pdf = await renderPartnerBoothBannerPdf({
+              partnerName: partner?.name ?? signed.name,
+              partnerId: signed.id,
+              qrTargetUrl: target,
+              partnerLogoPath: partner?.logo || signed.logo || null,
+              eventName: event.name,
+            });
+            const safeName = event.slug.replace(/[^a-z0-9_-]+/gi, "-");
+            send(res, 200, pdf, "application/pdf", {
+              "Cache-Control": "private, max-age=300",
+              "Content-Disposition": `attachment; filename="calclaim-event-banner-${safeName}.pdf"`,
+            });
+            return;
+          }
+          if (!parts[2]) {
+            if (req.method === "GET") {
+              const token = readPartnerOwnerToken(req);
+              if (
+                !partnerOwnerAuthorized(
+                  config.developerSessionSecret,
+                  signed.id,
+                  signed.slug,
+                  token,
+                )
+              ) {
+                send(
+                  res,
+                  401,
+                  JSON.stringify({ error: "unauthorized" }),
+                  "application/json; charset=utf-8",
+                );
+                return;
+              }
+              const board = buildPartnerEventLeaderboard(signed.slug);
+              send(
+                res,
+                200,
+                JSON.stringify({
+                  ok: true,
+                  events: board ?? [],
+                }),
+                "application/json; charset=utf-8",
+              );
+              return;
+            }
+            if (req.method === "POST") {
+              try {
+                const body = (await readJsonBody(req, 8192)) as {
+                  name?: unknown;
+                  ownerToken?: unknown;
+                };
+                const token = readPartnerOwnerToken(req, body);
+                if (
+                  !partnerOwnerAuthorized(
+                    config.developerSessionSecret,
+                    signed.id,
+                    signed.slug,
+                    token,
+                  )
+                ) {
+                  send(
+                    res,
+                    401,
+                    JSON.stringify({ error: "unauthorized" }),
+                    "application/json; charset=utf-8",
+                  );
+                  return;
+                }
+                if (!signed.emailVerifiedAt) {
+                  send(
+                    res,
+                    403,
+                    JSON.stringify({ error: "unverified" }),
+                    "application/json; charset=utf-8",
+                  );
+                  return;
+                }
+                const name = typeof body.name === "string" ? body.name : "";
+                const created = createPartnerEvent({
+                  partnerId: signed.id,
+                  partnerSlug: signed.slug,
+                  name,
+                });
+                if ("error" in created) {
+                  send(
+                    res,
+                    400,
+                    JSON.stringify({ error: created.error }),
+                    "application/json; charset=utf-8",
+                  );
+                  return;
+                }
+                const board = buildPartnerEventLeaderboard(signed.slug);
+                send(
+                  res,
+                  200,
+                  JSON.stringify({
+                    ok: true,
+                    event: created,
+                    events: board ?? [],
+                    qrUrl: `/api/qr/partner/${encodeURIComponent(signed.slug)}/event/${encodeURIComponent(created.slug)}`,
+                    bannerUrl: `/api/partners/${encodeURIComponent(signed.slug)}/events/${encodeURIComponent(created.slug)}/banner`,
+                  }),
+                  "application/json; charset=utf-8",
+                );
+              } catch {
+                send(
+                  res,
+                  400,
+                  JSON.stringify({ error: "bad_request" }),
+                  "application/json; charset=utf-8",
+                );
+              }
+              return;
+            }
+            send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
+            return;
+          }
+          if (req.method !== "GET") {
+            send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
+            return;
+          }
+          const token = readPartnerOwnerToken(req);
+          if (
+            !partnerOwnerAuthorized(
+              config.developerSessionSecret,
+              signed.id,
+              signed.slug,
+              token,
+            )
+          ) {
+            send(
+              res,
+              401,
+              JSON.stringify({ error: "unauthorized" }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          const stats = buildPartnerEventStats(signed.slug, eventSlug);
+          if (!stats) {
+            send(
+              res,
+              404,
+              JSON.stringify({ error: "not_found" }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          send(res, 200, JSON.stringify(stats), "application/json; charset=utf-8");
+          return;
+        }
         if (parts[1] === "banner") {
           if (req.method !== "GET") {
             send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
@@ -1249,16 +1721,77 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
           });
           return;
         }
+        if (parts[1] === "feedback") {
+          if (req.method !== "POST") {
+            send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
+            return;
+          }
+          try {
+            const partner = getPartnerBySlug(slug);
+            if (!partner) {
+              send(
+                res,
+                404,
+                JSON.stringify({ error: "Partner not found" }),
+                "application/json; charset=utf-8",
+              );
+              return;
+            }
+            const body = (await readJsonBody(req, 16_384)) as { text?: unknown };
+            const text = typeof body.text === "string" ? body.text.trim() : "";
+            if (!text) {
+              send(
+                res,
+                400,
+                JSON.stringify({ error: "empty" }),
+                "application/json; charset=utf-8",
+              );
+              return;
+            }
+            if (text.length > 4000) {
+              send(
+                res,
+                400,
+                JSON.stringify({ error: "too_long" }),
+                "application/json; charset=utf-8",
+              );
+              return;
+            }
+            const result = await ingestPartnerLandingFeedback({
+              partnerSlug: partner.slug,
+              campaignId: partner.campaignId,
+              text,
+            });
+            send(
+              res,
+              200,
+              JSON.stringify({
+                ok: true,
+                ticketsCreated: result.tickets.length,
+                feedbackMessages: result.feedbackMessages,
+                feedbackTickets: result.feedbackTickets,
+              }),
+              "application/json; charset=utf-8",
+            );
+          } catch {
+            send(
+              res,
+              400,
+              JSON.stringify({ error: "bad_request" }),
+              "application/json; charset=utf-8",
+            );
+          }
+          return;
+        }
         if (parts[1] === "profile") {
           if (req.method !== "PATCH" && req.method !== "POST") {
             send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
             return;
           }
           try {
-            const asDeveloper = isDeveloperAuthed(
-              req,
-              config.developerSessionSecret,
-            );
+            const asDeveloper =
+              !config.developerAuthRequired ||
+              isDeveloperAuthed(req, config.developerSessionSecret);
             const existingPartner = getSignedUpPartnerBySlug(slug);
             const contentType = String(req.headers["content-type"] || "");
             let name = "";
@@ -1445,15 +1978,30 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
       }
 
       if (pathname.startsWith("/api/qr/partner/")) {
-        const slug = decodeURIComponent(
-          pathname.slice("/api/qr/partner/".length).split("/")[0] ?? "",
-        );
+        const qrParts = pathname
+          .slice("/api/qr/partner/".length)
+          .split("/")
+          .filter(Boolean)
+          .map((p) => decodeURIComponent(p));
+        const slug = qrParts[0] ?? "";
         const partner = getPartnerBySlug(slug);
         if (!partner) {
           send(res, 404, "Partner not found", "text/plain; charset=utf-8");
           return;
         }
-        const target = campaignLandingUrl(config.publicBaseUrl, partner.campaignId);
+        let campaignId = partner.campaignId;
+        if (qrParts[1] === "event" && qrParts[2]) {
+          const event = getPartnerEventBySlug(partner.slug, qrParts[2]);
+          if (!event) {
+            send(res, 404, "Event not found", "text/plain; charset=utf-8");
+            return;
+          }
+          campaignId = event.campaignId;
+        } else if (qrParts[1]) {
+          send(res, 404, "Not found", "text/plain; charset=utf-8");
+          return;
+        }
+        const target = campaignLandingUrl(config.publicBaseUrl, campaignId);
         const png = await renderShareQrPng(target);
         send(res, 200, png, "image/png", {
           "Cache-Control": "public, max-age=3600",
@@ -1576,6 +2124,19 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
       if (pathname === "/dev" || pathname.startsWith("/dev/")) {
         const rel =
           pathname === "/dev" || pathname === "/dev/" ? "/dev/index.html" : pathname;
+        // Local: skip login page entirely; production still serves it.
+        if (
+          !config.developerAuthRequired &&
+          (rel === "/dev/login.html" || pathname === "/dev/login.html")
+        ) {
+          const nextRaw = url.searchParams.get("next") || "/dev";
+          const next =
+            nextRaw.startsWith("/dev") && !nextRaw.startsWith("//")
+              ? nextRaw
+              : "/dev";
+          redirect(res, next, developerNoIndexHeaders());
+          return;
+        }
         if (DEV_PUBLIC_FILES.has(rel)) {
           serveStatic(res, rel, developerNoIndexHeaders());
           return;
@@ -1630,7 +2191,8 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
         pathname === "/impact" ||
         pathname.startsWith("/impact/") ||
         pathname.startsWith("/brand/") ||
-        pathname.startsWith("/i18n/")
+        pathname.startsWith("/i18n/") ||
+        pathname.startsWith("/donate/")
       ) {
         serveStatic(res, pathname === "/" ? "/impact" : pathname);
         return;
@@ -1664,9 +2226,13 @@ export function startWebServer(
     console.log(`  Impact dashboard: ${config.publicBaseUrl}/impact`);
     console.log(`  Partner leaderboard: ${config.publicBaseUrl}/impact#partners`);
     console.log(`  Partner signup: ${config.publicBaseUrl}/partners/signup`);
-    console.log(`  Developer (password + CAPTCHA): ${config.publicBaseUrl}/dev`);
+    console.log(
+      config.developerAuthRequired
+        ? `  Developer (password + CAPTCHA): ${config.publicBaseUrl}/dev`
+        : `  Developer (open locally): ${config.publicBaseUrl}/dev`,
+    );
     console.log(`  Sample QR landing: ${config.publicBaseUrl}/go/qr_oakland_library`);
-    if (!config.developerPassword) {
+    if (config.developerAuthRequired && !config.developerPassword) {
       console.warn("  DEVELOPER_PASSWORD is unset – developer login will fail until set.");
     }
   });

@@ -117,6 +117,12 @@ export const ELIGIBILITY_TAGS: readonly VocabItem[] = [
     group: "Residency",
   },
   {
+    id: "lives_at_service_address",
+    label: "Lives at the address the discount or service applies to",
+    short: "Lives at service address",
+    group: "Residency",
+  },
+  {
     id: "income_limit",
     label: "Household income under a program limit",
     short: "Income limit",
@@ -232,8 +238,28 @@ export const ELIGIBILITY_TAGS: readonly VocabItem[] = [
   },
   {
     id: "account_in_your_name",
-    label: "Utility account in the applicant's name",
+    label: "Bill or account in the applicant's name",
     short: "Account in your name",
+    group: "Utility",
+  },
+  {
+    id: "no_shared_meter",
+    label:
+      "Does not share a meter with another household (a unit with its own submeter still qualifies)",
+    short: "Own meter",
+    group: "Utility",
+  },
+  {
+    id: "not_master_metered",
+    label:
+      "Not on a master-metered account (submetered tenants billed by a landlord are also out)",
+    short: "Not master-metered",
+    group: "Utility",
+  },
+  {
+    id: "usage_under_baseline_cap",
+    label: "Monthly electric usage under the program baseline cap",
+    short: "Under usage cap",
     group: "Utility",
   },
   {
@@ -262,8 +288,8 @@ export const ELIGIBILITY_TAGS: readonly VocabItem[] = [
   },
   {
     id: "renter_landlord_permission",
-    label: "Landlord permission needed if renting",
-    short: "Landlord OK",
+    label: "Owner sign-off needed if renting",
+    short: "Owner sign-off",
     group: "Utility",
   },
   {
@@ -339,10 +365,112 @@ export const ELIGIBILITY_TAGS: readonly VocabItem[] = [
     group: "Tax",
   },
   {
+    id: "not_tax_dependent",
+    label: "Not claimed as a dependent on another person's tax return (except spouse)",
+    short: "Not a tax dependent",
+    group: "Tax",
+  },
+  {
     id: "qualifies_for_caleitc",
     label: "Must also qualify for CalEITC",
     short: "CalEITC first",
     group: "Tax",
+  },
+  {
+    id: "one_per_person",
+    label: "One benefit per person for the life of the program",
+    short: "One per person",
+    group: "Household",
+  },
+  {
+    id: "buying_ev_this_year",
+    label: "Planning to buy an EV or hydrogen vehicle this year",
+    short: "Buying EV this year",
+    group: "Vehicle",
+  },
+  {
+    id: "first_time_zev",
+    label: "First-time zero-emission vehicle buyer or lessee",
+    short: "First-time ZEV",
+    group: "Vehicle",
+  },
+  {
+    id: "participating_oem",
+    label: "Must buy or lease through a participating manufacturer",
+    short: "Participating OEM",
+    group: "Vehicle",
+  },
+  {
+    id: "qualifying_zev",
+    label: "Battery-electric or hydrogen fuel-cell vehicle (not a plug-in hybrid)",
+    short: "BEV or FCEV",
+    group: "Vehicle",
+  },
+  {
+    id: "foster_youth_18_25",
+    label: "Former foster youth age 18–25 who was in care on/after 18",
+    short: "Foster youth 18–25",
+    group: "Household",
+  },
+  {
+    id: "school_age_child",
+    label: "School-age child in the household (Sun Bucks / CFAP path)",
+    short: "School-age child",
+    group: "Household",
+  },
+  {
+    id: "smart_device",
+    label: "Compatible Nest / smart thermostat or eligible EV charger",
+    short: "Smart device",
+    group: "Utility",
+  },
+  {
+    id: "fire_threat_district",
+    label: "Home in a designated fire-threat / high-risk outage area",
+    short: "Fire-threat district",
+    group: "Utility",
+  },
+  {
+    id: "scrap_vehicle",
+    label: "Must scrap or retire a qualifying older vehicle",
+    short: "Scrap vehicle",
+    group: "Vehicle",
+  },
+  {
+    id: "preowned_ev",
+    label: "Buying a qualifying pre-owned electric vehicle",
+    short: "Pre-owned EV",
+    group: "Vehicle",
+  },
+  {
+    id: "refugee_or_asylee",
+    label: "Refugee, asylee, or other RCA-eligible immigration status",
+    short: "Refugee / asylee",
+    group: "Status",
+  },
+  {
+    id: "rents_home",
+    label: "Pays rent for a California residence",
+    short: "Renter",
+    group: "Household",
+  },
+  {
+    id: "retirement_contribution",
+    label: "Contributes to a qualifying retirement plan (IRA / 401k)",
+    short: "Retirement contrib.",
+    group: "Tax",
+  },
+  {
+    id: "covered_ca_plan",
+    label: "Enrolled or enrolling in Covered California marketplace coverage",
+    short: "Covered CA plan",
+    group: "Status",
+  },
+  {
+    id: "work_credits_ssdi",
+    label: "Enough Social Security work credits for disability insurance",
+    short: "SSDI work credits",
+    group: "Age & disability",
   },
 ];
 
@@ -444,6 +572,57 @@ export const DOCUMENT_TAGS: readonly VocabItem[] = [
 const THIRD_PARTY_DOCS = new Set(
   DOCUMENT_TAGS.filter((d) => d.group === "Third party").map((d) => d.id),
 );
+
+/**
+ * Document alternatives: listing every member on a program means "bring any
+ * one of these," not all of them. Stored as flat ids in the JSON so editors
+ * can still tick individual boxes; the coverage grid and difficulty score
+ * collapse a full match into a single OR column / path.
+ */
+export interface DocumentOrGroup {
+  id: string;
+  members: readonly string[];
+  label: string;
+  short: string;
+}
+
+export const DOCUMENT_OR_GROUPS: readonly DocumentOrGroup[] = [
+  {
+    id: "award_or_income",
+    members: ["categoricalProof", "incomeProof"],
+    label:
+      "Award letter (Medi-Cal / CalFresh / SSI / CalWORKs / WIC) OR pay stubs / benefit letter",
+    short: "Award letter OR pay stubs",
+  },
+];
+
+export interface ResolvedDocuments {
+  /** Individual docs that are required on their own (not part of a matched OR). */
+  required: string[];
+  /** OR-group ids where every member is listed on the program. */
+  orGroups: string[];
+}
+
+/** Collapse full OR-group matches; leftover members stay as required singles. */
+export function resolveDocumentRequirements(
+  documents: readonly string[],
+): ResolvedDocuments {
+  const docs = documents.filter((d) => d !== "none");
+  const matchedGroups: string[] = [];
+  const consumed = new Set<string>();
+
+  for (const group of DOCUMENT_OR_GROUPS) {
+    if (group.members.every((m) => docs.includes(m))) {
+      matchedGroups.push(group.id);
+      for (const m of group.members) consumed.add(m);
+    }
+  }
+
+  return {
+    required: docs.filter((d) => !consumed.has(d)),
+    orGroups: matchedGroups,
+  };
+}
 
 /** Labels stay short because they render inside a table cell dropdown. */
 export const INTERVIEW_LEVELS: readonly { id: InterviewLevel; label: string; weight: number }[] = [
@@ -575,6 +754,22 @@ function requirementsFor(programId: string): ProgramRequirements {
   return { ...emptyRequirements(), ...(readFile().programs[programId] ?? {}) };
 }
 
+/** Bot / cron-safe read of one program's requirements row. */
+export function getProgramRequirements(programId: string): ProgramRequirements {
+  return requirementsFor(programId);
+}
+
+/** Offer-card line when a renter can apply but the owner must sign off. */
+export const OWNER_SIGN_OFF_IF_RENTING_LINE = "Owner sign-off if renting.";
+
+export function ownerSignOffIfRentingLine(programId: string): string | null {
+  return getProgramRequirements(programId).eligibility.includes(
+    "renter_landlord_permission",
+  )
+    ? OWNER_SIGN_OFF_IF_RENTING_LINE
+    : null;
+}
+
 /** Difficulty score for report ordering (bot-safe read of the requirements matrix). */
 export function programDifficulty(programId: string): DifficultyResult {
   const program = loadPrograms().find((p) => p.id === programId);
@@ -596,22 +791,18 @@ export function scoreDifficulty(
   program: Pick<Program, "formFillMinutes">,
   entry: ProgramRequirements,
 ): DifficultyResult {
-  const docs = entry.documents.filter((d) => d !== "none");
-  // Categorical award letter OR income docs are alternatives – score the harder
-  // of the two once, not both as required.
-  const hasCategorical = docs.includes("categoricalProof");
-  const hasIncome = docs.includes("incomeProof");
-  const scoredDocs = docs.filter((d) => {
-    if (hasCategorical && hasIncome && d === "incomeProof") return false;
-    return true;
-  });
-  const docPoints = scoredDocs.reduce((sum, d) => {
-    if (hasCategorical && hasIncome && d === "categoricalProof") {
-      // Award letter is third-party (2); pay stubs are first-party (1) – take max.
-      return sum + Math.max(THIRD_PARTY_DOCS.has("categoricalProof") ? 2 : 1, 1);
-    }
-    return sum + (THIRD_PARTY_DOCS.has(d) ? 2 : 1);
-  }, 0);
+  const resolved = resolveDocumentRequirements(entry.documents);
+  const pathCount = resolved.required.length + resolved.orGroups.length;
+  let docPoints = 0;
+  for (const d of resolved.required) {
+    docPoints += THIRD_PARTY_DOCS.has(d) ? 2 : 1;
+  }
+  for (const groupId of resolved.orGroups) {
+    const group = DOCUMENT_OR_GROUPS.find((g) => g.id === groupId);
+    if (!group) continue;
+    // Score the harder alternative once (award letter is third-party; pay stubs are not).
+    docPoints += Math.max(...group.members.map((m) => (THIRD_PARTY_DOCS.has(m) ? 2 : 1)));
+  }
   const interviewPoints =
     INTERVIEW_LEVELS.find((l) => l.id === entry.interview)?.weight ?? 0;
   const formPoints = (program.formFillMinutes ?? 0) / 15;
@@ -623,10 +814,9 @@ export function scoreDifficulty(
   const computed: DifficultyTier =
     score <= EASY_MAX ? "easy" : score <= MODERATE_MAX ? "moderate" : "hard";
 
-  const docCountLabel =
-    hasCategorical && hasIncome
-      ? `${scoredDocs.length} doc path(s) (award letter OR income) = ${docPoints}`
-      : `${scoredDocs.length} doc(s) = ${docPoints}`;
+  const docCountLabel = resolved.orGroups.length
+    ? `${pathCount} doc path(s) (incl. OR alternatives) = ${docPoints}`
+    : `${pathCount} doc(s) = ${docPoints}`;
 
   return {
     score,
@@ -822,6 +1012,8 @@ export interface ProgramMatrix {
   rows: MatrixRow[];
   summary: MatrixSummary;
   programIndex: { id: string; name: string; short: string }[];
+  /** Document alternatives collapsed in the coverage grid and difficulty score. */
+  documentOrGroups: readonly DocumentOrGroup[];
   vocab: {
     eligibility: readonly VocabItem[];
     documents: readonly VocabItem[];
@@ -932,6 +1124,7 @@ export function buildProgramMatrix(ctx: AvailabilityContext = {}): ProgramMatrix
       name: p.name,
       short: shortProgramName(p.name),
     })),
+    documentOrGroups: DOCUMENT_OR_GROUPS,
     vocab: {
       eligibility: ELIGIBILITY_TAGS,
       documents: DOCUMENT_TAGS,
@@ -950,6 +1143,22 @@ export function buildProgramMatrix(ctx: AvailabilityContext = {}): ProgramMatrix
 /** Statuses where someone could apply today. Everything else needs a look. */
 export function isOpenNow(status: AvailabilityStatus): boolean {
   return status === "open" || status === "window_open" || status === "deadline_soon";
+}
+
+/**
+ * Waitlisted / paused / enrollment-closed – held out of the offer tree.
+ * Users who qualify can opt in to be notified when these reopen.
+ */
+export function isHeldFromOffer(status: AvailabilityStatus): boolean {
+  return status === "paused" || status === "closed";
+}
+
+/** Availability for a library program (mtime-aware requirements + override). */
+export function programAvailability(
+  program: Pick<Program, "id" | "deadlines" | "requiresActiveDisasterWindow">,
+  ctx: AvailabilityContext = {},
+): Availability {
+  return computeAvailability(program, requirementsFor(program.id), ctx);
 }
 
 function uniqueFrom(value: unknown, allowed: Set<string>): string[] {

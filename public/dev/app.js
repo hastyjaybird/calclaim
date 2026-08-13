@@ -37,6 +37,20 @@ function formatWhen(iso) {
   }
 }
 
+/** Compact duration for dwell / time-to-finish (ms → display). */
+function formatDuration(ms) {
+  if (ms == null || !Number.isFinite(ms) || ms <= 0) return "–";
+  if (ms < 10_000) return `${(Math.round(ms / 100) / 10).toFixed(1)}s`;
+  const sec = Math.round(ms / 1000);
+  if (sec < 60) return `${sec}s`;
+  const m = Math.floor(sec / 60);
+  const r = sec % 60;
+  if (m < 60) return r ? `${m}m ${r}s` : `${m}m`;
+  const h = Math.floor(m / 60);
+  const mr = m % 60;
+  return mr ? `${h}h ${mr}m` : `${h}h`;
+}
+
 let pollTimer = null;
 
 function renderOverview(status) {
@@ -205,6 +219,8 @@ function feedbackSourceLabel(t) {
     return `voice${t.transcriptStatus ? ` · ${t.transcriptStatus}` : ""}`;
   }
   if (t.source === "contact") return "contact form";
+  if (t.source === "tree") return "message tree";
+  if (t.source === "partner") return "partner page";
   return "text";
 }
 
@@ -219,32 +235,106 @@ function feedbackWhoLabel(t) {
     }
     return "Web contact";
   }
+  if (t.source === "tree") {
+    try {
+      const snap = JSON.parse(t.sessionSnapshot || "{}");
+      if (snap.screenTitle) return snap.screenTitle;
+    } catch {
+      /* ignore */
+    }
+    return "Tree review";
+  }
+  if (t.source === "partner" || t.partnerSlug) {
+    const slug = t.partnerSlug || "partner";
+    const point =
+      t.groupId && Number.isFinite(t.pointIndex)
+        ? ` · point ${Number(t.pointIndex) + 1}`
+        : "";
+    return `${slug}${point}`;
+  }
   return `User ${t.telegramUserId}`;
+}
+
+function feedbackTreePath(t) {
+  if (t.source !== "tree") return null;
+  try {
+    const snap = JSON.parse(t.sessionSnapshot || "{}");
+    if (snap.treePath) return snap.treePath;
+    if (Array.isArray(snap.actions) && snap.actions.length) {
+      return `/dev/tree#a=${snap.actions.map((a) => encodeURIComponent(a)).join(",")}`;
+    }
+  } catch {
+    /* ignore */
+  }
+  return "/dev/tree";
+}
+
+function feedbackPartnerLink(t) {
+  if (!t.partnerSlug) return null;
+  return `/partners/${encodeURIComponent(t.partnerSlug)}`;
 }
 
 function renderFeedbackTodos(todos) {
   const root = el("feedback-list");
   if (!root) return;
   if (!todos.length) {
-    root.innerHTML = `<p class="empty">No feedback in this filter yet. Testers can text, send a voice note, or use the contact form.</p>`;
+    root.innerHTML = `<p class="empty">No feedback in this filter yet. Testers can text, send a voice note, use the contact form, or submit on a partner page. Tree review requests also land here.</p>`;
     return;
   }
   root.innerHTML = todos
     .map((t) => {
-      const actions =
-        t.status === "open"
-          ? `<button type="button" data-feedback-id="${t.id}" data-status="done">Mark done</button>`
-          : `<button type="button" data-feedback-id="${t.id}" data-status="open">Reopen</button>`;
+      const actions = [];
+      if (t.status === "open") {
+        actions.push(
+          `<button type="button" data-feedback-id="${t.id}" data-status="done">Mark done</button>`,
+        );
+        actions.push(
+          `<button type="button" data-feedback-id="${t.id}" data-status="disqualified">Disqualify as feedback</button>`,
+        );
+      } else if (t.status === "done") {
+        actions.push(
+          `<button type="button" data-feedback-id="${t.id}" data-status="open">Reopen</button>`,
+        );
+        actions.push(
+          `<button type="button" data-feedback-id="${t.id}" data-status="disqualified">Disqualify as feedback</button>`,
+        );
+      } else {
+        actions.push(
+          `<button type="button" data-feedback-id="${t.id}" data-status="open">Restore as open</button>`,
+        );
+      }
+      const treePath = feedbackTreePath(t);
+      const treeLink = treePath
+        ? `<a class="badge badge-source" href="${escapeHtml(treePath)}">Open tree location</a>`
+        : "";
+      const partnerHref = feedbackPartnerLink(t);
+      const partnerLink = partnerHref
+        ? `<a class="badge badge-source" href="${escapeHtml(partnerHref)}">Partner page</a>`
+        : "";
+      const statusBadge =
+        t.status === "disqualified"
+          ? `<span class="badge badge-cat">disqualified</span>`
+          : "";
+      const creditNote =
+        t.campaignId && t.status !== "disqualified"
+          ? `<span class="cat">Credits ${escapeHtml(t.partnerSlug || t.campaignId)}</span>`
+          : t.campaignId && t.status === "disqualified"
+            ? `<span class="cat">Removed from ${escapeHtml(t.partnerSlug || t.campaignId)} metrics</span>`
+            : "";
       return `<article class="finding" data-feedback="${t.id}">
         <div class="finding-head">
           <span class="badge badge-cat">${escapeHtml(feedbackSourceLabel(t))}</span>
           <span class="badge badge-source">${escapeHtml(t.step)}</span>
+          ${statusBadge}
+          ${treeLink}
+          ${partnerLink}
           <h3>${escapeHtml(feedbackWhoLabel(t))}</h3>
         </div>
         <p>${escapeHtml(t.text)}</p>
         <div class="finding-meta">
           <span class="cat">${escapeHtml(formatWhen(t.createdAt))}</span>
-          <div class="finding-actions">${actions}</div>
+          ${creditNote}
+          <div class="finding-actions">${actions.join("")}</div>
         </div>
       </article>`;
     })
@@ -493,6 +583,8 @@ const matrix = {
   rowsById: new Map(),
   labels: { eligibility: new Map(), documents: new Map(), programs: new Map() },
   shortLabels: { eligibility: new Map(), documents: new Map(), programs: new Map() },
+  orGroupsById: new Map(),
+  activeTab: "edit",
   rankStale: false,
 };
 
@@ -535,6 +627,24 @@ function indexMatrix(data) {
   matrix.shortLabels.eligibility = new Map(data.vocab.eligibility.map((v) => [v.id, v.short]));
   matrix.shortLabels.documents = new Map(data.vocab.documents.map((v) => [v.id, v.short]));
   matrix.shortLabels.programs = new Map(data.programIndex.map((p) => [p.id, p.short]));
+  matrix.orGroupsById = new Map((data.documentOrGroups ?? []).map((g) => [g.id, g]));
+}
+
+/** Collapse full OR-group matches the same way the server scores difficulty. */
+function resolveDocuments(ids) {
+  const docs = (ids ?? []).filter((d) => d !== "none");
+  const orGroups = [];
+  const consumed = new Set();
+  for (const group of matrix.orGroupsById.values()) {
+    if (group.members.every((m) => docs.includes(m))) {
+      orGroups.push(group.id);
+      for (const m of group.members) consumed.add(m);
+    }
+  }
+  return {
+    required: docs.filter((d) => !consumed.has(d)),
+    orGroups,
+  };
 }
 
 function chipsHtml(field, ids) {
@@ -543,28 +653,25 @@ function chipsHtml(field, ids) {
     return `<span class="chip chip-empty">${escapeHtml(MULTI_FIELDS[field].empty)}</span>`;
   }
 
-  // Documents: award letter and income proof are alternatives when both are listed.
   let displayIds = ids;
-  let orPrefix = null;
-  if (field === "documents" && ids.includes("categoricalProof") && ids.includes("incomeProof")) {
-    orPrefix = {
-      title:
-        "Award letter (Medi-Cal / CalFresh / SSI / CalWORKs / WIC) OR pay stubs / benefit letter",
-      short: "Award letter OR pay stubs",
-    };
-    displayIds = ids.filter((id) => id !== "categoricalProof" && id !== "incomeProof");
+  const orChips = [];
+  if (field === "documents") {
+    const resolved = resolveDocuments(ids);
+    displayIds = resolved.required;
+    for (const groupId of resolved.orGroups) {
+      const group = matrix.orGroupsById.get(groupId);
+      if (!group) continue;
+      orChips.push(
+        `<span class="chip chip-or" title="${escapeHtml(group.label)}">${escapeHtml(
+          group.short,
+        )}</span>`,
+      );
+    }
   }
 
-  const shown = displayIds.slice(0, orPrefix ? 3 : 4);
+  const shown = displayIds.slice(0, orChips.length ? 3 : 4);
   const rest = displayIds.length - shown.length;
-  const chips = [];
-  if (orPrefix) {
-    chips.push(
-      `<span class="chip chip-or" title="${escapeHtml(orPrefix.title)}">${escapeHtml(
-        orPrefix.short,
-      )}</span>`,
-    );
-  }
+  const chips = [...orChips];
   for (const id of shown) {
     chips.push(
       `<span class="chip" title="${escapeHtml(labelFor(vocabKey, id))}">${escapeHtml(
@@ -576,18 +683,16 @@ function chipsHtml(field, ids) {
   return chips.join("");
 }
 
-/** Flatten document labels for CSV/search – categorical + income become one OR line. */
+/** Flatten document labels for CSV/search – matched OR groups become one line. */
 function documentLabelsForExport(ids) {
   if (!ids.length) return [];
-  const hasOr = ids.includes("categoricalProof") && ids.includes("incomeProof");
+  const resolved = resolveDocuments(ids);
   const out = [];
-  if (hasOr) {
-    out.push(
-      "Award letter (Medi-Cal / CalFresh / SSI / CalWORKs / WIC) OR pay stubs / benefit letter",
-    );
+  for (const groupId of resolved.orGroups) {
+    const group = matrix.orGroupsById.get(groupId);
+    out.push(group?.label ?? groupId);
   }
-  for (const id of ids) {
-    if (hasOr && (id === "categoricalProof" || id === "incomeProof")) continue;
+  for (const id of resolved.required) {
     out.push(labelFor("documents", id));
   }
   return out;
@@ -851,6 +956,183 @@ function renderMatrix() {
   matrix.rankStale = false;
   el("btn-matrix-resort").disabled = true;
   renderMatrixSummary();
+  renderCoverageGrid();
+}
+
+function coverageColumns() {
+  const showElig = el("coverage-show-eligibility")?.checked !== false;
+  const showDocs = el("coverage-show-documents")?.checked !== false;
+  const showInterview = el("coverage-show-interview")?.checked !== false;
+  const rows = matrix.data.rows;
+  const cols = [];
+
+  if (showElig) {
+    const used = new Set();
+    for (const row of rows) {
+      for (const id of row.eligibility) used.add(id);
+    }
+    for (const item of matrix.data.vocab.eligibility) {
+      if (!used.has(item.id)) continue;
+      cols.push({
+        kind: "eligibility",
+        id: item.id,
+        short: item.short,
+        label: item.label,
+        group: "Eligibility",
+        or: false,
+      });
+    }
+  }
+
+  if (showDocs) {
+    const resolvedByProgram = new Map(
+      rows.map((row) => [row.id, resolveDocuments(row.documents)]),
+    );
+    const usedOr = new Set();
+    const usedDocs = new Set();
+    for (const resolved of resolvedByProgram.values()) {
+      for (const id of resolved.orGroups) usedOr.add(id);
+      for (const id of resolved.required) usedDocs.add(id);
+    }
+    for (const group of matrix.orGroupsById.values()) {
+      if (!usedOr.has(group.id)) continue;
+      cols.push({
+        kind: "or",
+        id: group.id,
+        short: group.short,
+        label: group.label,
+        group: "Documents (OR)",
+        or: true,
+      });
+    }
+    for (const item of matrix.data.vocab.documents) {
+      if (item.id === "none" || !usedDocs.has(item.id)) continue;
+      cols.push({
+        kind: "document",
+        id: item.id,
+        short: item.short,
+        label: item.label,
+        group: "Documents",
+        or: false,
+      });
+    }
+  }
+
+  if (showInterview) {
+    cols.push({
+      kind: "interview",
+      id: "interview",
+      short: "Interview",
+      label: "Interview requirement",
+      group: "Interview",
+      or: false,
+    });
+  }
+
+  return cols;
+}
+
+function coverageCellHtml(row, col) {
+  if (col.kind === "eligibility") {
+    return row.eligibility.includes(col.id)
+      ? `<td class="coverage-yes" title="${escapeHtml(col.label)}">✓</td>`
+      : "<td></td>";
+  }
+  if (col.kind === "or") {
+    const resolved = resolveDocuments(row.documents);
+    return resolved.orGroups.includes(col.id)
+      ? `<td class="coverage-or-cell" title="${escapeHtml(col.label)}">OR</td>`
+      : "<td></td>";
+  }
+  if (col.kind === "document") {
+    const resolved = resolveDocuments(row.documents);
+    return resolved.required.includes(col.id)
+      ? `<td class="coverage-yes" title="${escapeHtml(col.label)}">✓</td>`
+      : "<td></td>";
+  }
+  if (col.kind === "interview") {
+    const label =
+      matrix.data.vocab.interview.find((i) => i.id === row.interview)?.label ?? row.interview;
+    if (row.interview === "none") {
+      return `<td class="coverage-interview" title="No interview">—</td>`;
+    }
+    return `<td class="coverage-interview" title="${escapeHtml(label)}">${escapeHtml(label)}</td>`;
+  }
+  return "<td></td>";
+}
+
+function renderCoverageGrid() {
+  const thead = el("coverage-head");
+  const tbody = el("coverage-rows");
+  if (!thead || !tbody || !matrix.data) return;
+
+  const cols = coverageColumns();
+  const rows = visibleMatrixRows();
+
+  if (!cols.length) {
+    thead.innerHTML = "";
+    tbody.innerHTML = `<tr><td>Turn on at least one requirement group above.</td></tr>`;
+    return;
+  }
+
+  const groupSpans = [];
+  for (const col of cols) {
+    const last = groupSpans[groupSpans.length - 1];
+    if (last && last.group === col.group) last.span += 1;
+    else groupSpans.push({ group: col.group, span: 1 });
+  }
+
+  thead.innerHTML = `
+    <tr>
+      <th class="coverage-corner" rowspan="2">Program</th>
+      ${groupSpans
+        .map(
+          (g) =>
+            `<th class="coverage-group" colspan="${g.span}">${escapeHtml(g.group)}</th>`,
+        )
+        .join("")}
+    </tr>
+    <tr>
+      ${cols
+        .map(
+          (col) =>
+            `<th class="coverage-req${col.or ? " coverage-or" : ""}" title="${escapeHtml(
+              col.label,
+            )}"><span>${escapeHtml(col.short)}</span></th>`,
+        )
+        .join("")}
+    </tr>`;
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="${cols.length + 1}">No programs match this filter.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows
+    .map((row) => {
+      const short = matrix.shortLabels.programs.get(row.id) ?? row.name;
+      return `<tr>
+        <th scope="row" title="${escapeHtml(row.name)}">${escapeHtml(short)}</th>
+        ${cols.map((col) => coverageCellHtml(row, col)).join("")}
+      </tr>`;
+    })
+    .join("");
+}
+
+function setMatrixTab(tab) {
+  matrix.activeTab = tab === "grid" ? "grid" : "edit";
+  const editPanel = el("matrix-edit-panel");
+  const gridPanel = el("matrix-grid-panel");
+  const editTab = el("tab-matrix-edit");
+  const gridTab = el("tab-matrix-grid");
+  if (!editPanel || !gridPanel || !editTab || !gridTab) return;
+
+  const isGrid = matrix.activeTab === "grid";
+  editPanel.hidden = isGrid;
+  gridPanel.hidden = !isGrid;
+  editTab.setAttribute("aria-selected", String(!isGrid));
+  gridTab.setAttribute("aria-selected", String(isGrid));
+  if (isGrid) renderCoverageGrid();
 }
 
 function renderMatrixSummary() {
@@ -971,6 +1253,7 @@ async function saveMatrixField(programId, field, value) {
   matrix.data.summary = data.summary;
   matrix.rowsById = new Map(data.rows.map((r) => [r.id, r]));
   refreshMatrixCells();
+  renderCoverageGrid();
   matrix.rankStale = true;
   el("btn-matrix-resort").disabled = false;
   setMatrixStatus(
@@ -1142,6 +1425,21 @@ function wireMatrix() {
   el("btn-matrix-csv").addEventListener("click", downloadMatrixCsv);
   el("btn-matrix-json").addEventListener("click", () => void copyMatrixJson());
   el("btn-matrix-resort").disabled = true;
+
+  for (const tab of document.querySelectorAll("[data-matrix-tab]")) {
+    tab.addEventListener("click", () => setMatrixTab(tab.getAttribute("data-matrix-tab")));
+  }
+  for (const id of [
+    "coverage-show-eligibility",
+    "coverage-show-documents",
+    "coverage-show-interview",
+  ]) {
+    el(id)?.addEventListener("change", renderCoverageGrid);
+  }
+
+  if (location.hash === "#coverage" || location.hash === "#matrix-grid") {
+    setMatrixTab("grid");
+  }
 }
 
 function renderFunnel(funnel) {
@@ -1242,6 +1540,342 @@ function renderFunnel(funnel) {
   });
 }
 
+function renderJourney(journey) {
+  const summary = el("journey-summary");
+  const tbody = el("journey-rows");
+  if (!summary || !tbody) return;
+
+  const buckets = journey?.buckets ?? [];
+  if (!journey || !journey.starters) {
+    summary.textContent =
+      "No journey screen data yet – counts appear as people walk the bot after this instrumentation shipped (screens seen + remaining-path estimates).";
+    tbody.innerHTML = `<tr><td colspan="4">No journey data yet.</td></tr>`;
+    const emptyCanvas = el("chart-journey");
+    if (emptyCanvas?._journeyChart) {
+      emptyCanvas._journeyChart.destroy();
+      emptyCanvas._journeyChart = null;
+    }
+    return;
+  }
+
+  summary.innerHTML = `<strong>${number.format(journey.starters)}</strong> starters ·
+    <strong>${number.format(journey.finishers)}</strong> finished
+    (${journey.starters ? Math.round((journey.finishers / journey.starters) * 1000) / 10 : 0}%) ·
+    avg progress <strong>${journey.avgPctThrough}%</strong> ·
+    <strong>${number.format(journey.reportsCreated)}</strong> reports created
+    (${number.format(journey.reportRecipients)} people)`;
+
+  const maxDrop = Math.max(...buckets.map((b) => b.dropPct), 0);
+  tbody.innerHTML = buckets
+    .map((b) => {
+      const dropCell =
+        b.dropped > 0
+          ? `<span class="${b.dropPct === maxDrop && maxDrop > 0 ? "drop-bad" : ""}">−${number.format(b.dropped)} (${b.dropPct}%)</span>`
+          : "–";
+      return `<tr>
+        <td>${escapeHtml(b.label)}</td>
+        <td class="num">${number.format(b.people)}</td>
+        <td class="num">${dropCell}</td>
+        <td class="num">${number.format(b.stillIn)} (${b.retentionPct}%)</td>
+      </tr>`;
+    })
+    .join("");
+
+  const canvas = el("chart-journey");
+  if (!canvas || typeof Chart === "undefined") return;
+  if (canvas._journeyChart) canvas._journeyChart.destroy();
+
+  canvas._journeyChart = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels: buckets.map((b) => b.label),
+      datasets: [
+        {
+          label: "Still in (% of starters)",
+          data: buckets.map((b) => b.retentionPct),
+          borderColor: "rgba(13, 122, 95, 0.95)",
+          backgroundColor: "rgba(13, 122, 95, 0.12)",
+          fill: true,
+          tension: 0.25,
+          yAxisID: "y",
+          pointRadius: 4,
+        },
+        {
+          label: "Dropout rate in band (%)",
+          data: buckets.map((b) => b.dropPct),
+          borderColor: "rgba(180, 70, 50, 0.9)",
+          backgroundColor: "rgba(180, 70, 50, 0.08)",
+          fill: false,
+          tension: 0.25,
+          yAxisID: "y",
+          pointRadius: 4,
+          borderDash: [5, 4],
+        },
+        {
+          label: "People (furthest band)",
+          data: buckets.map((b) => b.people),
+          type: "bar",
+          backgroundColor: "rgba(58, 85, 80, 0.28)",
+          borderRadius: 4,
+          yAxisID: "yPeople",
+          order: 3,
+          maxBarThickness: 36,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { position: "bottom", labels: { boxWidth: 12 } },
+        tooltip: {
+          callbacks: {
+            afterBody(items) {
+              const b = buckets[items[0]?.dataIndex];
+              if (!b) return "";
+              return `Dropped in band: ${b.dropped}`;
+            },
+          },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          title: { display: true, text: "Percent" },
+          grid: { color: "rgba(16, 36, 31, 0.08)" },
+        },
+        yPeople: {
+          beginAtZero: true,
+          position: "right",
+          title: { display: true, text: "People" },
+          grid: { display: false },
+          ticks: { precision: 0 },
+        },
+        x: {
+          grid: { display: false },
+        },
+      },
+    },
+  });
+}
+
+function renderScreenDropout(screenDropout) {
+  const tbody = el("screen-dropout-rows");
+  const callout = el("screen-dropout-callout");
+  if (!tbody || !callout) return;
+
+  const screens = (screenDropout?.screens ?? []).filter((s) => s.reached > 0);
+  if (!screens.length) {
+    tbody.innerHTML = `<tr><td colspan="5">No per-screen data yet.</td></tr>`;
+    callout.hidden = true;
+    return;
+  }
+
+  const maxDrop = Math.max(...screens.map((s) => s.dropPct), 0);
+  tbody.innerHTML = screens
+    .map((s) => {
+      const dropClass =
+        s.dropPct === maxDrop && maxDrop > 0 && s.id !== "finish" ? "drop-bad" : "";
+      return `<tr>
+        <td>${escapeHtml(s.label)}<span class="stage-detail">${escapeHtml(s.detail)}</span></td>
+        <td class="num">${number.format(s.reached)}</td>
+        <td class="num">${s.dropped > 0 ? `−${number.format(s.dropped)}` : "–"}</td>
+        <td class="num"><span class="${dropClass}">${s.dropPct}%</span></td>
+        <td class="num">${s.avgLeft}</td>
+      </tr>`;
+    })
+    .join("");
+
+  if (screenDropout.biggestDropId && screenDropout.biggestDropPct > 0) {
+    const row = screens.find((s) => s.id === screenDropout.biggestDropId);
+    callout.hidden = false;
+    callout.textContent = `Highest drop rate: ${row?.label ?? screenDropout.biggestDropId} (${screenDropout.biggestDropPct}% of people who reached it left there).`;
+  } else {
+    callout.hidden = true;
+  }
+
+  const canvas = el("chart-screen-dropout");
+  if (!canvas || typeof Chart === "undefined") return;
+  if (canvas._screenChart) canvas._screenChart.destroy();
+
+  const labels = screens.map((s) => s.label);
+  canvas._screenChart = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Reached",
+          data: screens.map((s) => s.reached),
+          backgroundColor: "rgba(13, 122, 95, 0.7)",
+          borderRadius: 5,
+          maxBarThickness: 28,
+        },
+        {
+          label: "Dropped here",
+          data: screens.map((s) => s.dropped),
+          backgroundColor: "rgba(180, 70, 50, 0.7)",
+          borderRadius: 5,
+          maxBarThickness: 28,
+        },
+      ],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      plugins: {
+        legend: { position: "bottom", labels: { boxWidth: 12 } },
+        tooltip: {
+          callbacks: {
+            afterLabel(ctx) {
+              const s = screens[ctx.dataIndex];
+              if (!s) return "";
+              return [
+                `Drop rate: ${s.dropPct}%`,
+                `Avg screens left when shown: ${s.avgLeft}`,
+                `Avg % through: ${s.avgPct}%`,
+              ];
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: { precision: 0 },
+          grid: { color: "rgba(16, 36, 31, 0.08)" },
+        },
+        y: { grid: { display: false } },
+      },
+    },
+  });
+}
+
+function renderScreenTiming(screenTiming) {
+  const summary = el("screen-timing-summary");
+  const tbody = el("screen-timing-rows");
+  const callout = el("screen-timing-callout");
+  const finishEl = el("m-finish-time");
+  const finishNote = el("m-finish-time-note");
+  if (!summary || !tbody || !callout) return;
+
+  const journey = screenTiming?.journey;
+  const screens = (screenTiming?.screens ?? []).filter((s) => s.samples > 0);
+
+  if (!screens.length && !(journey?.samples)) {
+    summary.textContent =
+      "No timing yet – appears after people move from one bot screen to the next (uses existing screen timestamps, including sessions from before this panel shipped).";
+    tbody.innerHTML = `<tr><td colspan="5">No timing data yet.</td></tr>`;
+    callout.hidden = true;
+    if (finishEl) finishEl.textContent = "–";
+    if (finishNote) finishNote.textContent = "Active answering time";
+    const emptyCanvas = el("chart-screen-timing");
+    if (emptyCanvas?._timingChart) {
+      emptyCanvas._timingChart.destroy();
+      emptyCanvas._timingChart = null;
+    }
+    return;
+  }
+
+  const finishers = journey?.samples ?? 0;
+  if (finishEl) {
+    finishEl.textContent = finishers ? formatDuration(journey.medianMs) : "–";
+  }
+  if (finishNote) {
+    finishNote.textContent = finishers
+      ? `${number.format(finishers)} finished · p90 ${formatDuration(journey.p90Ms)}`
+      : "No finishers with timing yet";
+  }
+
+  summary.innerHTML = finishers
+    ? `<strong>${number.format(finishers)}</strong> finished with timing ·
+       median <strong>${formatDuration(journey.medianMs)}</strong> ·
+       p90 <strong>${formatDuration(journey.p90Ms)}</strong> ·
+       mean <strong>${formatDuration(journey.meanMs)}</strong>
+       <span class="stage-detail">Active time only (pauses over 30 minutes omitted)</span>`
+    : `Per-screen times below are from people who answered and moved on. No one has finished with countable timing yet.`;
+
+  tbody.innerHTML = screens
+    .map((s) => {
+      const slow =
+        s.id === screenTiming.slowestId && s.samples >= 3 ? "timing-slow" : "";
+      return `<tr>
+        <td>${escapeHtml(s.label)}<span class="stage-detail">${escapeHtml(s.detail)}</span></td>
+        <td class="num">${number.format(s.samples)}</td>
+        <td class="num"><span class="${slow}">${formatDuration(s.medianMs)}</span></td>
+        <td class="num">${formatDuration(s.p90Ms)}</td>
+        <td class="num">${formatDuration(s.meanMs)}</td>
+      </tr>`;
+    })
+    .join("");
+
+  if (screenTiming.slowestId && screenTiming.slowestMedianMs > 0) {
+    const row = screens.find((s) => s.id === screenTiming.slowestId);
+    callout.hidden = false;
+    callout.textContent = `Slowest median: ${row?.label ?? screenTiming.slowestId} (${formatDuration(screenTiming.slowestMedianMs)}). Worth a copy / keyboard pass if that stays high.`;
+  } else {
+    callout.hidden = true;
+  }
+
+  const canvas = el("chart-screen-timing");
+  if (!canvas || typeof Chart === "undefined") return;
+  if (canvas._timingChart) canvas._timingChart.destroy();
+
+  const toSec = (ms) => Math.round((ms / 1000) * 10) / 10;
+  canvas._timingChart = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: screens.map((s) => s.label),
+      datasets: [
+        {
+          label: "Median (sec)",
+          data: screens.map((s) => toSec(s.medianMs)),
+          backgroundColor: "rgba(13, 122, 95, 0.75)",
+          borderRadius: 5,
+          maxBarThickness: 28,
+        },
+        {
+          label: "P90 (sec)",
+          data: screens.map((s) => toSec(s.p90Ms)),
+          backgroundColor: "rgba(180, 130, 20, 0.55)",
+          borderRadius: 5,
+          maxBarThickness: 28,
+        },
+      ],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      plugins: {
+        legend: { position: "bottom", labels: { boxWidth: 12 } },
+        tooltip: {
+          callbacks: {
+            afterLabel(ctx) {
+              const s = screens[ctx.dataIndex];
+              if (!s) return "";
+              return [
+                `Answers: ${s.samples}`,
+                `Median: ${formatDuration(s.medianMs)}`,
+                `P90: ${formatDuration(s.p90Ms)}`,
+                `Mean: ${formatDuration(s.meanMs)}`,
+              ];
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          title: { display: true, text: "Seconds" },
+          grid: { color: "rgba(16, 36, 31, 0.08)" },
+        },
+        y: { grid: { display: false } },
+      },
+    },
+  });
+}
+
 async function loadFunnel() {
   // Live analytics only – never the public-site demo funnel.
   const res = await api("/api/dev/stats");
@@ -1251,7 +1885,16 @@ async function loadFunnel() {
     Chart.defaults.font.family = "Figtree, system-ui, sans-serif";
     Chart.defaults.color = "#3a5550";
   }
+  const reportsEl = el("m-reports");
+  const reportPeopleEl = el("m-report-people");
+  if (reportsEl) reportsEl.textContent = number.format(stats.reportsCreated ?? 0);
+  if (reportPeopleEl) {
+    reportPeopleEl.textContent = number.format(stats.reportRecipients ?? 0);
+  }
   renderFunnel(stats.funnel);
+  renderJourney(stats.journey);
+  renderScreenDropout(stats.screenDropout);
+  renderScreenTiming(stats.screenTiming);
 }
 
 /** @type {Array<{ id: string, slug: string, name: string, email: string, city: string, logo: string, statusUrl: string, bannerUrl: string }> | null} */

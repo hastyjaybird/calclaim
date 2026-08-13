@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <title>CalClaim – Message tree flowchart</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/impact/styles.css" />
+  <link rel="stylesheet" href="/dev/styles.css" />
+  <link rel="stylesheet" href="/dev/tree/styles.css" />
+  <link rel="stylesheet" href="/dev/tree/flowchart/styles.css" />
+</head>
+<body>
+  <div class="banner" role="banner">
+    <div class="banner-inner">
+      <a class="banner-brand" href="/impact" aria-label="CalClaim home">
+        <img
+          class="banner-mark"
+          src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
+          alt="CalClaim"
+          width="180"
+          height="63"
+        />
+      </a>
+      <span class="banner-sep" aria-hidden="true"></span>
+      <nav class="site-nav" aria-label="Site">
+        <a href="/impact">Impact</a>
+        <a href="/dev">Developer</a>
+        <a href="/dev/tree">Message tree</a>
+        <a href="/dev/tree/chart">Gate chart</a>
+        <a href="/dev/tree/flowchart" aria-current="page">Flowchart</a>
+        <a href="/dev/tree/utilities">Utilities</a>
+        <button type="button" class="nav-logout" id="btn-logout">Log out</button>
+      </nav>
+      <span class="banner-line">Temporary review · not linked from public pages</span>
+    </div>
+  </div>
+
+  <header class="hero hero-dev tree-hero flowchart-hero">
+    <p class="eyebrow">Temporary developer review</p>
+    <h1>Whole flowchart</h1>
+    <p class="lede">
+      Full Telegram conversation diagram: opt-in, categorical gate, YES/NO arms,
+      offer-card loop, unlock gates, and finish. Program lists below follow
+      library offer order (<code>yesOrder</code> / <code>noOrder</code>) — the
+      same order used on the
+      <a href="/dev/tree/chart">Gate chart</a>.
+    </p>
+    <div class="tree-toolbar">
+      <a class="cta cta-ghost" href="/dev/tree">Walk the tree</a>
+      <a class="cta cta-ghost" href="/dev/tree/chart">Gate chart</a>
+    </div>
+    <p class="scan-status" id="status-line" aria-live="polite"></p>
+  </header>
+
+  <main class="flowchart-main">
+    <section class="flowchart-diagram" aria-labelledby="diagram-heading">
+      <h2 id="diagram-heading">Conversation flow</h2>
+      <p class="flowchart-lede">
+        Gates only appear when they unlock the next cheapest wave. Immigration
+        is always last. Global Help / STOP never advances the tree.
+      </p>
+
+      <div class="flow-chart" role="img" aria-label="CalClaim message tree flowchart">
+        <ol class="flow-steps">
+          <li class="flow-node">
+            <span class="flow-kind">start</span>
+            <span class="flow-label">/start</span>
+          </li>
+          <li class="flow-node is-screen">
+            <span class="flow-kind">screen</span>
+            <span class="flow-label">OPT_IN</span>
+            <span class="flow-note">Disclaimer · Start</span>
+          </li>
+          <li class="flow-node is-screen">
+            <span class="flow-kind">screen</span>
+            <span class="flow-label">GATE</span>
+            <span class="flow-note">Already on Medi-Cal, CalFresh, SSI, CalWORKs, CAPI, GA/GR, CMSP, or WIC? (SSI / CAPI / GA/GR / CMSP / WIC spelled out on buttons)</span>
+          </li>
+        </ol>
+
+        <div class="flow-branch">
+          <article class="flow-arm">
+            <h3>YES arm</h3>
+            <p>award letter + photo ID + utility bill</p>
+          </article>
+          <article class="flow-arm">
+            <h3>NO arm</h3>
+            <p>photo ID + utility bill · income later</p>
+          </article>
+        </div>
+
+        <ol class="flow-steps" start="4">
+          <li class="flow-node is-loop">
+            <span class="flow-kind">loop</span>
+            <span class="flow-label">OFFER_CARD</span>
+            <span class="flow-note">Sign up · Already · Remind · Skip → update Application Guide → next card or next gate</span>
+          </li>
+        </ol>
+
+        <div class="flow-gates">
+          <h3>Unlock gates <span>(only when they unlock the next wave)</span></h3>
+          <ol class="gate-grid">
+            <li><strong>HOUSEHOLD_SIZE</strong> NO arm · 1–8 or More · before income</li>
+            <li><strong>INCOME_BAND</strong> CARE / FERA / above</li>
+            <li><strong>HAS_CA_HOME</strong> CA live vs other / visiting</li>
+            <li><strong>HAS_CA_WORK</strong> after “another state”</li>
+            <li><strong>HAS_UTILITY_BILLS</strong> which bills in your name · None + Done</li>
+            <li><strong>HAS_SHUTOFF_ZONE</strong> already in shut-off area? · Yes / No / Not sure → address</li>
+            <li><strong>PAST_DUE</strong> gates AMP · after bills-in-name</li>
+            <li><strong>HAS_MEDICAL_NEED</strong> qualifying condition or device · Medical Baseline</li>
+            <li><strong>HAS_BUYING_EV</strong> EV intent</li>
+            <li><strong>HAS_FIRST_TIME_ZEV</strong> after buying EV</li>
+            <li><strong>HAS_CHILD</strong> kids / pregnancy</li>
+            <li><strong>HAS_FOSTER_YOUTH</strong> ages 18–25</li>
+            <li><strong>HAS_ABD</strong> 65+ / blind / disabled</li>
+            <li><strong>HAS_WORK</strong> UI / SDI / PFL</li>
+            <li><strong>HAS_DISASTER</strong> live window only</li>
+            <li><strong>HAS_DISASTER_ZIP</strong> after “not sure”</li>
+            <li><strong>HAS_ZIP</strong> CMSP county</li>
+            <li><strong>IMMIGRATION</strong> after cheaper gates · not stored</li>
+            <li class="is-last"><strong>HAS_REFUGEE_STATUS</strong> after citizen/eligible Yes · RCA</li>
+          </ol>
+          <p class="flow-gates-return">→ back to OFFER_CARD when a gate unlocks more programs</p>
+        </div>
+
+        <ol class="flow-steps" start="5">
+          <li class="flow-node is-screen">
+            <span class="flow-kind">screen</span>
+            <span class="flow-label">FINISH / IDLE</span>
+            <span class="flow-note">Application Guide if open to-dos · reminders armed</span>
+          </li>
+          <li class="flow-node is-global">
+            <span class="flow-kind">global</span>
+            <span class="flow-label">Help / STOP / free-form</span>
+            <span class="flow-note">Anytime · does not advance the tree</span>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="flowchart-orders" aria-labelledby="orders-heading">
+      <h2 id="orders-heading">Programs in tree offer order</h2>
+      <p class="flowchart-lede" id="orders-lede">Loading library…</p>
+      <div class="order-grid">
+        <article class="order-col">
+          <h3>YES arm</h3>
+          <ol class="order-list" id="yes-order"></ol>
+        </article>
+        <article class="order-col">
+          <h3>NO arm</h3>
+          <ol class="order-list" id="no-order"></ol>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script src="/dev/tree/flowchart/app.js"></script>
+</body>
+</html>
