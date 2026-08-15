@@ -66,6 +66,8 @@ want = {
     'PORT': '3000',
     'DATABASE_PATH': './data/calclaim.sqlite',
     'TZ': 'America/Los_Angeles',
+    # Public /impact + partner pages show collected events (not staged demo).
+    'IMPACT_STATS_MODE': 'live',
 }
 keys = set()
 out = []

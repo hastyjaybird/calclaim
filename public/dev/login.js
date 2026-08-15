@@ -16,8 +16,8 @@ async function loadCaptcha() {
   showError("");
   captchaAnswer.value = "";
   const res = await fetch("/api/dev/captcha", { cache: "no-store" });
-  if (!res.ok) throw new Error("Could not load CAPTCHA");
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Could not load CAPTCHA");
   captchaId.value = data.id;
   captchaImg.src = `data:image/svg+xml;base64,${btoa(data.svg)}`;
   captchaImg.alt = data.question || "CAPTCHA challenge";

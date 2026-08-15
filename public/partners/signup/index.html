@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/partners/styles.css?v=20260805-verify" />
-  <link rel="stylesheet" href="/partners/signup/styles.css?v=20260805-verify" />
+  <link rel="stylesheet" href="/partners/styles.css?v=20260813-signup-simple" />
+  <link rel="stylesheet" href="/partners/signup/styles.css?v=20260813-signup-simple" />
   <link rel="stylesheet" href="/donate/donate.css?v=20260812-donate" />
 </head>
 <body data-page="partnerSignup">
@@ -37,27 +37,19 @@
   </div>
 
   <div class="signup-deck">
-    <a class="back-link" href="/impact#partners" data-i18n="partners.backLink">← Back to partner leaderboard</a>
+    <a class="back-link" href="/impact#partners" data-i18n="signup.backLink">← Leaderboard</a>
 
     <main class="signup-shell">
     <section class="signup-hero" id="signup-form-panel">
       <p class="signup-eyebrow" data-i18n="signup.eyebrow">Community partners</p>
-      <h1>
-        <img
-          class="signup-logo"
-          src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
-          alt="CalClaim"
-          width="320"
-          height="113"
-        />
-      </h1>
+      <h1 data-i18n="signup.title">Partner signup</h1>
       <p class="signup-lede" data-i18n="signup.lede">
-        Same signup for everyone: verify your email, then get a QR kit and stats page. Organizations must use a real company or organization domain (not Gmail or Yahoo) and appear on the public leaderboard. Individuals keep a private stats page.
+        Get a QR code for your events.
       </p>
 
       <form id="partner-signup-form" class="signup-form" novalidate>
         <fieldset class="account-type">
-          <legend data-i18n="signup.accountTypeLabel">I am signing up as</legend>
+          <legend data-i18n="signup.accountTypeLabel">Sign up as</legend>
           <div class="account-type-options">
             <label class="account-type-option">
               <input
@@ -105,7 +97,7 @@
             data-i18n-aria="signup.emailLabel"
           />
           <span class="field-help" id="signup-email-help" data-i18n="signup.emailHelpOrg">
-            Must be your organization’s email domain (not Gmail, Yahoo, or Outlook).
+            Use your company email, not Gmail or Yahoo.
           </span>
         </label>
         <label class="field">
@@ -130,15 +122,13 @@
             data-i18n-aria="signup.logoLabel"
           />
           <span class="field-help" data-i18n="signup.logoHelp">
-            Shown on your printable booth banner. PNG or JPG, up to 2&nbsp;MB.
+            PNG or JPG, up to 2&nbsp;MB.
           </span>
         </label>
-        <p class="signup-hint" id="signup-hint" data-i18n="signup.hint">
-          We’ll email a verification link. After you confirm, you’ll get your QR code, status page, and booth banner.
-        </p>
+        <p class="signup-hint" id="signup-hint" hidden></p>
         <div class="cta-row">
           <button type="submit" class="cta" id="signup-submit" data-i18n="signup.submit">
-            Sign up &amp; verify email
+            Sign up
           </button>
           <button
             type="button"
@@ -155,23 +145,21 @@
     </section>
 
     <section class="signup-pending" id="signup-pending-panel" hidden>
-      <p class="signup-eyebrow" data-i18n="signup.pendingEyebrow">Check your email</p>
-      <h2 data-i18n="signup.pendingHeading">Verify your email to finish signup.</h2>
+      <p class="signup-eyebrow" data-i18n="signup.pendingEyebrow">Almost done</p>
+      <h2 data-i18n="signup.pendingHeading">Check your email</h2>
       <p class="signup-lede" id="signup-pending-body">
-        We sent a verification link to your email. Click it to confirm this is a verified account.
+        We sent a link to your email.
       </p>
       <p class="signup-pending-domain" id="signup-pending-domain" hidden></p>
-      <p class="signup-hint" data-i18n="signup.pendingHint">
-        The link expires in 48 hours. Your QR kit unlocks after verification.
-      </p>
+      <p class="signup-hint" data-i18n="signup.pendingHint">Expires in 48 hours.</p>
       <p id="signup-pending-demo" class="signup-pending-demo" hidden></p>
     </section>
 
     <section class="signup-success" id="signup-success-panel" hidden>
       <p class="signup-eyebrow" data-i18n="signup.successEyebrow">Verified</p>
-      <h2 data-i18n="signup.successHeading">Thanks for partnering with us.</h2>
+      <h2 data-i18n="signup.successHeading">You’re in.</h2>
       <p class="signup-lede" data-i18n="signup.successBody">
-        Here is your unique QR code. Print out the booth banner for your next event.
+        Print this QR at your next event.
       </p>
       <figure class="signup-qr-hero">
         <img
@@ -209,7 +197,6 @@
                   <img class="booth-banner-preview__logo" id="success-banner-logo" alt="" />
                   <p class="booth-banner-preview__name" id="success-banner-name"></p>
                 </div>
-                <span class="booth-banner-preview__amp" aria-hidden="true">&amp;</span>
                 <img
                   class="booth-banner-preview__mark"
                   src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
@@ -219,6 +206,9 @@
                 />
                 <p class="booth-banner-preview__name booth-banner-preview__name--solo" id="success-banner-name-solo"></p>
               </div>
+              <div class="booth-banner-preview__qr-wrap">
+                <img class="booth-banner-preview__qr" id="success-banner-qr" alt="" width="120" height="120" />
+              </div>
               <p
                 class="booth-banner-preview__tag"
                 data-i18n="signup.bannerPreviewTag"
@@ -226,9 +216,6 @@
               >
                 Scan to find California benefits help<br />food, health, phone discounts, energy bill aid, and more.
               </p>
-              <div class="booth-banner-preview__qr-wrap">
-                <img class="booth-banner-preview__qr" id="success-banner-qr" alt="" width="120" height="120" />
-              </div>
             </div>
           </a>
           <figcaption class="signup-banner-actions">
@@ -261,9 +248,9 @@
     </div>
   </footer>
 
-  <script src="/i18n/messages.js?v=20260813-lede2"></script>
-  <script src="/i18n/lang.js?v=20260804-qr"></script>
+  <script src="/i18n/messages.js?v=20260815-vi-tl"></script>
+  <script src="/i18n/lang.js?v=20260815-vi-tl"></script>
   <script src="/donate/donate.js?v=20260812-donate"></script>
-  <script src="/partners/signup/app.js?v=20260805-lb-orgs"></script>
+  <script src="/partners/signup/app.js?v=20260813-signup-simple"></script>
 </body>
 </html>

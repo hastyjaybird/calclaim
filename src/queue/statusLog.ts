@@ -2,7 +2,7 @@ import {
   getImmigrationAnswer,
   passesImmigrationGate,
 } from "./immigrationMemory.js";
-import { isCmspCounty } from "../library/geo.js";
+import { passesCountyEligibility, programNeedsZip } from "../library/geo.js";
 import { loadPrograms } from "../library/load.js";
 import {
   isHeldFromOffer,
@@ -110,6 +110,24 @@ function explainEligibility(
           : "Not a first-time zero-emission vehicle buyer",
     };
   }
+  if (program.requiresBuyingEbikeThisYear && session.buyingEbikeThisYear !== true) {
+    return {
+      eligible: false,
+      reason:
+        session.buyingEbikeThisYear === null
+          ? "Waiting on buying-e-bike-this-year answer"
+          : "Not buying a pedal e-bike this year",
+    };
+  }
+  if (program.requiresVehicleRetirement && session.wouldRetireVehicle !== true) {
+    return {
+      eligible: false,
+      reason:
+        session.wouldRetireVehicle === null
+          ? "Waiting on vehicle-retirement answer"
+          : "No older car to retire / scrap",
+    };
+  }
   if (
     program.requiresChildInHousehold &&
     session.hasChildInHousehold !== true
@@ -193,16 +211,24 @@ function explainEligibility(
       };
     }
   }
-  if (program.requiresCmspCounty) {
+  if (programNeedsZip(program)) {
     if (session.residenceZip === null) {
       return { eligible: false, reason: "Waiting on ZIP / county" };
     }
-    if (!isCmspCounty(session.residenceCounty)) {
+    if (!passesCountyEligibility(program, session.residenceCounty)) {
+      if (program.requiresCmspCounty) {
+        return {
+          eligible: false,
+          reason: session.residenceCounty
+            ? `Not in a participating CMSP county (${session.residenceCounty})`
+            : "ZIP skipped or not matched to a participating CMSP county",
+        };
+      }
       return {
         eligible: false,
         reason: session.residenceCounty
-          ? `Not in a participating CMSP county (${session.residenceCounty})`
-          : "ZIP skipped or not matched to a participating CMSP county",
+          ? `Not in a participating county (${session.residenceCounty})`
+          : "ZIP skipped or not matched to a participating county",
       };
     }
   }

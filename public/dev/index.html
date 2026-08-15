@@ -4,78 +4,91 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow, noarchive" />
-  <title>CalClaim – Developer library watch</title>
+  <title>CalClaim – Developer dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/impact/styles.css" />
   <link rel="stylesheet" href="/dev/styles.css" />
+  <link rel="stylesheet" href="/dev/tree/styles.css" />
+  <script>
+    (function () {
+      var h = location.hash.replace(/^#/, "");
+      if (
+        h === "tree" ||
+        h.indexOf("tree&") === 0 ||
+        h.indexOf("tree=") === 0 ||
+        h === "a" ||
+        h.indexOf("a=") === 0
+      ) {
+        document.documentElement.classList.add("dev-on-tree");
+      }
+    })();
+  </script>
 </head>
 <body>
-  <div class="banner" role="banner">
-    <div class="banner-inner">
-      <a class="banner-brand" href="/impact" aria-label="CalClaim home">
-        <img
-          class="banner-mark"
-          src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
-          alt="CalClaim"
-          width="180"
-          height="63"
-        />
-      </a>
-      <span class="banner-sep" aria-hidden="true"></span>
-      <nav class="site-nav" aria-label="Site">
-        <a href="/impact">Impact</a>
-        <a href="/impact#partners">Leaderboard</a>
-        <a href="/impact#about">About</a>
-        <a href="/impact#contact">Contact</a>
-        <a href="/impact#privacy">Privacy</a>
-        <a href="/dev" aria-current="page">Developer login</a>
-        <button type="button" class="nav-logout" id="btn-logout">Log out</button>
-      </nav>
-      <span class="banner-line">Library freshness – humans only · advisory findings</span>
+  <div class="dev-chrome">
+    <div class="banner" role="banner">
+      <div class="banner-inner">
+        <a class="banner-brand" href="/impact" aria-label="CalClaim home">
+          <img
+            class="banner-mark"
+            src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
+            alt="CalClaim"
+            width="180"
+            height="63"
+          />
+        </a>
+        <span class="banner-sep" aria-hidden="true"></span>
+        <nav class="site-nav" aria-label="Site">
+          <a href="/impact">Impact</a>
+          <a href="/impact#partners">Leaderboard</a>
+          <a href="/impact#about">About</a>
+          <a href="/impact#contact">Contact</a>
+          <a href="/impact#privacy">Privacy</a>
+          <a href="/dev" aria-current="page">Developer dashboard</a>
+          <button type="button" class="nav-logout" id="btn-logout">Log out</button>
+        </nav>
+      </div>
     </div>
+    <nav class="dev-section-nav" aria-label="Page sections">
+      <div class="dev-section-nav-inner">
+        <a href="#tree">Message tree</a>
+        <a href="#status">Status</a>
+        <a href="#usage">Users</a>
+        <a href="#program-opens">Opens</a>
+        <a href="#scan">Scan</a>
+        <a href="#partners">Partners</a>
+        <a href="#feedback">Feedback</a>
+        <a href="#dev-tickets">Tickets</a>
+        <a href="#org-tickets">Org tickets</a>
+        <a href="#checklist">Checklist</a>
+        <a href="#funnel">Pipeline</a>
+        <a href="#spread">Spread</a>
+        <a href="#screen-dropout">Dropout</a>
+        <a href="#screen-timing">Timing</a>
+        <a href="#disaster">Disaster</a>
+        <a href="#programs">Programs</a>
+      </div>
+    </nav>
   </div>
 
+  <div class="dev-dashboard">
   <header class="hero hero-dev">
     <p class="eyebrow">Developer tools</p>
-    <h1>Library watch</h1>
+    <h1>Developer dashboard</h1>
     <p class="lede">
       Scan official program pages for date, eligibility, apply-process, funding, amount, and URL drift.
       Findings never edit the frozen library – developers review and update <code>programs.json</code>.
     </p>
-    <div class="cta-row">
-      <button type="button" class="cta" id="btn-scan">Run library check</button>
-      <a class="cta cta-ghost" href="#matrix">Requirements</a>
-      <a class="cta cta-ghost" href="/dev/tree">Message tree (temp)</a>
-      <a class="cta cta-ghost" href="/dev/tree/chart">Gate chart (temp)</a>
-      <a class="cta cta-ghost" href="/dev/tree/flowchart">Flowchart (temp)</a>
-      <a class="cta cta-ghost" href="#checklist">Watch checklist</a>
-    </div>
-    <p class="scan-status" id="scan-status" aria-live="polite"></p>
   </header>
 
   <main>
-    <section class="metrics" aria-label="Library status">
-      <article class="metric">
-        <p class="metric-label">Library version</p>
-        <p class="metric-value" id="m-version">–</p>
-        <p class="metric-note" id="m-age">Aging rule: 90 days</p>
-      </article>
+    <section class="metrics" id="status" aria-label="Library status">
       <article class="metric">
         <p class="metric-label">Programs</p>
         <p class="metric-value" id="m-programs">–</p>
         <p class="metric-note" id="m-bands">Income bands: –</p>
-      </article>
-      <article class="metric">
-        <p class="metric-label">Open findings</p>
-        <p class="metric-value" id="m-open">–</p>
-        <p class="metric-note"><span id="m-crit">0</span> critical · <span id="m-high">0</span> high</p>
-      </article>
-      <article class="metric metric-accent">
-        <p class="metric-label">LLM analysis</p>
-        <p class="metric-value metric-value-sm" id="m-llm">–</p>
-        <p class="metric-note">Optional via API key in env</p>
       </article>
       <article class="metric">
         <p class="metric-label">Reports created</p>
@@ -83,15 +96,287 @@
         <p class="metric-note"><span id="m-report-people">0</span> people received a guide</p>
       </article>
       <article class="metric">
-        <p class="metric-label">Median time to finish</p>
+        <p class="metric-label">Mean time to finish</p>
         <p class="metric-value metric-value-sm" id="m-finish-time">–</p>
         <p class="metric-note" id="m-finish-time-note">Active answering time</p>
       </article>
+      <article class="metric">
+        <p class="metric-label">Partners</p>
+        <p class="metric-value" id="m-partners">–</p>
+        <p class="metric-note" id="m-partners-note">Community partners signed up</p>
+      </article>
+      <article class="metric">
+        <p class="metric-label">Library version</p>
+        <p class="metric-value" id="m-version">–</p>
+        <p class="metric-note" id="m-age">Aging rule: 90 days</p>
+      </article>
+      <article class="metric">
+        <p class="metric-label">LLM analysis</p>
+        <p class="metric-value metric-value-sm" id="m-llm">–</p>
+        <p class="metric-note">Optional via API key in env</p>
+      </article>
+    </section>
+
+    <section class="charts" id="usage" aria-label="Usage over time">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Users per day</h2>
+          <p>Live QR scans + link clicks by day (operator traffic excluded)</p>
+        </div>
+        <canvas id="chart-daily" height="220"></canvas>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Total users over time</h2>
+          <p>Cumulative people reached</p>
+        </div>
+        <canvas id="chart-cumulative" height="220"></canvas>
+      </div>
+    </section>
+
+    <section class="panel" id="program-opens" aria-labelledby="program-opens-heading">
+      <div class="panel-head">
+        <h2 id="program-opens-heading">Programs opened from CalClaim</h2>
+        <p>
+          Live tracked redirects to official application sites (operator traffic excluded).
+        </p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Program</th>
+              <th>Category</th>
+              <th class="num">Opens</th>
+              <th class="num">Follow-throughs</th>
+              <th class="num">Est. $ unlocked</th>
+            </tr>
+          </thead>
+          <tbody id="program-open-rows">
+            <tr><td colspan="5">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="scan" aria-labelledby="scans-heading">
+      <div id="scans" class="programs-anchor" aria-hidden="true"></div>
+      <details class="panel-fold" open>
+        <summary class="panel-fold-summary">
+          <h2 id="scans-heading">Recent scans</h2>
+        </summary>
+        <div class="panel-fold-body">
+      <div class="panel-head panel-head-row">
+        <div>
+          <p>
+            Past library checks. Each run hits apply URLs and source citations;
+            it never writes to the library. Open findings land in Tickets.
+          </p>
+        </div>
+        <button type="button" class="cta" id="btn-scan">Run library check</button>
+      </div>
+      <p class="scan-status" id="scan-status" aria-live="polite"></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Status</th>
+              <th>Progress</th>
+              <th>Findings</th>
+              <th>LLM</th>
+              <th>Started</th>
+            </tr>
+          </thead>
+          <tbody id="scan-rows">
+            <tr><td colspan="6">No scans yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="panel" id="partners" aria-labelledby="partners-heading">
+      <div class="panel-head panel-head-row">
+        <div>
+          <h2 id="partners-heading">Community partners</h2>
+          <p>Signed-up organizations and individuals. Canceled partners stay listed here with signup and cancel dates; they are hidden from the public leaderboard.</p>
+        </div>
+        <button type="button" class="cta cta-ghost" id="btn-partners-refresh">Refresh</button>
+      </div>
+      <p class="scan-status" id="partners-status" aria-live="polite"></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>City</th>
+              <th>Email / status</th>
+              <th>Partner ID</th>
+              <th>Dates</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="partner-rows">
+            <tr><td colspan="6">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <dialog class="partner-edit-dialog" id="dev-partner-edit-dialog" aria-labelledby="dev-edit-dialog-title">
+      <form id="dev-partner-edit-form" class="partner-edit-form" novalidate>
+        <header class="partner-edit-head">
+          <h2 id="dev-edit-dialog-title">Edit partner</h2>
+          <button type="button" class="partner-edit-close" id="dev-edit-dialog-close" aria-label="Close">×</button>
+        </header>
+        <p class="partner-edit-lede">
+          Partner ID and status URL stay the same when the organization name changes.
+        </p>
+        <p class="partner-edit-meta">
+          <span>ID: <code id="dev-edit-partner-id">–</code></span>
+          <span>Slug: <code id="dev-edit-slug">–</code></span>
+        </p>
+        <label class="field">
+          <span>Organization name</span>
+          <input id="dev-edit-organization" name="organization" type="text" required maxlength="120" autocomplete="organization" />
+        </label>
+        <label class="field">
+          <span>City</span>
+          <input id="dev-edit-city" name="city" type="text" maxlength="80" autocomplete="address-level2" />
+        </label>
+        <label class="field">
+          <span>Work email</span>
+          <input id="dev-edit-email" name="email" type="email" inputmode="email" required maxlength="200" autocomplete="email" />
+        </label>
+        <label class="field">
+          <span>Organization logo (optional)</span>
+          <input id="dev-edit-logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp,image/gif" autocomplete="off" />
+          <span class="field-help">Leave empty to keep the current logo. PNG or JPG, up to 2&nbsp;MB.</span>
+        </label>
+        <p id="dev-edit-status" class="partner-edit-status" role="status" aria-live="polite" hidden></p>
+        <div class="partner-edit-actions">
+          <button type="button" class="cta cta-ghost" id="dev-edit-cancel">Cancel</button>
+          <button type="submit" class="cta" id="dev-edit-submit">Save changes</button>
+        </div>
+      </form>
+    </dialog>
+
+    <section class="panel" id="feedback" aria-labelledby="feedback-heading">
+      <div class="panel-head panel-head-row">
+        <div>
+          <h2 id="feedback-heading">Alpha user feedback – to do</h2>
+          <p>
+            Text and voice notes from testers, web contact form messages,
+            partner organization feedback (from the private org page), and developer requests pinned from the
+            message-tree review. Multi-point partner feedback is split into one
+            point per message and credited on that organization’s metrics.
+            Disqualify junk or non-feedback so it drops out of partner tallies.
+            Send real work to Developer tickets with
+            <strong>Send to dev tickets</strong> – partner pages never mention tickets. Voice is transcribed to text when
+            <code>OPENAI_API_KEY</code> is set. Mark done if you handle it here
+            without a ticket.
+          </p>
+        </div>
+        <label class="filter">
+          Show
+          <select id="feedback-filter">
+            <option value="open">Open</option>
+            <option value="all">All</option>
+            <option value="done">Done</option>
+            <option value="disqualified">Disqualified</option>
+          </select>
+        </label>
+      </div>
+      <div id="feedback-list" class="findings">
+        <p class="empty">Loading…</p>
+      </div>
+    </section>
+
+    <section class="panel" id="dev-tickets" aria-labelledby="findings-heading">
+      <details class="panel-fold" open>
+        <summary class="panel-fold-summary">
+          <h2 id="findings-heading">Developer tickets</h2>
+        </summary>
+        <div class="panel-fold-body">
+      <div class="panel-head panel-head-row">
+        <div>
+          <p>
+            Library-scan issues and user feedback sent from the inbox above.
+            Acknowledge or dismiss after you update the library or ship a fix.
+          </p>
+        </div>
+        <label class="filter">
+          Show
+          <select id="finding-filter">
+            <option value="open">Open</option>
+            <option value="all">All</option>
+            <option value="acknowledged">Acknowledged</option>
+            <option value="dismissed">Dismissed</option>
+            <option value="fixed">Fixed</option>
+          </select>
+        </label>
+      </div>
+      <div id="findings-list" class="findings">
+        <p class="empty">Loading…</p>
+      </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="panel" id="org-tickets" aria-labelledby="org-tickets-heading">
+      <details class="panel-fold" open>
+        <summary class="panel-fold-summary">
+          <h2 id="org-tickets-heading">Dev tickets by organization</h2>
+        </summary>
+        <div class="panel-fold-body">
+      <div class="panel-head panel-head-row">
+        <div>
+          <p>
+            Feedback that has been sent to developer tickets, grouped by the
+            partner organization that was credited. Partner-facing pages never
+            mention developer tickets – this view is for operators only.
+          </p>
+        </div>
+        <label class="filter">
+          Show
+          <select id="org-ticket-filter">
+            <option value="open">Open</option>
+            <option value="all">All</option>
+            <option value="done">Done</option>
+            <option value="disqualified">Disqualified</option>
+          </select>
+        </label>
+      </div>
+      <div id="org-tickets-list" class="findings">
+        <p class="empty">Loading…</p>
+      </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="panel" id="checklist" aria-labelledby="checklist-heading">
+      <details class="panel-fold" open>
+        <summary class="panel-fold-summary">
+          <h2 id="checklist-heading">What to keep an eye on</h2>
+        </summary>
+        <div class="panel-fold-body">
+      <div class="panel-head">
+        <p>Beyond dates, qualifications, apply steps, funding, max amounts, and URLs – these fields also break CalClaim when stale.</p>
+      </div>
+      <ul class="checklist" id="checklist-items"></ul>
+        </div>
+      </details>
     </section>
 
     <section class="panel" id="funnel" aria-labelledby="funnel-heading">
+      <details class="panel-fold" open>
+        <summary class="panel-fold-summary">
+          <h2 id="funnel-heading">Pipeline fall-off</h2>
+        </summary>
+        <div class="panel-fold-body">
       <div class="panel-head">
-        <h2 id="funnel-heading">Pipeline fall-off</h2>
         <p>
           Live collected traffic only (operator Telegram ids excluded) – not the public demo dataset.
           Where people leave the conversation tree – from finding CalClaim to finishing the offer queue.
@@ -118,43 +403,68 @@
           </table>
         </div>
       </div>
+        </div>
+      </details>
     </section>
 
-    <section class="panel" id="journey" aria-labelledby="journey-heading">
+    <section class="panel" id="spread" aria-labelledby="spread-heading">
+      <details class="panel-fold" open>
+        <summary class="panel-fold-summary">
+          <h2 id="spread-heading">How CalClaim spreads</h2>
+        </summary>
+        <div class="panel-fold-body">
       <div class="panel-head">
-        <h2 id="journey-heading">Journey progress &amp; dropout</h2>
         <p>
-          Overall view: how far people get through the experience.
-          Progress = screens seen ÷ (screens seen + max screens still ahead on their path).
-          Dropout in a band = people whose furthest progress landed there and who never finished.
+          Live collected traffic only – not the public demo dataset.
+          Organization QR codes versus people sharing with friends. Each person who shares
+          gets an anonymous link, so we can see whether word of mouth is growing –
+          without collecting who they sent it to.
         </p>
       </div>
-      <p class="journey-summary" id="journey-summary">Loading…</p>
-      <div class="funnel-layout">
-        <div class="funnel-chart-wrap">
-          <canvas id="chart-journey" height="320"></canvas>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>% through</th>
-                <th class="num">People</th>
-                <th class="num">Dropped here</th>
-                <th class="num">Still in</th>
-              </tr>
-            </thead>
-            <tbody id="journey-rows">
-              <tr><td colspan="4">Loading…</td></tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="spread-compare" aria-label="Organizations compared with friend shares">
+        <article class="spread-card" id="spread-org">
+          <p class="metric-label">Organizations</p>
+          <p class="metric-value" id="m-org-reached">–</p>
+          <p class="metric-note">Partner QR codes and events</p>
+          <p class="spread-sub" id="m-org-detail"></p>
+        </article>
+        <article class="spread-card spread-card-friends" id="spread-friends">
+          <p class="metric-label">Friends sharing</p>
+          <p class="metric-value" id="m-friend-reached">–</p>
+          <p class="metric-note">People sending CalClaim to someone they know</p>
+          <p class="spread-sub" id="m-friend-detail"></p>
+        </article>
       </div>
+      <p class="spread-verdict" id="spread-verdict"></p>
+      <div class="spread-meta">
+        <article>
+          <p class="metric-label">People who shared</p>
+          <p class="metric-value" id="m-sharers">–</p>
+          <p class="metric-note">Opened Share in CalClaim</p>
+        </article>
+        <article>
+          <p class="metric-label">Friend-link clicks</p>
+          <p class="metric-value" id="m-friend-clicks">–</p>
+          <p class="metric-note">New people reached through those shares</p>
+        </article>
+        <article>
+          <p class="metric-label">Clicks per person who shared</p>
+          <p class="metric-value" id="m-viral">–</p>
+          <p class="metric-note">How far each share travels</p>
+        </article>
+      </div>
+      <p class="spread-website" id="spread-website" hidden></p>
+        </div>
+      </details>
     </section>
 
     <section class="panel" id="screen-dropout" aria-labelledby="screen-dropout-heading">
+      <details class="panel-fold" open>
+        <summary class="panel-fold-summary">
+          <h2 id="screen-dropout-heading">Dropout by tree location</h2>
+        </summary>
+        <div class="panel-fold-body">
       <div class="panel-head">
-        <h2 id="screen-dropout-heading">Dropout by tree location</h2>
         <p>
           Granular developer view: drop-off at each message-tree screen.
           “Dropped here” means this was the last screen they saw and they never reached Finish.
@@ -182,11 +492,17 @@
           </table>
         </div>
       </div>
+        </div>
+      </details>
     </section>
 
     <section class="panel" id="screen-timing" aria-labelledby="screen-timing-heading">
+      <details class="panel-fold" open>
+        <summary class="panel-fold-summary">
+          <h2 id="screen-timing-heading">Time on questions</h2>
+        </summary>
+        <div class="panel-fold-body">
       <div class="panel-head">
-        <h2 id="screen-timing-heading">Time on questions</h2>
         <p>
           How long people spend on each tree screen, and how long finishers take
           for the whole walk. Time is the gap from one screen shown to the next.
@@ -217,41 +533,18 @@
           </table>
         </div>
       </div>
-    </section>
-
-    <section class="panel" aria-labelledby="feedback-heading">
-      <div class="panel-head panel-head-row">
-        <div>
-          <h2 id="feedback-heading">Alpha user feedback – to do</h2>
-          <p>
-            Text and voice notes from testers, web contact form messages,
-            partner landing-page feedback, and developer requests pinned from the
-            message-tree review. Multi-point partner feedback is split into one
-            ticket per point and credited on that organization’s metrics.
-            Disqualify junk or non-feedback so it drops out of partner tallies.
-            Voice is transcribed to text when <code>OPENAI_API_KEY</code> is set.
-            Mark done after you act on it.
-          </p>
         </div>
-        <label class="filter">
-          Show
-          <select id="feedback-filter">
-            <option value="open">Open</option>
-            <option value="all">All</option>
-            <option value="done">Done</option>
-            <option value="disqualified">Disqualified</option>
-          </select>
-        </label>
-      </div>
-      <div id="feedback-list" class="findings">
-        <p class="empty">Loading…</p>
-      </div>
+      </details>
     </section>
 
-    <section class="panel" aria-labelledby="disaster-heading">
+    <section class="panel" id="disaster" aria-labelledby="disaster-heading">
+      <details class="panel-fold" open>
+        <summary class="panel-fold-summary">
+          <h2 id="disaster-heading">Disaster CalFresh windows</h2>
+        </summary>
+        <div class="panel-fold-body">
       <div class="panel-head panel-head-row">
         <div>
-          <h2 id="disaster-heading">Disaster CalFresh windows</h2>
           <p>
             Scanned daily and published automatically – nothing here waits on you. USDA FNS
             is the agency that approves Disaster CalFresh and the only source that states the
@@ -278,61 +571,24 @@
       <div id="disaster-list" class="findings">
         <p class="empty">Loading…</p>
       </div>
-    </section>
-
-    <section class="panel" aria-labelledby="findings-heading">
-      <div class="panel-head panel-head-row">
-        <div>
-          <h2 id="findings-heading">Findings for developers</h2>
-          <p>Prioritized mismatches and link issues. Acknowledge or dismiss after you update the library.</p>
         </div>
-        <label class="filter">
-          Show
-          <select id="finding-filter">
-            <option value="open">Open</option>
-            <option value="all">All</option>
-            <option value="acknowledged">Acknowledged</option>
-            <option value="dismissed">Dismissed</option>
-            <option value="fixed">Fixed</option>
-          </select>
-        </label>
-      </div>
-      <div id="findings-list" class="findings">
-        <p class="empty">Loading…</p>
-      </div>
+      </details>
     </section>
 
-    <section class="panel" aria-labelledby="programs-heading">
-      <div class="panel-head">
-        <h2 id="programs-heading">Programs in library</h2>
-        <p>Each row is a frozen offer CalClaim can present. Open findings are from prior scans.</p>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Program</th>
-              <th>Category</th>
-              <th class="num">Sources</th>
-              <th class="num">Deadlines</th>
-              <th class="num">Open findings</th>
-              <th>Apply URL</th>
-            </tr>
-          </thead>
-          <tbody id="program-rows">
-            <tr><td colspan="6">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="panel" id="matrix" aria-labelledby="matrix-heading">
+    <section class="panel" id="programs" aria-labelledby="programs-heading">
+      <div id="matrix" class="programs-anchor" aria-hidden="true"></div>
+      <details class="panel-fold" open>
+        <summary class="panel-fold-summary">
+          <h2 id="programs-heading">Programs</h2>
+        </summary>
+        <div class="panel-fold-body">
       <div class="panel-head panel-head-row">
         <div>
-          <h2 id="matrix-heading">Program requirements</h2>
           <p>
-            Two views of the same data in <code>library/program-requirements.json</code>.
-            <em>Edit rows</em> is the ranked spreadsheet with dropdowns.
+            Every frozen offer in the library, plus the operational requirements in
+            <code>library/program-requirements.json</code>.
+            <em>Edit rows</em> is the ranked spreadsheet: library links and scan findings
+            sit next to eligibility, documents, and review status.
             <em>Coverage grid</em> is the scan view: every program down the side, every
             eligibility rule and document across the top – including
             <em>this document OR that document</em> alternatives as one column.
@@ -383,7 +639,7 @@
         </div>
       </div>
 
-      <div class="matrix-tabs" role="tablist" aria-label="Requirements views">
+      <div class="matrix-tabs" role="tablist" aria-label="Program views">
         <button
           type="button"
           class="matrix-tab"
@@ -418,6 +674,7 @@
               <tr>
                 <th class="num" title="Rank by difficulty score, easiest first">#</th>
                 <th>Program</th>
+                <th title="Apply URL, source citations, deadlines, and open scan findings">Library</th>
                 <th title="Whether someone could apply today">Open now?</th>
                 <th>Difficulty</th>
                 <th>Eligibility requirements</th>
@@ -431,7 +688,7 @@
               </tr>
             </thead>
             <tbody id="matrix-rows">
-              <tr><td colspan="12">Loading…</td></tr>
+              <tr><td colspan="13">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -461,6 +718,11 @@
 
       <details class="matrix-legend">
         <summary>How the difficulty rank and the open/closed status are worked out</summary>
+        <p>
+          <strong>Library</strong> is the frozen <code>programs.json</code> row: apply URL,
+          source citation count, deadline count (a <code>*</code> means at least one deadline
+          has no date), and open scan findings from the last library check.
+        </p>
         <p>
           <strong>Open now?</strong> is computed on every load, not stored, so it cannot go stale.
           <em>Dormant</em> means a disaster-gated program like Disaster CalFresh has no county
@@ -494,106 +756,110 @@
           next. <strong>Needs first</strong> is the reverse – a hard prerequisite.
         </p>
       </details>
-    </section>
-
-    <section class="panel" id="partners" aria-labelledby="partners-heading">
-      <div class="panel-head panel-head-row">
-        <div>
-          <h2 id="partners-heading">Community partners</h2>
-          <p>Signed-up organizations and individuals. Public leaderboard only lists verified organizations.</p>
         </div>
-        <button type="button" class="cta cta-ghost" id="btn-partners-refresh">Refresh</button>
-      </div>
-      <p class="scan-status" id="partners-status" aria-live="polite"></p>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Organization</th>
-              <th>City</th>
-              <th>Email</th>
-              <th>Partner ID</th>
-              <th>Slug</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="partner-rows">
-            <tr><td colspan="6">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
+      </details>
     </section>
+  </main>
+  </div>
 
-    <dialog class="partner-edit-dialog" id="dev-partner-edit-dialog" aria-labelledby="dev-edit-dialog-title">
-      <form id="dev-partner-edit-form" class="partner-edit-form" novalidate>
-        <header class="partner-edit-head">
-          <h2 id="dev-edit-dialog-title">Edit partner</h2>
-          <button type="button" class="partner-edit-close" id="dev-edit-dialog-close" aria-label="Close">×</button>
-        </header>
-        <p class="partner-edit-lede">
-          Partner ID and status URL stay the same when the organization name changes.
+  <div class="dev-tree-view" id="tree">
+    <header class="hero hero-dev tree-hero">
+      <p class="eyebrow">Developer tools</p>
+      <h1>Message tree</h1>
+      <p class="lede">
+        Walk the Telegram conversation with the real ranker. At each point you can
+        see the bot copy, why that screen appeared, and whether each program’s
+        requirements are met, still unknown, or already eliminated for this user.
+      </p>
+      <div class="tree-toolbar" id="presets"></div>
+      <div class="tree-toolbar">
+        <button type="button" class="cta cta-ghost" id="btn-undo">Undo last tap</button>
+        <button type="button" class="cta cta-ghost" id="btn-skip-rest">Skip rest of wave</button>
+        <button type="button" class="cta cta-ghost" id="btn-add-rest">Add rest of wave</button>
+        <button type="button" class="cta cta-ghost" id="btn-copy">Copy link to this point</button>
+        <button type="button" class="cta" id="btn-request">Developer request</button>
+        <a class="cta cta-ghost" href="/dev/tree/chart">Gate chart</a>
+        <a class="cta cta-ghost" href="/dev/tree/utilities">Utilities</a>
+      </div>
+      <p class="scan-status" id="status-line" aria-live="polite"></p>
+    </header>
+
+    <div class="tree-layout">
+      <section class="tree-col tree-col-flow" aria-labelledby="flow-heading">
+        <h2 id="flow-heading">Canonical flow</h2>
+        <p class="tree-col-lede">
+          Order of screens. Highlight is where this simulated user is now.
+          Gates only appear when they unlock the next cheapest wave.
         </p>
-        <p class="partner-edit-meta">
-          <span>ID: <code id="dev-edit-partner-id">–</code></span>
-          <span>Slug: <code id="dev-edit-slug">–</code></span>
+        <ol class="flow-list" id="flow-list"></ol>
+      </section>
+
+      <section class="tree-col tree-col-phone" aria-labelledby="phone-heading">
+        <h2 id="phone-heading">What the user sees</h2>
+        <p class="why" id="why"></p>
+        <article class="phone" id="phone">
+          <p class="phone-step" id="phone-step"></p>
+          <pre class="phone-text" id="phone-text"></pre>
+          <p class="phone-note" id="phone-note" hidden></p>
+          <div class="phone-buttons" id="phone-buttons"></div>
+          <form class="phone-zip" id="zip-form" hidden>
+            <label for="zip-input">Type a 5-digit ZIP</label>
+            <div class="zip-row">
+              <input id="zip-input" name="zip" inputmode="numeric" maxlength="10" autocomplete="off" />
+              <button type="submit" class="cta">Send ZIP</button>
+            </div>
+          </form>
+        </article>
+        <aside class="facts" aria-labelledby="facts-heading">
+          <h3 id="facts-heading">Known about this user</h3>
+          <dl id="facts"></dl>
+        </aside>
+      </section>
+
+      <section class="tree-col tree-col-reqs" aria-labelledby="reqs-heading">
+        <div class="reqs-head">
+          <h2 id="reqs-heading">Requirements at this point</h2>
+          <p class="tree-col-lede" id="counts"></p>
+        </div>
+        <div class="filter-row" id="filters" role="tablist" aria-label="Filter programs"></div>
+        <div class="program-list" id="tree-programs"></div>
+      </section>
+    </div>
+
+    <dialog class="tree-request-dialog" id="request-dialog" aria-labelledby="request-dialog-title">
+      <form class="tree-request-form" id="request-form">
+        <div class="tree-request-head">
+          <h2 id="request-dialog-title">Developer request</h2>
+          <button type="button" class="tree-request-close" id="request-dialog-close" aria-label="Close">×</button>
+        </div>
+        <p class="tree-request-lede">
+          Note something to fix or rethink. Saving pins this request to the tree
+          location you are on right now.
         </p>
-        <label class="field">
-          <span>Organization name</span>
-          <input id="dev-edit-organization" name="organization" type="text" required maxlength="120" autocomplete="organization" />
+        <p class="tree-request-location" id="request-location" aria-live="polite"></p>
+        <label class="tree-request-field" for="request-text">
+          Request
+          <textarea
+            id="request-text"
+            name="text"
+            rows="5"
+            maxlength="4000"
+            required
+            placeholder="What should change at this point in the tree?"
+          ></textarea>
         </label>
-        <label class="field">
-          <span>City</span>
-          <input id="dev-edit-city" name="city" type="text" maxlength="80" autocomplete="address-level2" />
-        </label>
-        <label class="field">
-          <span>Work email</span>
-          <input id="dev-edit-email" name="email" type="email" inputmode="email" required maxlength="200" autocomplete="email" />
-        </label>
-        <label class="field">
-          <span>Organization logo (optional)</span>
-          <input id="dev-edit-logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp,image/gif" autocomplete="off" />
-          <span class="field-help">Leave empty to keep the current logo. PNG or JPG, up to 2&nbsp;MB.</span>
-        </label>
-        <p id="dev-edit-status" class="partner-edit-status" role="status" aria-live="polite" hidden></p>
-        <div class="partner-edit-actions">
-          <button type="button" class="cta cta-ghost" id="dev-edit-cancel">Cancel</button>
-          <button type="submit" class="cta" id="dev-edit-submit">Save changes</button>
+        <div class="tree-request-actions">
+          <button type="button" class="cta cta-ghost" id="request-cancel">Cancel</button>
+          <button type="submit" class="cta" id="request-save">Save request</button>
+        </div>
+        <p class="tree-request-status" id="request-status" aria-live="polite"></p>
+        <div class="tree-request-list-wrap">
+          <h3>Open tree requests</h3>
+          <div class="tree-request-list" id="request-list"></div>
         </div>
       </form>
     </dialog>
-
-    <section class="panel" id="checklist" aria-labelledby="checklist-heading">
-      <div class="panel-head">
-        <h2 id="checklist-heading">What to keep an eye on</h2>
-        <p>Beyond dates, qualifications, apply steps, funding, max amounts, and URLs – these fields also break CalClaim when stale.</p>
-      </div>
-      <ul class="checklist" id="checklist-items"></ul>
-    </section>
-
-    <section class="panel" aria-labelledby="scans-heading">
-      <div class="panel-head">
-        <h2 id="scans-heading">Recent scans</h2>
-        <p>Scans hit apply URLs and source citations; they never write to the library.</p>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Status</th>
-              <th>Progress</th>
-              <th>Findings</th>
-              <th>LLM</th>
-              <th>Started</th>
-            </tr>
-          </thead>
-          <tbody id="scan-rows">
-            <tr><td colspan="6">No scans yet</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </main>
+  </div>
 
   <footer>
     <p>
@@ -605,6 +871,7 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="/dev/tree/app.js"></script>
   <script src="/dev/app.js"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@ import {
   type ImmigrationAnswer,
 } from "./immigrationMemory.js";
 import { missingDocs } from "../library/docs.js";
-import { isCmspCounty } from "../library/geo.js";
+import { passesCountyEligibility, programNeedsZip } from "../library/geo.js";
 import { getProgram, loadPrograms } from "../library/load.js";
 import {
   isHeldFromOffer,
@@ -64,6 +64,8 @@ export type TriageGateId =
   | "ca_residency"
   | "buying_ev"
   | "first_time_zev"
+  | "buying_ebike"
+  | "retire_vehicle"
   | "child"
   | "foster_youth"
   | "refugee"
@@ -163,6 +165,12 @@ export function buildQueue(
     if (p.requiresFirstTimeZev && session.firstTimeZev !== true) {
       return false;
     }
+    if (p.requiresBuyingEbikeThisYear && session.buyingEbikeThisYear !== true) {
+      return false;
+    }
+    if (p.requiresVehicleRetirement && session.wouldRetireVehicle !== true) {
+      return false;
+    }
     if (p.requiresChildInHousehold && session.hasChildInHousehold !== true) {
       return false;
     }
@@ -190,8 +198,8 @@ export function buildQueue(
     ) {
       return false;
     }
-    // ZIP unanswered → county unknown → not yet eligible for CMSP.
-    if (p.requiresCmspCounty && !isCmspCounty(session.residenceCounty)) {
+    // ZIP unanswered → county unknown → not yet eligible for CMSP / local e-bike.
+    if (!passesCountyEligibility(p, session.residenceCounty)) {
       return false;
     }
     if (!passesIncomeGate(p, session.incomeBand, branch)) return false;
@@ -269,6 +277,8 @@ function withOptimisticGates(
     isCaResident: session.isCaResident ?? true,
     buyingEvThisYear: session.buyingEvThisYear ?? true,
     firstTimeZev: session.firstTimeZev ?? true,
+    buyingEbikeThisYear: session.buyingEbikeThisYear ?? true,
+    wouldRetireVehicle: session.wouldRetireVehicle ?? true,
     hasChildInHousehold: session.hasChildInHousehold ?? true,
     isFosterYouth: session.isFosterYouth ?? true,
     isRefugeeOrAsylee: session.isRefugeeOrAsylee ?? true,
@@ -304,6 +314,12 @@ export function remainingTriageQuestions(
   if (program.requiresFirstTimeZev && session.firstTimeZev === null) {
     n += 1;
   }
+  if (program.requiresBuyingEbikeThisYear && session.buyingEbikeThisYear === null) {
+    n += 1;
+  }
+  if (program.requiresVehicleRetirement && session.wouldRetireVehicle === null) {
+    n += 1;
+  }
   if (program.requiresChildInHousehold && session.hasChildInHousehold === null) {
     n += 1;
   }
@@ -333,7 +349,7 @@ export function remainingTriageQuestions(
   ) {
     n += 1;
   }
-  if (program.requiresCmspCounty && session.residenceZip === null) n += 1;
+  if (programNeedsZip(program) && session.residenceZip === null) n += 1;
   return n;
 }
 
@@ -363,6 +379,10 @@ function gateStillOpen(gate: TriageGateId, session: SessionState): boolean {
       return session.buyingEvThisYear === null;
     case "first_time_zev":
       return session.firstTimeZev === null;
+    case "buying_ebike":
+      return session.buyingEbikeThisYear === null;
+    case "retire_vehicle":
+      return session.wouldRetireVehicle === null;
     case "child":
       return session.hasChildInHousehold === null;
     case "foster_youth":
@@ -408,6 +428,10 @@ function programUsesGate(
       return program.requiresBuyingEvThisYear === true;
     case "first_time_zev":
       return program.requiresFirstTimeZev === true;
+    case "buying_ebike":
+      return program.requiresBuyingEbikeThisYear === true;
+    case "retire_vehicle":
+      return program.requiresVehicleRetirement === true;
     case "child":
       return program.requiresChildInHousehold === true;
     case "foster_youth":
@@ -423,7 +447,7 @@ function programUsesGate(
     case "disaster":
       return program.requiresActiveDisasterWindow === true;
     case "zip":
-      return program.requiresCmspCounty === true;
+      return programNeedsZip(program);
   }
 }
 
@@ -435,6 +459,26 @@ function programsUnlockedByGate(
   session: SessionState,
   gate: TriageGateId,
 ): Program[] {
+  if (gate === "zip") {
+    const found: Program[] = [];
+    const seen = new Set<string>();
+    for (const p of loadPrograms()) {
+      if (!programUsesGate(p, "zip", session)) continue;
+      const county = p.eligibleCounties?.[0] ?? "Sonoma";
+      const ids = buildQueue(
+        withOptimisticGates(session, {
+          residenceZip: "99999",
+          residenceCounty: county,
+        }),
+      );
+      if (ids.includes(p.id) && !seen.has(p.id)) {
+        seen.add(p.id);
+        found.push(p);
+      }
+    }
+    return found;
+  }
+
   if (gate === "work") {
     const found: Program[] = [];
     const seen = new Set<string>();
@@ -484,6 +528,12 @@ function programsUnlockedByGate(
     case "first_time_zev":
       overrides.firstTimeZev = true;
       break;
+    case "buying_ebike":
+      overrides.buyingEbikeThisYear = true;
+      break;
+    case "retire_vehicle":
+      overrides.wouldRetireVehicle = true;
+      break;
     case "child":
       overrides.hasChildInHousehold = true;
       break;
@@ -502,10 +552,6 @@ function programsUnlockedByGate(
     case "disaster":
       overrides.inDisasterArea = true;
       break;
-    case "zip":
-      overrides.residenceZip = "95476";
-      overrides.residenceCounty = "Sonoma";
-      break;
   }
 
   return buildQueue(withOptimisticGates(session, overrides))
@@ -515,6 +561,37 @@ function programsUnlockedByGate(
       return programUsesGate(p, gate, session);
     });
 }
+
+/**
+ * Tie-break order when two open gates unlock programs with the same remaining
+ * question count. Cheaper remainingQ always wins; this list only decides ties.
+ *
+ * Household/bill 1-question gates sit before transportation so a scrap-car or
+ * first-ZEV follow-up cannot beat WIC / SSI / UI on a 1q tie. Within
+ * transportation: pedal e-bike before EV (more plausible for this audience),
+ * then scrap (statewide $7,500, yes/no) before ZIP (typing; only a few
+ * counties have a no-scrap rebate). ZIP is last so CMSP’s 1q county check
+ * still outranks a 2q e-bike/EV intent.
+ */
+export const TRIAGE_GATE_ASK_ORDER: readonly TriageGateId[] = [
+  "income",
+  "ca_residency",
+  "utility_bills",
+  "shared_meter",
+  "shutoff_zone",
+  "past_due",
+  "medical_need",
+  "child",
+  "foster_youth",
+  "refugee",
+  "abd",
+  "work",
+  "buying_ebike",
+  "retire_vehicle",
+  "buying_ev",
+  "first_time_zev",
+  "zip",
+];
 
 /**
  * Next question to ask. Live Disaster CalFresh windows jump the queue – the
@@ -529,23 +606,7 @@ export function pickNextTriageGate(session: SessionState): TriageGateId | null {
     return "disaster";
   }
 
-  const gates: TriageGateId[] = [
-    "income",
-    "ca_residency",
-    "utility_bills",
-    "shared_meter",
-    "shutoff_zone",
-    "past_due",
-    "medical_need",
-    "buying_ev",
-    "first_time_zev",
-    "child",
-    "foster_youth",
-    "refugee",
-    "abd",
-    "work",
-    "zip",
-  ];
+  const gates = TRIAGE_GATE_ASK_ORDER;
 
   let best: TriageGateId | null = null;
   let bestMinQ = Infinity;
@@ -646,24 +707,7 @@ export function estimateMaxScreensRemaining(session: SessionState): number {
   if (session.step === "idle") return 0;
 
   let gates = 0;
-  const gateOrder: TriageGateId[] = [
-    "disaster",
-    "income",
-    "ca_residency",
-    "utility_bills",
-    "shared_meter",
-    "shutoff_zone",
-    "past_due",
-    "medical_need",
-    "buying_ev",
-    "first_time_zev",
-    "child",
-    "foster_youth",
-    "refugee",
-    "abd",
-    "work",
-    "zip",
-  ];
+  const gateOrder: TriageGateId[] = ["disaster", ...TRIAGE_GATE_ASK_ORDER];
 
   for (const gate of gateOrder) {
     if (!gateStillOpen(gate, session)) continue;
@@ -817,6 +861,20 @@ export function queueNeedsFirstTimeZevGate(session: SessionState): boolean {
   return (
     gateStillOpen("first_time_zev", session) &&
     programsUnlockedByGate(session, "first_time_zev").length > 0
+  );
+}
+
+export function queueNeedsBuyingEbikeGate(session: SessionState): boolean {
+  return (
+    gateStillOpen("buying_ebike", session) &&
+    programsUnlockedByGate(session, "buying_ebike").length > 0
+  );
+}
+
+export function queueNeedsRetireVehicleGate(session: SessionState): boolean {
+  return (
+    gateStillOpen("retire_vehicle", session) &&
+    programsUnlockedByGate(session, "retire_vehicle").length > 0
   );
 }
 

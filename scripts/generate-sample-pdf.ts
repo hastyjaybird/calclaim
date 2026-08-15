@@ -24,6 +24,8 @@ const sample: SessionState = {
   isCaResident: true,
   buyingEvThisYear: false,
   firstTimeZev: false,
+  buyingEbikeThisYear: false,
+  wouldRetireVehicle: false,
   hasChildInHousehold: true,
   isFosterYouth: false,
   isRefugeeOrAsylee: false,

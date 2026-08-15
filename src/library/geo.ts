@@ -51,3 +51,37 @@ export function isCmspCounty(county: string | null | undefined): boolean {
   if (!county) return false;
   return loadCmspCounties().has(county.trim().toLowerCase());
 }
+
+export function countyInList(
+  county: string | null | undefined,
+  allowed: readonly string[],
+): boolean {
+  if (!county || allowed.length === 0) return false;
+  const needle = county.trim().toLowerCase();
+  return allowed.some((c) => c.trim().toLowerCase() === needle);
+}
+
+/** ZIP is asked when CMSP or any eligibleCounties program would otherwise unlock. */
+export function programNeedsZip(program: {
+  requiresCmspCounty?: boolean;
+  eligibleCounties?: string[];
+}): boolean {
+  return (
+    program.requiresCmspCounty === true ||
+    Boolean(program.eligibleCounties && program.eligibleCounties.length > 0)
+  );
+}
+
+export function passesCountyEligibility(
+  program: {
+    requiresCmspCounty?: boolean;
+    eligibleCounties?: string[];
+  },
+  county: string | null | undefined,
+): boolean {
+  if (program.requiresCmspCounty && !isCmspCounty(county)) return false;
+  if (program.eligibleCounties?.length) {
+    return countyInList(county, program.eligibleCounties);
+  }
+  return true;
+}

@@ -9,6 +9,8 @@ export interface PartnerWelcomeEmailPayload {
   statusUrl: string;
   qrUrl: string;
   bannerUrl: string;
+  /** Individuals only: link that soft-cancels and removes them from the leaderboard. */
+  cancelUrl?: string;
   qrPng: Buffer;
   bannerPdf: Buffer;
 }
@@ -16,6 +18,15 @@ export interface PartnerWelcomeEmailPayload {
 export interface PartnerVerifyEmailPayload {
   partner: SignedUpPartner;
   verifyUrl: string;
+}
+
+export interface PartnerLoginEmailPayload {
+  partnerName: string;
+  partnerSlug: string;
+  emailDomain: string;
+  accountType: "organization" | "individual";
+  to: string;
+  loginUrl: string;
 }
 
 export interface SendPartnerEmailResult {
@@ -33,8 +44,20 @@ function escapeHtml(s: string): string {
 }
 
 function buildWelcomeHtml(payload: PartnerWelcomeEmailPayload): string {
-  const { partner, statusUrl, qrUrl, bannerUrl } = payload;
+  const { partner, statusUrl, qrUrl, bannerUrl, cancelUrl } = payload;
   const name = escapeHtml(partner.name);
+  const isIndividual = partner.accountType === "individual";
+  const creditLine = isIndividual
+    ? `Every scan of your QR code credits <strong>${name}</strong> on the public community partner leaderboard and on your public stats page.`
+    : `Every scan of your QR code credits <strong>${name}</strong> on the public community partner leaderboard.`;
+  const cancelBlock = cancelUrl
+    ? `
+              <p style="margin:22px 0 8px;font-size:14px;color:#084d3d;font-weight:700;">Remove yourself from the leaderboard</p>
+              <p style="margin:0 0 18px;font-size:15px;line-height:1.45;color:#3a5550;">
+                If you no longer want to appear on the public leaderboard, open this link to cancel your partner listing:
+                <br /><a href="${escapeHtml(cancelUrl)}" style="color:#0d7a5f;">${escapeHtml(cancelUrl)}</a>
+              </p>`
+    : "";
   return `<!DOCTYPE html>
 <html>
 <body style="margin:0;padding:0;background:#eef4f1;font-family:Georgia,'Times New Roman',serif;color:#10241f;">
@@ -55,11 +78,7 @@ function buildWelcomeHtml(payload: PartnerWelcomeEmailPayload): string {
                 <strong style="color:#10241f;">${escapeHtml(partner.id)}</strong>.
               </p>
               <p style="margin:0 0 18px;font-size:16px;line-height:1.5;color:#3a5550;">
-                ${
-                  partner.accountType === "organization"
-                    ? `Every scan of your QR code credits <strong>${name}</strong> on the public community partner leaderboard.`
-                    : `Every scan of your QR code is tracked on your private status page (individuals are not listed on the public leaderboard).`
-                }
+                ${creditLine}
               </p>
               <p style="margin:0 0 8px;font-size:14px;color:#084d3d;font-weight:700;">Your partner status page</p>
               <p style="margin:0 0 18px;font-size:15px;line-height:1.45;">
@@ -77,7 +96,7 @@ function buildWelcomeHtml(payload: PartnerWelcomeEmailPayload): string {
               <p style="margin:0 0 18px;font-size:15px;line-height:1.45;color:#3a5550;">
                 Attached as <code>calclaim-booth-banner.pdf</code> – page 1 is a full booth placard; page 2 has two half-page fliers (same layout, rotated) to cut and hand out.
                 <br /><a href="${escapeHtml(bannerUrl)}" style="color:#0d7a5f;">Download booth banner</a>
-              </p>
+              </p>${cancelBlock}
               <p style="margin:0;font-size:13px;line-height:1.45;color:#3a5550;">
                 Questions? Reply to this email or use the contact form on the CalClaim impact site.
               </p>
@@ -97,16 +116,23 @@ function buildWelcomeHtml(payload: PartnerWelcomeEmailPayload): string {
 }
 
 function buildWelcomeText(payload: PartnerWelcomeEmailPayload): string {
-  const { partner, statusUrl, qrUrl, bannerUrl } = payload;
+  const { partner, statusUrl, qrUrl, bannerUrl, cancelUrl } = payload;
+  const creditLine =
+    partner.accountType === "individual"
+      ? `Every scan of your QR code credits ${partner.name} on the public community partner leaderboard and on your public stats page.`
+      : `Every scan of your QR code credits ${partner.name} on the public community partner leaderboard.`;
+  const cancelBlock = cancelUrl
+    ? `
+
+Remove yourself from the leaderboard:
+${cancelUrl}
+`
+    : "";
   return `Welcome, ${partner.name}
 
 Your email is verified. Your unique partner ID is ${partner.id}.
 
-${
-    partner.accountType === "organization"
-      ? `Every scan of your QR code credits ${partner.name} on the public community partner leaderboard.`
-      : `Every scan of your QR code is tracked on your private status page (individuals are not listed on the public leaderboard).`
-  }
+${creditLine}
 
 Your partner status page:
 ${statusUrl}
@@ -116,7 +142,7 @@ ${qrUrl}
 
 Booth banner to print (also attached as calclaim-booth-banner.pdf) – page 1 is a full booth placard; page 2 has two half-page fliers (same layout, rotated) to cut and hand out:
 ${bannerUrl}
-
+${cancelBlock}
 Questions? Reply to this email or use the contact form on the CalClaim impact site.
 
 – CalClaim
@@ -329,6 +355,7 @@ export async function sendPartnerWelcomeEmail(
           statusUrl: payload.statusUrl,
           qrUrl: payload.qrUrl,
           bannerUrl: payload.bannerUrl,
+          cancelUrl: payload.cancelUrl || "",
         },
         binaries: [
           { suffix: "-qr.png", buffer: payload.qrPng },
@@ -356,6 +383,7 @@ export async function sendPartnerWelcomeEmail(
       statusUrl: payload.statusUrl,
       qrUrl: payload.qrUrl,
       bannerUrl: payload.bannerUrl,
+      cancelUrl: payload.cancelUrl || "",
     },
     binaries: [
       { suffix: "-qr.png", buffer: payload.qrPng },
@@ -369,6 +397,145 @@ export async function sendPartnerWelcomeEmail(
     ok: true,
     mode: "outbox",
     detail: `SMTP not configured; wrote kit to ${outDir}`,
+  };
+}
+
+function buildLoginHtml(payload: PartnerLoginEmailPayload): string {
+  const name = escapeHtml(payload.partnerName);
+  const domain = escapeHtml(payload.emailDomain || "");
+  const orgNote =
+    payload.accountType === "organization" && domain
+      ? ` Anyone with an <strong>@${domain}</strong> email can sign in to this organization’s private page.`
+      : "";
+  return `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#eef4f1;font-family:Georgia,'Times New Roman',serif;color:#10241f;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef4f1;padding:28px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:560px;width:100%;">
+          <tr>
+            <td style="background:#0d7a5f;padding:18px 28px;color:#f7f3ea;font-family:Figtree,Helvetica,Arial,sans-serif;font-size:14px;letter-spacing:0.04em;">
+              CalClaim · Partner sign-in
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 28px 8px;font-family:Figtree,Helvetica,Arial,sans-serif;">
+              <h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;color:#084d3d;">Sign in to ${name}</h1>
+              <p style="margin:0 0 14px;font-size:16px;line-height:1.5;color:#3a5550;">
+                Use this link to open the private organization page for
+                <strong style="color:#10241f;">${name}</strong>.${orgNote}
+              </p>
+              <p style="margin:0 0 22px;">
+                <a href="${escapeHtml(payload.loginUrl)}"
+                   style="display:inline-block;background:#0d7a5f;color:#f7f3ea;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:700;font-size:15px;">
+                  Sign in to CalClaim
+                </a>
+              </p>
+              <p style="margin:0 0 8px;font-size:13px;line-height:1.45;color:#3a5550;">
+                Or paste this link into your browser:
+              </p>
+              <p style="margin:0 0 18px;font-size:13px;line-height:1.45;word-break:break-all;">
+                <a href="${escapeHtml(payload.loginUrl)}" style="color:#0d7a5f;">${escapeHtml(payload.loginUrl)}</a>
+              </p>
+              <p style="margin:0;font-size:13px;line-height:1.45;color:#3a5550;">
+                If you did not request this, ignore this email. The link expires in one hour.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 28px 28px;font-family:Figtree,Helvetica,Arial,sans-serif;font-size:12px;color:#3a5550;">
+              CalClaim demo · Partner magic link · Not an official agency affiliation
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+function buildLoginText(payload: PartnerLoginEmailPayload): string {
+  const domainNote =
+    payload.accountType === "organization" && payload.emailDomain
+      ? ` Anyone with an @${payload.emailDomain} email can sign in to this organization’s private page.`
+      : "";
+  return `Sign in to ${payload.partnerName}
+
+Use this link to open the private organization page for ${payload.partnerName}.${domainNote}
+
+${payload.loginUrl}
+
+If you did not request this, ignore this email. The link expires in one hour.
+
+– CalClaim
+`;
+}
+
+/** Send magic-link email for private partner / organization page sign-in. */
+export async function sendPartnerLoginEmail(
+  payload: PartnerLoginEmailPayload,
+): Promise<SendPartnerEmailResult> {
+  const subject = `Sign in to CalClaim – ${payload.partnerName}`;
+  const text = buildLoginText(payload);
+  const html = buildLoginHtml(payload);
+
+  if (smtpConfigured()) {
+    try {
+      await sendMail({
+        to: payload.to,
+        subject,
+        text,
+        html,
+      });
+      return {
+        ok: true,
+        mode: "smtp",
+        detail: `Sent login email to ${payload.to}`,
+      };
+    } catch (err) {
+      console.error("[partner-email] Login SMTP failed, falling back to outbox:", err);
+      const outDir = await writeOutboxFile({
+        kind: "partner-login",
+        slug: payload.partnerSlug,
+        to: payload.to,
+        subject,
+        text,
+        html,
+        extra: {
+          slug: payload.partnerSlug,
+          loginUrl: payload.loginUrl,
+        },
+      });
+      return {
+        ok: true,
+        mode: "outbox",
+        detail: `SMTP failed; wrote login to ${outDir}`,
+      };
+    }
+  }
+
+  const outDir = await writeOutboxFile({
+    kind: "partner-login",
+    slug: payload.partnerSlug,
+    to: payload.to,
+    subject,
+    text,
+    html,
+    extra: {
+      slug: payload.partnerSlug,
+      loginUrl: payload.loginUrl,
+    },
+  });
+  console.log(
+    `[partner-email] SMTP unset – wrote login to ${outDir} (to: ${payload.to})`,
+  );
+  console.log(`[partner-email] Login link: ${payload.loginUrl}`);
+  return {
+    ok: true,
+    mode: "outbox",
+    detail: `SMTP not configured; wrote login to ${outDir}`,
   };
 }
 

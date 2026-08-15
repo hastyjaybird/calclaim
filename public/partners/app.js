@@ -10,6 +10,8 @@ const number = new Intl.NumberFormat("en-US");
 
 /** @type {{ slug: string, name: string, city: string, logo: string } | null} */
 let currentPartner = null;
+/** @type {{ name: string, email: string, city: string, logo: string, accountType: string } | null} */
+let currentAccount = null;
 /** @type {string | null} */
 let ownerToken = null;
 /** @type {ReturnType<typeof lineChart>[]} */
@@ -54,12 +56,26 @@ function escapeHtml(s) {
 }
 
 function partnerPathParts() {
-  const path = location.pathname.replace(/^\/(es|zh)(?=\/|$)/, "") || "/";
-  const m = path.match(
+  const path = location.pathname.replace(/^\/(es|zh|vi|tl)(?=\/|$)/, "") || "/";
+  const orgEvent = path.match(
+    /^\/partners\/([A-Za-z0-9_-]+)\/org\/events\/([A-Za-z0-9_-]+)\/?$/,
+  );
+  if (orgEvent) {
+    return { slug: orgEvent[1], eventSlug: orgEvent[2], org: true };
+  }
+  const orgOnly = path.match(/^\/partners\/([A-Za-z0-9_-]+)\/org\/?$/);
+  if (orgOnly) {
+    return { slug: orgOnly[1], eventSlug: null, org: true };
+  }
+  const publicPartner = path.match(
     /^\/partners\/([A-Za-z0-9_-]+)(?:\/events\/([A-Za-z0-9_-]+))?\/?$/,
   );
-  if (!m) return { slug: null, eventSlug: null };
-  return { slug: m[1], eventSlug: m[2] || null };
+  if (!publicPartner) return { slug: null, eventSlug: null, org: false };
+  return {
+    slug: publicPartner[1],
+    eventSlug: publicPartner[2] || null,
+    org: false,
+  };
 }
 
 function partnerSlugFromPath() {
@@ -68,6 +84,10 @@ function partnerSlugFromPath() {
 
 function eventSlugFromPath() {
   return partnerPathParts().eventSlug;
+}
+
+function isOrgPage() {
+  return Boolean(partnerPathParts().org);
 }
 
 function withLang(path) {
@@ -426,9 +446,15 @@ function applyPartnerHeader(p, eventInfo) {
   const back = document.querySelector(".back-link");
   if (back) {
     if (isEvent) {
-      back.href = withLang(`/partners/${encodeURIComponent(p.slug)}`);
+      back.href = withLang(`/partners/${encodeURIComponent(p.slug)}/org`);
       back.textContent = fillName(
         txt("partners.backToPartner", "← Back to {name}"),
+        p.name,
+      );
+    } else if (isOrgPage()) {
+      back.href = withLang(`/partners/${encodeURIComponent(p.slug)}`);
+      back.textContent = fillName(
+        txt("partners.backToPublic", "← Back to public page"),
         p.name,
       );
     } else {
@@ -438,8 +464,10 @@ function applyPartnerHeader(p, eventInfo) {
   }
 
   document.title = isEvent
-    ? `CalClaim × ${p.name} · ${eventInfo.name}`
-    : `CalClaim × ${p.name}`;
+    ? `${p.name} × CalClaim · ${eventInfo.name}`
+    : isOrgPage()
+      ? `${p.name} × CalClaim · Organization`
+      : `${p.name} × CalClaim`;
 }
 
 function paintMetrics(stats) {
@@ -512,24 +540,71 @@ function renderPartner(stats) {
   paintMetrics(stats);
 }
 
-function setOwnerChrome(signedIn) {
-  const loginOpen = el("partner-login-open");
+function syncPageMode(signedIn) {
+  const org = isOrgPage();
+  document.body.classList.toggle("is-org-page", org);
+  document.body.classList.toggle("is-org-signed-in", Boolean(org && signedIn));
+
+  const signInLink = el("org-sign-in-link");
+  const loginPanel = el("org-login-panel");
+  const privateBlock = el("org-private");
   const signed = el("owner-signed-in");
-  const loginPanel = el("owner-login-panel");
   const eventsPanel = el("owner-events-panel");
+  const accountPanel = el("owner-account-panel");
+  const feedbackPanel = el("partner-feedback-panel");
+  const feedbackMsg = el("metric-feedback-messages");
+  const feedbackPts = el("metric-feedback-points");
+  const publicMetrics = el("public-metrics");
+  const charts = document.querySelector(".charts");
+  const mapPanel = el("map")?.closest("section.panel");
+  const disclaimer = el("disclaimer");
+  const downloadBanner = el("download-banner");
   const canOwn = Boolean(currentPartner?.editable);
-  if (loginOpen) loginOpen.hidden = !canOwn || signedIn || eventSlugFromPath();
-  if (signed) signed.hidden = !canOwn || !signedIn;
-  if (loginPanel && (!canOwn || signedIn)) loginPanel.hidden = true;
-  if (eventsPanel) eventsPanel.hidden = !canOwn || !signedIn || Boolean(eventSlugFromPath());
+  const onEvent = Boolean(eventSlugFromPath());
+
+  if (signInLink && currentPartner) {
+    signInLink.href = withLang(
+      `/partners/${encodeURIComponent(currentPartner.slug)}/org`,
+    );
+    signInLink.hidden = org;
+  }
+
+  if (loginPanel) loginPanel.hidden = !org || Boolean(signedIn);
+  if (privateBlock) privateBlock.hidden = !org || !signedIn;
+  if (signed) signed.hidden = !org || !signedIn;
+  if (eventsPanel) eventsPanel.hidden = !org || !signedIn || !canOwn || onEvent;
+  if (accountPanel) accountPanel.hidden = !org || !signedIn || !canOwn || onEvent;
+  if (feedbackPanel) feedbackPanel.hidden = !org || !signedIn || onEvent;
+  if (feedbackMsg) feedbackMsg.hidden = !org || !signedIn;
+  if (feedbackPts) feedbackPts.hidden = !org || !signedIn;
+
+  const showPublicBlocks = !org || Boolean(signedIn);
+  if (publicMetrics) publicMetrics.hidden = !showPublicBlocks;
+  if (charts) charts.hidden = !showPublicBlocks;
+  if (mapPanel) mapPanel.hidden = !showPublicBlocks;
+  if (disclaimer) disclaimer.hidden = !showPublicBlocks;
+  if (downloadBanner) downloadBanner.hidden = org && !signedIn;
+
+  if (org && currentPartner) {
+    const loginBody = el("org-login-body");
+    if (loginBody && !signedIn) {
+      if (currentPartner.accountType === "organization" && currentPartner.emailDomain) {
+        loginBody.textContent = txt(
+          "partners.orgLoginBodyDomain",
+          "Enter a @{domain} work email. We’ll send a one-time link – anyone at that company domain can sign in.",
+        ).replace("{domain}", currentPartner.emailDomain);
+      } else {
+        loginBody.textContent = txt(
+          "partners.orgLoginBodyIndividual",
+          "Enter the email you used to sign up. We’ll send a one-time link.",
+        );
+      }
+    }
+  }
 }
 
-function setLoginStatus(message, isError) {
-  const status = el("owner-login-status");
-  if (!status) return;
-  status.hidden = !message;
-  status.textContent = message || "";
-  status.classList.toggle("is-error", Boolean(isError));
+function setOwnerChrome(signedIn) {
+  syncPageMode(signedIn);
 }
 
 function setEventCreateStatus(message, isError) {
@@ -567,7 +642,7 @@ function renderEventBoard(rows) {
   board.innerHTML = rows
     .map((row) => {
       const href = withLang(
-        `/partners/${encodeURIComponent(slug)}/events/${encodeURIComponent(row.slug)}`,
+        `/partners/${encodeURIComponent(slug)}/org/events/${encodeURIComponent(row.slug)}`,
       );
       const secondary = `${number.format(row.botStarts)} ${txt(
         "impact.partnersBotStarts",
@@ -596,6 +671,278 @@ function renderEventBoard(rows) {
     .join("");
 }
 
+function setAccountStatus(message, isError) {
+  const status = el("owner-account-status");
+  if (!status) return;
+  status.hidden = !message;
+  status.textContent = message || "";
+  status.classList.toggle("is-error", Boolean(isError));
+}
+
+function setEditStatus(message, isError) {
+  const status = el("partner-edit-status");
+  if (!status) return;
+  status.hidden = !message;
+  status.textContent = message || "";
+  status.classList.toggle("is-error", Boolean(isError));
+}
+
+function setDeleteStatus(message, isError) {
+  const status = el("partner-delete-status");
+  if (!status) return;
+  status.hidden = !message;
+  status.textContent = message || "";
+  status.classList.toggle("is-error", Boolean(isError));
+}
+
+function applyEditFormLabels() {
+  const isOrg = currentAccount?.accountType !== "individual";
+  const nameLabel = el("edit-name-label");
+  const emailLabel = el("edit-email-label");
+  const emailHelp = el("edit-email-help");
+  const logoLabel = el("edit-logo-label");
+  if (nameLabel) {
+    nameLabel.textContent = isOrg
+      ? txt("signup.nameLabel", "Organization name")
+      : txt("signup.nameLabelIndividual", "Your name");
+  }
+  if (emailLabel) {
+    emailLabel.textContent = isOrg
+      ? txt("signup.emailLabel", "Work email")
+      : txt("signup.emailLabelIndividual", "Email");
+  }
+  if (emailHelp) {
+    emailHelp.textContent = isOrg
+      ? txt("signup.emailHelpOrg", "Use your company email, not Gmail or Yahoo.")
+      : txt("signup.emailHelpIndividual", "We’ll email you a link.");
+  }
+  if (logoLabel) {
+    logoLabel.textContent = isOrg
+      ? txt("signup.logoLabel", "Organization logo (optional)")
+      : txt("signup.logoLabelIndividual", "Logo (optional)");
+  }
+}
+
+function fillEditForm() {
+  applyEditFormLabels();
+  if (el("edit-name")) el("edit-name").value = currentAccount?.name || currentPartner?.name || "";
+  if (el("edit-email")) el("edit-email").value = currentAccount?.email || "";
+  if (el("edit-city")) el("edit-city").value = currentAccount?.city || currentPartner?.city || "";
+  if (el("edit-logo")) el("edit-logo").value = "";
+}
+
+function closeDialog(id) {
+  const dialog = el(id);
+  if (dialog && typeof dialog.close === "function") dialog.close();
+}
+
+function openDialog(id) {
+  const dialog = el(id);
+  if (dialog && typeof dialog.showModal === "function") dialog.showModal();
+}
+
+async function fetchAccount() {
+  if (!currentPartner || !ownerToken) {
+    currentAccount = null;
+    return null;
+  }
+  const res = await fetch(
+    `/api/partners/${encodeURIComponent(currentPartner.slug)}/account`,
+    { headers: ownerHeaders() },
+  );
+  if (res.status === 401) {
+    ownerToken = null;
+    currentAccount = null;
+    clearOwnerToken(currentPartner.slug);
+    setOwnerChrome(false);
+    return null;
+  }
+  if (!res.ok) return null;
+  const data = await res.json();
+  currentAccount = {
+    name: data.name || "",
+    email: data.email || "",
+    city: data.city || "",
+    logo: data.logo || "",
+    accountType: data.accountType || "organization",
+  };
+  return currentAccount;
+}
+
+async function downloadPartnerData() {
+  if (!currentPartner || !ownerToken) return;
+  setAccountStatus(txt("partners.downloadingData", "Preparing download…"), false);
+  try {
+    const res = await fetch(
+      `/api/partners/${encodeURIComponent(currentPartner.slug)}/export`,
+      { headers: ownerHeaders() },
+    );
+    if (res.status === 401) {
+      ownerToken = null;
+      currentAccount = null;
+      clearOwnerToken(currentPartner.slug);
+      setOwnerChrome(false);
+      setAccountStatus(
+        txt("partners.signInError", "Could not sign in. Check the partner ID from your email."),
+        true,
+      );
+      return;
+    }
+    if (!res.ok) {
+      setAccountStatus(
+        txt("partners.downloadDataError", "Could not download your data. Try again."),
+        true,
+      );
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `calclaim-${currentPartner.slug}-website-data.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setAccountStatus("", false);
+  } catch {
+    setAccountStatus(
+      txt("partners.downloadDataError", "Could not download your data. Try again."),
+      true,
+    );
+  }
+}
+
+async function submitPartnerEdit(event) {
+  event.preventDefault();
+  if (!currentPartner || !ownerToken) return;
+  const name = el("edit-name")?.value?.trim() ?? "";
+  const email = el("edit-email")?.value?.trim() ?? "";
+  const city = el("edit-city")?.value?.trim() ?? "";
+  const logoFile = el("edit-logo")?.files?.[0] || null;
+  const isOrg = currentAccount?.accountType !== "individual";
+  if (!name) {
+    setEditStatus(
+      isOrg
+        ? txt("signup.errorName", "Add your organization name.")
+        : txt("signup.errorNameIndividual", "Add your name."),
+      true,
+    );
+    return;
+  }
+  if (!email) {
+    setEditStatus(txt("signup.errorEmail", "Add your email."), true);
+    return;
+  }
+  if (logoFile && logoFile.size > 2_000_000) {
+    setEditStatus(txt("signup.errorLogoSize", "Logo must be 2 MB or smaller."), true);
+    return;
+  }
+
+  const form = el("partner-edit-form");
+  const submit = form?.querySelector('button[type="submit"]');
+  if (submit) {
+    submit.disabled = true;
+    submit.textContent = txt("partners.editSaving", "Saving changes…");
+  }
+  setEditStatus("", false);
+
+  try {
+    const body = new FormData();
+    body.set("name", name);
+    body.set("email", email);
+    body.set("city", city);
+    body.set("ownerToken", ownerToken);
+    if (logoFile) body.set("logo", logoFile);
+    const res = await fetch(
+      `/api/partners/${encodeURIComponent(currentPartner.slug)}/profile`,
+      {
+        method: "POST",
+        headers: ownerHeaders(),
+        body,
+      },
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (data.error === "email_org_domain_required") {
+        setEditStatus(
+          txt(
+            "signup.errorOrgDomain",
+            "Organizations must use a work email domain (not Gmail, Yahoo, or Outlook).",
+          ),
+          true,
+        );
+      } else if (data.error === "email_invalid") {
+        setEditStatus(txt("signup.errorEmailInvalid", "Enter a valid email address."), true);
+      } else {
+        setEditStatus(txt("partners.editError", "Could not save changes. Try again."), true);
+      }
+      return;
+    }
+    closeDialog("partner-edit-dialog");
+    if (data.pendingVerification) {
+      setAccountStatus(
+        txt(
+          "partners.editPendingVerification",
+          "Saved. Check your email to verify the new address.",
+        ),
+        false,
+      );
+    }
+    await showPartnerView(false);
+    await fetchAccount();
+  } catch {
+    setEditStatus(txt("partners.editError", "Could not save changes. Try again."), true);
+  } finally {
+    if (submit) {
+      submit.disabled = false;
+      submit.textContent = txt("partners.editSave", "Save changes");
+    }
+  }
+}
+
+async function submitPartnerDelete(event) {
+  event.preventDefault();
+  if (!currentPartner || !ownerToken) return;
+  const form = el("partner-delete-form");
+  const submit = form?.querySelector('button[type="submit"]');
+  if (submit) submit.disabled = true;
+  setDeleteStatus("", false);
+  try {
+    const res = await fetch(
+      `/api/partners/${encodeURIComponent(currentPartner.slug)}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          ...ownerHeaders(),
+        },
+        body: JSON.stringify({ ownerToken, confirm: "delete" }),
+      },
+    );
+    if (!res.ok) {
+      setDeleteStatus(
+        txt("partners.deleteError", "Could not delete the account. Try again."),
+        true,
+      );
+      return;
+    }
+    clearOwnerToken(currentPartner.slug);
+    ownerToken = null;
+    currentAccount = null;
+    currentPartner = null;
+    closeDialog("partner-delete-dialog");
+    location.href = withLang("/impact#partners");
+  } catch {
+    setDeleteStatus(
+      txt("partners.deleteError", "Could not delete the account. Try again."),
+      true,
+    );
+  } finally {
+    if (submit) submit.disabled = false;
+  }
+}
+
 async function fetchEventBoard() {
   if (!currentPartner || !ownerToken) return [];
   const res = await fetch(
@@ -604,6 +951,7 @@ async function fetchEventBoard() {
   );
   if (res.status === 401) {
     ownerToken = null;
+    currentAccount = null;
     clearOwnerToken(currentPartner.slug);
     setOwnerChrome(false);
     return [];
@@ -615,7 +963,7 @@ async function fetchEventBoard() {
   return rows;
 }
 
-async function loginAsOwner(payload, silent) {
+async function loginAsOwner(payload) {
   if (!currentPartner) return false;
   const res = await fetch(
     `/api/partners/${encodeURIComponent(currentPartner.slug)}/login`,
@@ -626,80 +974,206 @@ async function loginAsOwner(payload, silent) {
     },
   );
   const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data.ownerToken) {
-    if (!silent) {
-      if (data.error === "partner_id_mismatch") {
-        setLoginStatus(
-          txt("partners.errorPartnerIdMismatch", "That partner ID doesn’t match this page."),
-          true,
-        );
-      } else if (data.error === "login_unavailable") {
-        setLoginStatus(
-          txt("partners.loginUnavailable", "This demo partner page can’t sign in."),
-          true,
-        );
-      } else {
-        setLoginStatus(
-          txt(
-            "partners.signInError",
-            "Could not sign in. Check the partner ID from your email.",
-          ),
-          true,
-        );
-      }
-    }
-    return false;
-  }
+  if (!res.ok || !data.ownerToken) return false;
   ownerToken = data.ownerToken;
   storeOwnerToken(currentPartner.slug, ownerToken);
+  if (typeof data.editable === "boolean") {
+    currentPartner.editable = data.editable;
+  }
   setOwnerChrome(true);
-  await fetchEventBoard();
+  await Promise.all([
+    currentPartner.editable ? fetchEventBoard() : Promise.resolve([]),
+    currentPartner.editable ? fetchAccount() : Promise.resolve(null),
+  ]);
   return true;
 }
 
 async function tryRestoreOwnerSession() {
-  if (!currentPartner?.editable) {
+  if (!isOrgPage()) {
     setOwnerChrome(false);
     return false;
   }
   const stored = readStoredOwnerToken(currentPartner.slug);
   if (stored) {
-    const ok = await loginAsOwner({ ownerToken: stored }, true);
+    ownerToken = stored;
+    setOwnerChrome(true);
+    const ok = await loginAsOwner({ ownerToken: stored });
     if (ok) return true;
+    ownerToken = null;
     clearOwnerToken(currentPartner.slug);
   }
   const edit = readSignupEditSession();
   if (edit && edit.slug === currentPartner.slug && edit.editToken) {
-    return loginAsOwner(
-      { editToken: edit.editToken, partnerId: edit.partnerId },
-      true,
-    );
+    return loginAsOwner({ editToken: edit.editToken, partnerId: edit.partnerId });
   }
   setOwnerChrome(false);
   return false;
 }
 
+async function confirmMagicLogin(token) {
+  if (!currentPartner || !token) return false;
+  const res = await fetch(
+    `/api/partners/${encodeURIComponent(currentPartner.slug)}/confirm-login`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ownerToken) return false;
+  ownerToken = data.ownerToken;
+  storeOwnerToken(currentPartner.slug, ownerToken);
+  if (typeof data.editable === "boolean") {
+    currentPartner.editable = data.editable;
+  }
+  setOwnerChrome(true);
+  await Promise.all([
+    currentPartner.editable ? fetchEventBoard() : Promise.resolve([]),
+    currentPartner.editable ? fetchAccount() : Promise.resolve(null),
+  ]);
+  // Drop the token from the URL so refresh doesn't re-consume it.
+  const clean = orgPathFor();
+  history.replaceState({}, "", clean);
+  return true;
+}
+
+function setOrgLoginStatus(message, isError) {
+  const status = el("org-login-status");
+  if (!status) return;
+  status.hidden = !message;
+  status.textContent = message || "";
+  status.classList.toggle("is-error", Boolean(isError));
+}
+
+function wireOrgLogin(slug) {
+  const form = el("org-login-form");
+  if (!form || form.dataset.wired) return;
+  form.dataset.wired = "1";
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const email = el("org-login-email")?.value?.trim() ?? "";
+    if (!email) {
+      setOrgLoginStatus(txt("signup.errorEmail", "Add your email."), true);
+      return;
+    }
+    const submit = form.querySelector('button[type="submit"]');
+    if (submit) {
+      submit.disabled = true;
+      submit.textContent = txt("partners.orgLoginSending", "Sending link…");
+    }
+    setOrgLoginStatus("", false);
+    const demo = el("org-login-demo");
+    if (demo) {
+      demo.hidden = true;
+      demo.innerHTML = "";
+    }
+    try {
+      const res = await fetch(
+        `/api/partners/${encodeURIComponent(slug)}/request-login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (data.error === "email_domain_mismatch") {
+          setOrgLoginStatus(
+            txt(
+              "partners.orgLoginDomainError",
+              "Use a work email on this organization’s domain.",
+            ),
+            true,
+          );
+        } else if (data.error === "email_mismatch") {
+          setOrgLoginStatus(
+            txt(
+              "partners.orgLoginMismatch",
+              "Use the email address from your partner signup.",
+            ),
+            true,
+          );
+        } else if (data.error === "rate_limited") {
+          setOrgLoginStatus(
+            txt(
+              "partners.orgLoginRateLimited",
+              "Please wait a moment before requesting another link.",
+            ),
+            true,
+          );
+        } else if (data.error === "unverified") {
+          setOrgLoginStatus(
+            txt(
+              "partners.orgLoginUnverified",
+              "Verify your partner email before signing in.",
+            ),
+            true,
+          );
+        } else {
+          setOrgLoginStatus(
+            txt("partners.orgLoginError", "Could not send a sign-in link. Try again."),
+            true,
+          );
+        }
+        return;
+      }
+      setOrgLoginStatus(
+        txt(
+          "partners.orgLoginSent",
+          "Check your email for a sign-in link. It expires in one hour.",
+        ),
+        false,
+      );
+      if (data.loginUrl && demo) {
+        demo.hidden = false;
+        demo.innerHTML = `${escapeHtml(
+          txt("partners.orgLoginDemoLink", "Local demo link:"),
+        )} <a href="${escapeHtml(data.loginUrl)}">${escapeHtml(data.loginUrl)}</a>`;
+      }
+    } catch {
+      setOrgLoginStatus(
+        txt("partners.orgLoginError", "Could not send a sign-in link. Try again."),
+        true,
+      );
+    } finally {
+      if (submit) {
+        submit.disabled = false;
+        submit.textContent = txt(
+          "partners.orgLoginSubmit",
+          "Email me a sign-in link",
+        );
+      }
+    }
+  });
+}
+
 function eventPathFor(eventSlug) {
-  if (!currentPartner) return "/partners";
+  if (!currentPartner) return withLang("/impact#partners");
   return withLang(
-    `/partners/${encodeURIComponent(currentPartner.slug)}/events/${encodeURIComponent(eventSlug)}`,
+    `/partners/${encodeURIComponent(currentPartner.slug)}/org/events/${encodeURIComponent(eventSlug)}`,
   );
 }
 
 function partnerPathFor() {
   if (!currentPartner) return withLang("/impact#partners");
+  if (isOrgPage()) {
+    return withLang(`/partners/${encodeURIComponent(currentPartner.slug)}/org`);
+  }
   return withLang(`/partners/${encodeURIComponent(currentPartner.slug)}`);
+}
+
+function orgPathFor() {
+  if (!currentPartner) return withLang("/impact#partners");
+  return withLang(`/partners/${encodeURIComponent(currentPartner.slug)}/org`);
 }
 
 async function showEventView(eventSlug, push) {
   if (!currentPartner) return;
   if (!ownerToken) {
     setOwnerChrome(false);
-    el("owner-login-panel").hidden = false;
-    setLoginStatus(
-      txt("partners.signInToViewEvent", "Sign in with your partner ID to see event stats."),
-      false,
-    );
+    if (eventSlugFromPath()) history.replaceState({}, "", orgPathFor());
     return;
   }
   const res = await fetch(
@@ -708,8 +1182,11 @@ async function showEventView(eventSlug, push) {
   );
   if (res.status === 401) {
     ownerToken = null;
+    currentAccount = null;
     clearOwnerToken(currentPartner.slug);
     setOwnerChrome(false);
+    await showPartnerView(false);
+    history.replaceState({}, "", orgPathFor());
     return;
   }
   if (res.status === 404) {
@@ -727,10 +1204,11 @@ async function showEventView(eventSlug, push) {
   if (banner) banner.hidden = true;
   applyPartnerHeader(currentPartner, stats.event);
   paintMetrics(stats);
-  setOwnerChrome(true);
+  // URL must match the view before syncPageMode reads eventSlugFromPath().
   if (push) {
     history.pushState({ eventSlug }, "", eventPathFor(eventSlug));
   }
+  setOwnerChrome(true);
 }
 
 async function showPartnerView(push) {
@@ -746,68 +1224,38 @@ async function showPartnerView(push) {
   if (deck) deck.hidden = false;
   if (banner) banner.hidden = true;
   renderPartner(stats);
+  // URL must match the view before syncPageMode reads eventSlugFromPath().
+  // Otherwise the events panel stays hidden after leaving an event detail.
+  if (push) history.pushState({}, "", partnerPathFor());
   setOwnerChrome(Boolean(ownerToken));
   if (ownerToken) await fetchEventBoard();
-  if (push) history.pushState({}, "", partnerPathFor());
 }
 
 function wireOwnerUi(slug) {
-  const loginOpen = el("partner-login-open");
-  const loginPanel = el("owner-login-panel");
-  const loginForm = el("owner-login-form");
-  const loginCancel = el("owner-login-cancel");
   const signOut = el("partner-sign-out");
   const createForm = el("event-create-form");
   const board = el("event-board");
+  const editOpen = el("partner-edit-open");
+  const editDialog = el("partner-edit-dialog");
+  const editForm = el("partner-edit-form");
+  const editClose = el("partner-edit-close");
+  const editCancel = el("partner-edit-cancel");
+  const downloadBtn = el("partner-download-data");
+  const deleteOpen = el("partner-delete-open");
+  const deleteDialog = el("partner-delete-dialog");
+  const deleteForm = el("partner-delete-form");
+  const deleteClose = el("partner-delete-close");
+  const deleteCancel = el("partner-delete-cancel");
 
-  if (loginOpen && !loginOpen.dataset.wired) {
-    loginOpen.dataset.wired = "1";
-    loginOpen.addEventListener("click", () => {
-      if (loginPanel) loginPanel.hidden = false;
-      el("owner-partner-id")?.focus();
-    });
-  }
-  if (loginCancel && !loginCancel.dataset.wired) {
-    loginCancel.dataset.wired = "1";
-    loginCancel.addEventListener("click", () => {
-      if (loginPanel) loginPanel.hidden = true;
-      setLoginStatus("", false);
-    });
-  }
-  if (loginForm && !loginForm.dataset.wired) {
-    loginForm.dataset.wired = "1";
-    loginForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const partnerId = el("owner-partner-id")?.value?.trim() ?? "";
-      if (!partnerId) {
-        setLoginStatus(
-          txt("partners.errorPartnerId", "Enter your partner ID from the welcome email."),
-          true,
-        );
-        return;
-      }
-      const submit = loginForm.querySelector('button[type="submit"]');
-      if (submit) submit.disabled = true;
-      setLoginStatus("", false);
-      try {
-        const ok = await loginAsOwner({ partnerId });
-        if (ok) {
-          loginForm.reset();
-          if (loginPanel) loginPanel.hidden = true;
-          const pendingEvent = eventSlugFromPath();
-          if (pendingEvent) await showEventView(pendingEvent, false);
-        }
-      } finally {
-        if (submit) submit.disabled = false;
-      }
-    });
-  }
   if (signOut && !signOut.dataset.wired) {
     signOut.dataset.wired = "1";
     signOut.addEventListener("click", () => {
       ownerToken = null;
+      currentAccount = null;
       clearOwnerToken(slug);
       setOwnerChrome(false);
+      closeDialog("partner-edit-dialog");
+      closeDialog("partner-delete-dialog");
       if (eventSlugFromPath()) {
         void showPartnerView(true);
       }
@@ -879,6 +1327,63 @@ function wireOwnerUi(slug) {
       }
     });
   }
+  if (editOpen && !editOpen.dataset.wired) {
+    editOpen.dataset.wired = "1";
+    editOpen.addEventListener("click", async () => {
+      if (!currentAccount) await fetchAccount();
+      fillEditForm();
+      setEditStatus("", false);
+      openDialog("partner-edit-dialog");
+      el("edit-name")?.focus();
+    });
+  }
+  if (editClose && !editClose.dataset.wired) {
+    editClose.dataset.wired = "1";
+    editClose.addEventListener("click", () => closeDialog("partner-edit-dialog"));
+  }
+  if (editCancel && !editCancel.dataset.wired) {
+    editCancel.dataset.wired = "1";
+    editCancel.addEventListener("click", () => closeDialog("partner-edit-dialog"));
+  }
+  if (editDialog && !editDialog.dataset.wired) {
+    editDialog.dataset.wired = "1";
+    editDialog.addEventListener("click", (event) => {
+      if (event.target === editDialog) closeDialog("partner-edit-dialog");
+    });
+  }
+  if (editForm && !editForm.dataset.wired) {
+    editForm.dataset.wired = "1";
+    editForm.addEventListener("submit", (event) => void submitPartnerEdit(event));
+  }
+  if (downloadBtn && !downloadBtn.dataset.wired) {
+    downloadBtn.dataset.wired = "1";
+    downloadBtn.addEventListener("click", () => void downloadPartnerData());
+  }
+  if (deleteOpen && !deleteOpen.dataset.wired) {
+    deleteOpen.dataset.wired = "1";
+    deleteOpen.addEventListener("click", () => {
+      setDeleteStatus("", false);
+      openDialog("partner-delete-dialog");
+    });
+  }
+  if (deleteClose && !deleteClose.dataset.wired) {
+    deleteClose.dataset.wired = "1";
+    deleteClose.addEventListener("click", () => closeDialog("partner-delete-dialog"));
+  }
+  if (deleteCancel && !deleteCancel.dataset.wired) {
+    deleteCancel.dataset.wired = "1";
+    deleteCancel.addEventListener("click", () => closeDialog("partner-delete-dialog"));
+  }
+  if (deleteDialog && !deleteDialog.dataset.wired) {
+    deleteDialog.dataset.wired = "1";
+    deleteDialog.addEventListener("click", (event) => {
+      if (event.target === deleteDialog) closeDialog("partner-delete-dialog");
+    });
+  }
+  if (deleteForm && !deleteForm.dataset.wired) {
+    deleteForm.dataset.wired = "1";
+    deleteForm.addEventListener("submit", (event) => void submitPartnerDelete(event));
+  }
   if (board && !board.dataset.wired) {
     board.dataset.wired = "1";
     board.addEventListener("click", (event) => {
@@ -902,8 +1407,8 @@ function wireOwnerUi(slug) {
   }
 
   window.addEventListener("popstate", () => {
-    const eventSlug = eventSlugFromPath();
-    if (eventSlug) void showEventView(eventSlug, false);
+    const parts = partnerPathParts();
+    if (parts.eventSlug) void showEventView(parts.eventSlug, false);
     else void showPartnerView(false);
   });
 }
@@ -927,11 +1432,53 @@ async function main() {
   }
   const stats = await res.json();
   renderPartner(stats);
+
+  // Individuals have a public stats page only – no private /org dashboard.
+  if (isOrgPage() && currentPartner?.accountType === "individual") {
+    location.replace(withLang(`/partners/${encodeURIComponent(slug)}`));
+    return;
+  }
+
   wireFeedbackForm(slug);
   wireOwnerUi(slug);
-  await tryRestoreOwnerSession();
+  wireOrgLogin(slug);
+  setOwnerChrome(false);
+
+  const params = new URLSearchParams(location.search);
+  const loginToken = params.get("login");
+  if (isOrgPage() && loginToken) {
+    const ok = await confirmMagicLogin(loginToken);
+    if (!ok) {
+      setOrgLoginStatus(
+        txt(
+          "partners.orgLoginLinkInvalid",
+          "That sign-in link is invalid or expired. Request a new one.",
+        ),
+        true,
+      );
+    }
+  } else if (isOrgPage()) {
+    await tryRestoreOwnerSession();
+  } else {
+    // After signup verify, org edit token should open the private org page.
+    // Individuals have no private dashboard – stay on the public status page.
+    const edit = readSignupEditSession();
+    if (
+      edit &&
+      edit.slug === slug &&
+      edit.editToken &&
+      currentPartner?.accountType !== "individual"
+    ) {
+      location.replace(withLang(`/partners/${encodeURIComponent(slug)}/org`));
+      return;
+    }
+  }
+
   const eventSlug = eventSlugFromPath();
-  if (eventSlug) await showEventView(eventSlug, false);
+  if (eventSlug && ownerToken) await showEventView(eventSlug, false);
+  else if (isOrgPage() && !ownerToken && eventSlug) {
+    history.replaceState({}, "", orgPathFor());
+  }
 }
 
 function setFeedbackStatus(message, isError) {
@@ -968,12 +1515,26 @@ function wireFeedbackForm(slug) {
     try {
       const res = await fetch(`/api/partners/${encodeURIComponent(slug)}/feedback`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        headers: {
+          "Content-Type": "application/json",
+          ...ownerHeaders(),
+        },
+        body: JSON.stringify({ text, ownerToken }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        if (data.error === "empty") {
+        if (data.error === "unauthorized") {
+          setFeedbackStatus(
+            txt(
+              "partners.feedbackNeedSignIn",
+              "Sign in with your work email to share feedback.",
+            ),
+            true,
+          );
+          ownerToken = null;
+          clearOwnerToken(slug);
+          setOwnerChrome(false);
+        } else if (data.error === "empty") {
           setFeedbackStatus(
             txt("partners.feedbackEmpty", "Add a note before sending."),
             true,
@@ -993,17 +1554,17 @@ function wireFeedbackForm(slug) {
       }
 
       form.reset();
-      const tickets = Number(data.ticketsCreated) || 0;
+      const points = Number(data.pointsCreated ?? data.ticketsCreated) || 0;
       const success =
-        tickets <= 1
+        points <= 1
           ? txt(
               "partners.feedbackSuccessOne",
-              "Thanks – we created a developer ticket and credited this organization.",
+              "Thanks – we recorded your feedback and credited this organization.",
             )
           : txt(
               "partners.feedbackSuccessMany",
-              "Thanks – we created {n} developer tickets and credited this organization.",
-            ).replace("{n}", String(tickets));
+              "Thanks – we recorded {n} feedback points and credited this organization.",
+            ).replace("{n}", String(points));
       setFeedbackStatus(success, false);
 
       if (el("m-feedback-messages") && data.feedbackMessages != null) {

@@ -4,24 +4,34 @@ import { getPartnerBySlug } from "../analytics/partners.js";
 import { renderPartnerBoothBannerPdf } from "./banner.js";
 import {
   allocateUniqueSlug,
+  cancelSignedUpPartner,
+  deleteSignedUpPartner,
+  getSignedUpPartnerById,
   getSignedUpPartnerBySlug,
   insertSignedUpPartner,
   randomPartnerToken,
   updateSignedUpPartner,
   type SignedUpPartner,
 } from "./db.js";
+import { deletePartnerEventsForPartner } from "./events.js";
 import {
   parseAccountType,
   validateSignupEmail,
   type PartnerAccountType,
 } from "./emailDomains.js";
-import { issuePartnerEditToken, verifyPartnerEditToken } from "./editToken.js";
+import { partnerHasPrivateDashboard } from "./accountKind.js";
+import {
+  issuePartnerCancelToken,
+  issuePartnerEditToken,
+  verifyPartnerCancelToken,
+  verifyPartnerEditToken,
+} from "./editToken.js";
 import {
   sendPartnerVerificationEmail,
   sendPartnerWelcomeEmail,
   type SendPartnerEmailResult,
 } from "./email.js";
-import { savePartnerLogoUpload } from "./logoUpload.js";
+import { deletePartnerLogoFiles, savePartnerLogoUpload } from "./logoUpload.js";
 import { issueEmailVerifyToken } from "./verifyToken.js";
 
 export interface PartnerSignupInput {
@@ -48,6 +58,7 @@ export interface PartnerKitResult {
   qrUrl: string;
   bannerUrl: string;
   editToken: string;
+  cancelUrl?: string;
   email: SendPartnerEmailResult;
 }
 
@@ -168,28 +179,40 @@ export async function deliverPartnerKit(
     renderShareQrPng(qrTarget),
     renderPartnerBoothBannerPdf({
       partnerName: partner.name,
-      partnerId: partner.id,
       qrTargetUrl: qrTarget,
       partnerLogoPath: partner.logo || null,
     }),
   ]);
+
+  let cancelUrl: string | undefined;
+  if (!partnerHasPrivateDashboard(partner.accountType)) {
+    const cancelToken = issuePartnerCancelToken(
+      config.developerSessionSecret,
+      partner.id,
+      partner.slug,
+    );
+    cancelUrl = `${config.publicBaseUrl}/partners/cancel?token=${encodeURIComponent(cancelToken)}`;
+  }
 
   const email = await sendPartnerWelcomeEmail({
     partner,
     statusUrl,
     qrUrl,
     bannerUrl,
+    cancelUrl,
     qrPng,
     bannerPdf,
   });
 
-  const editToken = issuePartnerEditToken(
-    config.developerSessionSecret,
-    partner.id,
-    partner.slug,
-  );
+  const editToken = partnerHasPrivateDashboard(partner.accountType)
+    ? issuePartnerEditToken(
+        config.developerSessionSecret,
+        partner.id,
+        partner.slug,
+      )
+    : "";
 
-  return { partner, statusUrl, qrUrl, bannerUrl, editToken, email };
+  return { partner, statusUrl, qrUrl, bannerUrl, editToken, cancelUrl, email };
 }
 
 export function parsePartnerProfileUpdate(
@@ -222,6 +245,7 @@ export async function updatePartnerProfile(
     partnerId?: string;
     editToken?: string;
     asDeveloper?: boolean;
+    asOwner?: boolean;
     logo?: { buffer: Buffer; mime: string; filename: string };
     editTokenSecret?: string;
     accountType?: PartnerAccountType;
@@ -241,8 +265,9 @@ export async function updatePartnerProfile(
 > {
   const existing = getSignedUpPartnerBySlug(slug);
   if (!existing) return { error: "not_found" };
+  if (existing.canceledAt) return { error: "canceled" };
 
-  if (!fields.asDeveloper) {
+  if (!fields.asDeveloper && !fields.asOwner) {
     const partnerId = trimField(fields.partnerId, 40).toLowerCase();
     const editToken = trimField(fields.editToken, 200);
     if (!partnerId) return { error: "partner_id_required" };
@@ -309,4 +334,62 @@ export async function updatePartnerProfile(
   }
 
   return result;
+}
+
+export function deletePartnerAccount(
+  slug: string,
+): { ok: true; canceledAt: string } | { error: "not_found" | "already_canceled" } {
+  const existing = getSignedUpPartnerBySlug(slug);
+  if (!existing) return { error: "not_found" };
+  if (existing.canceledAt) {
+    return { error: "already_canceled" };
+  }
+  // Soft-cancel: keep the row for the developer partners panel with signup + cancel dates.
+  const canceled = cancelSignedUpPartner(existing.slug);
+  if (!canceled?.canceledAt) return { error: "not_found" };
+  return { ok: true, canceledAt: canceled.canceledAt };
+}
+
+/**
+ * Individual partners cancel via a tokenized URL in their welcome email
+ * (no private sign-in page). Removes them from the public leaderboard only.
+ */
+export function cancelPartnerAccountByToken(
+  secret: string,
+  token: string,
+):
+  | { ok: true; partner: SignedUpPartner; alreadyCanceled: boolean }
+  | { error: "invalid_token" | "not_found" | "not_individual" } {
+  const cleaned = String(token || "").trim();
+  if (!cleaned.startsWith("cancel.")) return { error: "invalid_token" };
+  const partnerId = cleaned.split(".")[1]?.toLowerCase() || "";
+  if (!partnerId) return { error: "invalid_token" };
+  const existing = getSignedUpPartnerById(partnerId);
+  if (!existing) return { error: "not_found" };
+  if (partnerHasPrivateDashboard(existing.accountType)) {
+    return { error: "not_individual" };
+  }
+  if (
+    !verifyPartnerCancelToken(secret, existing.id, existing.slug, cleaned)
+  ) {
+    return { error: "invalid_token" };
+  }
+  if (existing.canceledAt) {
+    return { ok: true, partner: existing, alreadyCanceled: true };
+  }
+  const canceled = cancelSignedUpPartner(existing.slug);
+  if (!canceled) return { error: "not_found" };
+  return { ok: true, partner: canceled, alreadyCanceled: false };
+}
+
+/** Hard remove (operator tooling). Prefer soft-cancel for partner-facing flows. */
+export function purgePartnerAccount(
+  slug: string,
+): { ok: true } | { error: "not_found" } {
+  const existing = getSignedUpPartnerBySlug(slug);
+  if (!existing) return { error: "not_found" };
+  deletePartnerEventsForPartner(existing.slug, existing.id);
+  deletePartnerLogoFiles(existing.id, existing.logo);
+  deleteSignedUpPartner(existing.slug);
+  return { ok: true };
 }

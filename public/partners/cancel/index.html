@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CalClaim – Verify partner email</title>
+  <title>CalClaim – Cancel partner listing</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/partners/styles.css?v=20260813-signup-simple" />
-  <link rel="stylesheet" href="/partners/signup/styles.css?v=20260813-signup-simple" />
+  <link rel="stylesheet" href="/partners/styles.css?v=20260815-cancel" />
+  <link rel="stylesheet" href="/partners/signup/styles.css?v=20260815-cancel" />
   <link rel="stylesheet" href="/donate/donate.css?v=20260812-donate" />
 </head>
-<body data-page="partnerVerify">
+<body data-page="partnerCancel">
   <div class="banner" role="banner">
     <div class="banner-inner">
       <a class="banner-brand" href="/impact" data-i18n-aria="nav.homeAria" aria-label="CalClaim home">
@@ -40,54 +40,46 @@
     <a class="back-link" href="/impact#partners" data-i18n="signup.backLink">← Leaderboard</a>
 
     <main class="signup-shell">
-      <section class="signup-hero" id="verify-loading">
-        <p class="signup-eyebrow" data-i18n="verify.eyebrow">Partner signup</p>
-        <h2 data-i18n="verify.loadingHeading">Confirming…</h2>
-        <p class="signup-lede" data-i18n="verify.loadingBody">Just a moment.</p>
+      <section class="signup-hero" id="cancel-loading">
+        <p class="signup-eyebrow" data-i18n="cancel.eyebrow">Partner listing</p>
+        <h2 data-i18n="cancel.loadingHeading">Checking…</h2>
+        <p class="signup-lede" data-i18n="cancel.loadingBody">Just a moment.</p>
       </section>
 
-      <section class="signup-hero" id="verify-error" hidden>
-        <p class="signup-eyebrow" data-i18n="verify.eyebrow">Partner signup</p>
-        <h2 data-i18n="verify.errorHeading">This link expired.</h2>
-        <p class="signup-lede" data-i18n="verify.errorBody">Sign up again to get a new link.</p>
+      <section class="signup-hero" id="cancel-error" hidden>
+        <p class="signup-eyebrow" data-i18n="cancel.eyebrow">Partner listing</p>
+        <h2 data-i18n="cancel.errorHeading">This link is not valid.</h2>
+        <p class="signup-lede" data-i18n="cancel.errorBody">
+          Use the cancel link from your CalClaim welcome email, or contact us if you need help.
+        </p>
         <div class="cta-row">
-          <a class="cta" href="/partners/signup" data-i18n="verify.signupAgain">Back to signup</a>
+          <a class="cta" href="/impact#partners" data-i18n="cancel.backLeaderboard">Back to leaderboard</a>
         </div>
       </section>
 
-      <section class="signup-success" id="verify-success" hidden>
-        <p class="signup-eyebrow" data-i18n="verify.successEyebrow">Verified</p>
-        <h2 data-i18n="verify.successHeading">You’re in.</h2>
-        <p class="signup-lede" id="verify-success-body">
-          Print this QR at your next event.
+      <section class="signup-hero" id="cancel-confirm" hidden>
+        <p class="signup-eyebrow" data-i18n="cancel.eyebrow">Partner listing</p>
+        <h2 data-i18n="cancel.confirmHeading">Remove yourself from the leaderboard?</h2>
+        <p class="signup-lede" id="cancel-confirm-body">
+          This removes your name from the public partner leaderboard and hides your public stats page.
         </p>
-        <p class="verified-badge-row" id="verify-badge-row" hidden>
-          <span class="verified-badge" id="verify-badge"></span>
-        </p>
-        <figure class="signup-qr-hero">
-          <img
-            id="verify-qr"
-            class="signup-qr-hero__img"
-            alt=""
-            width="280"
-            height="280"
-            data-i18n-alt="signup.qrAlt"
-          />
-          <figcaption data-i18n="signup.bannerPreviewScan">Scan with your phone</figcaption>
-        </figure>
-        <dl class="signup-kit">
-          <div>
-            <dt data-i18n="signup.statusLinkLabel">Status page</dt>
-            <dd><a id="verify-status-link" href="#">–</a></dd>
-          </div>
-        </dl>
         <div class="cta-row">
-          <a class="cta" id="verify-banner-link" href="#" data-i18n="signup.downloadBanner">
-            Download booth banner
-          </a>
-          <a class="cta cta-ghost" id="verify-status-cta" href="#" data-i18n="verify.viewStatus">
-            View status page
-          </a>
+          <button type="button" class="cta" id="cancel-confirm-btn" data-i18n="cancel.confirmButton">
+            Yes, remove my listing
+          </button>
+          <a class="cta cta-ghost" href="/impact#partners" data-i18n="cancel.keepListing">Keep my listing</a>
+        </div>
+        <p class="signup-lede" id="cancel-confirm-status" hidden></p>
+      </section>
+
+      <section class="signup-hero" id="cancel-success" hidden>
+        <p class="signup-eyebrow" data-i18n="cancel.successEyebrow">Canceled</p>
+        <h2 data-i18n="cancel.successHeading">You’re off the leaderboard.</h2>
+        <p class="signup-lede" id="cancel-success-body">
+          Your public listing is removed. Thank you for trying CalClaim.
+        </p>
+        <div class="cta-row">
+          <a class="cta" href="/impact#partners" data-i18n="cancel.backLeaderboard">Back to leaderboard</a>
         </div>
       </section>
     </main>
@@ -104,9 +96,9 @@
     </div>
   </footer>
 
-  <script src="/i18n/messages.js?v=20260815-vi-tl"></script>
+  <script src="/i18n/messages.js?v=20260815-cancel"></script>
   <script src="/i18n/lang.js?v=20260815-vi-tl"></script>
   <script src="/donate/donate.js?v=20260812-donate"></script>
-  <script src="/partners/verify/app.js?v=20260813-signup-simple"></script>
+  <script src="/partners/cancel/app.js?v=20260815-cancel"></script>
 </body>
 </html>

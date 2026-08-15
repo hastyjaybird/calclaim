@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Durable local CalClaim web-only server for /dev and /dev/tree.
+# Durable local CalClaim web-only server for /dev (including the message-tree tab).
 #
 # Why this exists:
 #   Agents were starting the server with `npx tsx -e '…'` inside Cursor-managed
@@ -58,7 +58,7 @@ status() {
   if pid_alive "$pid" && is_listening; then
     echo "dev-web: running pid=$pid port=$PORT"
     echo "  log: $LOG_FILE"
-    echo "  tree: http://localhost:${PORT}/dev/tree"
+    echo "  tree: http://localhost:${PORT}/dev#tree"
     return 0
   fi
   if is_listening; then
@@ -123,7 +123,7 @@ start() {
     if pid_alive "$pid" && is_listening && health_ok; then
       echo "dev-web: started pid=$pid port=$PORT"
       echo "  log: $LOG_FILE"
-      echo "  tree: http://localhost:${PORT}/dev/tree"
+      echo "  tree: http://localhost:${PORT}/dev#tree"
       return 0
     fi
     if ! pid_alive "$pid"; then
@@ -144,7 +144,7 @@ ensure() {
   pid="$(read_pid)"
   if pid_alive "$pid" && is_listening && health_ok; then
     echo "dev-web: already running pid=$pid port=$PORT"
-    echo "  tree: http://localhost:${PORT}/dev/tree"
+    echo "  tree: http://localhost:${PORT}/dev#tree"
     return 0
   fi
   if pid_alive "$pid" && ! is_listening; then
@@ -156,7 +156,7 @@ ensure() {
   elif is_listening; then
     # Something else healthy on the port – adopt it.
     echo "dev-web: port $PORT already healthy (external process)"
-    echo "  tree: http://localhost:${PORT}/dev/tree"
+    echo "  tree: http://localhost:${PORT}/dev#tree"
     return 0
   fi
   start

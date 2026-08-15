@@ -11,6 +11,7 @@ import { clientIp, coarseFromIp, fromCampaignPin } from "../analytics/geo.js";
 import { getPartnerBySlug } from "../analytics/partners.js";
 import {
   buildImpactStats,
+  toPublicImpactStats,
   buildPartnerLeaderboard,
   impactStatsMode,
   buildPartnerStats,
@@ -45,6 +46,7 @@ import {
   insertTreeFeedbackTodo,
   listFeedbackTodos,
   setFeedbackTodoStatus,
+  setFeedbackTodoTicketed,
   type FeedbackTodoStatus,
 } from "../feedback/todos.js";
 import {
@@ -62,10 +64,12 @@ import type { FindingStatus } from "../watchdog/types.js";
 import { appendContactMessage } from "../contact/messages.js";
 import { renderPartnerBoothBannerPdf } from "../partners/banner.js";
 import {
+  getSignedUpPartnerById,
   getSignedUpPartnerBySlug,
   listSignedUpPartners,
   RESERVED_PARTNER_SLUGS,
 } from "../partners/db.js";
+import { buildPartnerWebsiteExportZip } from "../partners/export.js";
 import {
   createPartnerEvent,
   getPartnerEventBySlug,
@@ -75,21 +79,32 @@ import {
   verifyPartnerEditToken,
   verifyPartnerOwnerToken,
 } from "../partners/editToken.js";
+import {
+  confirmPartnerLogin,
+  requestPartnerLogin,
+} from "../partners/login.js";
 import { readPartnerSignupMultipart } from "../partners/logoUpload.js";
 import {
+  cancelPartnerAccountByToken,
+  deletePartnerAccount,
   parsePartnerProfileUpdate,
   parsePartnerSignup,
   registerPartnerSignup,
   updatePartnerProfile,
 } from "../partners/signup.js";
+import { partnerHasPrivateDashboard } from "../partners/accountKind.js";
 import { verifyPartnerEmail } from "../partners/verify.js";
 import {
+  clearLoginFailures,
+  consumeCaptchaQuota,
   createCaptchaChallenge,
   createSession,
   DEVELOPER_ACCESS_POLICY,
   destroySession,
   isDeveloperAuthed,
+  loginLockStatus,
   readJsonBody,
+  recordLoginFailure,
   sessionClearCookieHeaders,
   sessionSetCookieHeaders,
   verifyCaptcha,
@@ -155,6 +170,39 @@ function redirect(
   res.end();
 }
 
+function requestIp(req: http.IncomingMessage): string {
+  return (
+    clientIp(
+      {
+        get: (n) => {
+          const v = req.headers[n];
+          return Array.isArray(v) ? v[0] : v;
+        },
+      },
+      req.socket.remoteAddress,
+    ) ?? "unknown"
+  );
+}
+
+function sendRateLimited(
+  res: http.ServerResponse,
+  retryAfterSec: number,
+  extraHeaders?: Record<string, string | string[]>,
+): void {
+  send(
+    res,
+    429,
+    JSON.stringify({
+      error: "Too many attempts. Try again in a few minutes.",
+    }),
+    "application/json; charset=utf-8",
+    {
+      ...extraHeaders,
+      "Retry-After": String(retryAfterSec),
+    },
+  );
+}
+
 function isSecureRequest(req: http.IncomingMessage, config: AppConfig): boolean {
   if (config.publicBaseUrl.startsWith("https://")) return true;
   const proto = req.headers["x-forwarded-proto"];
@@ -193,12 +241,14 @@ function partnerOwnerAuthorized(
   );
 }
 
-/** Public pages may be served under /es/... or /zh/... ; developer pages are English-only. */
-function stripPublicLangPrefix(urlPath: string): { lang: "es" | "zh" | null; path: string } {
-  const m = urlPath.match(/^\/(es|zh)(?=\/|$)/);
+/** Public pages may be served under /es|zh|vi|tl/... ; developer pages are English-only. */
+type PublicLang = "es" | "zh" | "vi" | "tl";
+
+function stripPublicLangPrefix(urlPath: string): { lang: PublicLang | null; path: string } {
+  const m = urlPath.match(/^\/(es|zh|vi|tl)(?=\/|$)/);
   if (!m) return { lang: null, path: urlPath };
   const rest = urlPath.slice(m[0].length) || "/";
-  return { lang: m[1] as "es" | "zh", path: rest };
+  return { lang: m[1] as PublicLang, path: rest };
 }
 
 function serveStatic(
@@ -214,21 +264,26 @@ function serveStatic(
     rel = "/dev/tree/chart/index.html";
   }
   if (rel === "/dev/tree/flowchart" || rel === "/dev/tree/flowchart/") {
-    rel = "/dev/tree/flowchart/index.html";
+    redirect(res, "/dev", extraHeaders);
+    return;
   }
   if (rel === "/dev/tree/utilities" || rel === "/dev/tree/utilities/") {
     rel = "/dev/tree/utilities/index.html";
   }
-  // Partner deck template: /partners and /partners/:slug → partners/index.html
-  // Signup / verify forms live at /partners/signup and /partners/verify
+  // Partner deck: /partners/:slug (public) and /partners/:slug/org (private)
+  // Signup / verify / cancel forms live under /partners/
   if (rel === "/partners/signup" || rel === "/partners/signup/") {
     rel = "/partners/signup/index.html";
   } else if (rel === "/partners/verify" || rel === "/partners/verify/") {
     rel = "/partners/verify/index.html";
+  } else if (rel === "/partners/cancel" || rel === "/partners/cancel/") {
+    rel = "/partners/cancel/index.html";
   } else if (rel === "/partners" || rel === "/partners/") {
     rel = "/partners/index.html";
   } else if (
-    /^\/partners\/[A-Za-z0-9_-]+(\/events\/[A-Za-z0-9_-]+)?\/?$/.test(rel)
+    /^\/partners\/[A-Za-z0-9_-]+(\/org)?(\/events\/[A-Za-z0-9_-]+)?\/?$/.test(
+      rel,
+    )
   ) {
     rel = "/partners/index.html";
   }
@@ -258,6 +313,11 @@ async function handleDevAuthApi(
   const noIndex = developerNoIndexHeaders();
 
   if (pathname === "/api/dev/captcha" && req.method === "GET") {
+    const quota = consumeCaptchaQuota(requestIp(req));
+    if (!quota.ok) {
+      sendRateLimited(res, quota.retryAfterSec, noIndex);
+      return true;
+    }
     const challenge = createCaptchaChallenge();
     send(
       res,
@@ -275,6 +335,12 @@ async function handleDevAuthApi(
   }
 
   if (pathname === "/api/dev/login" && req.method === "POST") {
+    const ip = requestIp(req);
+    const lock = loginLockStatus(ip);
+    if (lock.locked) {
+      sendRateLimited(res, lock.retryAfterSec, noIndex);
+      return true;
+    }
     try {
       const body = (await readJsonBody(req)) as {
         password?: string;
@@ -284,6 +350,11 @@ async function handleDevAuthApi(
       };
 
       if (body.humanAttestation !== true) {
+        const fail = recordLoginFailure(ip);
+        if (fail.locked) {
+          sendRateLimited(res, fail.retryAfterSec, noIndex);
+          return true;
+        }
         send(
           res,
           403,
@@ -298,6 +369,11 @@ async function handleDevAuthApi(
       }
 
       if (!verifyCaptcha(body.captchaId ?? "", body.captchaAnswer ?? "")) {
+        const fail = recordLoginFailure(ip);
+        if (fail.locked) {
+          sendRateLimited(res, fail.retryAfterSec, noIndex);
+          return true;
+        }
         send(
           res,
           401,
@@ -309,6 +385,11 @@ async function handleDevAuthApi(
       }
 
       if (!verifyDeveloperPassword(body.password ?? "", config.developerPassword)) {
+        const fail = recordLoginFailure(ip);
+        if (fail.locked) {
+          sendRateLimited(res, fail.retryAfterSec, noIndex);
+          return true;
+        }
         send(
           res,
           401,
@@ -319,13 +400,13 @@ async function handleDevAuthApi(
         return true;
       }
 
+      clearLoginFailures(ip);
       const session = createSession(config.developerSessionSecret);
       send(res, 200, JSON.stringify({ ok: true }), "application/json; charset=utf-8", {
         ...noIndex,
         "Set-Cookie": sessionSetCookieHeaders(
           session.token,
           session.sig,
-          session.maxAgeSec,
           secure,
         ),
       });
@@ -341,7 +422,7 @@ async function handleDevAuthApi(
     return true;
   }
 
-  if (pathname === "/api/dev/logout" && (req.method === "POST" || req.method === "GET")) {
+  if (pathname === "/api/dev/logout" && req.method === "POST") {
     destroySession(req);
     send(res, 200, JSON.stringify({ ok: true }), "application/json; charset=utf-8", {
       ...noIndex,
@@ -357,11 +438,7 @@ async function handleDevAuthApi(
     send(
       res,
       200,
-      JSON.stringify({
-        authenticated: ok,
-        authRequired: config.developerAuthRequired,
-        policy: DEVELOPER_ACCESS_POLICY,
-      }),
+      JSON.stringify({ authenticated: ok }),
       "application/json; charset=utf-8",
       noIndex,
     );
@@ -458,10 +535,16 @@ async function handleDevApi(
           logo: p.logo || "",
           campaignId: p.campaignId,
           createdAt: p.createdAt,
+          canceledAt: p.canceledAt,
           accountType: p.accountType,
           emailDomain: p.emailDomain,
           emailVerified: Boolean(p.emailVerifiedAt),
           emailVerifiedAt: p.emailVerifiedAt,
+          status: p.canceledAt
+            ? "canceled"
+            : p.emailVerifiedAt
+              ? "active"
+              : "pending",
           statusUrl: `/partners/${encodeURIComponent(p.slug)}`,
           bannerUrl: `/api/partners/${encodeURIComponent(p.slug)}/banner`,
         })),
@@ -811,8 +894,20 @@ async function handleDevApi(
         ? statusParam
         : "open";
     const sourceParam = url.searchParams.get("source");
-    const todos = listFeedbackTodos({ status, limit: 200 }).filter((t) =>
-      sourceParam ? t.source === sourceParam : true,
+    const ticketedParam = url.searchParams.get("ticketed");
+    const ticketed =
+      ticketedParam === "1" || ticketedParam === "true"
+        ? true
+        : ticketedParam === "0" || ticketedParam === "false"
+          ? false
+          : "all";
+    const limitRaw = Number(url.searchParams.get("limit") || "200");
+    const limit =
+      Number.isFinite(limitRaw) && limitRaw > 0
+        ? Math.min(Math.floor(limitRaw), 500)
+        : 200;
+    const todos = listFeedbackTodos({ status, limit, ticketed }).filter(
+      (t) => (sourceParam ? t.source === sourceParam : true),
     );
     send(
       res,
@@ -888,22 +983,42 @@ async function handleDevApi(
   const feedbackMatch = pathname.match(/^\/api\/dev\/feedback-todos\/(\d+)$/);
   if (feedbackMatch && req.method === "PATCH") {
     try {
-      const body = (await readJsonBody(req)) as { status?: string };
+      const body = (await readJsonBody(req)) as {
+        status?: string;
+        ticketed?: unknown;
+      };
       const allowed: FeedbackTodoStatus[] = ["open", "done", "disqualified"];
-      if (!body.status || !allowed.includes(body.status as FeedbackTodoStatus)) {
+      const hasStatus =
+        typeof body.status === "string" &&
+        allowed.includes(body.status as FeedbackTodoStatus);
+      const promote = body.ticketed === true;
+      if (!hasStatus && !promote) {
         send(
           res,
           400,
-          JSON.stringify({ error: "status must be open|done|disqualified" }),
+          JSON.stringify({
+            error: "status must be open|done|disqualified, or set ticketed: true",
+          }),
           "application/json; charset=utf-8",
           noIndex,
         );
         return true;
       }
-      const todo = setFeedbackTodoStatus(
-        Number(feedbackMatch[1]),
-        body.status as FeedbackTodoStatus,
-      );
+      const id = Number(feedbackMatch[1]);
+      let todo = promote ? setFeedbackTodoTicketed(id) : null;
+      if (promote && !todo) {
+        send(
+          res,
+          404,
+          JSON.stringify({ error: "Feedback todo not found" }),
+          "application/json; charset=utf-8",
+          noIndex,
+        );
+        return true;
+      }
+      if (hasStatus) {
+        todo = setFeedbackTodoStatus(id, body.status as FeedbackTodoStatus);
+      }
       if (!todo) {
         send(
           res,
@@ -1275,7 +1390,12 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
       }
 
       if (pathname === "/api/stats") {
-        send(res, 200, JSON.stringify(buildImpactStats()), "application/json; charset=utf-8");
+        send(
+          res,
+          200,
+          JSON.stringify(toPublicImpactStats(buildImpactStats())),
+          "application/json; charset=utf-8",
+        );
         return;
       }
 
@@ -1407,6 +1527,7 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             return;
           }
           const { kit } = result;
+          const hasPrivate = partnerHasPrivateDashboard(kit.partner.accountType);
           send(
             res,
             200,
@@ -1422,10 +1543,12 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               accountType: kit.partner.accountType,
               emailDomain: kit.partner.emailDomain,
               emailVerified: true,
+              hasPrivateDashboard: hasPrivate,
               statusUrl: kit.statusUrl,
               qrUrl: kit.qrUrl,
               bannerUrl: kit.bannerUrl,
-              editToken: kit.editToken,
+              cancelUrl: kit.cancelUrl || "",
+              editToken: hasPrivate ? kit.editToken : "",
               emailMode: kit.email.mode,
             }),
             "application/json; charset=utf-8",
@@ -1442,26 +1565,226 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
         return;
       }
 
+      if (pathname === "/api/partners/cancel" && req.method === "POST") {
+        try {
+          const body = (await readJsonBody(req, 4_096)) as { token?: unknown };
+          const token = typeof body.token === "string" ? body.token.trim() : "";
+          if (!token) {
+            send(
+              res,
+              400,
+              JSON.stringify({ error: "invalid_token" }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          const result = cancelPartnerAccountByToken(
+            config.developerSessionSecret,
+            token,
+          );
+          if ("error" in result) {
+            const status =
+              result.error === "not_found"
+                ? 404
+                : result.error === "not_individual"
+                  ? 403
+                  : 400;
+            send(
+              res,
+              status,
+              JSON.stringify({ error: result.error }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          send(
+            res,
+            200,
+            JSON.stringify({
+              ok: true,
+              alreadyCanceled: result.alreadyCanceled,
+              name: result.partner.name,
+              slug: result.partner.slug,
+              createdAt: result.partner.createdAt,
+              canceledAt: result.partner.canceledAt,
+            }),
+            "application/json; charset=utf-8",
+          );
+        } catch (err) {
+          console.error("Partner cancel failed:", err);
+          send(
+            res,
+            500,
+            JSON.stringify({ error: "cancel_failed" }),
+            "application/json; charset=utf-8",
+          );
+        }
+        return;
+      }
+
+      if (pathname === "/api/partners/login" && req.method === "POST") {
+        try {
+          const body = (await readJsonBody(req, 4096)) as {
+            partnerId?: unknown;
+          };
+          const partnerId =
+            typeof body.partnerId === "string" ? body.partnerId.trim() : "";
+          const signed = partnerId
+            ? getSignedUpPartnerById(partnerId)
+            : undefined;
+          if (!signed || signed.canceledAt) {
+            send(
+              res,
+              403,
+              JSON.stringify({ error: "unauthorized" }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          if (!partnerHasPrivateDashboard(signed.accountType)) {
+            send(
+              res,
+              403,
+              JSON.stringify({ error: "no_private_dashboard" }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          const ownerToken = issuePartnerOwnerToken(
+            config.developerSessionSecret,
+            signed.id,
+            signed.slug,
+          );
+          send(
+            res,
+            200,
+            JSON.stringify({
+              ok: true,
+              ownerToken,
+              partnerId: signed.id,
+              slug: signed.slug,
+              emailVerified: Boolean(signed.emailVerifiedAt),
+            }),
+            "application/json; charset=utf-8",
+          );
+        } catch {
+          send(
+            res,
+            400,
+            JSON.stringify({ error: "bad_request" }),
+            "application/json; charset=utf-8",
+          );
+        }
+        return;
+      }
+
       if (pathname.startsWith("/api/partners/")) {
         const rest = pathname.slice("/api/partners/".length);
         const parts = rest.split("/").filter(Boolean);
         const slug = decodeURIComponent(parts[0] ?? "");
+        if (parts[1] === "request-login") {
+          if (req.method !== "POST") {
+            send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
+            return;
+          }
+          try {
+            const body = (await readJsonBody(req, 4096)) as { email?: unknown };
+            const email = typeof body.email === "string" ? body.email : "";
+            const result = await requestPartnerLogin(config, slug, email);
+            if (!result.ok) {
+              const status =
+                result.error === "not_found"
+                  ? 404
+                  : result.error === "rate_limited"
+                    ? 429
+                    : 400;
+              send(
+                res,
+                status,
+                JSON.stringify({ error: result.error }),
+                "application/json; charset=utf-8",
+              );
+              return;
+            }
+            send(
+              res,
+              200,
+              JSON.stringify({
+                ok: true,
+                mode: result.mode,
+                ...(result.loginUrl ? { loginUrl: result.loginUrl } : {}),
+              }),
+              "application/json; charset=utf-8",
+            );
+          } catch {
+            send(
+              res,
+              400,
+              JSON.stringify({ error: "bad_request" }),
+              "application/json; charset=utf-8",
+            );
+          }
+          return;
+        }
+        if (parts[1] === "confirm-login") {
+          if (req.method !== "POST") {
+            send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
+            return;
+          }
+          try {
+            const body = (await readJsonBody(req, 4096)) as { token?: unknown };
+            const token =
+              typeof body.token === "string" ? body.token.trim() : "";
+            const result = confirmPartnerLogin(config, slug, token);
+            if (!result.ok) {
+              send(
+                res,
+                result.error === "not_found" ? 404 : 403,
+                JSON.stringify({ error: result.error }),
+                "application/json; charset=utf-8",
+              );
+              return;
+            }
+            send(
+              res,
+              200,
+              JSON.stringify({
+                ok: true,
+                ownerToken: result.ownerToken,
+                partnerId: result.partnerId,
+                slug: result.slug,
+                email: result.email,
+                editable: result.editable,
+              }),
+              "application/json; charset=utf-8",
+            );
+          } catch {
+            send(
+              res,
+              400,
+              JSON.stringify({ error: "bad_request" }),
+              "application/json; charset=utf-8",
+            );
+          }
+          return;
+        }
         if (parts[1] === "login") {
           if (req.method !== "POST") {
             send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
             return;
           }
           try {
-            const signed = getSignedUpPartnerBySlug(slug);
-            if (!signed) {
+            const partner = getPartnerBySlug(slug);
+            if (!partner) {
               send(
                 res,
-                403,
-                JSON.stringify({ error: "login_unavailable" }),
+                404,
+                JSON.stringify({ error: "not_found" }),
                 "application/json; charset=utf-8",
               );
               return;
             }
+            const signed = getSignedUpPartnerBySlug(slug);
             const body = (await readJsonBody(req, 4096)) as {
               partnerId?: unknown;
               editToken?: unknown;
@@ -1473,11 +1796,13 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               typeof body.editToken === "string" ? body.editToken.trim() : "";
             const existingOwner = readPartnerOwnerToken(req, body);
             const idOk =
-              partnerId && partnerId.toLowerCase() === signed.id.toLowerCase();
+              partnerId &&
+              partnerId.toLowerCase() === partner.id.toLowerCase() &&
+              Boolean(signed);
             const tokenOk = partnerOwnerAuthorized(
               config.developerSessionSecret,
-              signed.id,
-              signed.slug,
+              partner.id,
+              partner.slug,
               editToken || existingOwner,
             );
             if (!idOk && !tokenOk) {
@@ -1493,8 +1818,8 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             }
             const ownerToken = issuePartnerOwnerToken(
               config.developerSessionSecret,
-              signed.id,
-              signed.slug,
+              partner.id,
+              partner.slug,
             );
             send(
               res,
@@ -1502,9 +1827,10 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               JSON.stringify({
                 ok: true,
                 ownerToken,
-                partnerId: signed.id,
-                slug: signed.slug,
-                emailVerified: Boolean(signed.emailVerifiedAt),
+                partnerId: partner.id,
+                slug: partner.slug,
+                emailVerified: partner.emailVerified,
+                editable: Boolean(signed),
               }),
               "application/json; charset=utf-8",
             );
@@ -1547,7 +1873,6 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             );
             const pdf = await renderPartnerBoothBannerPdf({
               partnerName: partner?.name ?? signed.name,
-              partnerId: signed.id,
               qrTargetUrl: target,
               partnerLogoPath: partner?.logo || signed.logo || null,
               eventName: event.name,
@@ -1710,7 +2035,6 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
           const target = campaignLandingUrl(config.publicBaseUrl, partner.campaignId);
           const pdf = await renderPartnerBoothBannerPdf({
             partnerName: partner.name,
-            partnerId: partner.id,
             qrTargetUrl: target,
             partnerLogoPath: partner.logo || null,
           });
@@ -1718,6 +2042,106 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
           send(res, 200, pdf, "application/pdf", {
             "Cache-Control": "private, max-age=300",
             "Content-Disposition": `attachment; filename="calclaim-booth-banner-${safeName}.pdf"`,
+          });
+          return;
+        }
+        if (parts[1] === "account") {
+          if (req.method !== "GET") {
+            send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
+            return;
+          }
+          const signed = getSignedUpPartnerBySlug(slug);
+          if (!signed) {
+            send(
+              res,
+              404,
+              JSON.stringify({ error: "not_found" }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          const token = readPartnerOwnerToken(req);
+          if (
+            !partnerOwnerAuthorized(
+              config.developerSessionSecret,
+              signed.id,
+              signed.slug,
+              token,
+            )
+          ) {
+            send(
+              res,
+              401,
+              JSON.stringify({ error: "unauthorized" }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          send(
+            res,
+            200,
+            JSON.stringify({
+              ok: true,
+              partnerId: signed.id,
+              slug: signed.slug,
+              name: signed.name,
+              email: signed.email,
+              city: signed.city,
+              logo: signed.logo || "",
+              accountType: signed.accountType,
+              emailDomain: signed.emailDomain,
+              emailVerified: Boolean(signed.emailVerifiedAt),
+            }),
+            "application/json; charset=utf-8",
+          );
+          return;
+        }
+        if (parts[1] === "export") {
+          if (req.method !== "GET") {
+            send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
+            return;
+          }
+          const signed = getSignedUpPartnerBySlug(slug);
+          if (!signed) {
+            send(
+              res,
+              404,
+              JSON.stringify({ error: "not_found" }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          const token = readPartnerOwnerToken(req);
+          if (
+            !partnerOwnerAuthorized(
+              config.developerSessionSecret,
+              signed.id,
+              signed.slug,
+              token,
+            )
+          ) {
+            send(
+              res,
+              401,
+              JSON.stringify({ error: "unauthorized" }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          const zip = buildPartnerWebsiteExportZip(signed.slug);
+          if (!zip) {
+            send(
+              res,
+              404,
+              JSON.stringify({ error: "not_found" }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          const safeName = signed.slug.replace(/[^a-z0-9_-]+/gi, "-");
+          send(res, 200, zip, "application/zip", {
+            "Cache-Control": "no-store",
+            "Content-Disposition": `attachment; filename="calclaim-${safeName}-website-data.zip"`,
           });
           return;
         }
@@ -1737,7 +2161,27 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               );
               return;
             }
-            const body = (await readJsonBody(req, 16_384)) as { text?: unknown };
+            const body = (await readJsonBody(req, 16_384)) as {
+              text?: unknown;
+              ownerToken?: unknown;
+            };
+            const ownerAuthToken = readPartnerOwnerToken(req, body);
+            if (
+              !partnerOwnerAuthorized(
+                config.developerSessionSecret,
+                partner.id,
+                partner.slug,
+                ownerAuthToken,
+              )
+            ) {
+              send(
+                res,
+                401,
+                JSON.stringify({ error: "unauthorized" }),
+                "application/json; charset=utf-8",
+              );
+              return;
+            }
             const text = typeof body.text === "string" ? body.text.trim() : "";
             if (!text) {
               send(
@@ -1767,6 +2211,7 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               200,
               JSON.stringify({
                 ok: true,
+                pointsCreated: result.tickets.length,
                 ticketsCreated: result.tickets.length,
                 feedbackMessages: result.feedbackMessages,
                 feedbackTickets: result.feedbackTickets,
@@ -1799,6 +2244,7 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             let city = "";
             let partnerId = "";
             let editToken = "";
+            let ownerToken = "";
             let logo: { buffer: Buffer; mime: string; filename: string } | undefined;
 
             if (contentType.includes("multipart/form-data")) {
@@ -1808,6 +2254,7 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               city = multi.city;
               partnerId = multi.partnerId;
               editToken = multi.editToken;
+              ownerToken = multi.ownerToken;
               logo = multi.logo;
             } else {
               const body = (await readJsonBody(req, 16_384)) as {
@@ -1816,6 +2263,7 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
                 city?: unknown;
                 partnerId?: unknown;
                 editToken?: unknown;
+                ownerToken?: unknown;
               };
               name = typeof body.name === "string" ? body.name : "";
               email = typeof body.email === "string" ? body.email : "";
@@ -1824,15 +2272,29 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
                 typeof body.partnerId === "string" ? body.partnerId : "";
               editToken =
                 typeof body.editToken === "string" ? body.editToken : "";
+              ownerToken =
+                typeof body.ownerToken === "string" ? body.ownerToken : "";
             }
 
+            const ownerAuthToken = readPartnerOwnerToken(req, { ownerToken });
+            const asOwner = Boolean(
+              existingPartner &&
+                partnerOwnerAuthorized(
+                  config.developerSessionSecret,
+                  existingPartner.id,
+                  existingPartner.slug,
+                  ownerAuthToken,
+                ),
+            );
+
             const accountType = existingPartner?.accountType ?? "organization";
-            const parsed = asDeveloper
-              ? parsePartnerSignup({ name, email, city, accountType })
-              : parsePartnerProfileUpdate(
-                  { name, email, city, partnerId, accountType },
-                  { accountType },
-                );
+            const parsed =
+              asDeveloper || asOwner
+                ? parsePartnerSignup({ name, email, city, accountType })
+                : parsePartnerProfileUpdate(
+                    { name, email, city, partnerId, accountType },
+                    { accountType },
+                  );
             if ("error" in parsed) {
               send(
                 res,
@@ -1846,9 +2308,10 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               name: parsed.name,
               email: parsed.email,
               city: parsed.city,
-              partnerId: asDeveloper ? undefined : partnerId,
+              partnerId: asDeveloper || asOwner ? undefined : partnerId,
               editToken,
               asDeveloper,
+              asOwner,
               editTokenSecret: config.developerSessionSecret,
               logo,
               accountType,
@@ -1912,6 +2375,84 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               res,
               500,
               JSON.stringify({ error: "update_failed" }),
+              "application/json; charset=utf-8",
+            );
+          }
+          return;
+        }
+        if (parts.length === 1 && req.method === "DELETE") {
+          const signed = getSignedUpPartnerBySlug(slug);
+          if (!signed) {
+            send(
+              res,
+              404,
+              JSON.stringify({ error: "not_found" }),
+              "application/json; charset=utf-8",
+            );
+            return;
+          }
+          try {
+            const body = (await readJsonBody(req, 4096)) as {
+              ownerToken?: unknown;
+              confirm?: unknown;
+            };
+            const token = readPartnerOwnerToken(req, body);
+            if (
+              !partnerOwnerAuthorized(
+                config.developerSessionSecret,
+                signed.id,
+                signed.slug,
+                token,
+              )
+            ) {
+              send(
+                res,
+                401,
+                JSON.stringify({ error: "unauthorized" }),
+                "application/json; charset=utf-8",
+              );
+              return;
+            }
+            const confirm =
+              typeof body.confirm === "string" ? body.confirm.trim().toLowerCase() : "";
+            if (confirm !== "delete") {
+              send(
+                res,
+                400,
+                JSON.stringify({ error: "confirm_required" }),
+                "application/json; charset=utf-8",
+              );
+              return;
+            }
+            const result = deletePartnerAccount(signed.slug);
+            if ("error" in result) {
+              const status =
+                result.error === "already_canceled" ? 409 : 404;
+              send(
+                res,
+                status,
+                JSON.stringify({ error: result.error }),
+                "application/json; charset=utf-8",
+              );
+              return;
+            }
+            send(
+              res,
+              200,
+              JSON.stringify({
+                ok: true,
+                canceled: true,
+                deleted: true,
+                slug: signed.slug,
+                canceledAt: result.canceledAt,
+              }),
+              "application/json; charset=utf-8",
+            );
+          } catch {
+            send(
+              res,
+              400,
+              JSON.stringify({ error: "bad_request" }),
               "application/json; charset=utf-8",
             );
           }
@@ -2057,7 +2598,7 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
         return;
       }
 
-      // Localized public URLs: /es/impact, /zh/privacy, etc.
+      // Localized public URLs: /es/impact, /zh/privacy, /vi/…, /tl/…, etc.
       // Developer login + /dev stay English-only (no alt-language pages).
       const localized = stripPublicLangPrefix(pathname);
       if (localized.lang) {
@@ -2106,6 +2647,23 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             serveStatic(res, "/partners/verify");
             return;
           }
+          if (
+            publicPath === "/partners/cancel" ||
+            publicPath === "/partners/cancel/"
+          ) {
+            serveStatic(res, "/partners/cancel");
+            return;
+          }
+          const legacyEvent = publicPath.match(
+            /^\/partners\/([A-Za-z0-9_-]+)\/events\/([A-Za-z0-9_-]+)\/?$/,
+          );
+          if (legacyEvent) {
+            redirect(
+              res,
+              `/${localized.lang}/partners/${legacyEvent[1]}/org/events/${legacyEvent[2]}`,
+            );
+            return;
+          }
           const slug = publicPath
             .slice("/partners/".length)
             .replace(/\/$/, "")
@@ -2124,7 +2682,7 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
       if (pathname === "/dev" || pathname.startsWith("/dev/")) {
         const rel =
           pathname === "/dev" || pathname === "/dev/" ? "/dev/index.html" : pathname;
-        // Local: skip login page entirely; production still serves it.
+        // When auth is off (DEVELOPER_AUTH=0), skip the login page.
         if (
           !config.developerAuthRequired &&
           (rel === "/dev/login.html" || pathname === "/dev/login.html")
@@ -2177,7 +2735,24 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
           serveStatic(res, "/partners/verify");
           return;
         }
-        const slug = pathname.slice("/partners/".length).replace(/\/$/, "").split("/")[0] ?? "";
+        if (pathname === "/partners/cancel" || pathname === "/partners/cancel/") {
+          serveStatic(res, "/partners/cancel");
+          return;
+        }
+        // Legacy event URLs lived on the public page; private org owns them now.
+        const legacyEvent = pathname.match(
+          /^\/partners\/([A-Za-z0-9_-]+)\/events\/([A-Za-z0-9_-]+)\/?$/,
+        );
+        if (legacyEvent) {
+          redirect(
+            res,
+            `/partners/${legacyEvent[1]}/org/events/${legacyEvent[2]}`,
+          );
+          return;
+        }
+        const slug =
+          pathname.slice("/partners/".length).replace(/\/$/, "").split("/")[0] ??
+          "";
         if (RESERVED_PARTNER_SLUGS.has(slug) || !getPartnerBySlug(slug)) {
           send(res, 404, "Not found", "text/plain; charset=utf-8");
           return;
@@ -2217,6 +2792,11 @@ export function startWebServer(
   config: AppConfig,
   telegramWebhook?: RequestHandler,
 ): http.Server {
+  if (!config.developerAuthRequired && config.publicBaseUrl.startsWith("https://")) {
+    throw new Error(
+      "DEVELOPER_AUTH=0 is blocked when PUBLIC_BASE_URL is https. Remove it from production .env.",
+    );
+  }
   const handler = createWebHandler(config, telegramWebhook);
   const server = http.createServer((req, res) => {
     void handler(req, res);
@@ -2229,7 +2809,7 @@ export function startWebServer(
     console.log(
       config.developerAuthRequired
         ? `  Developer (password + CAPTCHA): ${config.publicBaseUrl}/dev`
-        : `  Developer (open locally): ${config.publicBaseUrl}/dev`,
+        : `  Developer (auth off): ${config.publicBaseUrl}/dev`,
     );
     console.log(`  Sample QR landing: ${config.publicBaseUrl}/go/qr_oakland_library`);
     if (config.developerAuthRequired && !config.developerPassword) {

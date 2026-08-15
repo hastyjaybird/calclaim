@@ -1,9 +1,85 @@
 /* global Chart */
 
 const number = new Intl.NumberFormat("en-US");
+const money = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 0,
+});
 
 function el(id) {
   return document.getElementById(id);
+}
+
+function isTreeHash(hash = location.hash) {
+  const raw = String(hash || "").replace(/^#/, "");
+  return (
+    raw === "tree" ||
+    raw.startsWith("tree&") ||
+    raw.startsWith("tree=") ||
+    raw === "a" ||
+    raw.startsWith("a=")
+  );
+}
+
+function treeReviewPath(actionList) {
+  if (!Array.isArray(actionList) || !actionList.length) return "/dev#tree";
+  const encoded = actionList.map((a) => encodeURIComponent(a)).join(",");
+  return `/dev#tree&a=${encoded}`;
+}
+
+function migrateTreePath(path) {
+  if (!path) return "/dev#tree";
+  if (path.startsWith("/dev#tree")) return path;
+  if (path.startsWith("/dev/tree#a=")) {
+    return `/dev#tree&a=${path.slice("/dev/tree#a=".length)}`;
+  }
+  if (path === "/dev/tree" || path === "/dev/tree/") return "/dev#tree";
+  return path;
+}
+
+function setTreeView(on) {
+  document.documentElement.classList.toggle("dev-on-tree", on);
+  if (on) {
+    window.scrollTo(0, 0);
+    window.__treeReview?.activate?.();
+  } else {
+    requestAnimationFrame(() =>
+      resizeChartsIn(document.querySelector(".dev-dashboard")),
+    );
+  }
+}
+
+function revealSection(nodeOrId) {
+  const target =
+    typeof nodeOrId === "string" ? document.getElementById(nodeOrId) : nodeOrId;
+  if (!target) return;
+  const section = target.closest("section") || (target.matches("section") ? target : null);
+  const fold =
+    target.closest("details.panel-fold") ||
+    section?.querySelector(":scope > details.panel-fold");
+  if (fold) fold.open = true;
+}
+
+function resizeChartsIn(root) {
+  if (!root || typeof Chart === "undefined") return;
+  for (const canvas of root.querySelectorAll("canvas")) {
+    Chart.getChart(canvas)?.resize();
+  }
+}
+
+function initPanelFolds() {
+  for (const fold of document.querySelectorAll("details.panel-fold")) {
+    fold.addEventListener("toggle", () => {
+      if (fold.open) requestAnimationFrame(() => resizeChartsIn(fold));
+    });
+  }
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest("a[href^='#']");
+    if (!link?.hash || isTreeHash(link.hash)) return;
+    revealSection(link.hash.slice(1));
+  });
+  if (location.hash && !isTreeHash()) revealSection(location.hash.slice(1));
 }
 
 async function api(path, options) {
@@ -53,12 +129,29 @@ function formatDuration(ms) {
 
 let pollTimer = null;
 
+const libraryWatch = {
+  findingsByProgram: new Map(),
+};
+
+/** Library version dates are mm-dd-yy (YYYY-MM-DD and mm/dd/yy still format). */
+function formatLibraryVersion(version) {
+  const raw = String(version || "").trim();
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (iso) return `${iso[2]}-${iso[3]}-${iso[1].slice(2)}`;
+  const us = /^(\d{1,2})[/-](\d{1,2})[/-](\d{2}|\d{4})$/.exec(raw);
+  if (us) {
+    const yy = us[3].length === 4 ? us[3].slice(2) : us[3];
+    return `${us[1].padStart(2, "0")}-${us[2].padStart(2, "0")}-${yy}`;
+  }
+  return raw;
+}
+
 function renderOverview(status) {
   const o = status.overview;
-  el("m-version").textContent = o.version;
+  el("m-version").textContent = formatLibraryVersion(o.version);
   const age =
     o.ageDays == null
-      ? "Age unknown – use YYYY-MM-DD versions"
+      ? "Age unknown – use mm-dd-yy versions"
       : o.needsReview
         ? `${o.ageDays} days old – review due (>${o.agingRuleDays}d)`
         : `${o.ageDays} days old (within ${o.agingRuleDays}d rule)`;
@@ -67,25 +160,13 @@ function renderOverview(status) {
   else el("m-age").style.color = "";
 
   el("m-programs").textContent = String(o.programCount);
-  el("m-bands").textContent = `Income bands: ${o.incomeBandsVersion}`;
-  el("m-open").textContent = String(status.findingCounts.open);
-  el("m-crit").textContent = String(status.findingCounts.critical);
-  el("m-high").textContent = String(status.findingCounts.high);
+  el("m-bands").textContent = `Income bands: ${formatLibraryVersion(o.incomeBandsVersion)}`;
   el("m-llm").textContent = status.llmEnabled ? "On" : "Off";
 
-  const tbody = el("program-rows");
-  tbody.innerHTML = o.programs
-    .map(
-      (p) => `<tr>
-        <td>${escapeHtml(p.name)}</td>
-        <td><span class="cat">${escapeHtml(p.category)}</span></td>
-        <td class="num">${p.sourceCount}</td>
-        <td class="num">${p.deadlineCount}${p.hasNullDeadline ? "*" : ""}</td>
-        <td class="num">${p.openFindings}</td>
-        <td class="url-cell"><a href="${escapeHtml(p.applyUrl)}" target="_blank" rel="noopener">${escapeHtml(p.applyUrl)}</a></td>
-      </tr>`,
-    )
-    .join("");
+  libraryWatch.findingsByProgram = new Map(
+    o.programs.map((p) => [p.id, p.openFindings]),
+  );
+  refreshLibraryCells();
 
   el("checklist-items").innerHTML = o.watchChecklist
     .map(
@@ -148,24 +229,17 @@ function updateScanChrome(scan) {
   }
 }
 
-function renderFindings(findings) {
-  const root = el("findings-list");
-  if (!findings.length) {
-    root.innerHTML = `<p class="empty">No findings in this filter. Run a library check to look for drift.</p>`;
-    return;
-  }
-  root.innerHTML = findings
-    .map((f) => {
-      const evidence = f.evidenceUrl
-        ? `<a class="action-link" href="${escapeHtml(f.evidenceUrl)}" target="_blank" rel="noopener">Open evidence</a>`
-        : "";
-      const actions =
-        f.status === "open"
-          ? `<button type="button" data-id="${f.id}" data-status="acknowledged">Acknowledge</button>
+function findingCardHtml(f) {
+  const evidence = f.evidenceUrl
+    ? `<a class="action-link" href="${escapeHtml(f.evidenceUrl)}" target="_blank" rel="noopener">Open evidence</a>`
+    : "";
+  const actions =
+    f.status === "open"
+      ? `<button type="button" data-id="${f.id}" data-status="acknowledged">Acknowledge</button>
              <button type="button" data-id="${f.id}" data-status="fixed">Mark fixed</button>
              <button type="button" data-id="${f.id}" data-status="dismissed">Dismiss</button>`
-          : `<button type="button" data-id="${f.id}" data-status="open">Reopen</button>`;
-      return `<article class="finding" data-finding="${f.id}">
+      : `<button type="button" data-id="${f.id}" data-status="open">Reopen</button>`;
+  return `<article class="finding" data-finding="${f.id}">
         <div class="finding-head">
           <span class="badge badge-${escapeHtml(f.severity)}">${escapeHtml(f.severity)}</span>
           <span class="badge badge-cat">${escapeHtml(f.category)}</span>
@@ -181,14 +255,62 @@ function renderFindings(findings) {
           <div class="finding-actions">${actions}</div>
         </div>
       </article>`;
-    })
-    .join("");
+}
+
+function feedbackTicketCardHtml(t) {
+  const actions = [];
+  if (t.status === "open") {
+    actions.push(
+      `<button type="button" data-feedback-id="${t.id}" data-status="done">Mark done</button>`,
+    );
+    actions.push(
+      `<button type="button" data-feedback-id="${t.id}" data-status="disqualified">Disqualify as feedback</button>`,
+    );
+  } else if (t.status === "done") {
+    actions.push(
+      `<button type="button" data-feedback-id="${t.id}" data-status="open">Reopen</button>`,
+    );
+  } else {
+    actions.push(
+      `<button type="button" data-feedback-id="${t.id}" data-status="open">Restore as open</button>`,
+    );
+  }
+  return feedbackCardHtml(t, actions, { fromTickets: true });
+}
+
+function renderFindings(findings, feedbackTickets = []) {
+  const root = el("findings-list");
+  if (!findings.length && !feedbackTickets.length) {
+    root.innerHTML = `<p class="empty">No developer tickets in this filter. Run a library check, or send user feedback here with Send to dev tickets.</p>`;
+    return;
+  }
+  const items = [
+    ...feedbackTickets.map((t) => ({
+      kind: "feedback",
+      at: t.ticketedAt || t.createdAt,
+      html: feedbackTicketCardHtml(t),
+    })),
+    ...findings.map((f) => ({
+      kind: "finding",
+      at: f.createdAt,
+      html: findingCardHtml(f),
+    })),
+  ].sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  root.innerHTML = items.map((item) => item.html).join("");
 
   root.querySelectorAll("button[data-id]").forEach((btn) => {
     btn.addEventListener("click", () => {
       void patchFinding(Number(btn.getAttribute("data-id")), btn.getAttribute("data-status"));
     });
   });
+  bindFeedbackActionButtons(root, { refreshTickets: true });
+}
+
+function findingFilterToFeedbackStatus(filter) {
+  if (filter === "open") return "open";
+  if (filter === "fixed") return "done";
+  if (filter === "all") return "all";
+  return null;
 }
 
 async function patchFinding(id, status) {
@@ -211,7 +333,18 @@ async function refreshFindings() {
   const res = await api(`/api/dev/findings?status=${encodeURIComponent(filter)}`);
   if (!res.ok) throw new Error("Failed to load findings");
   const data = await res.json();
-  renderFindings(data.findings);
+  let tickets = [];
+  const fbStatus = findingFilterToFeedbackStatus(filter);
+  if (fbStatus) {
+    const ticketsRes = await api(
+      `/api/dev/feedback-todos?ticketed=1&status=${encodeURIComponent(fbStatus)}`,
+    );
+    if (ticketsRes.ok) {
+      const ticketsData = await ticketsRes.json();
+      tickets = ticketsData.todos || [];
+    }
+  }
+  renderFindings(data.findings, tickets);
 }
 
 function feedbackSourceLabel(t) {
@@ -259,32 +392,91 @@ function feedbackTreePath(t) {
   if (t.source !== "tree") return null;
   try {
     const snap = JSON.parse(t.sessionSnapshot || "{}");
-    if (snap.treePath) return snap.treePath;
+    if (snap.treePath) return migrateTreePath(snap.treePath);
     if (Array.isArray(snap.actions) && snap.actions.length) {
-      return `/dev/tree#a=${snap.actions.map((a) => encodeURIComponent(a)).join(",")}`;
+      return treeReviewPath(snap.actions);
     }
   } catch {
     /* ignore */
   }
-  return "/dev/tree";
+  return "/dev#tree";
 }
 
 function feedbackPartnerLink(t) {
   if (!t.partnerSlug) return null;
-  return `/partners/${encodeURIComponent(t.partnerSlug)}`;
+  return `/partners/${encodeURIComponent(t.partnerSlug)}/org`;
+}
+
+function feedbackCardHtml(t, actions, opts = {}) {
+  const treePath = feedbackTreePath(t);
+  const treeLink = treePath
+    ? `<a class="badge badge-source" href="${escapeHtml(treePath)}">Open tree location</a>`
+    : "";
+  const partnerHref = feedbackPartnerLink(t);
+  const partnerLink = partnerHref
+    ? `<a class="badge badge-source" href="${escapeHtml(partnerHref)}">Partner page</a>`
+    : "";
+  const statusBadge =
+    t.status === "disqualified"
+      ? `<span class="badge badge-cat">disqualified</span>`
+      : "";
+  const ticketBadge = opts.fromTickets
+    ? `<span class="badge badge-source">from feedback</span>`
+    : "";
+  const creditNote =
+    t.campaignId && t.status !== "disqualified"
+      ? `<span class="cat">Credits ${escapeHtml(t.partnerSlug || t.campaignId)}</span>`
+      : t.campaignId && t.status === "disqualified"
+        ? `<span class="cat">Removed from ${escapeHtml(t.partnerSlug || t.campaignId)} metrics</span>`
+        : "";
+  return `<article class="finding" data-feedback="${t.id}">
+        <div class="finding-head">
+          <span class="badge badge-cat">${escapeHtml(feedbackSourceLabel(t))}</span>
+          <span class="badge badge-source">${escapeHtml(t.step)}</span>
+          ${ticketBadge}
+          ${statusBadge}
+          ${treeLink}
+          ${partnerLink}
+          <h3>${escapeHtml(feedbackWhoLabel(t))}</h3>
+        </div>
+        <p>${escapeHtml(t.text)}</p>
+        <div class="finding-meta">
+          <span class="cat">${escapeHtml(formatWhen(t.createdAt))}</span>
+          ${creditNote}
+          <div class="finding-actions">${actions.join("")}</div>
+        </div>
+      </article>`;
+}
+
+function bindFeedbackActionButtons(root, opts = {}) {
+  root.querySelectorAll("button[data-feedback-id]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = Number(btn.getAttribute("data-feedback-id"));
+      if (btn.getAttribute("data-action") === "ticket") {
+        void sendFeedbackToTickets(id);
+        return;
+      }
+      void patchFeedbackTodo(id, btn.getAttribute("data-status"), {
+        refreshTickets: Boolean(opts.refreshTickets),
+      });
+    });
+  });
 }
 
 function renderFeedbackTodos(todos) {
   const root = el("feedback-list");
   if (!root) return;
   if (!todos.length) {
-    root.innerHTML = `<p class="empty">No feedback in this filter yet. Testers can text, send a voice note, use the contact form, or submit on a partner page. Tree review requests also land here.</p>`;
+    root.innerHTML = `<p class="empty">No feedback in this filter yet. Testers can text, send a voice note, use the contact form, or submit on a signed-in partner organization page. Tree review requests also land here.</p>`;
     return;
   }
   root.innerHTML = todos
     .map((t) => {
       const actions = [];
       if (t.status === "open") {
+        actions.push(
+          `<button type="button" class="action-send-ticket" data-feedback-id="${t.id}" data-action="ticket">Send to dev tickets</button>`,
+        );
         actions.push(
           `<button type="button" data-feedback-id="${t.id}" data-status="done">Mark done</button>`,
         );
@@ -303,54 +495,14 @@ function renderFeedbackTodos(todos) {
           `<button type="button" data-feedback-id="${t.id}" data-status="open">Restore as open</button>`,
         );
       }
-      const treePath = feedbackTreePath(t);
-      const treeLink = treePath
-        ? `<a class="badge badge-source" href="${escapeHtml(treePath)}">Open tree location</a>`
-        : "";
-      const partnerHref = feedbackPartnerLink(t);
-      const partnerLink = partnerHref
-        ? `<a class="badge badge-source" href="${escapeHtml(partnerHref)}">Partner page</a>`
-        : "";
-      const statusBadge =
-        t.status === "disqualified"
-          ? `<span class="badge badge-cat">disqualified</span>`
-          : "";
-      const creditNote =
-        t.campaignId && t.status !== "disqualified"
-          ? `<span class="cat">Credits ${escapeHtml(t.partnerSlug || t.campaignId)}</span>`
-          : t.campaignId && t.status === "disqualified"
-            ? `<span class="cat">Removed from ${escapeHtml(t.partnerSlug || t.campaignId)} metrics</span>`
-            : "";
-      return `<article class="finding" data-feedback="${t.id}">
-        <div class="finding-head">
-          <span class="badge badge-cat">${escapeHtml(feedbackSourceLabel(t))}</span>
-          <span class="badge badge-source">${escapeHtml(t.step)}</span>
-          ${statusBadge}
-          ${treeLink}
-          ${partnerLink}
-          <h3>${escapeHtml(feedbackWhoLabel(t))}</h3>
-        </div>
-        <p>${escapeHtml(t.text)}</p>
-        <div class="finding-meta">
-          <span class="cat">${escapeHtml(formatWhen(t.createdAt))}</span>
-          ${creditNote}
-          <div class="finding-actions">${actions.join("")}</div>
-        </div>
-      </article>`;
+      return feedbackCardHtml(t, actions);
     })
     .join("");
 
-  root.querySelectorAll("button[data-feedback-id]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      void patchFeedbackTodo(
-        Number(btn.getAttribute("data-feedback-id")),
-        btn.getAttribute("data-status"),
-      );
-    });
-  });
+  bindFeedbackActionButtons(root);
 }
 
-async function patchFeedbackTodo(id, status) {
+async function patchFeedbackTodo(id, status, opts = {}) {
   const res = await api(`/api/dev/feedback-todos/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -362,16 +514,95 @@ async function patchFeedbackTodo(id, status) {
     return;
   }
   await refreshFeedbackTodos();
+  if (opts.refreshTickets) {
+    await refreshFindings();
+    await refreshOrgTickets();
+  }
+}
+
+async function sendFeedbackToTickets(id) {
+  const res = await api(`/api/dev/feedback-todos/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ticketed: true }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    alert(err.error || "Could not send to developer tickets");
+    return;
+  }
+  await refreshFeedbackTodos();
+  await refreshFindings();
+  await refreshOrgTickets();
+  revealSection("org-tickets");
+  el("org-tickets")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function refreshFeedbackTodos() {
   const filterEl = el("feedback-filter");
   if (!filterEl) return;
   const filter = filterEl.value;
-  const res = await api(`/api/dev/feedback-todos?status=${encodeURIComponent(filter)}`);
+  const res = await api(
+    `/api/dev/feedback-todos?status=${encodeURIComponent(filter)}&ticketed=0`,
+  );
   if (!res.ok) throw new Error("Failed to load feedback todos");
   const data = await res.json();
   renderFeedbackTodos(data.todos);
+}
+
+function renderOrgTickets(todos) {
+  const root = el("org-tickets-list");
+  if (!root) return;
+  const attributed = (todos || []).filter((t) => t.partnerSlug || t.campaignId);
+  if (!attributed.length) {
+    root.innerHTML = `<p class="empty">No organization-attributed developer tickets in this filter yet. Promote partner feedback with Send to dev tickets.</p>`;
+    return;
+  }
+  const groups = new Map();
+  for (const t of attributed) {
+    const key = t.partnerSlug || t.campaignId || "unknown";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(t);
+  }
+  const ordered = [...groups.entries()].sort((a, b) => {
+    const aOpen = a[1].filter((t) => t.status === "open").length;
+    const bOpen = b[1].filter((t) => t.status === "open").length;
+    if (bOpen !== aOpen) return bOpen - aOpen;
+    return a[0].localeCompare(b[0]);
+  });
+  root.innerHTML = ordered
+    .map(([key, items]) => {
+      const openCount = items.filter((t) => t.status === "open").length;
+      const label = items[0]?.partnerSlug || key;
+      const href = items[0]?.partnerSlug
+        ? `/partners/${encodeURIComponent(items[0].partnerSlug)}/org`
+        : null;
+      const title = href
+        ? `<a href="${escapeHtml(href)}">${escapeHtml(label)}</a>`
+        : escapeHtml(label);
+      const cards = items.map((t) => feedbackTicketCardHtml(t)).join("");
+      return `<section class="org-ticket-group" data-org="${escapeHtml(key)}">
+        <header class="org-ticket-group-head">
+          <h3>${title}</h3>
+          <p>${items.length} ticket${items.length === 1 ? "" : "s"} · ${openCount} open</p>
+        </header>
+        <div class="findings">${cards}</div>
+      </section>`;
+    })
+    .join("");
+  bindFeedbackActionButtons(root, { refreshTickets: true });
+}
+
+async function refreshOrgTickets() {
+  const filterEl = el("org-ticket-filter");
+  if (!filterEl) return;
+  const filter = filterEl.value;
+  const res = await api(
+    `/api/dev/feedback-todos?status=${encodeURIComponent(filter)}&ticketed=1&limit=500`,
+  );
+  if (!res.ok) throw new Error("Failed to load organization tickets");
+  const data = await res.json();
+  renderOrgTickets(data.todos);
 }
 
 function formatPeriods(periods) {
@@ -530,6 +761,7 @@ async function refreshStatus(alsoFindings = true) {
   if (alsoFindings) {
     await refreshFindings();
     await refreshFeedbackTodos();
+    await refreshOrgTickets();
     await refreshDisasterWindows();
   }
 
@@ -883,6 +1115,30 @@ function unlocksCellHtml(row) {
   return multiCellHtml(row, "unlocks") + reverse;
 }
 
+function openFindingsFor(programId) {
+  return libraryWatch.findingsByProgram.get(programId) ?? 0;
+}
+
+function libraryCellHtml(row) {
+  const sources = row.librarySources?.length ?? 0;
+  const deadlineCount = row.deadlineCount ?? 0;
+  const deadlines = `${deadlineCount}${row.hasNullDeadline ? "*" : ""}`;
+  const deadlineTitle = row.hasNullDeadline
+    ? "At least one deadline has no date in the library"
+    : `${deadlineCount} deadline${deadlineCount === 1 ? "" : "s"} in the library`;
+  const findings = openFindingsFor(row.id);
+  const findingLabel = `${findings} open finding${findings === 1 ? "" : "s"}`;
+  const findingsHtml =
+    findings > 0
+      ? `<a class="lib-findings" href="#dev-tickets">${escapeHtml(findingLabel)}</a>`
+      : `<span class="cell-meta">${escapeHtml(findingLabel)}</span>`;
+  return `<div class="cell-library" data-library="${escapeHtml(row.id)}">
+    <a class="lib-apply" href="${escapeHtml(row.applyUrl)}" target="_blank" rel="noopener" title="${escapeHtml(row.applyUrl)}">${escapeHtml(hostLabel(row.applyUrl))}</a>
+    <span class="cell-meta" title="${escapeHtml(deadlineTitle)}">${sources} source${sources === 1 ? "" : "s"} · ${escapeHtml(deadlines)} deadline${deadlineCount === 1 ? "" : "s"}</span>
+    ${findingsHtml}
+  </div>`;
+}
+
 function matrixRowHtml(row) {
   return `<tr data-matrix-row="${escapeHtml(row.id)}">
     <td class="num">${row.rank}</td>
@@ -891,6 +1147,7 @@ function matrixRowHtml(row) {
       <span class="cat">${escapeHtml(row.category)}</span>
       <span class="cell-meta">${row.formFillMinutes} min form · ${row.timeToMoneyDays}d to money</span>
     </td>
+    <td>${libraryCellHtml(row)}</td>
     <td class="cell-status">${statusCellHtml(row)}</td>
     <td>${difficultyCellHtml(row)}</td>
     <td>${multiCellHtml(row, "eligibility")}</td>
@@ -935,6 +1192,7 @@ function visibleMatrixRows() {
       row.id,
       row.category,
       row.notes,
+      row.applyUrl,
       row.availability.label,
       row.availability.detail,
       ...row.eligibility.map((id) => labelFor("eligibility", id)),
@@ -952,7 +1210,7 @@ function renderMatrix() {
   const rows = visibleMatrixRows();
   tbody.innerHTML = rows.length
     ? rows.map(matrixRowHtml).join("")
-    : `<tr><td colspan="12">No programs match this filter.</td></tr>`;
+    : `<tr><td colspan="13">No programs match this filter.</td></tr>`;
   matrix.rankStale = false;
   el("btn-matrix-resort").disabled = true;
   renderMatrixSummary();
@@ -1148,7 +1406,7 @@ function renderMatrixSummary() {
     `Status: ${statusBits}`,
     `Review: ${s.byReview.needs_review} need review · ${s.byReview.verified_online} verified online · ${s.byReview.signed_off_by_program} signed off`,
     s.avgConfidence == null ? "no confidence set" : `avg confidence ${s.avgConfidence}%`,
-    `matrix version ${matrix.data.version}`,
+    `matrix version ${formatLibraryVersion(matrix.data.version)}`,
   ].join(" – ");
 }
 
@@ -1218,12 +1476,23 @@ function refreshMatrixCells() {
     const peek = tr.querySelector(`[data-notes="${row.id}"]`);
     if (peek) peek.textContent = notesPeek(row.notes);
 
+    const library = tr.querySelector(`[data-library="${row.id}"]`);
+    if (library) library.outerHTML = libraryCellHtml(row);
+
     const confidence = tr.querySelector('input[data-field="confidencePct"]');
     if (confidence && document.activeElement !== confidence) {
       confidence.value = row.confidencePct == null ? "" : String(row.confidencePct);
     }
   }
   renderMatrixSummary();
+}
+
+function refreshLibraryCells() {
+  if (!matrix.data) return;
+  for (const row of matrix.data.rows) {
+    const cell = document.querySelector(`[data-library="${row.id}"]`);
+    if (cell) cell.outerHTML = libraryCellHtml(row);
+  }
 }
 
 function setMatrixStatus(text, isError = false) {
@@ -1311,6 +1580,10 @@ function matrixCsv() {
     "program",
     "id",
     "category",
+    "apply url",
+    "sources",
+    "deadlines",
+    "open findings",
     "status",
     "status detail",
     "difficulty",
@@ -1336,6 +1609,10 @@ function matrixCsv() {
         row.name,
         row.id,
         row.category,
+        row.applyUrl,
+        row.librarySources?.length ?? 0,
+        `${row.deadlineCount ?? 0}${row.hasNullDeadline ? "*" : ""}`,
+        openFindingsFor(row.id),
         row.availability.label,
         row.availability.detail,
         row.difficultyTier,
@@ -1439,6 +1716,8 @@ function wireMatrix() {
 
   if (location.hash === "#coverage" || location.hash === "#matrix-grid") {
     setMatrixTab("grid");
+  } else if (location.hash === "#matrix" || location.hash === "#programs") {
+    setMatrixTab("edit");
   }
 }
 
@@ -1533,126 +1812,6 @@ function renderFunnel(funnel) {
           grid: { color: "rgba(16, 36, 31, 0.08)" },
         },
         y: {
-          grid: { display: false },
-        },
-      },
-    },
-  });
-}
-
-function renderJourney(journey) {
-  const summary = el("journey-summary");
-  const tbody = el("journey-rows");
-  if (!summary || !tbody) return;
-
-  const buckets = journey?.buckets ?? [];
-  if (!journey || !journey.starters) {
-    summary.textContent =
-      "No journey screen data yet – counts appear as people walk the bot after this instrumentation shipped (screens seen + remaining-path estimates).";
-    tbody.innerHTML = `<tr><td colspan="4">No journey data yet.</td></tr>`;
-    const emptyCanvas = el("chart-journey");
-    if (emptyCanvas?._journeyChart) {
-      emptyCanvas._journeyChart.destroy();
-      emptyCanvas._journeyChart = null;
-    }
-    return;
-  }
-
-  summary.innerHTML = `<strong>${number.format(journey.starters)}</strong> starters ·
-    <strong>${number.format(journey.finishers)}</strong> finished
-    (${journey.starters ? Math.round((journey.finishers / journey.starters) * 1000) / 10 : 0}%) ·
-    avg progress <strong>${journey.avgPctThrough}%</strong> ·
-    <strong>${number.format(journey.reportsCreated)}</strong> reports created
-    (${number.format(journey.reportRecipients)} people)`;
-
-  const maxDrop = Math.max(...buckets.map((b) => b.dropPct), 0);
-  tbody.innerHTML = buckets
-    .map((b) => {
-      const dropCell =
-        b.dropped > 0
-          ? `<span class="${b.dropPct === maxDrop && maxDrop > 0 ? "drop-bad" : ""}">−${number.format(b.dropped)} (${b.dropPct}%)</span>`
-          : "–";
-      return `<tr>
-        <td>${escapeHtml(b.label)}</td>
-        <td class="num">${number.format(b.people)}</td>
-        <td class="num">${dropCell}</td>
-        <td class="num">${number.format(b.stillIn)} (${b.retentionPct}%)</td>
-      </tr>`;
-    })
-    .join("");
-
-  const canvas = el("chart-journey");
-  if (!canvas || typeof Chart === "undefined") return;
-  if (canvas._journeyChart) canvas._journeyChart.destroy();
-
-  canvas._journeyChart = new Chart(canvas, {
-    type: "line",
-    data: {
-      labels: buckets.map((b) => b.label),
-      datasets: [
-        {
-          label: "Still in (% of starters)",
-          data: buckets.map((b) => b.retentionPct),
-          borderColor: "rgba(13, 122, 95, 0.95)",
-          backgroundColor: "rgba(13, 122, 95, 0.12)",
-          fill: true,
-          tension: 0.25,
-          yAxisID: "y",
-          pointRadius: 4,
-        },
-        {
-          label: "Dropout rate in band (%)",
-          data: buckets.map((b) => b.dropPct),
-          borderColor: "rgba(180, 70, 50, 0.9)",
-          backgroundColor: "rgba(180, 70, 50, 0.08)",
-          fill: false,
-          tension: 0.25,
-          yAxisID: "y",
-          pointRadius: 4,
-          borderDash: [5, 4],
-        },
-        {
-          label: "People (furthest band)",
-          data: buckets.map((b) => b.people),
-          type: "bar",
-          backgroundColor: "rgba(58, 85, 80, 0.28)",
-          borderRadius: 4,
-          yAxisID: "yPeople",
-          order: 3,
-          maxBarThickness: 36,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      interaction: { mode: "index", intersect: false },
-      plugins: {
-        legend: { position: "bottom", labels: { boxWidth: 12 } },
-        tooltip: {
-          callbacks: {
-            afterBody(items) {
-              const b = buckets[items[0]?.dataIndex];
-              if (!b) return "";
-              return `Dropped in band: ${b.dropped}`;
-            },
-          },
-        },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 100,
-          title: { display: true, text: "Percent" },
-          grid: { color: "rgba(16, 36, 31, 0.08)" },
-        },
-        yPeople: {
-          beginAtZero: true,
-          position: "right",
-          title: { display: true, text: "People" },
-          grid: { display: false },
-          ticks: { precision: 0 },
-        },
-        x: {
           grid: { display: false },
         },
       },
@@ -1780,7 +1939,7 @@ function renderScreenTiming(screenTiming) {
 
   const finishers = journey?.samples ?? 0;
   if (finishEl) {
-    finishEl.textContent = finishers ? formatDuration(journey.medianMs) : "–";
+    finishEl.textContent = finishers ? formatDuration(journey.meanMs) : "–";
   }
   if (finishNote) {
     finishNote.textContent = finishers
@@ -1876,6 +2035,165 @@ function renderScreenTiming(screenTiming) {
   });
 }
 
+function channelPct(part, whole) {
+  if (!whole) return 0;
+  return Math.round((part / whole) * 1000) / 10;
+}
+
+function formatChartLabel(dateStr) {
+  if (!dateStr || dateStr === "–") return dateStr;
+  const d = new Date(`${dateStr}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function lineChart(canvasId, labels, values, label) {
+  const canvas = el(canvasId);
+  if (!canvas || typeof Chart === "undefined") return;
+  if (canvas._lineChart) {
+    canvas._lineChart.destroy();
+  }
+  const dense = labels.length > 40;
+  canvas._lineChart = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels: labels.map(formatChartLabel),
+      datasets: [
+        {
+          label,
+          data: values,
+          borderColor: "#0d7a5f",
+          backgroundColor: "rgba(13, 122, 95, 0.12)",
+          fill: true,
+          tension: 0.3,
+          pointRadius: dense ? 0 : 3,
+          pointHoverRadius: 4,
+          pointBackgroundColor: "#084d3d",
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            maxTicksLimit: dense ? 8 : 12,
+            maxRotation: 0,
+            autoSkip: true,
+          },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { precision: 0 },
+          grid: { color: "rgba(16, 36, 31, 0.08)" },
+        },
+      },
+    },
+  });
+}
+
+function renderUsageCharts(series) {
+  const rows = Array.isArray(series) ? series : [];
+  const labels = rows.map((d) => d.date);
+  if (!labels.length) {
+    lineChart("chart-daily", ["–"], [0], "Users / day");
+    lineChart("chart-cumulative", ["–"], [0], "Cumulative");
+    return;
+  }
+  lineChart(
+    "chart-daily",
+    labels,
+    rows.map((d) => d.users),
+    "Users / day",
+  );
+  lineChart(
+    "chart-cumulative",
+    labels,
+    rows.map((d) => d.cumulative),
+    "Cumulative",
+  );
+}
+
+function renderProgramOpens(programs) {
+  const tbody = el("program-open-rows");
+  if (!tbody) return;
+  const rows = Array.isArray(programs) ? programs : [];
+  if (!rows.length) {
+    tbody.innerHTML =
+      "<tr><td colspan=\"5\">No program opens yet. Share a QR or open an apply link from CalClaim.</td></tr>";
+    return;
+  }
+  tbody.innerHTML = rows
+    .map(
+      (p) => `<tr>
+        <td>${escapeHtml(p.name)}</td>
+        <td><span class="cat">${escapeHtml(p.category)}</span></td>
+        <td class="num">${number.format(p.opens)}</td>
+        <td class="num">${number.format(p.followThroughs)}</td>
+        <td class="num">${money.format(p.estDollarsUnlocked)}</td>
+      </tr>`,
+    )
+    .join("");
+}
+
+function renderSharing(stats) {
+  const sharing = stats.sharing;
+  if (!sharing) return;
+
+  const org = sharing.organizations || {};
+  const friends = sharing.friends || {};
+  const website = sharing.website || {};
+  const orgN = org.peopleReached || 0;
+  const friendN = friends.peopleReached || 0;
+  const webN = website.peopleReached || 0;
+  const total = orgN + friendN + webN || stats.peopleReached || 0;
+
+  el("m-org-reached").textContent = number.format(orgN);
+  el("m-friend-reached").textContent = number.format(friendN);
+  el("m-org-detail").textContent = `${number.format(org.botStarts || 0)} started · ${number.format(org.followThroughs || 0)} follow-throughs · ${channelPct(orgN, total)}%`;
+  el("m-friend-detail").textContent = `${number.format(friends.botStarts || 0)} started · ${number.format(friends.followThroughs || 0)} follow-throughs · ${channelPct(friendN, total)}%`;
+
+  const orgCard = el("spread-org");
+  const friendCard = el("spread-friends");
+  orgCard?.classList.toggle("is-ahead", orgN > friendN);
+  friendCard?.classList.toggle("is-ahead", friendN > orgN);
+
+  const verdict = el("spread-verdict");
+  if (verdict) {
+    if (!total) {
+      verdict.hidden = true;
+      verdict.textContent = "";
+    } else {
+      verdict.hidden = false;
+      const orgPct = channelPct(orgN, total);
+      const friendPct = channelPct(friendN, total);
+      verdict.textContent =
+        friendN > orgN
+          ? `Friend-to-friend sharing is reaching more people than organization QR codes (${friendPct}% vs ${orgPct}%).`
+          : `Organizations still account for most reach (${orgPct}%). Friend shares are ${friendPct}% – the signal for word-of-mouth growth.`;
+    }
+  }
+
+  el("m-sharers").textContent = number.format(sharing.peopleWhoShared || 0);
+  el("m-friend-clicks").textContent = number.format(sharing.friendClicks || 0);
+  el("m-viral").textContent = number.format(sharing.clicksPerSharer || 0);
+
+  const webNote = el("spread-website");
+  if (webNote) {
+    if (webN > 0) {
+      webNote.hidden = false;
+      webNote.textContent = `Also: ${number.format(webN)} people found CalClaim from the website.`;
+    } else {
+      webNote.hidden = true;
+      webNote.textContent = "";
+    }
+  }
+}
+
 async function loadFunnel() {
   // Live analytics only – never the public-site demo funnel.
   const res = await api("/api/dev/stats");
@@ -1891,8 +2209,10 @@ async function loadFunnel() {
   if (reportPeopleEl) {
     reportPeopleEl.textContent = number.format(stats.reportRecipients ?? 0);
   }
+  renderSharing(stats);
+  renderUsageCharts(stats.usersPerDay);
+  renderProgramOpens(stats.programs);
   renderFunnel(stats.funnel);
-  renderJourney(stats.journey);
   renderScreenDropout(stats.screenDropout);
   renderScreenTiming(stats.screenTiming);
 }
@@ -1935,8 +2255,27 @@ function openDevPartnerDialog(partner) {
   el("dev-edit-organization")?.focus();
 }
 
+function renderPartnerMetric(partners) {
+  const countEl = el("m-partners");
+  const noteEl = el("m-partners-note");
+  if (countEl) countEl.textContent = number.format(partners.length);
+  if (!noteEl) return;
+  if (!partners.length) {
+    noteEl.textContent = "None signed up yet";
+    return;
+  }
+  const verified = partners.filter((p) => p.emailVerified && !p.canceledAt).length;
+  const canceled = partners.filter((p) => p.canceledAt).length;
+  const pending = partners.length - verified - canceled;
+  const parts = [`${number.format(verified)} active`];
+  if (pending) parts.push(`${number.format(pending)} pending`);
+  if (canceled) parts.push(`${number.format(canceled)} canceled`);
+  noteEl.textContent = parts.join(" · ");
+}
+
 function renderDevPartners(partners) {
   devPartners = partners;
+  renderPartnerMetric(partners);
   const tbody = el("partner-rows");
   if (!tbody) return;
   if (!partners.length) {
@@ -1945,23 +2284,32 @@ function renderDevPartners(partners) {
   }
   tbody.innerHTML = partners
     .map((p) => {
-      const verified = p.emailVerified
-        ? p.accountType === "organization" && p.emailDomain
-          ? `Verified · @${p.emailDomain}`
-          : "Verified email"
-        : "Pending verification";
-      return `<tr data-slug="${escapeHtml(p.slug)}">
-        <td>${escapeHtml(p.name)}<br><small>${escapeHtml(p.accountType || "organization")}</small></td>
-        <td>${escapeHtml(p.city || "–")}</td>
-        <td>${escapeHtml(p.email || "–")}<br><small>${escapeHtml(verified)}</small></td>
-        <td><code>${escapeHtml(p.id)}</code></td>
-        <td><a href="${escapeHtml(p.statusUrl)}" target="_blank" rel="noopener">${escapeHtml(p.slug)}</a></td>
-        <td>
-          <div class="partner-row-actions">
+      const status = p.canceledAt
+        ? "Canceled"
+        : p.emailVerified
+          ? p.accountType === "organization" && p.emailDomain
+            ? `Verified · @${p.emailDomain}`
+            : "Verified email"
+          : "Pending verification";
+      const dates = [
+        `Signed up ${formatWhen(p.createdAt)}`,
+        p.canceledAt ? `Canceled ${formatWhen(p.canceledAt)}` : null,
+      ]
+        .filter(Boolean)
+        .join("<br>");
+      const actions = p.canceledAt
+        ? `<span class="muted">Canceled</span>`
+        : `<div class="partner-row-actions">
             <button type="button" data-edit-slug="${escapeHtml(p.slug)}">Edit</button>
             <a href="${escapeHtml(p.bannerUrl)}" download>Banner</a>
-          </div>
-        </td>
+          </div>`;
+      return `<tr data-slug="${escapeHtml(p.slug)}" class="${p.canceledAt ? "is-canceled" : ""}">
+        <td>${escapeHtml(p.name)}<br><small>${escapeHtml(p.accountType || "organization")}</small></td>
+        <td>${escapeHtml(p.city || "–")}</td>
+        <td>${escapeHtml(p.email || "–")}<br><small>${escapeHtml(status)}</small></td>
+        <td><code>${escapeHtml(p.id)}</code><br><small><a href="${escapeHtml(p.statusUrl)}" target="_blank" rel="noopener">${escapeHtml(p.slug)}</a></small></td>
+        <td><small>${dates}</small></td>
+        <td>${actions}</td>
       </tr>`;
     })
     .join("");
@@ -2063,10 +2411,134 @@ function bindDevPartnerEdit() {
   });
 }
 
+function initSectionNav() {
+  const chrome = document.querySelector(".dev-chrome");
+  const nav = document.querySelector(".dev-section-nav");
+  if (!nav) return;
+
+  const links = [...nav.querySelectorAll("a[href^='#']")];
+  const treeLink = links.find((link) => link.getAttribute("href") === "#tree");
+  const sectionLinks = links.filter((link) => link !== treeLink);
+  const sections = sectionLinks
+    .map((link) => document.getElementById(link.hash.slice(1)))
+    .filter(Boolean);
+  if (!sections.length) return;
+
+  function syncChromeHeight() {
+    if (!chrome) return;
+    document.documentElement.style.setProperty(
+      "--dev-chrome-height",
+      `${chrome.offsetHeight}px`,
+    );
+  }
+
+  let activeId = "";
+  const navInner = nav.querySelector(".dev-section-nav-inner") || nav;
+
+  function setActive(id) {
+    if (id === activeId) return;
+    activeId = id;
+    for (const link of links) {
+      const on = link.hash.slice(1) === id;
+      if (on) {
+        link.setAttribute("aria-current", "true");
+        const linkRect = link.getBoundingClientRect();
+        const innerRect = navInner.getBoundingClientRect();
+        const left =
+          navInner.scrollLeft +
+          (linkRect.left - innerRect.left) -
+          innerRect.width / 2 +
+          linkRect.width / 2;
+        navInner.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    }
+  }
+
+  function update() {
+    syncChromeHeight();
+    if (isTreeHash() || document.documentElement.classList.contains("dev-on-tree")) {
+      setActive("tree");
+      return;
+    }
+    const offset = (chrome?.offsetHeight ?? 64) + 8;
+    const probe = window.scrollY + offset;
+    let current = sections[0].id;
+    for (const section of sections) {
+      const top = section.getBoundingClientRect().top + window.scrollY;
+      if (probe >= top) current = section.id;
+    }
+    const atBottom =
+      window.innerHeight + window.scrollY >=
+      document.documentElement.scrollHeight - 4;
+    if (atBottom) current = sections[sections.length - 1].id;
+    setActive(current);
+  }
+
+  nav.addEventListener("click", (event) => {
+    const link = event.target.closest("a[href^='#']");
+    if (!link || !nav.contains(link)) return;
+    const href = link.getAttribute("href") || "";
+    event.preventDefault();
+    syncChromeHeight();
+    if (href === "#tree") {
+      setTreeView(true);
+      setActive("tree");
+      return;
+    }
+    const target = document.getElementById(link.hash.slice(1));
+    if (!target) return;
+    setTreeView(false);
+    revealSection(target);
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    history.replaceState(null, "", link.hash);
+    setActive(target.id);
+  });
+
+  let ticking = false;
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        update();
+        ticking = false;
+      });
+    },
+    { passive: true },
+  );
+  window.addEventListener("resize", update);
+  window.addEventListener("hashchange", () => {
+    if (isTreeHash()) {
+      setTreeView(true);
+      setActive("tree");
+      return;
+    }
+    setTreeView(false);
+    if (location.hash) revealSection(location.hash.slice(1));
+    update();
+  });
+  if (typeof ResizeObserver !== "undefined" && chrome) {
+    new ResizeObserver(syncChromeHeight).observe(chrome);
+  }
+  syncChromeHeight();
+  if (isTreeHash()) {
+    setTreeView(true);
+    setActive("tree");
+  } else {
+    update();
+  }
+}
+
 async function main() {
+  initPanelFolds();
+  initSectionNav();
   el("btn-scan").addEventListener("click", () => void startScan());
   el("finding-filter").addEventListener("change", () => void refreshFindings());
   el("feedback-filter")?.addEventListener("change", () => void refreshFeedbackTodos());
+  el("org-ticket-filter")?.addEventListener("change", () => void refreshOrgTickets());
   el("disaster-filter")?.addEventListener("change", () => void refreshDisasterWindows());
   el("btn-logout")?.addEventListener("click", () => void logout());
   wireMatrix();

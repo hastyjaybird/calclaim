@@ -1,5 +1,5 @@
 {
-  "version": "2026-08-03",
+  "version": "08-03-26",
   "notes": "CARE/FERA annual income bands for demo routing, taken from PG&E Electric Form 62-1477 (CARE/FERA Program Income Guidelines), effective 2026-06-01 through 2027-05-31. FERA max = top of the published FERA range per household size. Re-check when PG&E republishes (annually, typically each June).",
   "source": "https://www.pge.com/tariffs/assets/pdf/tariffbook/ELEC_FORMS_62-1477.pdf",
   "bandsByHouseholdSize": {

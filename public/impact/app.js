@@ -1,4 +1,4 @@
-/* global L, Chart */
+/* global L */
 
 const money = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -10,11 +10,6 @@ const number = new Intl.NumberFormat("en-US");
 
 function el(id) {
   return document.getElementById(id);
-}
-
-function chartDefaults() {
-  Chart.defaults.font.family = "Figtree, system-ui, sans-serif";
-  Chart.defaults.color = "#3a5550";
 }
 
 function txt(key, fallback) {
@@ -31,150 +26,7 @@ function renderMetrics(stats) {
   el("disclaimer").textContent = txt("impact.disclaimer", stats.disclaimer);
 }
 
-function channelPct(part, whole) {
-  if (!whole) return 0;
-  return Math.round((part / whole) * 1000) / 10;
-}
-
-function renderSharing(stats) {
-  const sharing = stats.sharing;
-  if (!sharing) return;
-
-  const org = sharing.organizations || {};
-  const friends = sharing.friends || {};
-  const website = sharing.website || {};
-  const orgN = org.peopleReached || 0;
-  const friendN = friends.peopleReached || 0;
-  const webN = website.peopleReached || 0;
-  const total = orgN + friendN + webN || stats.peopleReached || 0;
-
-  el("m-org-reached").textContent = number.format(orgN);
-  el("m-friend-reached").textContent = number.format(friendN);
-  el("m-org-detail").textContent = `${number.format(org.botStarts || 0)} ${txt(
-    "impact.partnersBotStarts",
-    "started",
-  )} · ${number.format(org.followThroughs || 0)} ${txt(
-    "impact.partnersFollows",
-    "follow-throughs",
-  )} · ${channelPct(orgN, total)}%`;
-  el("m-friend-detail").textContent = `${number.format(friends.botStarts || 0)} ${txt(
-    "impact.partnersBotStarts",
-    "started",
-  )} · ${number.format(friends.followThroughs || 0)} ${txt(
-    "impact.partnersFollows",
-    "follow-throughs",
-  )} · ${channelPct(friendN, total)}%`;
-
-  const orgCard = el("spread-org");
-  const friendCard = el("spread-friends");
-  orgCard?.classList.toggle("is-ahead", orgN > friendN);
-  friendCard?.classList.toggle("is-ahead", friendN > orgN);
-
-  const verdict = el("spread-verdict");
-  if (verdict) {
-    if (!total) {
-      verdict.hidden = true;
-      verdict.textContent = "";
-    } else {
-      verdict.hidden = false;
-      const orgPct = channelPct(orgN, total);
-      const friendPct = channelPct(friendN, total);
-      if (friendN > orgN) {
-        verdict.textContent = txt(
-          "impact.spreadVerdictFriends",
-          "Friend-to-friend sharing is reaching more people than organization QR codes ({friendPct}% vs {orgPct}%).",
-        )
-          .replace("{friendPct}", String(friendPct))
-          .replace("{orgPct}", String(orgPct));
-      } else {
-        verdict.textContent = txt(
-          "impact.spreadVerdictOrgs",
-          "Organizations still account for most reach ({orgPct}%). Friend shares are {friendPct}% – the signal for word-of-mouth growth.",
-        )
-          .replace("{orgPct}", String(orgPct))
-          .replace("{friendPct}", String(friendPct));
-      }
-    }
-  }
-
-  el("m-sharers").textContent = number.format(sharing.peopleWhoShared || 0);
-  el("m-friend-clicks").textContent = number.format(sharing.friendClicks || 0);
-  el("m-viral").textContent = number.format(sharing.clicksPerSharer || 0);
-
-  const webNote = el("spread-website");
-  if (webNote) {
-    if (webN > 0) {
-      webNote.hidden = false;
-      webNote.textContent = txt(
-        "impact.spreadWebsite",
-        "Also: {n} people found CalClaim from the website.",
-      ).replace("{n}", number.format(webN));
-    } else {
-      webNote.hidden = true;
-      webNote.textContent = "";
-    }
-  }
-
-  renderSpreadChart(sharing.usersPerDayByChannel || []);
-}
-
-const PROGRAMS_PREVIEW = 10;
 const PARTNERS_PREVIEW = 8;
-
-function renderTable(programs) {
-  const tbody = el("program-rows");
-  const expandBtn = el("programs-expand");
-  if (!programs.length) {
-    tbody.innerHTML = `<tr><td colspan="5">${escapeHtml(
-      txt(
-        "impact.emptyPrograms",
-        "No program opens yet. Share a QR or open an apply link from CalClaim.",
-      ),
-    )}</td></tr>`;
-    if (expandBtn) expandBtn.hidden = true;
-    return;
-  }
-
-  let expanded = false;
-
-  function paint() {
-    const visible =
-      expanded || programs.length <= PROGRAMS_PREVIEW
-        ? programs
-        : programs.slice(0, PROGRAMS_PREVIEW);
-    tbody.innerHTML = visible
-      .map(
-        (p) => `<tr>
-        <td>${escapeHtml(p.name)}</td>
-        <td><span class="cat">${escapeHtml(p.category)}</span></td>
-        <td class="num">${number.format(p.opens)}</td>
-        <td class="num">${number.format(p.followThroughs)}</td>
-        <td class="num">${money.format(p.estDollarsUnlocked)}</td>
-      </tr>`,
-      )
-      .join("");
-
-    if (!expandBtn) return;
-    if (programs.length <= PROGRAMS_PREVIEW) {
-      expandBtn.hidden = true;
-      return;
-    }
-    expandBtn.hidden = false;
-    expandBtn.textContent = expanded
-      ? txt("impact.showLess", "Show less")
-      : txt("impact.showAllPrograms", "Show all");
-    expandBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
-  }
-
-  if (expandBtn && !expandBtn.dataset.wired) {
-    expandBtn.dataset.wired = "1";
-    expandBtn.addEventListener("click", () => {
-      expanded = !expanded;
-      paint();
-    });
-  }
-  paint();
-}
 
 function escapeHtml(s) {
   return String(s)
@@ -320,140 +172,6 @@ function renderMap(points) {
   map.addLayer(clusters);
 }
 
-function formatChartLabel(dateStr) {
-  if (!dateStr || dateStr === "–") return dateStr;
-  const d = new Date(`${dateStr}T12:00:00`);
-  if (Number.isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
-function lineChart(canvasId, labels, values, label) {
-  const ctx = el(canvasId);
-  const dense = labels.length > 40;
-  return new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: labels.map(formatChartLabel),
-      datasets: [
-        {
-          label,
-          data: values,
-          borderColor: "#0d7a5f",
-          backgroundColor: "rgba(13, 122, 95, 0.12)",
-          fill: true,
-          tension: 0.3,
-          pointRadius: dense ? 0 : 3,
-          pointHoverRadius: 4,
-          pointBackgroundColor: "#084d3d",
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-      },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: {
-            maxTicksLimit: dense ? 8 : 12,
-            maxRotation: 0,
-            autoSkip: true,
-          },
-        },
-        y: {
-          beginAtZero: true,
-          ticks: { precision: 0 },
-          grid: { color: "rgba(16, 36, 31, 0.08)" },
-        },
-      },
-    },
-  });
-}
-
-function renderCharts(series) {
-  const labels = series.map((d) => d.date);
-  if (!labels.length) {
-    labels.push("–");
-    lineChart("chart-daily", labels, [0], "Users / day");
-    lineChart("chart-cumulative", labels, [0], "Cumulative");
-    return;
-  }
-  lineChart(
-    "chart-daily",
-    labels,
-    series.map((d) => d.users),
-    "Users / day",
-  );
-  lineChart(
-    "chart-cumulative",
-    labels,
-    series.map((d) => d.cumulative),
-    "Cumulative",
-  );
-}
-
-function renderSpreadChart(series) {
-  const canvas = el("chart-spread");
-  if (!canvas) return;
-  const labels = series.length ? series.map((d) => d.date) : ["–"];
-  const org = series.length ? series.map((d) => d.organizations) : [0];
-  const friends = series.length ? series.map((d) => d.friends) : [0];
-  const dense = labels.length > 40;
-  return new Chart(canvas, {
-    type: "line",
-    data: {
-      labels: labels.map(formatChartLabel),
-      datasets: [
-        {
-          label: txt("impact.spreadOrgs", "Organizations"),
-          data: org,
-          borderColor: "#0d7a5f",
-          backgroundColor: "rgba(13, 122, 95, 0.12)",
-          fill: true,
-          tension: 0.3,
-          pointRadius: dense ? 0 : 3,
-          pointHoverRadius: 4,
-          pointBackgroundColor: "#084d3d",
-        },
-        {
-          label: txt("impact.spreadFriends", "Friends sharing"),
-          data: friends,
-          borderColor: "#2a6f8f",
-          backgroundColor: "rgba(42, 111, 143, 0.12)",
-          fill: true,
-          tension: 0.3,
-          pointRadius: dense ? 0 : 3,
-          pointHoverRadius: 4,
-          pointBackgroundColor: "#1d4f66",
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: true, position: "bottom" },
-      },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: {
-            maxTicksLimit: dense ? 8 : 12,
-            maxRotation: 0,
-            autoSkip: true,
-          },
-        },
-        y: {
-          beginAtZero: true,
-          ticks: { precision: 0 },
-          grid: { color: "rgba(16, 36, 31, 0.08)" },
-        },
-      },
-    },
-  });
-}
-
 // Bold star (not a cup) – reads clearly at leaderboard size
 const TROPHY_SVG = `<svg class="partner-trophy" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
   <defs>
@@ -466,35 +184,6 @@ const TROPHY_SVG = `<svg class="partner-trophy" viewBox="0 0 24 24" aria-hidden=
   <path fill="url(#trophy-shine)" stroke="#8a5f06" stroke-width="0.6" stroke-linejoin="round"
     d="M12 2.2l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 15.4 6.7 18.4l1.1-5.9-4.3-4.1 5.9-.8z"/>
 </svg>`;
-
-/** Teal medal + speech bubble – most credited feedback tickets. */
-function feedbackAwardSvg(title) {
-  const label = escapeHtml(title);
-  return `<svg class="partner-feedback-award" viewBox="0 0 24 24" role="img" aria-label="${label}" focusable="false">
-  <title>${label}</title>
-  <path fill="#0a6b53" d="M8.2 15.6 6.4 22l5.6-2.4 5.6 2.4-1.8-6.4z"/>
-  <circle cx="12" cy="10.2" r="7.35" fill="#1aa37c" stroke="#084d3d" stroke-width="0.7"/>
-  <circle cx="12" cy="10.2" r="5.55" fill="#eef8f4"/>
-  <path fill="#0d7a5f" d="M8.15 8.05h7.7c.85 0 1.55.7 1.55 1.55v3.05c0 .85-.7 1.55-1.55 1.55h-3.35L9.2 16.1v-1.9h-1.05c-.85 0-1.55-.7-1.55-1.55V9.6c0-.85.7-1.55 1.55-1.55z"/>
-  <circle cx="10.15" cy="11.15" r=".7" fill="#eef8f4"/>
-  <circle cx="12" cy="11.15" r=".7" fill="#eef8f4"/>
-  <circle cx="13.85" cy="11.15" r=".7" fill="#eef8f4"/>
-</svg>`;
-}
-
-function slugsWithMostFeedback(partners) {
-  let max = 0;
-  for (const p of partners) {
-    const n = Number(p.feedbackTickets) || 0;
-    if (n > max) max = n;
-  }
-  if (max <= 0) return new Set();
-  return new Set(
-    partners
-      .filter((p) => (Number(p.feedbackTickets) || 0) === max)
-      .map((p) => p.slug),
-  );
-}
 
 function withLangPath(path) {
   return window.CalClaimLang?.withLang?.(path) || path;
@@ -512,20 +201,12 @@ function verifiedBadgeHtml(p) {
   return `<span class="verified-badge" title="${escapeHtml(label)}">${escapeHtml(label)}</span>`;
 }
 
-function partnerRowHtml(p, feedbackAwardSlugs) {
+function partnerRowHtml(p) {
   const href = withLangPath(`/partners/${encodeURIComponent(p.slug)}`);
-  const awards = [];
-  if (p.rank === 1) awards.push(TROPHY_SVG);
-  if (feedbackAwardSlugs.has(p.slug)) {
-    awards.push(
-      feedbackAwardSvg(
-        txt("impact.feedbackAwardTitle", "Most feedback tickets"),
-      ),
-    );
-  }
-  const trophy = awards.length
-    ? awards.join("")
-    : `<span class="partner-trophy-spacer" aria-hidden="true"></span>`;
+  const trophy =
+    p.rank === 1
+      ? TROPHY_SVG
+      : `<span class="partner-trophy-spacer" aria-hidden="true"></span>`;
   const secondary = `${number.format(p.botStarts)} ${txt(
     "impact.partnersBotStarts",
     "started",
@@ -548,15 +229,20 @@ function partnerRowHtml(p, feedbackAwardSlugs) {
         </div>
         <p class="partner-city">${escapeHtml(p.city)} · ${escapeHtml(secondary)}</p>
       </div>
-      <div class="partner-stat">
-        <p class="partner-stat-value">${number.format(p.peopleReached)}</p>
-        <p class="partner-stat-label">${escapeHtml(
-          txt("impact.partnersReached", "People reached"),
-        )}</p>
+      <div class="partner-stats">
+        <div class="partner-stat">
+          <p class="partner-stat-value">${number.format(p.peopleReached)}</p>
+          <p class="partner-stat-label">${escapeHtml(
+            txt("impact.partnersReached", "People reached"),
+          )}</p>
+        </div>
+        <div class="partner-stat partner-stat-aid">
+          <p class="partner-stat-value">${money.format(p.estDollarsUnlocked || 0)}</p>
+          <p class="partner-stat-label">${escapeHtml(
+            txt("impact.partnersEstAid", "Est. aid unlocked"),
+          )}</p>
+        </div>
       </div>
-      <span class="partner-link">${escapeHtml(
-        txt("impact.partnersViewStats", "View stats →"),
-      )}</span>
     </a>
   </li>`;
 }
@@ -574,16 +260,13 @@ function renderPartnerBoard(partners) {
   }
 
   let expanded = false;
-  const feedbackAwardSlugs = slugsWithMostFeedback(partners);
 
   function paint() {
     const visible =
       expanded || partners.length <= PARTNERS_PREVIEW
         ? partners
         : partners.slice(0, PARTNERS_PREVIEW);
-    board.innerHTML = visible
-      .map((p) => partnerRowHtml(p, feedbackAwardSlugs))
-      .join("");
+    board.innerHTML = visible.map(partnerRowHtml).join("");
 
     if (!expandBtn) return;
     if (partners.length <= PARTNERS_PREVIEW) {
@@ -672,21 +355,49 @@ function wireContactForm() {
   });
 }
 
+function hashIdFromHref(href) {
+  if (!href) return "";
+  const idx = href.indexOf("#");
+  return idx >= 0 ? href.slice(idx + 1) : "";
+}
+
+function isSamePageHash(href) {
+  if (!href) return false;
+  if (href.startsWith("#")) return true;
+  try {
+    const url = new URL(href, location.href);
+    return url.pathname === location.pathname && url.hash.length > 1;
+  } catch {
+    return false;
+  }
+}
+
+function prepareHashSection(id) {
+  if (id !== "privacy") return;
+  const details = document.querySelector("#privacy .privacy-details");
+  if (details) details.open = true;
+}
+
 function initNavScrollSpy() {
   const nav = document.querySelector(".site-nav");
-  if (!nav) return;
+  const noop = () => {};
+  if (!nav) return noop;
 
   const sectionIds = ["impact", "partners", "about", "contact", "privacy"];
   const sections = sectionIds
     .map((id) => document.getElementById(id))
     .filter(Boolean);
-  if (!sections.length) return;
+  if (!sections.length) return noop;
 
   const linksById = new Map(
     sectionIds.map((id) => [id, nav.querySelector(`a[href="#${id}"]`)]),
   );
 
   let activeId = "";
+  let pinnedId = "";
+  let pinnedScrollY = 0;
+  let settlingPin = false;
+  let settleTimer = 0;
 
   function setActive(id) {
     if (id === activeId) return;
@@ -698,7 +409,7 @@ function initNavScrollSpy() {
     }
   }
 
-  function update() {
+  function sectionFromScroll() {
     const banner = document.querySelector(".banner");
     const offset = (banner?.offsetHeight ?? 64) + 12;
     const probe = window.scrollY + offset;
@@ -713,14 +424,72 @@ function initNavScrollSpy() {
       window.innerHeight + window.scrollY >=
       document.documentElement.scrollHeight - 4;
     if (atBottom) current = sections[sections.length - 1].id;
-
-    setActive(current);
+    return current;
   }
+
+  function finishPinSettle() {
+    settlingPin = false;
+    pinnedScrollY = window.scrollY;
+  }
+
+  function schedulePinSettle() {
+    window.clearTimeout(settleTimer);
+    settleTimer = window.setTimeout(finishPinSettle, 500);
+  }
+
+  function pin(id) {
+    if (!linksById.get(id)) return;
+    pinnedId = id;
+    settlingPin = true;
+    pinnedScrollY = window.scrollY;
+    setActive(id);
+    schedulePinSettle();
+  }
+
+  function update() {
+    if (pinnedId) {
+      if (settlingPin) {
+        setActive(pinnedId);
+        return;
+      }
+      if (Math.abs(window.scrollY - pinnedScrollY) < 2) {
+        setActive(pinnedId);
+        return;
+      }
+      pinnedId = "";
+    }
+    setActive(sectionFromScroll());
+  }
+
+  function revealHash() {
+    const id = location.hash.slice(1);
+    if (!id || !document.getElementById(id)) {
+      update();
+      return;
+    }
+    prepareHashSection(id);
+    const target = document.getElementById(id);
+    target?.scrollIntoView({ block: "start", behavior: "instant" });
+    if (linksById.get(id)) pin(id);
+    else update();
+  }
+
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest("a[href]");
+    if (!link) return;
+    const href = link.getAttribute("href");
+    if (!isSamePageHash(href)) return;
+    const id = hashIdFromHref(href);
+    if (!id) return;
+    prepareHashSection(id);
+    if (linksById.get(id)) pin(id);
+  });
 
   let ticking = false;
   window.addEventListener(
     "scroll",
     () => {
+      if (settlingPin) schedulePinSettle();
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
@@ -731,14 +500,112 @@ function initNavScrollSpy() {
     { passive: true },
   );
   window.addEventListener("resize", update);
-  window.addEventListener("hashchange", update);
-  update();
+  window.addEventListener("hashchange", revealHash);
+
+  revealHash();
+  return revealHash;
+}
+
+const OWNER_STORAGE_PREFIX = "calclaim-partner-owner:";
+
+function setPartnerLoginStatus(message, isError) {
+  const status = el("partner-login-status");
+  if (!status) return;
+  status.hidden = !message;
+  status.textContent = message || "";
+  status.classList.toggle("is-error", Boolean(isError));
+}
+
+function showPartnerLoginPanel(show) {
+  const openBtn = el("partner-login-open");
+  const panel = el("partner-login-panel");
+  const input = el("partner-login-id");
+  if (!openBtn || !panel) return;
+  panel.hidden = !show;
+  openBtn.hidden = show;
+  openBtn.setAttribute("aria-expanded", show ? "true" : "false");
+  if (show) {
+    input?.focus();
+  } else {
+    setPartnerLoginStatus("", false);
+  }
+}
+
+function wirePartnerLogin() {
+  const openBtn = el("partner-login-open");
+  const form = el("partner-login-panel");
+  const cancel = el("partner-login-cancel");
+  const input = el("partner-login-id");
+  if (!openBtn || !form) return;
+
+  openBtn.addEventListener("click", () => showPartnerLoginPanel(true));
+  cancel?.addEventListener("click", () => showPartnerLoginPanel(false));
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const partnerId = String(input?.value || "").trim();
+    if (!partnerId) {
+      setPartnerLoginStatus(
+        txt("partners.errorPartnerId", "Enter your partner ID from the welcome email."),
+        true,
+      );
+      return;
+    }
+    const submit = form.querySelector('button[type="submit"]');
+    if (submit) submit.disabled = true;
+    setPartnerLoginStatus(
+      txt("impact.partnerLoginWorking", "Signing in…"),
+      false,
+    );
+    try {
+      const res = await fetch("/api/partners/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ partnerId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ownerToken || !data.slug) {
+        setPartnerLoginStatus(
+          data.error === "no_private_dashboard"
+            ? txt(
+                "partners.signInIndividualHint",
+                "Individual partners use the public stats page from their welcome email – there is no sign-in dashboard.",
+              )
+            : txt(
+                "partners.signInError",
+                "Could not sign in. Check the partner ID from your email.",
+              ),
+          true,
+        );
+        return;
+      }
+      try {
+        localStorage.setItem(
+          `${OWNER_STORAGE_PREFIX}${data.slug}`,
+          data.ownerToken,
+        );
+      } catch {
+        // ignore
+      }
+      location.href = withLangPath(`/partners/${encodeURIComponent(data.slug)}`);
+    } catch {
+      setPartnerLoginStatus(
+        txt(
+          "partners.signInError",
+          "Could not sign in. Check the partner ID from your email.",
+        ),
+        true,
+      );
+    } finally {
+      if (submit) submit.disabled = false;
+    }
+  });
 }
 
 async function main() {
-  chartDefaults();
   wireContactForm();
-  initNavScrollSpy();
+  wirePartnerLogin();
+  const revealHash = initNavScrollSpy();
   const [statsRes, partnersRes] = await Promise.all([
     fetch("/api/stats"),
     fetch("/api/partners"),
@@ -746,24 +613,24 @@ async function main() {
   if (!statsRes.ok) throw new Error("Failed to load stats");
   const stats = await statsRes.json();
   renderMetrics(stats);
-  renderSharing(stats);
-  renderTable(stats.programs);
   renderMap(stats.mapPoints);
-  renderCharts(stats.usersPerDay);
   if (partnersRes.ok) {
     const data = await partnersRes.json();
     renderPartnerBoard(data.partners);
   } else {
     renderPartnerBoard([]);
   }
+  revealHash();
+  requestAnimationFrame(revealHash);
 }
 
 main().catch((err) => {
   console.error(err);
-  el("program-rows").innerHTML = `<tr><td colspan="5">${escapeHtml(
-    txt(
+  const disclaimer = el("disclaimer");
+  if (disclaimer) {
+    disclaimer.textContent = txt(
       "impact.loadError",
       "Could not load stats. Is the CalClaim server running?",
-    ),
-  )}</td></tr>`;
+    );
+  }
 });

@@ -16,12 +16,14 @@ export interface SignedUpPartner {
   emailDomain: string;
   /** ISO timestamp when the signup email was verified; null until confirmed. */
   emailVerifiedAt: string | null;
+  /** ISO timestamp when the partner canceled; null while active. */
+  canceledAt: string | null;
 }
 
 let db: Database.Database | null = null;
 
 /** Reserved path segments under /partners/ that are not partner slugs. */
-export const RESERVED_PARTNER_SLUGS = new Set(["signup", "verify"]);
+export const RESERVED_PARTNER_SLUGS = new Set(["signup", "verify", "cancel"]);
 
 function ensureColumn(
   database: Database.Database,
@@ -57,6 +59,7 @@ export function initPartnerSignup(database: Database.Database): void {
   ensureColumn(db, "partner_signups", "account_type", "TEXT NOT NULL DEFAULT 'organization'");
   ensureColumn(db, "partner_signups", "email_domain", "TEXT NOT NULL DEFAULT ''");
   ensureColumn(db, "partner_signups", "email_verified_at", "TEXT");
+  ensureColumn(db, "partner_signups", "canceled_at", "TEXT");
 
   // Backfill domain from email; grandfather existing rows as verified so they stay listed.
   const rows = db
@@ -130,10 +133,11 @@ type PartnerRow = {
   account_type: string;
   email_domain: string;
   email_verified_at: string | null;
+  canceled_at: string | null;
 };
 
 const PARTNER_SELECT = `SELECT id, slug, name, email, city, campaign_id, logo, blurb,
-  created_at, account_type, email_domain, email_verified_at
+  created_at, account_type, email_domain, email_verified_at, canceled_at
   FROM partner_signups`;
 
 function rowToPartner(row: PartnerRow): SignedUpPartner {
@@ -152,6 +156,7 @@ function rowToPartner(row: PartnerRow): SignedUpPartner {
     accountType,
     emailDomain: row.email_domain || "",
     emailVerifiedAt: row.email_verified_at || null,
+    canceledAt: row.canceled_at || null,
   };
 }
 
@@ -249,6 +254,7 @@ export function insertSignedUpPartner(input: {
     accountType: input.accountType,
     emailDomain: input.emailDomain,
     emailVerifiedAt,
+    canceledAt: null,
   };
 }
 
@@ -297,6 +303,27 @@ export function updateSignedUpPartner(
     emailDomain,
     emailVerifiedAt,
   };
+}
+
+export function deleteSignedUpPartner(slug: string): SignedUpPartner | undefined {
+  const existing = getSignedUpPartnerBySlug(slug);
+  if (!existing) return undefined;
+  getDb().prepare("DELETE FROM partner_signups WHERE slug = ?").run(existing.slug);
+  return existing;
+}
+
+/** Soft-cancel: keep the row for operators, remove from public leaderboard/pages. */
+export function cancelSignedUpPartner(
+  slug: string,
+  canceledAt = new Date().toISOString(),
+): SignedUpPartner | undefined {
+  const existing = getSignedUpPartnerBySlug(slug);
+  if (!existing) return undefined;
+  if (existing.canceledAt) return existing;
+  getDb()
+    .prepare(`UPDATE partner_signups SET canceled_at = ? WHERE slug = ?`)
+    .run(canceledAt, existing.slug);
+  return { ...existing, canceledAt };
 }
 
 export function markPartnerEmailVerified(

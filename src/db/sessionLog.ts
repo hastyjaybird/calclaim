@@ -32,6 +32,8 @@ export function writeSessionProgramLog(session: SessionState): void {
       residencyTie: session.residencyTie,
       buyingEvThisYear: session.buyingEvThisYear,
       firstTimeZev: session.firstTimeZev,
+      buyingEbikeThisYear: session.buyingEbikeThisYear,
+      wouldRetireVehicle: session.wouldRetireVehicle,
       hasChildInHousehold: session.hasChildInHousehold,
       isFosterYouth: session.isFosterYouth,
       isRefugeeOrAsylee: session.isRefugeeOrAsylee,

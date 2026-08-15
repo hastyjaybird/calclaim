@@ -27,16 +27,16 @@ cp .env.example .env
 npm run dev
 ```
 
-For local `/dev` and `/dev/tree` only (no Telegram polling), use the durable web daemon so the port survives agent shell cleanup:
+For local `/dev` only (no Telegram polling), use the durable web daemon so the port survives agent shell cleanup:
 
 ```bash
 ./scripts/dev-web.sh ensure
-# → http://localhost:3000/dev/tree
+# → http://localhost:3000/dev#tree
 ```
 
 4. Open Telegram, tap your bot, send `/start`.  
 5. Open the funder dashboard: [http://localhost:3000/impact](http://localhost:3000/impact)  
-6. Open the developer library watch: [http://localhost:3000/dev](http://localhost:3000/dev)
+6. Open the developer review dashboard: [http://localhost:3000/dev](http://localhost:3000/dev)
 
 Optional demo numbers:
 
@@ -51,7 +51,7 @@ npm run seed-impact
 | `TELEGRAM_BOT_TOKEN` | Required |
 | `TELEGRAM_BOT_USERNAME` | Optional; auto from Telegram at boot |
 | `PUBLIC_BASE_URL` | Origin for QR landings + apply redirects (default `http://localhost:3000`) |
-| `IMPACT_STATS_MODE` | `demo` (default) or `live` – what `/impact` and partner pages display |
+| `IMPACT_STATS_MODE` | `live` (default) or `demo` – what `/impact` and partner pages display |
 | `OPERATOR_TELEGRAM_USER_IDS` | Optional – your Telegram id(s), excluded from live stats rollups |
 | `BOT_MODE` | `long_polling` (default) or `webhook` |
 | `WEBHOOK_URL` / `WEBHOOK_SECRET` / `PORT` | Webhook deploy |
@@ -65,15 +65,15 @@ npm run seed-impact
 
 ## Funder impact site
 
-Public page at `/impact` shows people reached (QR + links), program apply-page opens, follow-throughs, estimated aid unlocked, a coarse map, and charts. By default it serves **demo** (staged at-scale) numbers while real Telegram/QR events keep collecting; set `IMPACT_STATS_MODE=live` to show collected data. Details: [`docs/funder-dashboard.md`](docs/funder-dashboard.md).
+Public page at `/impact` shows people reached (QR + links), program apply-page opens, follow-throughs, estimated aid unlocked, a coarse map, and charts. By default it serves **live** collected Telegram/QR events (operator ids excluded); set `IMPACT_STATS_MODE=demo` for staged at-scale numbers. Details: [`docs/funder-dashboard.md`](docs/funder-dashboard.md).
 
-Partner signup at `/partners/signup` creates a unique partner ID, status page, QR, and printable booth banner; a welcome email delivers the kit (or `data/mail-outbox/` when SMTP is unset).
+Partner signup at `/partners/signup` creates a unique partner ID, status page, QR, and printable booth banner; a welcome email delivers the kit (or `data/mail-outbox/` when SMTP is unset). Owners sign in from the `/impact` leaderboard to manage event QR codes and their account.
 
 Print QR codes to `/go/<campaignId>` (see `library/campaigns.json`). Apply buttons in Telegram go through `/r/<programId>` so clicks are countable.
 
-## Developer library watch
+## Developer review dashboard
 
-Page at `/dev` (open locally; password + CAPTCHA on deploy; **humans only**) runs an advisory agent over each program’s apply URL and source citations: link health, deadlines, eligibility language, apply-process changes, funding/closed signals, max amounts, and CARE/FERA income bands. Optional LLM analysis if an API key is set. Findings never edit the frozen library – developers update `library/programs.json` by hand. Set `DEVELOPER_PASSWORD` in `.env` for production. Details: [`docs/developer-library-watch.md`](docs/developer-library-watch.md).
+Page at `/dev` (password + CAPTCHA; **humans only**) runs an advisory agent over each program’s apply URL and source citations: link health, deadlines, eligibility language, apply-process changes, funding/closed signals, max amounts, and CARE/FERA income bands. Optional LLM analysis if an API key is set. Findings never edit the frozen library – developers update `library/programs.json` by hand. Set `DEVELOPER_PASSWORD` in `.env`. Details: [`docs/developer-library-watch.md`](docs/developer-library-watch.md).
 
 ## What the bot does
 

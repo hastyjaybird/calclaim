@@ -64,6 +64,8 @@ export function emptySession(telegramUserId: number): SessionState {
     isCaResident: null,
     buyingEvThisYear: null,
     firstTimeZev: null,
+    buyingEbikeThisYear: null,
+    wouldRetireVehicle: null,
     hasChildInHousehold: null,
     isFosterYouth: null,
     isRefugeeOrAsylee: null,
@@ -88,6 +90,7 @@ export function emptySession(telegramUserId: number): SessionState {
     campaignId: null,
     screensSeen: [],
     screenShownAt: null,
+    undoStack: [],
     createdAt: now,
     updatedAt: now,
   };
@@ -124,6 +127,8 @@ export function loadSession(telegramUserId: number): SessionState | null {
   }
   if (state.buyingEvThisYear === undefined) state.buyingEvThisYear = null;
   if (state.firstTimeZev === undefined) state.firstTimeZev = null;
+  if (state.buyingEbikeThisYear === undefined) state.buyingEbikeThisYear = null;
+  if (state.wouldRetireVehicle === undefined) state.wouldRetireVehicle = null;
   if (state.hasChildInHousehold === undefined) state.hasChildInHousehold = null;
   if (state.isFosterYouth === undefined) state.isFosterYouth = null;
   if (state.isRefugeeOrAsylee === undefined) state.isRefugeeOrAsylee = null;
@@ -148,6 +153,7 @@ export function loadSession(telegramUserId: number): SessionState | null {
   if (state.campaignId === undefined) state.campaignId = null;
   if (state.screensSeen === undefined) state.screensSeen = [];
   if (state.screenShownAt === undefined) state.screenShownAt = null;
+  if (state.undoStack === undefined) state.undoStack = [];
   return state;
 }
 

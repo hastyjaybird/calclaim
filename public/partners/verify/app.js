@@ -44,17 +44,17 @@ function showSuccess(data) {
     if (data.alreadyVerified) {
       body.textContent = txt(
         "verify.alreadyBody",
-        "This email was already verified. Your QR kit is ready again below.",
+        "Already verified. Here’s your QR.",
       );
     } else if (data.accountType === "individual") {
       body.textContent = txt(
         "verify.successBodyIndividual",
-        "This is a verified individual account. Your QR kit and private stats page are ready (not listed on the public leaderboard).",
+        "Print this QR. Scans credit you on the public leaderboard.",
       );
     } else {
       body.textContent = txt(
         "verify.successBody",
-        "This is a verified organization account. Your QR kit is ready and you can appear on the public leaderboard.",
+        "Print this QR at your next event.",
       );
     }
   }
@@ -95,7 +95,15 @@ function showSuccess(data) {
     qr.alt = txt("signup.qrAlt", "Your unique partner QR code");
   }
 
-  if (data.editToken && data.partnerId && data.slug) {
+  // Organizations get a short-lived edit session that opens /org.
+  // Individuals only have a public status page (cancel via welcome email).
+  if (
+    data.hasPrivateDashboard !== false &&
+    data.accountType !== "individual" &&
+    data.editToken &&
+    data.partnerId &&
+    data.slug
+  ) {
     persistEditSession({
       partnerId: data.partnerId,
       slug: data.slug,

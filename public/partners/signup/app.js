@@ -41,6 +41,12 @@ function applyAccountTypeLabels() {
   const emailLabel = el("signup-email-label");
   const emailHelp = el("signup-email-help");
   const nameInput = el("signup-organization");
+  const lede = document.querySelector("#signup-form-panel .signup-lede");
+  if (lede) {
+    lede.textContent = isOrg
+      ? txt("signup.lede", "Get a QR code for your events.")
+      : txt("signup.ledeIndividual", "Get a QR code. Scans credit you on the public leaderboard.");
+  }
   if (nameLabel) {
     nameLabel.textContent = isOrg
       ? txt("signup.nameLabel", "Organization name")
@@ -53,14 +59,8 @@ function applyAccountTypeLabels() {
   }
   if (emailHelp) {
     emailHelp.textContent = isOrg
-      ? txt(
-          "signup.emailHelpOrg",
-          "Must be your organization’s domain (not Gmail, Yahoo, Outlook, or other free email).",
-        )
-      : txt(
-          "signup.emailHelpIndividual",
-          "Any email works. We’ll send a verification link – same steps as organizations.",
-        );
+      ? txt("signup.emailHelpOrg", "Use your company email, not Gmail or Yahoo.")
+      : txt("signup.emailHelpIndividual", "We’ll email you a link.");
   }
   const logoLabelEl = el("signup-logo")?.closest("label")?.querySelector(
     "span:first-child",
@@ -75,15 +75,8 @@ function applyAccountTypeLabels() {
   }
   const hint = el("signup-hint");
   if (hint && !editingExisting) {
-    hint.textContent = isOrg
-      ? txt(
-          "signup.hint",
-          "We’ll email a verification link. After you confirm, you’ll get your QR code, status page, and booth banner.",
-        )
-      : txt(
-          "signup.hintIndividual",
-          "We’ll email a verification link. After you confirm, you’ll get your QR code and private stats page (not listed on the public leaderboard).",
-        );
+    hint.hidden = true;
+    hint.textContent = "";
   }
 }
 
@@ -134,15 +127,16 @@ function setFormMode(isEdit) {
   if (submit) {
     submit.textContent = isEdit
       ? txt("signup.saveChanges", "Save changes")
-      : txt("signup.submit", "Sign up & verify email");
+      : txt("signup.submit", "Sign up");
   }
   if (cancel) cancel.hidden = !isEdit;
   if (typeField) typeField.hidden = isEdit;
   if (hint) {
     if (isEdit) {
+      hint.hidden = false;
       hint.textContent = txt(
         "signup.editHint",
-        "Your partner ID and status page link stay the same – even if you change the name.",
+        "Your status page link stays the same.",
       );
     } else {
       applyAccountTypeLabels();
@@ -181,39 +175,19 @@ function showPending(payload) {
 
   const body = el("signup-pending-body");
   if (body) {
-    const template = txt(
-      "signup.pendingBody",
-      "We sent a verification link to {email}. Click it to confirm this is a verified account.",
-    );
+    const template = txt("signup.pendingBody", "We sent a link to {email}.");
     body.textContent = template.replace("{email}", payload.email || "");
   }
 
   const domainEl = el("signup-pending-domain");
   if (domainEl) {
-    if (payload.accountType === "organization" && payload.emailDomain) {
-      domainEl.hidden = false;
-      domainEl.textContent = txt(
-        "signup.pendingDomain",
-        "Organization domain to verify: @{domain}",
-      ).replace("{domain}", payload.emailDomain);
-    } else {
-      domainEl.hidden = true;
-      domainEl.textContent = "";
-    }
+    domainEl.hidden = true;
+    domainEl.textContent = "";
   }
 
   const pendingHint = document.querySelector("#signup-pending-panel .signup-hint");
   if (pendingHint) {
-    pendingHint.textContent =
-      payload.accountType === "individual"
-        ? txt(
-            "signup.pendingHintIndividual",
-            "The link expires in 48 hours. After verification you’ll get a private stats page and QR kit – individuals are not listed on the public leaderboard.",
-          )
-        : txt(
-            "signup.pendingHint",
-            "The link expires in 48 hours. Your QR kit unlocks after verification. Organizations then appear on the public leaderboard.",
-          );
+    pendingHint.textContent = txt("signup.pendingHint", "Expires in 48 hours.");
   }
 
   const demo = el("signup-pending-demo");
@@ -221,14 +195,13 @@ function showPending(payload) {
     if (payload.verifyUrl) {
       demo.hidden = false;
       demo.innerHTML = "";
-      const note = document.createElement("span");
-      note.textContent = txt(
-        "signup.pendingDemoLink",
-        "Local demo (SMTP unset) – open verification link: ",
-      );
+      const note = document.createElement("p");
+      note.className = "signup-hint";
+      note.textContent = txt("signup.pendingDemoLink", "No email in this demo.");
       const link = document.createElement("a");
-      link.href = payload.verifyUrl;
-      link.textContent = payload.verifyUrl;
+      link.className = "cta";
+      link.href = withLang(payload.verifyUrl);
+      link.textContent = txt("signup.pendingDemoCta", "Verify now");
       demo.append(note, link);
     } else {
       demo.hidden = true;
@@ -267,12 +240,9 @@ function showSuccess(payload) {
       editablePartner.accountType === "individual"
         ? txt(
             "signup.successBodyIndividual",
-            "Here is your unique QR code and private stats page. Individuals are not shown on the public leaderboard – bookmark your status link from the email.",
+            "Print this QR. Scans credit you on the public leaderboard.",
           )
-        : txt(
-            "signup.successBody",
-            "Here is your unique QR code. Print out the booth banner for your next event. Your organization is eligible for the public leaderboard.",
-          );
+        : txt("signup.successBody", "Print this QR at your next event.");
   }
 
   const statusLink = el("success-status-link");

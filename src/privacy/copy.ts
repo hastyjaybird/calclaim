@@ -30,9 +30,9 @@ Full policy: ${PRIVACY_POLICY_URL}`;
 
 export const ABOUT_TEXT = `CalClaim finds help with food, health coverage, phone discounts, energy bills, and more – and gives you a personalized Application Guide for California and federal programs to make it easier to apply.
 
-Estimates only. Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, or any agency. Not tax, legal, or benefits advice. Official agencies decide eligibility.
+Estimates only. Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, or any agency. Not tax, legal, or benefits advice. For tax credits or filing questions, consult a tax professional or a free VITA site. Official agencies decide eligibility.
 
-Energy / utility programs (CARE, ESA, etc.) are just some of the programs in the list – not the whole product.`;
+CalClaim currently focuses more on California state benefits than federal ones. The federal programs shown are not exhaustive, and neither list is a complete catalog of available aid. Energy / utility programs (CARE, ESA, etc.) are just some of the programs in the list – not the whole product.`;
 
 /** Soft default when we capture free-form alpha feedback (then re-show last prompt). */
 export const THANKS_FEEDBACK = "Thanks for your feedback!";

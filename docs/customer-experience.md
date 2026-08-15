@@ -58,7 +58,7 @@ Library is source of truth. Every program that enters a user’s queue must reso
 | Wage-replacement insurance (EDD, gated by `workDisruption`) | `unemployment` (job loss), `sdi` (illness/injury/pregnancy), `pfl` (family care/bonding) |
 | Cash aid, ABD-gated | `ihss` (paid caregiver hours, alongside SSI/CAPI) |
 | Tax | `tax_credits` (info-only, never enters queue), `caleitc`, `young_child_tax_credit` |
-| Transportation | `myfirstev` (point-of-sale ZEV rebate; no income gate) |
+| Transportation | `myfirstev` (point-of-sale ZEV rebate); `ebike_511_contracosta` / `ebike_ava` (local pedal e-bike rebates); `cc4a_ebike` (scrap-a-car mobility option) |
 | Nested employment (not separate offer cards) | CalWORKs → WtW; LA GA/GR → GROW (noted in apply steps) |
 
 **BenefitsCal coverage:** Library rows cover every program on [BenefitsCal program descriptions](https://benefitscal.com/Help/program-descriptions/HCPRD?lang=en). `excludeIfAlreadyOn` drops Disaster CalFresh if already on CalFresh, CMSP if already on Medi-Cal, CAPI if already on SSI, and GA/GR if already on CalWORKs/SSI/CAPI.
@@ -125,11 +125,13 @@ Estimates only. Not affiliated with any agency.
 Type 'help' for more options.
 
 [ Start ]
+[ Share CalClaim with friends ]
 ```
 
 | Control | Logic |
 |---|---|
 | Start | → GATE |
+| Share CalClaim with friends | → Share menu (copyable link + Telegram share + QR); does not advance past OPT_IN. Help → Back returns here if the household gate was never answered. |
 | Free-form text / voice | Store as developer feedback todo (+ QC log; voice transcribed when configured) → “Thanks for your feedback!” → repeat last prompt; no advance |
 
 ### GATE
@@ -276,7 +278,39 @@ Are you trying to buy an electric vehicle (or a hydrogen car) this year?
 | Yes | `buyingEvThisYear=true` → include MyFirstEV (if CA home already met) |
 | No | Drop programs with `requiresBuyingEvThisYear` (`NOT_IN_QUEUE`) |
 
-Asked after HAS_CA_HOME when MyFirstEV is the next unlock. Then the MyFirstEV offer card is presented in the queue.
+Asked after the e-bike thread (and after 1-question household gates). RemainingQ for MyFirstEV is usually 2, so WIC/SSI/UI (1q) and e-bike follow-ups (1q after intent) go first.
+
+### HAS_BUYING_EBIKE (only if a `requiresBuyingEbikeThisYear` program would enter the queue)
+
+```text
+Are you trying to buy a pedal e-bike this year (not a scooter)?
+
+[ Yes ] [ No ]
+```
+
+| Control | Logic |
+|---|---|
+| Yes | `buyingEbikeThisYear=true` → ZIP (local rebates) and/or scrap-car (CC4A/DCAP) if those would unlock |
+| No | Drop all e-bike programs (`NOT_IN_QUEUE`) |
+
+This is the biggest yes/no disqualifier across remaining CA e-bike programs: every live rebate requires a Class 1–3 bike with pedals. Scooters, e-motos, and e-skateboards never qualify. There is no statewide e-bike voucher (CARB’s project ended Dec 2025).
+
+**Tree placement:** after core 1-question household gates (child / ABD / work), before the EV questions. RemainingQ is usually 2, so it cannot jump WIC/SSI. On a 2q tie with buying-EV, e-bike wins – more plausible for this audience, and the e-bike follow-ups (scrap, ZIP) finish before starting the car thread.
+
+### HAS_RETIRE_VEHICLE (only if a `requiresVehicleRetirement` program would enter the queue)
+
+```text
+Do you have an older gas or diesel car you could retire (scrap) for a bigger rebate?
+
+[ Yes – I could scrap one ] [ No ]
+```
+
+| Control | Logic |
+|---|---|
+| Yes | `wouldRetireVehicle=true` → include `cc4a_ebike` ($7,500 mobility option) |
+| No | Drop scrap-a-car e-bike path; keep local no-scrap rebates if ZIP matches |
+
+Asked right after e-bike yes. RemainingQ=1, so it beats the still-2q EV intent and is asked **before ZIP** (yes/no, statewide $7,500 vs typing a ZIP that only helps a few counties).
 
 ### HAS_CHILD (only if a `requiresChildInHousehold` program would enter the queue)
 
@@ -332,7 +366,7 @@ Has anything affected your ability to work in the last few months?
 
 Single-select – `unemployment`/`sdi`/`pfl` are mutually exclusive by construction (each requires a different answer), matching how EDD itself treats these as separate claim types. Asked after HAS_ABD, same "only when it gates an offer" pattern as past-due/child/ABD.
 
-### HAS_ZIP (only if a `requiresCmspCounty` program would enter the queue)
+### HAS_ZIP (only if a county-gated program would enter the queue – CMSP or local e-bike rebates)
 
 ```text
 What's your home ZIP code? (5 digits – used only to check county-specific programs.)
@@ -342,8 +376,8 @@ What's your home ZIP code? (5 digits – used only to check county-specific prog
 
 | Control | Logic |
 |---|---|
-| 5-digit CA ZIP | Resolve county → include CMSP only if county is one of the 35 participating CMSP counties |
-| Skip / unknown ZIP | Drop CMSP (`NOT_IN_QUEUE`) |
+| 5-digit CA ZIP | Resolve county → include CMSP if participating; include `ebike_511_contracosta` / `ebike_ava` if the county matches |
+| Skip / unknown ZIP | Drop county-gated programs (`NOT_IN_QUEUE`) |
 
 Asked in the offer loop when it is the cheapest remaining gate for still-unlockable programs (same pattern as past-due / child / ABD – not an early quiz).
 
@@ -353,6 +387,7 @@ Asked in the offer loop when it is the cheapest remaining gate for still-unlocka
 You may qualify for {Program name}.
 
 {Program name} – {one-line plain benefit}
+
 Est. up to ~${max from maxBenefitUsd for this household} (~$/person when size>1).
 Est. ~{formFillMinutes, discounted if docs already in hand} min to fill out form.
 Deadline: {label (YYYY-MM-DD) or label-only / “check site”}.
@@ -388,6 +423,7 @@ Deadline: {label (YYYY-MM-DD) or label-only / “check site”}.
 | Wave | Examples | Extra questions before this wave |
 |---|---|---|
 | 0 | LifeLine, LIHEAP, Medical Baseline, CalEITC; on YES also CARE/ESA/muni discounts/unsigned gate feeders (income skipped) | Bills-in-name when needed (phone+net → LifeLine; energy/fuel → LIHEAP; IOU/muni → CARE-family or EZ-SAVE/EAPR) |
+| 0–1 | MyFirstEV (CA home + buying EV); e-bike local rebates (pedal e-bike + ZIP); CC4A/DCAP e-bike ($7,500 if scrap-a-car) | After 1q household gates: e-bike intent → scrap → (ZIP if local) → then EV |
 | 1 | AMP; unemployment / SDI / PFL; disaster CalFresh; CMSP (ZIP); MyFirstEV (CA home → buying EV this year) | One of: past-due, work, disaster, ZIP; or CA home + buying-EV for MyFirstEV |
 | 2+ | NO-arm Medi-Cal / CalFresh / CARE / FERA (household + income); then WIC / CalWORKs (child); SSI / CAPI / IHSS (ABD) | Income block, then child / ABD as needed |
 

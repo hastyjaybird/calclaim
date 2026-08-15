@@ -1,3 +1,4 @@
+(() => {
 const STATUS_LABELS = {
   waiting_gate: "Waiting on gate",
   info_only: "Info only",
@@ -31,6 +32,7 @@ const RESOLVED = new Set([
 let actions = [];
 let snapshot = null;
 let filter = "all";
+let started = false;
 
 function el(id) {
   return document.getElementById(id);
@@ -44,8 +46,20 @@ function escapeHtml(s) {
     .replaceAll('"', "&quot;");
 }
 
+function isTreeHash(hash = location.hash) {
+  const raw = String(hash || "").replace(/^#/, "");
+  return (
+    raw === "tree" ||
+    raw.startsWith("tree&") ||
+    raw.startsWith("tree=") ||
+    raw === "a" ||
+    raw.startsWith("a=")
+  );
+}
+
 function readHash() {
   const raw = location.hash.replace(/^#/, "");
+  if (!isTreeHash(`#${raw}`)) return [];
   const params = new URLSearchParams(raw);
   const encoded = params.get("a");
   if (!encoded) return [];
@@ -57,8 +71,8 @@ function readHash() {
 
 function writeHash() {
   const encoded = actions.map((a) => encodeURIComponent(a)).join(",");
-  const next = encoded ? `#a=${encoded}` : "";
-  if (location.hash !== next) history.replaceState(null, "", next || location.pathname);
+  const next = encoded ? `#tree&a=${encoded}` : "#tree";
+  if (location.hash !== next) history.replaceState(null, "", next);
 }
 
 async function api(path, options) {
@@ -87,6 +101,14 @@ async function loadSnapshot() {
 
 function tap(action) {
   if (!action) return;
+  if (action === "nav:back") {
+    if (!actions.length) return;
+    actions = actions.slice(0, -1);
+    loadSnapshot().catch((err) => {
+      el("status-line").textContent = err.message;
+    });
+    return;
+  }
   actions = [...actions, action];
   loadSnapshot().catch((err) => {
     actions = actions.slice(0, -1);
@@ -322,7 +344,7 @@ function renderPrograms() {
   el("counts").textContent =
     `${counts.current_offer || 0} on screen · ${counts.in_queue || 0} in wave · ${counts.locked || 0} locked · ${counts.eliminated || 0} eliminated. Docs change rank, not eligibility.`;
 
-  el("programs").innerHTML = visible
+  el("tree-programs").innerHTML = visible
     .map((p) => {
       const reqs = p.requirements
         .filter((r) => r.needed || r.state !== "na")
@@ -367,7 +389,7 @@ function render() {
 
 function treePathFor(actionList) {
   const encoded = actionList.map((a) => encodeURIComponent(a)).join(",");
-  return encoded ? `/dev/tree#a=${encoded}` : "/dev/tree";
+  return encoded ? `/dev#tree&a=${encoded}` : "/dev#tree";
 }
 
 function currentTreeLocation() {
@@ -414,7 +436,7 @@ async function refreshRequestList() {
   if (!list) return;
   list.innerHTML = `<p class="tree-request-empty">Loading…</p>`;
   try {
-    const res = await api("/api/dev/feedback-todos?status=open&source=tree");
+    const res = await api("/api/dev/feedback-todos?status=open&source=tree&ticketed=0");
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || "Could not load requests");
     const todos = data.todos || [];
@@ -547,19 +569,35 @@ el("zip-form").addEventListener("submit", (e) => {
   el("zip-input").value = "";
 });
 
-el("btn-logout").addEventListener("click", async () => {
-  await fetch("/api/dev/logout", { method: "POST" }).catch(() => {});
-  location.href = "/dev/login.html";
-});
-
 window.addEventListener("hashchange", () => {
+  if (!isTreeHash()) return;
   actions = readHash();
+  started = true;
   loadSnapshot().catch((err) => {
     el("status-line").textContent = err.message;
   });
 });
 
-actions = readHash();
-loadSnapshot().catch((err) => {
-  el("status-line").textContent = err.message;
-});
+window.__treeReview = {
+  activate() {
+    if (!started) {
+      started = true;
+      if (isTreeHash()) actions = readHash();
+      writeHash();
+      loadSnapshot().catch((err) => {
+        el("status-line").textContent = err.message;
+      });
+      return;
+    }
+    writeHash();
+  },
+};
+
+if (isTreeHash()) {
+  started = true;
+  actions = readHash();
+  loadSnapshot().catch((err) => {
+    el("status-line").textContent = err.message;
+  });
+}
+})();

@@ -5,7 +5,12 @@
  */
 
 import { docLabel, missingDocs } from "../library/docs.js";
-import { countyFromZip, isCmspCounty, parseZipCode } from "../library/geo.js";
+import {
+  countyFromZip,
+  parseZipCode,
+  passesCountyEligibility,
+  programNeedsZip,
+} from "../library/geo.js";
 import { getProgram, incomeBandLabels, loadPrograms } from "../library/load.js";
 import {
   applyResidencyTie,
@@ -178,6 +183,8 @@ export interface TreeReviewSnapshot {
     isCaResident: boolean | null;
     buyingEvThisYear: boolean | null;
     firstTimeZev: boolean | null;
+    buyingEbikeThisYear: boolean | null;
+    wouldRetireVehicle: boolean | null;
     hasChildInHousehold: boolean | null;
     isFosterYouth: boolean | null;
     isRefugeeOrAsylee: boolean | null;
@@ -330,6 +337,12 @@ function askTriageGate(session: SessionState, gate: TriageGateId): void {
     case "first_time_zev":
       session.step = "has_first_time_zev";
       return;
+    case "buying_ebike":
+      session.step = "has_buying_ebike";
+      return;
+    case "retire_vehicle":
+      session.step = "has_retire_vehicle";
+      return;
     case "child":
       session.step = "has_child";
       return;
@@ -372,6 +385,13 @@ async function applyAction(
     session.step = "gate";
     session.alreadyOn = [];
     return { notice: null };
+  }
+
+  if (data === "opt:share") {
+    return {
+      notice:
+        "Share menu (copyable link + Telegram share + QR). Stays on OPT_IN until Start.",
+    };
   }
 
   if (data === "review:skip_rest" || data === "review:add_rest") {
@@ -629,6 +649,18 @@ async function applyAction(
     return { notice: null };
   }
 
+  if (data === "buyingebike:yes" || data === "buyingebike:no") {
+    session.buyingEbikeThisYear = data === "buyingebike:yes";
+    continueAfterWave(session);
+    return { notice: null };
+  }
+
+  if (data === "retirecar:yes" || data === "retirecar:no") {
+    session.wouldRetireVehicle = data === "retirecar:yes";
+    continueAfterWave(session);
+    return { notice: null };
+  }
+
   if (data === "abd:yes" || data === "abd:no") {
     session.hasAgedBlindOrDisabled = data === "abd:yes";
     continueAfterWave(session);
@@ -832,7 +864,22 @@ async function applyAction(
   return { notice: `Unknown / unsupported review action: ${data}` };
 }
 
-function previewScreen(session: SessionState): ReviewScreen {
+function previewScreen(session: SessionState, canGoBack = false): ReviewScreen {
+  const screen = previewScreenInner(session);
+  if (
+    canGoBack &&
+    screen.step !== "opt_in" &&
+    !screen.buttons.some((b) => b.action === "nav:back")
+  ) {
+    screen.buttons = [
+      ...screen.buttons,
+      { label: "Back", action: "nav:back", kind: "callback" },
+    ];
+  }
+  return screen;
+}
+
+function previewScreenInner(session: SessionState): ReviewScreen {
   const step = session.step;
 
   if (step === "opt_in") {
@@ -845,7 +892,14 @@ At any time, text about an issue, correction or suggest an improvement.
 
 Estimates only. Not affiliated with any agency.
 Type 'help' for more options.`,
-      buttons: [{ label: "Start", action: "opt:start", kind: "callback" }],
+      buttons: [
+        { label: "Start", action: "opt:start", kind: "callback" },
+        {
+          label: "Share CalClaim with friends",
+          action: "opt:share",
+          kind: "callback",
+        },
+      ],
     };
   }
 
@@ -1083,6 +1137,34 @@ Do you already know whether you're in one of those areas?`,
       buttons: [
         { label: "Yes – first ZEV", action: "firstzev:yes", kind: "callback" },
         { label: "No", action: "firstzev:no", kind: "callback" },
+      ],
+    };
+  }
+
+  if (step === "has_buying_ebike") {
+    return {
+      step,
+      title: "HAS_BUYING_EBIKE",
+      text: "Are you trying to buy a pedal e-bike this year (not a scooter)?",
+      buttons: [
+        { label: "Yes", action: "buyingebike:yes", kind: "callback" },
+        { label: "No", action: "buyingebike:no", kind: "callback" },
+      ],
+    };
+  }
+
+  if (step === "has_retire_vehicle") {
+    return {
+      step,
+      title: "HAS_RETIRE_VEHICLE",
+      text: "Do you have an older gas or diesel car you could retire (scrap) for a bigger rebate?",
+      buttons: [
+        {
+          label: "Yes – I could scrap one",
+          action: "retirecar:yes",
+          kind: "callback",
+        },
+        { label: "No", action: "retirecar:no", kind: "callback" },
       ],
     };
   }
@@ -1645,6 +1727,50 @@ function evaluateRequirements(
     checks.push(req("first_time_zev", "First-time ZEV", false, "na", "Not required"));
   }
 
+  if (program.requiresBuyingEbikeThisYear) {
+    if (session.buyingEbikeThisYear === null) {
+      checks.push(
+        req("buying_ebike", "Buying e-bike this year", true, "unknown", "Not asked yet"),
+      );
+    } else {
+      checks.push(
+        req(
+          "buying_ebike",
+          "Buying e-bike this year",
+          true,
+          session.buyingEbikeThisYear ? "met" : "unmet",
+          `Buying e-bike = ${yn(session.buyingEbikeThisYear)}`,
+        ),
+      );
+    }
+  } else {
+    checks.push(
+      req("buying_ebike", "Buying e-bike this year", false, "na", "Not required"),
+    );
+  }
+
+  if (program.requiresVehicleRetirement) {
+    if (session.wouldRetireVehicle === null) {
+      checks.push(
+        req("retire_vehicle", "Retire older vehicle", true, "unknown", "Not asked yet"),
+      );
+    } else {
+      checks.push(
+        req(
+          "retire_vehicle",
+          "Retire older vehicle",
+          true,
+          session.wouldRetireVehicle ? "met" : "unmet",
+          `Scrap car = ${yn(session.wouldRetireVehicle)}`,
+        ),
+      );
+    }
+  } else {
+    checks.push(
+      req("retire_vehicle", "Retire older vehicle", false, "na", "Not required"),
+    );
+  }
+
   if (program.requiresChildInHousehold) {
     if (session.hasChildInHousehold === null) {
       checks.push(req("child", "Child / pregnancy", true, "unknown", "Not asked yet"));
@@ -1804,27 +1930,31 @@ function evaluateRequirements(
     checks.push(req("disaster", "Disaster window", false, "na", "Not required"));
   }
 
-  if (program.requiresCmspCounty) {
+  if (programNeedsZip(program)) {
+    const zipLabel = program.requiresCmspCounty
+      ? "CMSP county (ZIP)"
+      : "County (ZIP)";
     if (session.residenceZip === null) {
-      checks.push(req("zip", "CMSP county (ZIP)", true, "unknown", "ZIP not asked yet"));
+      checks.push(req("zip", zipLabel, true, "unknown", "ZIP not asked yet"));
     } else if (!session.residenceCounty) {
       checks.push(
-        req("zip", "CMSP county (ZIP)", true, "unmet", "ZIP skipped / unknown county"),
+        req("zip", zipLabel, true, "unmet", "ZIP skipped / unknown county"),
       );
     } else {
-      const ok = isCmspCounty(session.residenceCounty);
+      const ok = passesCountyEligibility(program, session.residenceCounty);
+      const kind = program.requiresCmspCounty ? "a CMSP county" : "an eligible county";
       checks.push(
         req(
           "zip",
-          "CMSP county (ZIP)",
+          zipLabel,
           true,
           ok ? "met" : "unmet",
-          `${session.residenceCounty} ${ok ? "is" : "is not"} a CMSP county`,
+          `${session.residenceCounty} ${ok ? "is" : "is not"} ${kind}`,
         ),
       );
     }
   } else {
-    checks.push(req("zip", "CMSP county", false, "na", "Not required"));
+    checks.push(req("zip", "County (ZIP)", false, "na", "Not required"));
   }
 
   if (program.requiresCitizenOrEligibleImmigrant) {
@@ -2031,9 +2161,13 @@ function whyThisScreen(
     case "has_ca_work":
       return "User lives in another state. Ask whether they work in California before dropping or keeping work-based programs.";
     case "has_buying_ev":
-      return "Wave empty. Buying-EV intent is the cheapest remaining gate (MyFirstEV / PG&E EV – after CA residency).";
+      return "Wave empty. Buying-EV intent is the cheapest remaining gate (MyFirstEV / PG&E EV – after the e-bike thread).";
     case "has_first_time_zev":
       return "Wave empty. First-time ZEV is the cheapest remaining gate (MyFirstEV – after buying-EV intent).";
+    case "has_buying_ebike":
+      return "Wave empty. Pedal e-bike intent is the cheapest remaining gate (after core household 1q gates; scooters never qualify).";
+    case "has_retire_vehicle":
+      return "Wave empty. Vehicle retirement is the cheapest remaining gate (after e-bike yes; $7,500 CC4A/DCAP before ZIP).";
     case "has_child":
       return "Wave empty. Child/pregnancy is the cheapest remaining gate (WIC / CalWORKs).";
     case "has_foster_youth":
@@ -2051,7 +2185,7 @@ function whyThisScreen(
     case "has_disaster_zip":
       return "User chose Not sure on the disaster list. Confirm with a residence-or-work ZIP against the active window geography.";
     case "has_zip":
-      return "Wave empty. ZIP is the cheapest remaining gate (CMSP county check).";
+      return "Wave empty. ZIP is the cheapest remaining gate (CMSP / local e-bike county check).";
     case "has_immigration_status":
       return "All cheaper triage gates are done. Immigration is asked late on purpose – status-blind wins first. Answer is process-memory only, not stored on the session. A refugee/asylee follow-up may come next for RCA.";
     case "idle":
@@ -2204,26 +2338,6 @@ function buildTree(session: SessionState): TreeNode[] {
       note: "After bills-in-name · Medical Baseline",
     },
     {
-      id: "has_buying_ev",
-      label: "HAS_BUYING_EV",
-      kind: "gate",
-      active: step === "has_buying_ev",
-      answered:
-        session.buyingEvThisYear != null
-          ? yn(session.buyingEvThisYear)
-          : undefined,
-      note: "MyFirstEV / EV rebates · before first-time ZEV",
-    },
-    {
-      id: "has_first_time_zev",
-      label: "HAS_FIRST_TIME_ZEV",
-      kind: "gate",
-      active: step === "has_first_time_zev",
-      answered:
-        session.firstTimeZev != null ? yn(session.firstTimeZev) : undefined,
-      note: "MyFirstEV · then offer card",
-    },
-    {
       id: "has_child",
       label: "HAS_CHILD",
       kind: "gate",
@@ -2264,6 +2378,48 @@ function buildTree(session: SessionState): TreeNode[] {
       note: "UI / SDI / PFL (single-select)",
     },
     {
+      id: "has_buying_ebike",
+      label: "HAS_BUYING_EBIKE",
+      kind: "gate",
+      active: step === "has_buying_ebike",
+      answered:
+        session.buyingEbikeThisYear != null
+          ? yn(session.buyingEbikeThisYear)
+          : undefined,
+      note: "After core 1q household gates · pedal e-bike (not scooter)",
+    },
+    {
+      id: "has_retire_vehicle",
+      label: "HAS_RETIRE_VEHICLE",
+      kind: "gate",
+      active: step === "has_retire_vehicle",
+      answered:
+        session.wouldRetireVehicle != null
+          ? yn(session.wouldRetireVehicle)
+          : undefined,
+      note: "After e-bike yes · $7,500 CC4A/DCAP · before ZIP",
+    },
+    {
+      id: "has_buying_ev",
+      label: "HAS_BUYING_EV",
+      kind: "gate",
+      active: step === "has_buying_ev",
+      answered:
+        session.buyingEvThisYear != null
+          ? yn(session.buyingEvThisYear)
+          : undefined,
+      note: "After e-bike thread · MyFirstEV / EV rebates",
+    },
+    {
+      id: "has_first_time_zev",
+      label: "HAS_FIRST_TIME_ZEV",
+      kind: "gate",
+      active: step === "has_first_time_zev",
+      answered:
+        session.firstTimeZev != null ? yn(session.firstTimeZev) : undefined,
+      note: "MyFirstEV · then offer card",
+    },
+    {
       id: "has_disaster_area",
       label: "HAS_DISASTER",
       kind: "gate",
@@ -2292,7 +2448,7 @@ function buildTree(session: SessionState): TreeNode[] {
             ? `${session.residenceZip} · ${session.residenceCounty ?? "?"}`
             : "skipped"
           : undefined,
-      note: "CMSP county only",
+      note: "CMSP and local e-bike county · last among these gates",
     },
     {
       id: "has_immigration_status",
@@ -2435,7 +2591,7 @@ export async function simulateTreeReview(
       notice,
       whyThisScreen: whyThisScreen(session, nextGate),
       nextGate,
-      screen: previewScreen(session),
+      screen: previewScreen(session, actions.length > 0),
       facts: {
         step: session.step,
         branch: session.branch,
@@ -2451,6 +2607,8 @@ export async function simulateTreeReview(
         isCaResident: session.isCaResident,
         buyingEvThisYear: session.buyingEvThisYear,
         firstTimeZev: session.firstTimeZev,
+        buyingEbikeThisYear: session.buyingEbikeThisYear,
+        wouldRetireVehicle: session.wouldRetireVehicle,
         hasChildInHousehold: session.hasChildInHousehold,
         isFosterYouth: session.isFosterYouth,
         isRefugeeOrAsylee: session.isRefugeeOrAsylee,

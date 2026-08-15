@@ -14,7 +14,7 @@ Energy / PG&E programs are library rows, not the product identity.
 | [session-log.md](session-log.md) | Planning turns; Turn 14 = v2 pivot |
 | [competitive-ux-research.md](competitive-ux-research.md) | Competitors (benefits-first; energy as subset) |
 | [funder-dashboard.md](funder-dashboard.md) | Public impact site + QR/apply tracking |
-| [developer-library-watch.md](developer-library-watch.md) | Developer tab – library freshness agent + watch checklist |
+| [developer-library-watch.md](developer-library-watch.md) | Developer review dashboard – program page scan + freshness checklist |
 
 Build kickoff: [`../PROMPT.md`](../PROMPT.md)  
 Cursor plan: Telegram PDF benefits bot (CalClaim v2)

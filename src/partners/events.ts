@@ -145,6 +145,23 @@ function allocateEventSlug(name: string): string {
 const MAX_EVENT_NAME = 80;
 const MAX_EVENTS_PER_PARTNER = 200;
 
+export function deletePartnerEventsForPartner(
+  partnerSlug: string,
+  partnerId?: string,
+): number {
+  if (!db) return 0;
+  const info = partnerId
+    ? getDb()
+        .prepare(
+          `DELETE FROM partner_events WHERE partner_slug = ? OR partner_id = ?`,
+        )
+        .run(partnerSlug.trim().toLowerCase(), partnerId)
+    : getDb()
+        .prepare(`DELETE FROM partner_events WHERE partner_slug = ?`)
+        .run(partnerSlug.trim().toLowerCase());
+  return Number(info.changes) || 0;
+}
+
 export function createPartnerEvent(input: {
   partnerId: string;
   partnerSlug: string;

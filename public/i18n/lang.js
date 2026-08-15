@@ -1,10 +1,11 @@
 /* global CALCLAIM_I18N */
 
 (function () {
-  const SUPPORTED = ["en", "es", "zh"];
+  const SUPPORTED = ["en", "es", "zh", "vi", "tl"];
+  const LANG_PREFIX_RE = /^\/(es|zh|vi|tl)(?=\/|$)/;
 
   function detectLang() {
-    const m = location.pathname.match(/^\/(es|zh)(?=\/|$)/);
+    const m = location.pathname.match(LANG_PREFIX_RE);
     if (m) return m[1];
     const q = new URLSearchParams(location.search).get("lang");
     if (q && SUPPORTED.includes(q)) return q;
@@ -12,14 +13,31 @@
   }
 
   function stripLangPrefix(pathname) {
-    return pathname.replace(/^\/(es|zh)(?=\/|$)/, "") || "/";
+    return pathname.replace(LANG_PREFIX_RE, "") || "/";
   }
 
   function withLang(path, lang) {
+    if (!path) return path;
+    if (path.startsWith("#") || path.startsWith("mailto:")) return path;
+
+    if (/^https?:\/\//i.test(path)) {
+      try {
+        const u = new URL(path);
+        if (u.origin !== location.origin) return path;
+        const localized = withLang(`${u.pathname}${u.search}${u.hash}`, lang);
+        return localized.startsWith("http") ? localized : `${u.origin}${localized}`;
+      } catch {
+        return path;
+      }
+    }
+
     if (!path.startsWith("/")) return path;
     const hashIdx = path.indexOf("#");
     const hash = hashIdx >= 0 ? path.slice(hashIdx) : "";
-    const pathOnly = hashIdx >= 0 ? path.slice(0, hashIdx) : path;
+    const noHash = hashIdx >= 0 ? path.slice(0, hashIdx) : path;
+    const qIdx = noHash.indexOf("?");
+    const query = qIdx >= 0 ? noHash.slice(qIdx) : "";
+    const pathOnly = qIdx >= 0 ? noHash.slice(0, qIdx) : noHash;
     if (
       pathOnly.startsWith("/dev") ||
       pathOnly.startsWith("/go/") ||
@@ -27,14 +45,23 @@
       pathOnly.startsWith("/r/") ||
       pathOnly.startsWith("/report/") ||
       pathOnly.startsWith("/brand/") ||
-      pathOnly.startsWith("/health") ||
-      pathOnly.startsWith("http")
+      pathOnly.startsWith("/health")
     ) {
-      return pathOnly + hash;
+      return pathOnly + query + hash;
     }
-    const clean = pathOnly.replace(/^\/(es|zh)(?=\/|$)/, "") || "/";
-    if (lang === "en") return (clean === "/" ? "/impact" : clean) + hash;
-    return `/${lang}${clean === "/" ? "/impact" : clean}${hash}`;
+    const clean = pathOnly.replace(LANG_PREFIX_RE, "") || "/";
+    const localized = (lang === "en" ? "" : `/${lang}`) + (clean === "/" ? "/impact" : clean);
+    return localized + query + hash;
+  }
+
+  /** Same page in another language: keep query (verify token), drop hash. */
+  function langSwitchPath() {
+    const base = stripLangPrefix(location.pathname);
+    const path = base === "/" ? "/impact" : base;
+    const params = new URLSearchParams(location.search);
+    params.delete("lang");
+    const query = params.toString();
+    return query ? `${path}?${query}` : path;
   }
 
   function t(lang, key) {
@@ -57,8 +84,13 @@
       .replaceAll("__CONTACT__", withLang("/impact#contact", lang));
   }
 
+  function htmlLang(lang) {
+    if (lang === "zh") return "zh-Hans";
+    return lang;
+  }
+
   function applyTranslations(lang) {
-    document.documentElement.lang = lang === "zh" ? "zh-Hans" : lang;
+    document.documentElement.lang = htmlLang(lang);
 
     document.querySelectorAll("[data-i18n]").forEach((el) => {
       const key = el.getAttribute("data-i18n");
@@ -98,7 +130,7 @@
     // Keep public nav/footer links in the active language; leave /dev alone.
     document.querySelectorAll("a[href]").forEach((a) => {
       const href = a.getAttribute("href");
-      if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("http")) {
+      if (!href || href.startsWith("#") || href.startsWith("mailto:")) {
         return;
       }
       if (a.classList.contains("lang-btn")) return;
@@ -110,12 +142,10 @@
     const brand = document.querySelector(".banner-brand");
     if (brand) brand.setAttribute("href", withLang("/impact", lang));
 
+    const switchPath = langSwitchPath();
     document.querySelectorAll(".lang-btn").forEach((btn) => {
       const btnLang = btn.getAttribute("data-lang");
-      const base = stripLangPrefix(location.pathname);
-      // No hash – language switches should start at the top of the page.
-      const targetPath = base === "/" ? "/impact" : base;
-      btn.setAttribute("href", withLang(targetPath, btnLang));
+      btn.setAttribute("href", withLang(switchPath, btnLang));
       btn.setAttribute("aria-pressed", btnLang === lang ? "true" : "false");
       btn.classList.toggle("is-active", btnLang === lang);
     });
@@ -125,14 +155,41 @@
     const host = document.getElementById("lang-switch");
     if (!host) return;
     // No hash – language switches should start at the top of the page.
-    const basePath = stripLangPrefix(location.pathname) || "/impact";
+    const basePath = langSwitchPath();
     host.setAttribute("role", "navigation");
     host.setAttribute("aria-label", t(lang, "lang.aria"));
-    host.innerHTML = `
-      <a class="lang-btn" data-lang="en" href="${withLang(basePath, "en")}">${t(lang, "lang.en")}</a>
-      <a class="lang-btn" data-lang="es" href="${withLang(basePath, "es")}">${t(lang, "lang.es")}</a>
-      <a class="lang-btn" data-lang="zh" href="${withLang(basePath, "zh")}">${t(lang, "lang.zh")}</a>
-    `;
+    host.innerHTML = SUPPORTED.map(
+      (code) =>
+        `<a class="lang-btn" data-lang="${code}" href="${withLang(basePath, code)}">${t(lang, `lang.${code}`)}</a>`,
+    ).join("\n      ");
+  }
+
+  function revealDeveloperDashboardNav() {
+    const nav = document.querySelector(".site-nav");
+    if (!nav || nav.querySelector(".nav-dev-dashboard")) return;
+
+    fetch("/api/dev/session", { credentials: "same-origin", cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data?.authenticated) return;
+        if (nav.querySelector(".nav-dev-dashboard")) return;
+
+        const label = t(lang, "nav.dashboard") || "Developer dashboard";
+        const link = document.createElement("a");
+        link.href = "/dev";
+        link.className = "nav-dev-dashboard";
+        link.textContent = label;
+
+        const donate = nav.querySelector("[data-donate-open]");
+        if (donate) nav.insertBefore(link, donate);
+        else nav.appendChild(link);
+
+        document.querySelectorAll(".footer-dev-login").forEach((el) => {
+          el.removeAttribute("data-i18n");
+          el.textContent = label;
+        });
+      })
+      .catch(() => {});
   }
 
   const lang = detectLang();
@@ -144,4 +201,5 @@
 
   mountLangSwitch(lang);
   applyTranslations(lang);
+  revealDeveloperDashboardNav();
 })();

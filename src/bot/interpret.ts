@@ -456,6 +456,19 @@ function interpretStepAnswer(
   const step: StepId = session.step;
   const yn = parseYesNo(normalized);
 
+  if (
+    step !== "help_menu" &&
+    step !== "confirm_stop" &&
+    step !== "confirm_erase" &&
+    (session.undoStack?.length ?? 0) > 0 &&
+    (normalized === "back" ||
+      normalized === "go back" ||
+      normalized === "undo" ||
+      normalized === "oops")
+  ) {
+    return { kind: "step_answer", callback: "nav:back" };
+  }
+
   if (step === "opt_in") {
     if (
       yn === "yes" ||
@@ -464,6 +477,9 @@ function interpretStepAnswer(
       )
     ) {
       return { kind: "step_answer", callback: "opt:start" };
+    }
+    if (/\b(share|invite|friend)\b/.test(normalized)) {
+      return { kind: "step_answer", callback: "opt:share" };
     }
   }
 
@@ -647,6 +663,29 @@ function interpretStepAnswer(
       return { kind: "step_answer", callback: "firstzev:yes" };
     }
     if (yn === "no") return { kind: "step_answer", callback: "firstzev:no" };
+  }
+
+  if (step === "has_buying_ebike") {
+    if (/\b(scooter|e-?moto|motorcycle|e-?skate)\b/.test(normalized)) {
+      return { kind: "step_answer", callback: "buyingebike:no" };
+    }
+    if (
+      yn === "yes" ||
+      /\b(e-?bike|ebike|bike|bicycle|pedal)\b/.test(normalized)
+    ) {
+      return { kind: "step_answer", callback: "buyingebike:yes" };
+    }
+    if (yn === "no") return { kind: "step_answer", callback: "buyingebike:no" };
+  }
+
+  if (step === "has_retire_vehicle") {
+    if (
+      yn === "yes" ||
+      /\b(scrap|retire|junk|old car|clunker|trade.?in)\b/.test(normalized)
+    ) {
+      return { kind: "step_answer", callback: "retirecar:yes" };
+    }
+    if (yn === "no") return { kind: "step_answer", callback: "retirecar:no" };
   }
 
   if (step === "has_child") {
@@ -1021,6 +1060,10 @@ export function stepNudge(step: StepId): string {
       return "Tap Yes or No – are you trying to buy an EV (or hydrogen car) this year?";
     case "has_first_time_zev":
       return "Tap Yes or No – would this be your first battery-electric or hydrogen vehicle?";
+    case "has_buying_ebike":
+      return "Tap Yes or No – pedal e-bike this year (scooters don't qualify)?";
+    case "has_retire_vehicle":
+      return "Tap Yes or No – older gas/diesel car you could scrap for a bigger rebate?";
     case "has_child":
       return "Tap Yes or No – kids under 18 or pregnancy in the household.";
     case "has_foster_youth":

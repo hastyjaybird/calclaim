@@ -51,19 +51,15 @@ export function loadConfig() {
     process.env.DEVELOPER_SESSION_SECRET ??
     process.env.WEBHOOK_SECRET ??
     "calclaim-dev-session";
-  // Local: no password page. Deploy (NODE_ENV=production): require login.
-  // Override with DEVELOPER_AUTH=0|1 if needed.
+  // Password + CAPTCHA required locally and on deploy.
+  // Escape hatch: DEVELOPER_AUTH=0 skips login (local HTTP only – blocked on HTTPS).
   const authOverride = (process.env.DEVELOPER_AUTH ?? "").trim().toLowerCase();
   const developerAuthRequired =
-    authOverride === "1" ||
-    authOverride === "true" ||
-    authOverride === "on"
-      ? true
-      : authOverride === "0" ||
-          authOverride === "false" ||
-          authOverride === "off"
-        ? false
-        : process.env.NODE_ENV === "production";
+    authOverride === "0" ||
+    authOverride === "false" ||
+    authOverride === "off"
+      ? false
+      : true;
   return {
     token: env("TELEGRAM_BOT_TOKEN"),
     mode,
@@ -78,7 +74,7 @@ export function loadConfig() {
     /** Password for /dev (empty = developer login always fails when auth required) */
     developerPassword,
     developerSessionSecret,
-    /** When false (local default), /dev skips password + CAPTCHA */
+    /** When false (DEVELOPER_AUTH=0), /dev skips password + CAPTCHA */
     developerAuthRequired,
     stripeSecretKey: (process.env.STRIPE_SECRET_KEY ?? "").trim(),
     stripePublishableKey: (process.env.STRIPE_PUBLISHABLE_KEY ?? "").trim(),

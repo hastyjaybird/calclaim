@@ -15,10 +15,21 @@ import type { LibraryOverview } from "./types.js";
 
 const AGING_RULE_DAYS = 90;
 
+function ymdFromVersion(version: string): string | null {
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(version);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const us = /^(\d{1,2})[/-](\d{1,2})[/-](\d{2}|\d{4})$/.exec(version);
+  if (!us) return null;
+  const mm = us[1].padStart(2, "0");
+  const dd = us[2].padStart(2, "0");
+  const yyyy = us[3].length === 2 ? `20${us[3]}` : us[3];
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 function ageDaysFromVersion(version: string): number | null {
-  // Expect YYYY-MM-DD; tolerate other strings as unknown
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(version)) return null;
-  const then = Date.parse(`${version}T12:00:00Z`);
+  const ymd = ymdFromVersion(version);
+  if (!ymd) return null;
+  const then = Date.parse(`${ymd}T12:00:00Z`);
   if (Number.isNaN(then)) return null;
   return Math.floor((Date.now() - then) / (24 * 60 * 60 * 1000));
 }

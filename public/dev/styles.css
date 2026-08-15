@@ -1,3 +1,85 @@
+html {
+  scroll-padding-top: var(--dev-chrome-height, 7.5rem);
+}
+
+.dev-chrome {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 2px 16px rgba(15, 40, 28, 0.25);
+}
+
+.dev-chrome .banner {
+  position: relative;
+  box-shadow: none;
+}
+
+.dev-section-nav {
+  background: #08352c;
+  border-top: 1px solid rgba(247, 243, 234, 0.12);
+}
+
+.dev-section-nav-inner {
+  display: flex;
+  gap: 0.15rem;
+  padding: 0.35rem 1.25rem 0.45rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dev-section-nav a {
+  flex: 0 0 auto;
+  color: rgba(247, 243, 234, 0.78);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.dev-section-nav a:hover {
+  color: #f7f3ea;
+  background: rgba(247, 243, 234, 0.12);
+}
+
+.dev-section-nav a[aria-current="true"] {
+  color: #10241f;
+  background: #f7f3ea;
+}
+
+.dev-section-nav a:focus-visible {
+  outline: 2px solid #f7f3ea;
+  outline-offset: 2px;
+}
+
+.dev-section-nav a[href="#tree"] + a {
+  margin-left: 0.35rem;
+  padding-left: 0.85rem;
+  border-left: 1px solid rgba(247, 243, 234, 0.18);
+}
+
+.hero-dev,
+.metrics,
+.panel {
+  scroll-margin-top: var(--dev-chrome-height, 7.5rem);
+}
+
+html.dev-on-tree .dev-dashboard {
+  display: none;
+}
+
+html:not(.dev-on-tree) .dev-tree-view {
+  display: none;
+}
+
+.dev-tree-view .tree-hero,
+.dev-tree-view .tree-layout {
+  scroll-margin-top: var(--dev-chrome-height, 7.5rem);
+}
+
 .site-nav {
   display: inline-flex;
   align-items: center;
@@ -72,6 +154,20 @@ button.cta:disabled {
   color: var(--ink-soft);
 }
 
+#scan .scan-status:empty {
+  min-height: 0;
+  margin: 0;
+}
+
+.dev-dashboard .metrics {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.panel-head-row > .cta {
+  flex-shrink: 0;
+  align-self: center;
+}
+
 .metric-value-sm {
   font-size: clamp(1.35rem, 3vw, 1.85rem) !important;
 }
@@ -116,6 +212,64 @@ button.cta:disabled {
   gap: 1rem;
 }
 
+.panel-fold {
+  margin: 0;
+}
+
+.panel-fold-summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.1rem 0;
+  user-select: none;
+}
+
+.panel-fold-summary::-webkit-details-marker,
+.panel-fold-summary::marker {
+  display: none;
+  content: none;
+}
+
+.panel-fold-summary h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  color: var(--leaf-deep);
+}
+
+.panel-fold-summary::after {
+  content: "Hide";
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+}
+
+.panel-fold:not([open]) > .panel-fold-summary::after {
+  content: "Show";
+}
+
+.panel-fold-summary:hover::after {
+  color: var(--ink);
+  background: rgba(13, 122, 95, 0.08);
+}
+
+.panel-fold-summary:focus-visible {
+  outline: 2px solid var(--leaf-deep);
+  outline-offset: 3px;
+  border-radius: 0.4rem;
+}
+
+.panel-fold[open] > .panel-fold-summary {
+  margin-bottom: 0.35rem;
+}
+
 .filter {
   display: inline-flex;
   align-items: center;
@@ -153,6 +307,45 @@ button.cta:disabled {
   align-items: center;
   gap: 0.45rem 0.65rem;
   margin-bottom: 0.45rem;
+}
+
+.org-ticket-group {
+  margin: 0 0 1.25rem;
+  padding: 0 0 0.35rem;
+  border-bottom: 1px solid rgba(16, 36, 31, 0.1);
+}
+
+.org-ticket-group:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.org-ticket-group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  margin: 0 0 0.65rem;
+}
+
+.org-ticket-group-head h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--leaf-deep);
+}
+
+.org-ticket-group-head h3 a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.org-ticket-group-head p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
 }
 
 .finding h3 {
@@ -263,6 +456,17 @@ button.cta:disabled {
   background: rgba(31, 107, 74, 0.08);
 }
 
+.finding-actions button.action-send-ticket {
+  background: var(--leaf-deep);
+  color: #fff;
+  border-color: var(--leaf-deep);
+}
+
+.finding-actions button.action-send-ticket:hover {
+  background: var(--leaf, #1f6b4a);
+  color: #fff;
+}
+
 .empty {
   margin: 0;
   color: var(--ink-soft);
@@ -305,13 +509,17 @@ button.cta:disabled {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-/* ---------- Program requirements matrix ---------- */
+/* ---------- Combined programs table ---------- */
 
-/* The matrix is 12 columns wide, so this panel breaks out past main's 1100px. */
-#matrix {
+/* The combined programs table is 13 columns wide, so this panel breaks out past main's 1100px. */
+section.panel#programs {
   width: min(1600px, calc(100vw - 2.5rem));
   margin-left: calc((100% - min(1600px, 100vw - 2.5rem)) / 2);
-  scroll-margin-top: 5rem;
+}
+
+.programs-anchor {
+  height: 0;
+  overflow: hidden;
 }
 
 .matrix-controls {
@@ -596,6 +804,37 @@ button.cta:disabled {
 .cell-program .cat {
   font-size: 0.7rem;
   margin-top: 0.15rem;
+}
+
+.cell-library {
+  min-width: 8.5rem;
+  max-width: 11rem;
+}
+
+.cell-library .lib-apply {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--leaf-deep);
+  text-decoration: none;
+  word-break: break-word;
+}
+
+.cell-library .lib-apply:hover {
+  text-decoration: underline;
+}
+
+.cell-library .lib-findings {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #8a1f1f;
+  text-decoration: none;
+}
+
+.cell-library .lib-findings:hover {
+  text-decoration: underline;
 }
 
 .cell-meta {
@@ -1123,8 +1362,27 @@ footer a {
   background: rgba(13, 122, 95, 0.08);
 }
 
+#partner-rows tr.is-canceled td {
+  opacity: 0.72;
+}
+
+#partner-rows .muted {
+  color: var(--muted, #3a5550);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .dev-dashboard .metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 @media (max-width: 640px) {
   .banner-line {
     width: 100%;
+  }
+
+  .dev-dashboard .metrics {
+    grid-template-columns: 1fr;
   }
 }

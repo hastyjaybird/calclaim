@@ -21,6 +21,8 @@ export interface DeveloperFeedbackTodo {
   partnerSlug: string | null;
   groupId: string | null;
   pointIndex: number;
+  /** ISO timestamp once a reviewer sends this item to Developer tickets; null while it stays in the inbox. */
+  ticketedAt: string | null;
 }
 
 export interface ContactFeedbackFields {
@@ -79,6 +81,7 @@ export function initFeedbackTodos(database: Database.Database): void {
   ensureColumn(db, "developer_feedback_todos", "partner_slug", "TEXT");
   ensureColumn(db, "developer_feedback_todos", "group_id", "TEXT");
   ensureColumn(db, "developer_feedback_todos", "point_index", "INTEGER NOT NULL DEFAULT 0");
+  ensureColumn(db, "developer_feedback_todos", "ticketed_at", "TEXT");
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_feedback_todos_campaign
       ON developer_feedback_todos(campaign_id, status);
@@ -143,6 +146,7 @@ function insertTodoRow(input: {
     partnerSlug: input.partnerSlug ?? null,
     groupId: input.groupId ?? null,
     pointIndex: input.pointIndex ?? 0,
+    ticketedAt: null,
   };
 }
 
@@ -207,9 +211,9 @@ export function insertTreeFeedbackTodo(
 ): DeveloperFeedbackTodo {
   const actions = fields.actions.map((a) => String(a)).filter(Boolean);
   const hash = actions.length
-    ? `#a=${actions.map((a) => encodeURIComponent(a)).join(",")}`
-    : "";
-  const treePath = `/dev/tree${hash}`;
+    ? `#tree&a=${actions.map((a) => encodeURIComponent(a)).join(",")}`
+    : "#tree";
+  const treePath = `/dev${hash}`;
   const step = fields.step.trim() || "tree_review";
   return insertTodoRow({
     telegramUserId: 0,
@@ -354,24 +358,31 @@ export async function recordSessionFeedbackTodos(input: {
 export function listFeedbackTodos(opts?: {
   status?: FeedbackTodoStatus | "all";
   limit?: number;
+  /** true = sent to Developer tickets; false = still in the inbox; "all" = either. */
+  ticketed?: boolean | "all";
 }): DeveloperFeedbackTodo[] {
   const limit = opts?.limit ?? 100;
   const status = opts?.status ?? "open";
-  const rows =
-    status === "all"
-      ? (getDb()
-          .prepare(
-            `SELECT * FROM developer_feedback_todos
-             ORDER BY created_at DESC LIMIT ?`,
-          )
-          .all(limit) as Record<string, unknown>[])
-      : (getDb()
-          .prepare(
-            `SELECT * FROM developer_feedback_todos
-             WHERE status = ?
-             ORDER BY created_at DESC LIMIT ?`,
-          )
-          .all(status, limit) as Record<string, unknown>[]);
+  const ticketed = opts?.ticketed ?? "all";
+  const where: string[] = [];
+  const params: unknown[] = [];
+  if (status !== "all") {
+    where.push("status = ?");
+    params.push(status);
+  }
+  if (ticketed === true) {
+    where.push("ticketed_at IS NOT NULL");
+  } else if (ticketed === false) {
+    where.push("ticketed_at IS NULL");
+  }
+  const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+  const rows = getDb()
+    .prepare(
+      `SELECT * FROM developer_feedback_todos
+       ${whereSql}
+       ORDER BY created_at DESC LIMIT ?`,
+    )
+    .all(...params, limit) as Record<string, unknown>[];
   return rows.map(rowToTodo);
 }
 
@@ -386,6 +397,29 @@ export function setFeedbackTodoStatus(
     .prepare(`SELECT * FROM developer_feedback_todos WHERE id = ?`)
     .get(id) as Record<string, unknown> | undefined;
   return row ? rowToTodo(row) : null;
+}
+
+/** Promote an inbox item into the Developer tickets queue. Idempotent if already sent. */
+export function setFeedbackTodoTicketed(
+  id: number,
+): DeveloperFeedbackTodo | null {
+  const row = getDb()
+    .prepare(`SELECT * FROM developer_feedback_todos WHERE id = ?`)
+    .get(id) as Record<string, unknown> | undefined;
+  if (!row) return null;
+  if (row.ticketed_at != null && String(row.ticketed_at)) {
+    return rowToTodo(row);
+  }
+  const ticketedAt = new Date().toISOString();
+  getDb()
+    .prepare(
+      `UPDATE developer_feedback_todos SET ticketed_at = ? WHERE id = ?`,
+    )
+    .run(ticketedAt, id);
+  const updated = getDb()
+    .prepare(`SELECT * FROM developer_feedback_todos WHERE id = ?`)
+    .get(id) as Record<string, unknown> | undefined;
+  return updated ? rowToTodo(updated) : null;
 }
 
 export function eraseUserFeedbackTodos(telegramUserId: number): void {
@@ -454,5 +488,6 @@ function rowToTodo(row: Record<string, unknown>): DeveloperFeedbackTodo {
     partnerSlug: row.partner_slug == null ? null : String(row.partner_slug),
     groupId: row.group_id == null ? null : String(row.group_id),
     pointIndex: Number(row.point_index ?? 0),
+    ticketedAt: row.ticketed_at == null ? null : String(row.ticketed_at),
   };
 }

@@ -27,6 +27,8 @@ export type ChartGateId =
   | "shutoff_zone"
   | "buying_ev"
   | "first_time_zev"
+  | "buying_ebike"
+  | "retire_vehicle"
   | "child"
   | "foster_youth"
   | "refugee"
@@ -144,22 +146,6 @@ export const CHART_COLUMNS: readonly ChartColumn[] = [
     note: "After bills-in-name · Medical Baseline",
   },
   {
-    id: "buying_ev",
-    short: "Buying EV",
-    label: "Buying an EV this year",
-    question:
-      "Are you trying to buy an electric vehicle (or a hydrogen car) this year?",
-    note: "MyFirstEV / PG&E EV / Clean Cars",
-  },
-  {
-    id: "first_time_zev",
-    short: "First ZEV",
-    label: "First-time ZEV buyer",
-    question:
-      "Would this be your first battery-electric or hydrogen vehicle (not a plug-in hybrid)?",
-    note: "MyFirstEV · after buying-EV intent",
-  },
-  {
     id: "child",
     short: "Child",
     label: "Child / pregnancy in household",
@@ -189,6 +175,37 @@ export const CHART_COLUMNS: readonly ChartColumn[] = [
     note: "UI / SDI / PFL",
   },
   {
+    id: "buying_ebike",
+    short: "Buying e-bike",
+    label: "Buying a pedal e-bike this year",
+    question: "Are you trying to buy a pedal e-bike this year (not a scooter)?",
+    note: "After core 1q household gates · before EV · scooters never qualify",
+  },
+  {
+    id: "retire_vehicle",
+    short: "Scrap car",
+    label: "Retire an older vehicle",
+    question:
+      "Do you have an older gas or diesel car you could retire (scrap) for a bigger rebate?",
+    note: "After e-bike yes · statewide $7,500 CC4A/DCAP · before ZIP (yes/no beats typing)",
+  },
+  {
+    id: "buying_ev",
+    short: "Buying EV",
+    label: "Buying an EV this year",
+    question:
+      "Are you trying to buy an electric vehicle (or a hydrogen car) this year?",
+    note: "After e-bike thread · MyFirstEV / PG&E EV / Clean Cars",
+  },
+  {
+    id: "first_time_zev",
+    short: "First ZEV",
+    label: "First-time ZEV buyer",
+    question:
+      "Would this be your first battery-electric or hydrogen vehicle (not a plug-in hybrid)?",
+    note: "MyFirstEV · after buying-EV intent",
+  },
+  {
     id: "disaster",
     short: "Disaster",
     label: "Disaster area",
@@ -201,7 +218,7 @@ export const CHART_COLUMNS: readonly ChartColumn[] = [
     label: "Home ZIP / county residency",
     question:
       "What's your home ZIP code? (5 digits – used only to check county-specific programs.)",
-    note: "Bot asks ZIP for CMSP · chart also marks other county-residency programs",
+    note: "Bot asks ZIP for CMSP and county e-bike rebates · chart also marks other county-residency programs",
   },
   {
     id: "citizen_or_eligible",
@@ -298,12 +315,17 @@ function gatesFor(
 
   const countyNeeded =
     program.requiresCmspCounty === true ||
+    Boolean(program.eligibleCounties?.length) ||
     hasTag(eligibility, "county_residency");
   const countyDetail = program.requiresCmspCounty
     ? "CMSP"
-    : hasTag(eligibility, "county_residency")
-      ? "county"
-      : "";
+    : program.eligibleCounties?.length
+      ? program.eligibleCounties.length <= 2
+        ? program.eligibleCounties.join("/")
+        : "county list"
+      : hasTag(eligibility, "county_residency")
+        ? "county"
+        : "";
 
   const citizenNeeded =
     program.requiresCitizenOrEligibleImmigrant === true ||
@@ -333,6 +355,8 @@ function gatesFor(
     shutoff_zone: cell(shutoffNeeded, shutoffNeeded ? "map" : ""),
     buying_ev: cell(program.requiresBuyingEvThisYear === true),
     first_time_zev: cell(program.requiresFirstTimeZev === true),
+    buying_ebike: cell(program.requiresBuyingEbikeThisYear === true),
+    retire_vehicle: cell(program.requiresVehicleRetirement === true),
     child: cell(program.requiresChildInHousehold === true),
     foster_youth: cell(program.requiresFosterYouth === true),
     refugee: cell(

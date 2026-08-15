@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="/partners/styles.css?v=20260813-events" />
+  <link rel="stylesheet" href="/partners/styles.css?v=20260815-org" />
   <link rel="stylesheet" href="/donate/donate.css?v=20260812-donate" />
 </head>
 <body data-page="partner">
@@ -43,13 +43,6 @@
     <header class="slide-hero">
       <div class="co-brand" aria-label="Partnership">
         <img
-          class="co-brand-logo co-brand-calclaim"
-          src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
-          alt="CalClaim"
-          width="280"
-          height="99"
-        />
-        <img
           class="co-brand-logo co-brand-partner"
           id="partner-logo"
           src=""
@@ -59,6 +52,13 @@
           hidden
         />
         <span class="co-brand-partner-name" id="partner-logo-name" hidden></span>
+        <img
+          class="co-brand-logo co-brand-calclaim"
+          src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
+          alt="CalClaim"
+          width="280"
+          height="99"
+        />
       </div>
       <h1 class="partner-title" id="partner-name">–</h1>
       <p class="partner-verified-row" id="partner-verified-row" hidden>
@@ -76,13 +76,9 @@
           download
           data-i18n="partners.downloadBanner"
         >Download booth banner</a>
-        <button
-          type="button"
-          class="cta cta-ghost"
-          id="partner-login-open"
-          hidden
-          data-i18n="partners.signIn"
-        >Sign in to manage events</button>
+        <a class="cta cta-ghost" id="org-sign-in-link" href="#" hidden data-i18n="partners.orgSignIn">
+          Organization sign-in
+        </a>
         <p class="owner-signed-in" id="owner-signed-in" hidden>
           <span data-i18n="partners.signedIn">Signed in</span>
           <button type="button" class="text-btn" id="partner-sign-out" data-i18n="partners.signOut">Sign out</button>
@@ -90,35 +86,34 @@
       </div>
     </header>
 
-    <section class="panel owner-login-panel" id="owner-login-panel" hidden>
+    <section class="panel org-login-panel" id="org-login-panel" hidden>
       <div class="panel-head">
-        <h2 data-i18n="partners.signInHeading">This is your organization?</h2>
-        <p data-i18n="partners.signInBody">
-          Enter the partner ID from your welcome email to create event QR codes and see how each event performed.
+        <h2 data-i18n="partners.orgLoginHeading">Organization sign-in</h2>
+        <p id="org-login-body" data-i18n="partners.orgLoginBody">
+          Enter your work email. We’ll send a one-time link – anyone at your company domain can sign in.
         </p>
       </div>
-      <form id="owner-login-form" class="owner-login-form" novalidate>
-        <label class="field" for="owner-partner-id">
-          <span data-i18n="partners.partnerIdLabel">Partner ID</span>
+      <form id="org-login-form" class="org-login-form" novalidate>
+        <label class="field" for="org-login-email">
+          <span data-i18n="partners.orgLoginEmailLabel">Work email</span>
           <input
-            id="owner-partner-id"
-            name="partnerId"
-            type="text"
-            autocomplete="username"
-            spellcheck="false"
+            id="org-login-email"
+            name="email"
+            type="email"
+            maxlength="200"
             required
-            data-i18n-placeholder="partners.partnerIdHelp"
-            placeholder="From your CalClaim welcome email."
+            autocomplete="email"
+            data-i18n-placeholder="partners.orgLoginEmailPlaceholder"
+            placeholder="you@company.com"
           />
         </label>
-        <div class="owner-login-actions">
-          <button type="submit" class="cta" data-i18n="partners.signInSubmit">Sign in</button>
-          <button type="button" class="cta cta-ghost" id="owner-login-cancel" data-i18n="partners.editCancel">Cancel</button>
-          <p class="owner-login-status" id="owner-login-status" hidden></p>
-        </div>
+        <button type="submit" class="cta" data-i18n="partners.orgLoginSubmit">Email me a sign-in link</button>
+        <p class="org-login-status" id="org-login-status" role="status" aria-live="polite" hidden></p>
       </form>
+      <p class="org-login-demo" id="org-login-demo" hidden></p>
     </section>
 
+    <div id="org-private" hidden>
     <section class="panel owner-events-panel" id="owner-events-panel" hidden>
       <div class="panel-head">
         <h2 data-i18n="partners.eventsHeading">Event QR codes</h2>
@@ -144,8 +139,9 @@
       </form>
       <ol class="event-board" id="event-board" data-i18n-aria="partners.eventsAria" aria-label="Event leaderboard"></ol>
     </section>
+    </div>
 
-    <section class="slide-body">
+    <section class="slide-body" id="public-metrics">
       <aside class="qr-panel">
         <h2 id="partner-qr-heading">Partner unique QR code</h2>
         <p id="partner-qr-body" data-i18n="partners.qrBody">
@@ -179,42 +175,15 @@
           <p class="metric-label" data-i18n="partners.estAid">Est. aid unlocked</p>
           <p class="metric-value" id="m-dollars">–</p>
         </article>
-        <article class="metric">
+        <article class="metric metric-private-only" id="metric-feedback-messages" hidden>
           <p class="metric-label" data-i18n="partners.feedbackMessages">Feedback messages</p>
           <p class="metric-value" id="m-feedback-messages">–</p>
         </article>
-        <article class="metric">
-          <p class="metric-label" data-i18n="partners.feedbackTickets">Dev tickets from feedback</p>
+        <article class="metric metric-private-only" id="metric-feedback-points" hidden>
+          <p class="metric-label" data-i18n="partners.feedbackPoints">Feedback points</p>
           <p class="metric-value" id="m-feedback-tickets">–</p>
         </article>
       </section>
-    </section>
-
-    <section class="panel feedback-panel" aria-labelledby="partner-feedback-heading">
-      <div class="panel-head">
-        <h2 id="partner-feedback-heading" data-i18n="partners.feedbackHeading">Share feedback</h2>
-        <p data-i18n="partners.feedbackBody">
-          Ideas, bugs, or friction you noticed – each distinct point becomes a developer ticket and credits this organization.
-        </p>
-      </div>
-      <form id="partner-feedback-form" class="partner-feedback-form" novalidate>
-        <label class="field" for="partner-feedback-text">
-          <span class="visually-hidden" data-i18n="partners.feedbackLabel">Your feedback</span>
-          <textarea
-            id="partner-feedback-text"
-            name="text"
-            rows="5"
-            maxlength="4000"
-            required
-            data-i18n-placeholder="partners.feedbackPlaceholder"
-            placeholder="What should we improve?"
-          ></textarea>
-        </label>
-        <div class="partner-feedback-actions">
-          <button type="submit" class="cta" data-i18n="partners.feedbackSubmit">Send feedback</button>
-          <p class="partner-feedback-status" id="partner-feedback-status" hidden></p>
-        </div>
-      </form>
     </section>
 
     <section class="charts" data-i18n-aria="partners.chartsAria" aria-label="Partner usage over time">
@@ -244,10 +213,131 @@
       <div id="map" role="img" data-i18n-aria="partners.mapAria" aria-label="Map of partner outreach locations"></div>
     </section>
 
+    <section class="panel feedback-panel" id="partner-feedback-panel" aria-labelledby="partner-feedback-heading" hidden>
+      <div class="panel-head">
+        <h2 id="partner-feedback-heading" data-i18n="partners.feedbackHeading">Share feedback</h2>
+        <p data-i18n="partners.feedbackBody">
+          Ideas, bugs, or friction you noticed – each distinct point is recorded and credits this organization.
+        </p>
+      </div>
+      <form id="partner-feedback-form" class="partner-feedback-form" novalidate>
+        <label class="field" for="partner-feedback-text">
+          <span class="visually-hidden" data-i18n="partners.feedbackLabel">Your feedback</span>
+          <textarea
+            id="partner-feedback-text"
+            name="text"
+            rows="5"
+            maxlength="4000"
+            required
+            data-i18n-placeholder="partners.feedbackPlaceholder"
+            placeholder="What should we improve?"
+          ></textarea>
+        </label>
+        <div class="partner-feedback-actions">
+          <button type="submit" class="cta" data-i18n="partners.feedbackSubmit">Send feedback</button>
+          <p class="partner-feedback-status" id="partner-feedback-status" hidden></p>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel owner-account-panel" id="owner-account-panel" hidden>
+      <div class="panel-head">
+        <h2 data-i18n="partners.manageAccount">Your account</h2>
+        <p data-i18n="partners.manageAccountBody">
+          Edit your details, download the data shown on this page, or delete your account.
+        </p>
+      </div>
+      <div class="owner-account-actions">
+        <button type="button" class="cta" id="partner-edit-open" data-i18n="partners.editDetails">
+          Edit details
+        </button>
+        <button type="button" class="cta cta-ghost" id="partner-download-data" data-i18n="partners.downloadData">
+          Download my data
+        </button>
+        <button type="button" class="cta cta-danger" id="partner-delete-open" data-i18n="partners.deleteAccount">
+          Delete account
+        </button>
+      </div>
+      <p class="owner-account-status" id="owner-account-status" hidden></p>
+    </section>
+
     <p class="disclaimer" id="disclaimer"></p>
   </div>
 
   <p class="error-banner" id="error-banner" hidden></p>
+
+  <dialog class="partner-edit-dialog" id="partner-edit-dialog" aria-labelledby="partner-edit-heading">
+    <form id="partner-edit-form" class="partner-edit-form" novalidate>
+      <header class="partner-edit-head">
+        <h2 id="partner-edit-heading" data-i18n="partners.editHeading">Edit partner details</h2>
+        <button
+          type="button"
+          class="partner-edit-close"
+          id="partner-edit-close"
+          data-i18n-aria="partners.editCloseAria"
+          aria-label="Close"
+        >×</button>
+      </header>
+      <p class="partner-edit-lede" data-i18n="partners.editLede">
+        Update your organization details. Your status page link stays the same.
+      </p>
+      <label class="field" for="edit-name">
+        <span id="edit-name-label" data-i18n="signup.nameLabel">Organization name</span>
+        <input id="edit-name" name="name" type="text" maxlength="120" required autocomplete="organization" />
+      </label>
+      <label class="field" for="edit-email">
+        <span id="edit-email-label" data-i18n="signup.emailLabel">Work email</span>
+        <input id="edit-email" name="email" type="email" maxlength="200" required autocomplete="email" />
+        <span class="field-help" id="edit-email-help" data-i18n="signup.emailHelpOrg">
+          Use your company email, not Gmail or Yahoo.
+        </span>
+      </label>
+      <label class="field" for="edit-city">
+        <span data-i18n="signup.cityLabel">City</span>
+        <input id="edit-city" name="city" type="text" maxlength="80" autocomplete="address-level2" />
+      </label>
+      <label class="field" for="edit-logo">
+        <span id="edit-logo-label" data-i18n="signup.logoLabel">Organization logo (optional)</span>
+        <input
+          id="edit-logo"
+          name="logo"
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+        />
+        <span class="field-help" data-i18n="partners.editLogoHelp">
+          Leave empty to keep your current logo. PNG or JPG, up to 2 MB.
+        </span>
+      </label>
+      <p class="partner-edit-status" id="partner-edit-status" role="status" aria-live="polite" hidden></p>
+      <div class="partner-edit-actions">
+        <button type="button" class="cta cta-ghost" id="partner-edit-cancel" data-i18n="partners.editCancel">Cancel</button>
+        <button type="submit" class="cta" data-i18n="partners.editSave">Save changes</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="partner-edit-dialog" id="partner-delete-dialog" aria-labelledby="partner-delete-heading">
+    <form id="partner-delete-form" class="partner-edit-form" novalidate>
+      <header class="partner-edit-head">
+        <h2 id="partner-delete-heading" data-i18n="partners.deleteHeading">Delete your partner account?</h2>
+        <button
+          type="button"
+          class="partner-edit-close"
+          id="partner-delete-close"
+          data-i18n-aria="partners.editCloseAria"
+          aria-label="Close"
+        >×</button>
+      </header>
+      <p class="partner-edit-lede" data-i18n="partners.deleteWarning">
+        This permanently deletes all of your information – organization details, logo, status page, QR codes, and event codes. This cannot be undone.
+      </p>
+      <p class="partner-edit-status" id="partner-delete-status" role="status" aria-live="polite" hidden></p>
+      <div class="partner-edit-actions">
+        <button type="button" class="cta cta-ghost" id="partner-delete-cancel" data-i18n="partners.deleteCancel">Keep my account</button>
+        <button type="submit" class="cta cta-danger" data-i18n="partners.deleteConfirm">Yes, delete all my information</button>
+      </div>
+    </form>
+  </dialog>
 
   <footer class="site-footer">
     <div class="site-footer-inner">
@@ -263,9 +353,9 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="/i18n/messages.js?v=20260813-lede2"></script>
-  <script src="/i18n/lang.js"></script>
+  <script src="/i18n/messages.js?v=20260815-org"></script>
+  <script src="/i18n/lang.js?v=20260815-vi-tl"></script>
   <script src="/donate/donate.js?v=20260812-donate"></script>
-  <script src="/partners/app.js?v=20260813-events"></script>
+  <script src="/partners/app.js?v=20260815-org"></script>
 </body>
 </html>

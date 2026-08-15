@@ -48,6 +48,8 @@ export type StepId =
   | "has_ca_work"
   | "has_buying_ev"
   | "has_first_time_zev"
+  | "has_buying_ebike"
+  | "has_retire_vehicle"
   | "has_child"
   | "has_foster_youth"
   | "has_refugee_status"
@@ -158,6 +160,21 @@ export interface Program {
    * Asked after buying-EV intent when that would unlock the offer.
    */
   requiresFirstTimeZev?: boolean;
+  /**
+   * E-bike rebates: shopping for a pedal e-bike (not a scooter / e-moto).
+   * Biggest yes/no disqualifier across remaining CA e-bike programs.
+   */
+  requiresBuyingEbikeThisYear?: boolean;
+  /**
+   * Clean Cars 4 All / DCAP mobility option: must retire (scrap) an older vehicle.
+   * Asked only when that would unlock the $7,500 e-bike path.
+   */
+  requiresVehicleRetirement?: boolean;
+  /**
+   * County-limited programs (511 Contra Costa, Ava Bike Electric). ZIP is asked
+   * when any such program would otherwise enter the queue.
+   */
+  eligibleCounties?: string[];
   /** CalWORKs / WIC-style: needs a child under 18 or pregnancy in the household. */
   requiresChildInHousehold?: boolean;
   /**
@@ -291,6 +308,10 @@ export interface SessionState {
   buyingEvThisYear: boolean | null;
   /** First-time ZEV buyer – gates requiresFirstTimeZev programs. */
   firstTimeZev: boolean | null;
+  /** Shopping for a pedal e-bike – gates requiresBuyingEbikeThisYear programs. */
+  buyingEbikeThisYear: boolean | null;
+  /** Willing to scrap an older car – gates requiresVehicleRetirement programs. */
+  wouldRetireVehicle: boolean | null;
   /** Kids under 18 or pregnancy – gates requiresChildInHousehold programs. */
   hasChildInHousehold: boolean | null;
   /** Former foster youth – gates requiresFosterYouth programs. */
@@ -316,8 +337,9 @@ export interface SessionState {
    */
   inDisasterArea: boolean | null;
   /**
-   * Home ZIP – asked only when a county-gated program (CMSP) would enter the
-   * queue. null = not asked; "" = skipped; otherwise a 5-digit ZIP.
+   * Home ZIP – asked only when a county-gated program (CMSP, local e-bike
+   * rebates) would enter the queue. null = not asked; "" = skipped; otherwise a
+   * 5-digit ZIP.
    */
   residenceZip: string | null;
   /** County resolved from residenceZip (null if skipped / unknown). */
@@ -354,6 +376,14 @@ export interface SessionState {
   screensSeen: string[];
   /** When the current experience screen was shown – dwell = now − this. */
   screenShownAt: string | null;
+  /**
+   * Snapshots taken before each tree-progressing answer so Back can erase the
+   * last collected fact / offer decision (Application Guide item, skip, etc.).
+   */
+  undoStack?: Array<{
+    stateJson: string;
+    immigration: "eligible" | "ineligible" | "declined" | null;
+  }>;
   createdAt: string;
   updatedAt: string;
 }

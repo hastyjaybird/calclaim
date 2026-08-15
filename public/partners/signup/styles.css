@@ -42,6 +42,7 @@
 .account-type-option {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.55rem;
   margin: 0;
   padding: 0.75rem 0.9rem;
@@ -61,9 +62,13 @@
 
 .account-type-option input {
   margin: 0;
+  width: auto;
+  flex: 0 0 auto;
+  padding: 0;
   accent-color: var(--leaf);
 }
 
+.signup-hero h1,
 .signup-pending h2,
 .signup-success h2 {
   margin: 0 0 0.75rem;
@@ -82,18 +87,14 @@
 }
 
 .signup-pending-demo {
-  margin: 1rem 0 0;
-  padding: 0.85rem 1rem;
-  border-radius: 10px;
-  background: rgba(13, 122, 95, 0.08);
-  font-size: 0.9rem;
-  line-height: 1.45;
-  word-break: break-all;
+  margin: 1.25rem 0 0;
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
 }
 
-.signup-pending-demo a {
-  color: var(--leaf-deep);
-  font-weight: 600;
+.signup-pending-demo .signup-hint {
+  margin: 0;
 }
 
 .verified-badge-row {
@@ -142,14 +143,7 @@
   color: var(--leaf-deep);
 }
 
-.signup-logo {
-  display: block;
-  width: min(100%, 18rem);
-  height: auto;
-  margin: 0 0 1rem;
-}
-
-.signup-form .field-help {
+.signup-form .field > .field-help {
   font-size: 0.88rem;
   font-weight: 500;
   letter-spacing: 0;
@@ -161,10 +155,6 @@
 .signup-form input[type="file"] {
   padding: 0.65rem 0.75rem;
   background: rgba(255, 255, 255, 0.85);
-}
-
-.signup-hero h1 {
-  margin: 0;
 }
 
 .signup-lede {
@@ -193,7 +183,7 @@
   color: var(--ink-soft);
 }
 
-.signup-form input {
+.signup-form input:not([type="radio"]):not([type="checkbox"]) {
   width: 100%;
   padding: 0.85rem 0.95rem;
   border: 1px solid var(--line);
@@ -210,7 +200,7 @@
   padding-right: 2.25rem;
 }
 
-.signup-form input:focus {
+.signup-form input:not([type="radio"]):not([type="checkbox"]):focus {
   outline: 2px solid rgba(13, 122, 95, 0.35);
   border-color: var(--leaf);
 }
@@ -379,9 +369,10 @@
 
 .booth-banner-preview__brand {
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 0.2rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.22rem;
 }
 
 .booth-banner-preview__partner {
@@ -390,48 +381,28 @@
   align-items: center;
   gap: 0.12rem;
   min-width: 0;
-  max-width: 42%;
-}
-
-.booth-banner-preview__amp {
-  display: none;
-  align-self: center;
-  margin-top: 0.15rem;
-  font-family: var(--font-display);
-  font-size: 0.82rem;
-  font-weight: 700;
-  line-height: 1;
-  color: #000;
-}
-
-.booth-banner-preview:has(.booth-banner-preview__partner:not([hidden])) .booth-banner-preview__amp {
-  display: block;
+  max-width: 90%;
+  width: 100%;
 }
 
 .booth-banner-preview__mark {
   display: block;
-  width: 38%;
-  max-width: 3.4rem;
+  width: 72%;
+  max-width: 5.2rem;
   height: auto;
   flex-shrink: 0;
-  margin-top: 0.1rem;
+  margin-top: 0.05rem;
   filter: grayscale(1) contrast(1.15);
 }
 
-.booth-banner-preview:not(:has(.booth-banner-preview__partner:not([hidden]))) .booth-banner-preview__mark {
-  width: 72%;
-  max-width: none;
-  margin: 0.1rem auto 0;
-}
-
-.booth-banner-preview:not(:has(.booth-banner-preview__partner:not([hidden]))) .booth-banner-preview__brand {
-  flex-direction: column;
-  align-items: center;
+.booth-banner-preview:has(.booth-banner-preview__partner:not([hidden])) .booth-banner-preview__mark {
+  width: 58%;
+  max-width: 4.2rem;
 }
 
 .booth-banner-preview__logo {
-  width: 1.7rem;
-  height: 1.7rem;
+  width: 2rem;
+  height: 2rem;
   object-fit: contain;
   flex-shrink: 0;
   filter: grayscale(1);
@@ -464,7 +435,7 @@
 }
 
 .booth-banner-preview__tag {
-  margin: 0.15rem 0 0;
+  margin: 0.35rem 0 0;
   font-size: 0.42rem;
   font-weight: 700;
   line-height: 1.3;

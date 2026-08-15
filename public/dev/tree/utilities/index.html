@@ -14,39 +14,44 @@
   <link rel="stylesheet" href="/dev/tree/utilities/styles.css" />
 </head>
 <body>
-  <div class="banner" role="banner">
-    <div class="banner-inner">
-      <a class="banner-brand" href="/impact" aria-label="CalClaim home">
-        <img
-          class="banner-mark"
-          src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
-          alt="CalClaim"
-          width="180"
-          height="63"
-        />
-      </a>
-      <span class="banner-sep" aria-hidden="true"></span>
-      <nav class="site-nav" aria-label="Site">
-        <a href="/impact">Impact</a>
-        <a href="/dev">Developer</a>
-        <a href="/dev/tree">Message tree</a>
-        <a href="/dev/tree/chart">Gate chart</a>
-        <a href="/dev/tree/flowchart">Flowchart</a>
-        <a href="/dev/tree/utilities" aria-current="page">Utilities</a>
-        <button type="button" class="nav-logout" id="btn-logout">Log out</button>
-      </nav>
-      <span class="banner-line">Temporary review · not linked from public pages</span>
+  <div class="dev-chrome">
+    <div class="banner" role="banner">
+      <div class="banner-inner">
+        <a class="banner-brand" href="/impact" aria-label="CalClaim home">
+          <img
+            class="banner-mark"
+            src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
+            alt="CalClaim"
+            width="180"
+            height="63"
+          />
+        </a>
+        <span class="banner-sep" aria-hidden="true"></span>
+        <nav class="site-nav" aria-label="Site">
+          <a href="/impact">Impact</a>
+          <a href="/impact#partners">Leaderboard</a>
+          <a href="/impact#about">About</a>
+          <a href="/impact#contact">Contact</a>
+          <a href="/impact#privacy">Privacy</a>
+          <a href="/dev" aria-current="page">Developer dashboard</a>
+          <button type="button" class="nav-logout" id="btn-logout">Log out</button>
+        </nav>
+      </div>
     </div>
   </div>
 
   <header class="hero hero-dev tree-hero">
-    <p class="eyebrow">Temporary developer review</p>
+    <p class="eyebrow">Developer tools</p>
     <h1>Utility territories</h1>
     <p class="lede">
       What each bills-in-name selection unlocks, with official apply links.
       IOUs share CARE / FERA / ESA / AMP / Medical Baseline; munis have their
       own discount programs. San Diego → SDG&E row.
     </p>
+    <div class="tree-toolbar">
+      <a class="cta cta-ghost" href="/dev#tree">Message tree</a>
+      <a class="cta cta-ghost" href="/dev/tree/chart">Gate chart</a>
+    </div>
     <p class="scan-status" id="status-line" aria-live="polite"></p>
   </header>
 

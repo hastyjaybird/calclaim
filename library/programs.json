@@ -1,7 +1,7 @@
 {
-  "version": "2026-08-12",
+  "version": "08-13-26",
   "market": "California",
-  "disclaimer": "Estimates only. Not affiliated with any agency or utility. Official agencies decide eligibility.",
+  "disclaimer": "Estimates only. Not affiliated with any agency or utility. Not tax, legal, or benefits advice – consult a tax professional for tax credits. Official agencies decide eligibility. Coverage is incomplete; CalClaim emphasizes California state benefits over federal ones.",
   "programs": [
     {
       "id": "medi_cal",
@@ -2111,6 +2111,162 @@
       "maxBenefitUsd": {
         "period": "year",
         "amount": 1000
+      }
+    },
+    {
+      "id": "ebike_511_contracosta",
+      "name": "511 Contra Costa e-bike rebate",
+      "category": "transportation",
+      "jurisdiction": "state",
+      "oneLiner": "After-purchase cash rebate for a new pedal e-bike if you live in Contra Costa County",
+      "maxBenefit": "$150 standard, or $300 if income-qualified (at or below 400% FPL)",
+      "applyUrl": "https://511.ccta.ca.gov/biking/electric-bicycle-rebate/",
+      "deadlines": [
+        {
+          "label": "Apply within 6 months of purchase, while funds last",
+          "date": null
+        }
+      ],
+      "applySteps": [
+        "Buy a new Class 1–3 e-bike or installed conversion kit with working pedals (scooters and e-motos do not qualify)",
+        "Apply at 511 CCTA within six months with ID, Contra Costa proof of address, sales receipt with tax, and a photo of the serial number",
+        "Income-qualified applicants can upload a public-assistance letter or tax return for the $300 tier"
+      ],
+      "docsNeeded": [
+        "photoId"
+      ],
+      "docsReusableFromGate": [
+        "photoId"
+      ],
+      "timeToMoneyDays": 30,
+      "formFillMinutes": 20,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 21,
+      "noOrder": 21,
+      "gateFeeder": false,
+      "requiresCaResidency": true,
+      "requiresBuyingEbikeThisYear": true,
+      "eligibleCounties": [
+        "Contra Costa"
+      ],
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://511.ccta.ca.gov/biking/electric-bicycle-rebate/",
+        "https://511.ccta.ca.gov/wp-content/uploads/2026/04/Eligibility-Rules-Terms-and-Conditions-511CC-E-Bike-Rebate-program_FINAL_rev-4.8.26.pdf"
+      ],
+      "estAnnualUsd": 300,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 300
+      }
+    },
+    {
+      "id": "ebike_ava",
+      "name": "Ava Bike Electric",
+      "category": "transportation",
+      "jurisdiction": "state",
+      "oneLiner": "Lottery instant rebate on a new pedal e-bike for Alameda County residents and Ava customers in San Joaquin County",
+      "maxBenefit": "$400–$1,500 at participating shops ($1,000/$1,500 income-qualified; cargo/adaptive pays more); plus $250 safety gear for income-qualified riders",
+      "applyUrl": "https://avaenergy.org/go-electric/e-bikes/bike-electric/",
+      "deadlines": [
+        {
+          "label": "Monthly drawings through 2027 (apply before 11:59 p.m. the day before the 4th Tuesday)",
+          "date": null
+        }
+      ],
+      "applySteps": [
+        "Confirm you live in Alameda County, or are an Ava Community Energy customer in San Joaquin County (Tracy, Stockton, Lathrop, or unincorporated)",
+        "Apply online before purchase – eligible applicants are entered in the next three monthly drawings",
+        "If selected, redeem the instant rebate at a participating shop within 60 days on a Class 1–3 pedal e-bike (not a scooter)"
+      ],
+      "docsNeeded": [
+        "photoId"
+      ],
+      "docsReusableFromGate": [
+        "photoId"
+      ],
+      "timeToMoneyDays": 45,
+      "formFillMinutes": 15,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 22,
+      "noOrder": 22,
+      "gateFeeder": false,
+      "requiresCaResidency": true,
+      "requiresBuyingEbikeThisYear": true,
+      "eligibleCounties": [
+        "Alameda",
+        "San Joaquin"
+      ],
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://avaenergy.org/go-electric/e-bikes/bike-electric/",
+        "https://avaenergy.org/news/ava-community-energy-extends-e-bike-rebate-program-for-one-more-year-bringing-e-bikes-to-more-than-2000-additional-residents/"
+      ],
+      "estAnnualUsd": 1500,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 1500
+      }
+    },
+    {
+      "id": "cc4a_ebike",
+      "name": "Clean Cars 4 All / DCAP e-bike option",
+      "category": "transportation",
+      "jurisdiction": "state",
+      "oneLiner": "Up to $7,500 toward a pedal e-bike (or transit) if you scrap an older car – income-qualified",
+      "maxBenefit": "$7,500 mobility option (e-bike and/or transit) after retiring an eligible older vehicle; household income at or below 300% FPL",
+      "applyUrl": "https://ww2.arb.ca.gov/our-work/programs/clean-cars-4-all/about",
+      "deadlines": [
+        {
+          "label": "Must be approved before you scrap the car or buy the e-bike; funding varies by air district",
+          "date": null
+        }
+      ],
+      "applySteps": [
+        "This is not a walk-in e-bike coupon – you must have an eligible older vehicle to retire and be at or below 300% of the federal poverty level",
+        "Find your air district on CARB's Clean Cars 4 All page. Bay Area, South Coast (Replace Your Ride), San Diego, and San Joaquin Valley run their own programs; everywhere else uses the statewide Driving Clean Assistance Program (DCAP)",
+        "Get preapproved, then scrap the car through the program and use the mobility card or voucher for a Class 1–3 pedal e-bike (scooters do not qualify). Sacramento's district round is currently paused"
+      ],
+      "docsNeeded": [
+        "photoId",
+        "incomeProof"
+      ],
+      "docsReusableFromGate": [
+        "photoId",
+        "incomeProof"
+      ],
+      "timeToMoneyDays": 90,
+      "formFillMinutes": 40,
+      "branches": [
+        "yes",
+        "no"
+      ],
+      "yesOrder": 23,
+      "noOrder": 23,
+      "gateFeeder": false,
+      "requiresCaResidency": true,
+      "requiresBuyingEbikeThisYear": true,
+      "requiresVehicleRetirement": true,
+      "skipCascades": [],
+      "skipReasons": [],
+      "sources": [
+        "https://ww2.arb.ca.gov/our-work/programs/clean-cars-4-all/about",
+        "https://www.baaqmd.gov/Funding-and-Incentives/Residents/Clean-Cars-for-All/Mobility-Options",
+        "https://drivingcleanca.org/about-us/frequently-asked-questions/",
+        "https://www.replaceyourride.com/"
+      ],
+      "estAnnualUsd": 7500,
+      "maxBenefitUsd": {
+        "period": "once",
+        "amount": 7500
       }
     }
   ]

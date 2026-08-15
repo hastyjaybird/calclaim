@@ -26,6 +26,19 @@ function el(id) {
   return document.getElementById(id);
 }
 
+/** Library version dates are mm-dd-yy (YYYY-MM-DD and mm/dd/yy still format). */
+function formatLibraryVersion(version) {
+  const raw = String(version || "").trim();
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (iso) return `${iso[2]}-${iso[3]}-${iso[1].slice(2)}`;
+  const us = /^(\d{1,2})[/-](\d{1,2})[/-](\d{2}|\d{4})$/.exec(raw);
+  if (us) {
+    const yy = us[3].length === 4 ? us[3].slice(2) : us[3];
+    return `${us[1].padStart(2, "0")}-${us[2].padStart(2, "0")}-${yy}`;
+  }
+  return raw;
+}
+
 function readLayout() {
   try {
     const raw = localStorage.getItem(LAYOUT_KEY);
@@ -344,7 +357,7 @@ function render() {
   }
   const dirty = dirtyBits.length ? ` · ${dirtyBits.join(" · ")}` : "";
   setStatus(
-    `${orderIds.length} programs on ${branch.toUpperCase()} · library ${chart.version}${dirty}`,
+    `${orderIds.length} programs on ${branch.toUpperCase()} · library ${formatLibraryVersion(chart.version)}${dirty}`,
   );
 }
 

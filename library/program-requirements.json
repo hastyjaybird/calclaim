@@ -1,5 +1,5 @@
 {
-  "version": "2026-08-12",
+  "version": "08-13-26",
   "notes": "Operational requirements matrix for the /dev page. The bot does not read this file – it exists so a human can rank programs by how hard they actually are to finish, track what has been verified, and see which programs open the door to others. Every row started as a draft assembled from the official pages listed in reviewRefs and is marked needs_review until a person confirms it. Edited through /dev, so changes land here as a git diff.",
   "programs": {
     "medi_cal": {
@@ -1564,6 +1564,120 @@
       ],
       "notes": "CARE/FERA band approximates the Saver's Credit income ceiling. Requires an actual retirement contribution in the tax year.",
       "lastReviewedAt": "2026-08-12",
+      "reviewedBy": "agent-audit"
+    },
+    "ebike_511_contracosta": {
+      "eligibility": [
+        "ca_residency",
+        "county_residency",
+        "buying_ebike_this_year",
+        "pedal_ebike",
+        "one_per_person",
+        "seasonal_window"
+      ],
+      "documents": [
+        "photoId",
+        "residencyProof"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "Rolling after-purchase rebate; funds can run out. Scooters and e-skateboards are explicitly ineligible.",
+      "reviewStatus": "needs_review",
+      "confidencePct": 85,
+      "reviewRefs": [
+        {
+          "label": "511 CCTA – Electric Bicycle Rebate Program",
+          "url": "https://511.ccta.ca.gov/biking/electric-bicycle-rebate/"
+        },
+        {
+          "label": "511 CCTA – eligibility rules (Apr 2026)",
+          "url": "https://511.ccta.ca.gov/wp-content/uploads/2026/04/Eligibility-Rules-Terms-and-Conditions-511CC-E-Bike-Rebate-program_FINAL_rev-4.8.26.pdf"
+        }
+      ],
+      "notes": "Biggest universal e-bike disqualifier is 'not a pedal e-bike' (scooters out). Then ZIP must be Contra Costa. No income cap for the $150 tier; $300 needs 400% FPL or assistance enrollment. Buy first, apply within 6 months. Age 18+. One rebate per person, two per address.",
+      "lastReviewedAt": "2026-08-13",
+      "reviewedBy": "agent-audit"
+    },
+    "ebike_ava": {
+      "eligibility": [
+        "ca_residency",
+        "county_residency",
+        "buying_ebike_this_year",
+        "pedal_ebike",
+        "one_per_person",
+        "seasonal_window"
+      ],
+      "documents": [
+        "photoId",
+        "residencyProof"
+      ],
+      "interview": "none",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "Extended through Dec 2027; monthly lottery. San Joaquin County is Ava customers only (Tracy/Stockton/Lathrop/unincorporated) – county match is slightly wide.",
+      "reviewStatus": "needs_review",
+      "confidencePct": 80,
+      "reviewRefs": [
+        {
+          "label": "Ava Bike Electric",
+          "url": "https://avaenergy.org/go-electric/e-bikes/bike-electric/"
+        },
+        {
+          "label": "Ava – program extension (Aug 2026)",
+          "url": "https://avaenergy.org/news/ava-community-energy-extends-e-bike-rebate-program-for-one-more-year-bringing-e-bikes-to-more-than-2000-additional-residents/"
+        }
+      ],
+      "notes": "Apply before purchase. Standard $400 / cargo-adaptive $900; CARE/FERA/EAP $1,000 / $1,500 plus $250 safety gear. Instant rebate at participating shops if drawn. Alameda County residents all qualify; San Joaquin only if an Ava customer.",
+      "lastReviewedAt": "2026-08-13",
+      "reviewedBy": "agent-audit"
+    },
+    "cc4a_ebike": {
+      "eligibility": [
+        "ca_residency",
+        "buying_ebike_this_year",
+        "pedal_ebike",
+        "retire_older_vehicle",
+        "income_limit",
+        "seasonal_window"
+      ],
+      "documents": [
+        "photoId",
+        "incomeProof",
+        "residencyProof"
+      ],
+      "interview": "appointment_required",
+      "unlocks": [],
+      "prerequisites": [],
+      "difficultyOverride": null,
+      "availabilityOverride": null,
+      "availabilityNote": "District funding varies. Sacramento Metro CC4A e-bike round was paused as of Jul 31, 2026. San Joaquin Valley is currently limited to designated AB 617 communities.",
+      "reviewStatus": "needs_review",
+      "confidencePct": 75,
+      "reviewRefs": [
+        {
+          "label": "CARB – Clean Cars 4 All",
+          "url": "https://ww2.arb.ca.gov/our-work/programs/clean-cars-4-all/about"
+        },
+        {
+          "label": "BAAQMD – mobility options",
+          "url": "https://www.baaqmd.gov/Funding-and-Incentives/Residents/Clean-Cars-for-All/Mobility-Options"
+        },
+        {
+          "label": "DCAP FAQ",
+          "url": "https://drivingcleanca.org/about-us/frequently-asked-questions/"
+        },
+        {
+          "label": "South Coast Replace Your Ride",
+          "url": "https://www.replaceyourride.com/"
+        }
+      ],
+      "notes": "The $7,500 path's extra disqualifier after 'pedal e-bike' is retiring an older car. No incomeGate in the bot because 300% FPL is wider than CARE/FERA – apply steps still state the income cap. Preapproval required. Statewide CARB e-bike voucher project ended Dec 2025; this scrap-and-replace mobility option is what remains at state scale.",
+      "lastReviewedAt": "2026-08-13",
       "reviewedBy": "agent-audit"
     }
   }

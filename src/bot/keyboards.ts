@@ -23,7 +23,10 @@ export const GATE_OPTIONS = [
 export const GATE_NONE_ID = "none";
 
 export function optInKeyboard(): InlineKeyboard {
-  return new InlineKeyboard().text("Start", "opt:start");
+  return new InlineKeyboard()
+    .text("Start", "opt:start")
+    .row()
+    .text("Share CalClaim with friends", "opt:share");
 }
 
 export function gateKeyboard(selected: string[] = []): InlineKeyboard {
@@ -131,6 +134,19 @@ export function firstTimeZevKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
     .text("Yes – first ZEV", "firstzev:yes")
     .text("No", "firstzev:no");
+}
+
+export function buyingEbikeKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text("Yes", "buyingebike:yes")
+    .text("No", "buyingebike:no");
+}
+
+export function retireVehicleKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text("Yes – I could scrap one", "retirecar:yes")
+    .row()
+    .text("No", "retirecar:no");
 }
 
 export function childHouseholdKeyboard(): InlineKeyboard {

@@ -3,7 +3,7 @@ import type { MeterSharing, Program, SessionState } from "./types.js";
 
 export type { MeterSharing };
 
-/** Telegram + /dev/tree copy – short, no “master-metered” jargon. */
+/** Telegram + /dev#tree copy – short, no “master-metered” jargon. */
 export const SHARED_METER_PROMPT = `Does another household share this utility meter with you?
 
 Two families on one bill counts as yes. If your landlord sends you a separate bill, tap that instead.`;

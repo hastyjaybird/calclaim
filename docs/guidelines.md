@@ -61,7 +61,7 @@ Energy bill discounts and free home upgrades are **valuable offers**, not the br
 ## Safety & honesty
 
 - Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, LUMA, PREPA, Rewiring America, DOE, Anthropic, or other agencies.  
-- Not tax, legal, or benefits advice. Estimates only. Agencies decide eligibility.  
+- Not tax, legal, or benefits advice. For tax credits or filing, consult a tax professional or free VITA. Estimates only. Agencies decide eligibility. Program lists are incomplete; CalClaim emphasizes California state benefits over federal ones.  
 - Never invent eligibility, dollar amounts, or deadlines.  
 - No sensitive document uploads in v2.  
 - Opt-in first message; STOP / erase clears data and reminders.

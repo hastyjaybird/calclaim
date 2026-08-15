@@ -1,7 +1,7 @@
 # CalClaim Privacy Policy (demo)
 
 **Product:** CalClaim v2 – California financial aid / benefits navigator (Telegram)  
-**Last updated:** 2026-08-12
+**Last updated:** 2026-08-13
 
 ## What we collect
 
@@ -27,7 +27,7 @@ Tables: `telegram_users`, `telegram_messages` in the demo database.
 - Free-form text or voice notes you send that are not a recognized button/command (alpha feedback / developer quality control)
 - Voice notes are transcribed to text (when transcription is configured) and stored as feedback for the developer To Do List
 - Optional email and comments submitted on the public contact form (stored in the developer feedback To Do List in SQLite)
-- Partner signup: organization name, work email, and optional city (stored in SQLite `partner_signups`; used to email the QR kit and power the partner status page)
+- Partner signup: organization name, work email, and optional city (stored in SQLite `partner_signups`; used to email the QR kit and power the partner status page). Signed-in partners can download the data shown on that page (CSV) or delete the account.
 - Optional gifts on the public site: gift amount, monthly vs one-time, and Stripe payment / subscription ids (SQLite `donations`). Card numbers, bank account numbers, and PayPal credentials are collected by Stripe / PayPal, not by CalClaim.
 
 ### Impact analytics (aggregate funder dashboard)
@@ -61,12 +61,13 @@ We do not sell your data. This demo does not send your Telegram profile or messa
 
 - Message **STOP** to pause deadline reminders only (your session and Application Guide stay; message again to resume reminders).
 - Use **Help → Erase all my data** / type **erase** to delete your session, Telegram user/message rows, todos, reminder flags, your QC log rows, and your alpha feedback to-do rows.
-- Aggregate impact counts (anonymized event totals) may remain on the funder dashboard after you erase your session.
+- Community partners can sign in from the partner leaderboard, then **download** the metrics, charts, and map data shown on their status page, or **delete** the account (organization details, logo, status page, QR codes, and event codes). We warn before deletion that all of that information will be removed.
+- Aggregate impact counts (anonymized event totals) may remain on the funder dashboard after you erase your session or a partner deletes their account.
 - Hosting operators may wipe the demo database when the demo ends.
 
 ## Developer area access (humans only)
 
-The Developer tools at `/dev` (library watch / scan UI) are for **authorized human operators only**.
+The Developer tools at `/dev` (review dashboard) are for **authorized human operators only**.
 
 - Robots, crawlers, scrapers, automated scripts, AI agents, bots, and any other non-human systems are **prohibited** from logging in to or accessing the Developer page or its APIs (`/api/dev/*`).
 - Access requires a shared operator password, a CAPTCHA challenge, and an explicit human attestation checkbox.
@@ -75,7 +76,7 @@ The Developer tools at `/dev` (library watch / scan UI) are for **authorized hum
 
 ## Not affiliated
 
-Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, or any agency. Estimates only – not tax, legal, or benefits advice. Dollar totals on the impact site are library estimates × follow-throughs, not verified payouts.
+Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, or any agency. Estimates only – not tax, legal, or benefits advice. For tax credits or filing questions, consult a tax professional or a free VITA site. CalClaim currently focuses more on California state benefits than federal ones; the federal programs shown are not exhaustive, and neither list is a complete catalog of available aid. Dollar totals on the impact site are library estimates × follow-throughs, not verified payouts.
 
 ## Contact
 

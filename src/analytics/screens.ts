@@ -5,7 +5,7 @@ import {
 } from "../queue/ranker.js";
 import { recordEvent, type AnalyticsEventRow } from "./db.js";
 
-/** Tree locations that count as experience screens (matches /dev/tree nodes). */
+/** Tree locations that count as experience screens (matches /dev#tree nodes). */
 export const SCREEN_LOCATIONS = [
   {
     id: "opt_in",
@@ -63,14 +63,9 @@ export const SCREEN_LOCATIONS = [
     detail: "Utility bill past due?",
   },
   {
-    id: "has_buying_ev",
-    label: "Buying EV",
-    detail: "Shopping for EV this year",
-  },
-  {
-    id: "has_first_time_zev",
-    label: "First-time ZEV",
-    detail: "First battery / hydrogen vehicle",
+    id: "has_medical_need",
+    label: "Medical Baseline need",
+    detail: "Qualifying medical condition or device",
   },
   {
     id: "has_child",
@@ -88,11 +83,6 @@ export const SCREEN_LOCATIONS = [
     detail: "RCA-eligible newcomer",
   },
   {
-    id: "has_medical_need",
-    label: "Medical Baseline need",
-    detail: "Qualifying medical condition or device",
-  },
-  {
     id: "has_abd",
     label: "Aged / blind / disabled",
     detail: "SSI / CAPI / IHSS gate",
@@ -101,6 +91,26 @@ export const SCREEN_LOCATIONS = [
     id: "has_work_disruption",
     label: "Work disruption",
     detail: "UI / SDI / PFL",
+  },
+  {
+    id: "has_buying_ebike",
+    label: "Buying e-bike",
+    detail: "Pedal e-bike this year (not a scooter)",
+  },
+  {
+    id: "has_retire_vehicle",
+    label: "Retire old car",
+    detail: "Scrap an older vehicle for mobility option",
+  },
+  {
+    id: "has_buying_ev",
+    label: "Buying EV",
+    detail: "Shopping for EV this year",
+  },
+  {
+    id: "has_first_time_zev",
+    label: "First-time ZEV",
+    detail: "First battery / hydrogen vehicle",
   },
   {
     id: "has_disaster_area",
@@ -115,7 +125,7 @@ export const SCREEN_LOCATIONS = [
   {
     id: "has_zip",
     label: "Home ZIP",
-    detail: "CMSP county check",
+    detail: "CMSP / local e-bike county",
   },
   {
     id: "has_immigration_status",
@@ -173,6 +183,10 @@ export function treeLocationForStep(step: StepId): ScreenLocationId | null {
       return "has_buying_ev";
     case "has_first_time_zev":
       return "has_first_time_zev";
+    case "has_buying_ebike":
+      return "has_buying_ebike";
+    case "has_retire_vehicle":
+      return "has_retire_vehicle";
     case "has_child":
       return "has_child";
     case "has_foster_youth":
@@ -300,32 +314,9 @@ export function trackReportCreated(
   });
 }
 
-export interface JourneyBucket {
-  /** Midpoint label, e.g. "0–10%" */
-  id: string;
-  label: string;
-  /** Users whose furthest percent-through fell in this band */
-  people: number;
-  /** Share of starters who reached at least this band's floor */
-  reachedPct: number;
-  /** Users who never finished and whose last progress is in this band */
-  dropped: number;
-  /** dropped / people in band (0–100) */
-  dropPct: number;
-  /** Cumulative people still in at or past this band's floor */
-  stillIn: number;
-  /** stillIn / starters (0–100) */
-  retentionPct: number;
-}
-
-export interface JourneyProgressStats {
-  starters: number;
-  finishers: number;
+export interface ReportCounts {
   reportsCreated: number;
   reportRecipients: number;
-  buckets: JourneyBucket[];
-  /** Average furthest percent-through among starters */
-  avgPctThrough: number;
 }
 
 export interface ScreenDropoutRow {
@@ -376,110 +367,15 @@ function parseMeta(raw: string | null): ScreenProgressMeta | null {
   }
 }
 
-const BANDS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100] as const;
-
-function bandIndex(pct: number): number {
-  if (pct >= 100) return BANDS.length - 1;
-  for (let i = BANDS.length - 2; i >= 0; i--) {
-    if (pct >= BANDS[i]!) return i;
-  }
-  return 0;
-}
-
-function bandLabel(i: number): { id: string; label: string } {
-  if (i >= BANDS.length - 1) {
-    return { id: "100", label: "100% (finished)" };
-  }
-  const lo = BANDS[i]!;
-  const hi = BANDS[i + 1]!;
-  return { id: `${lo}-${hi}`, label: `${lo}–${hi}%` };
-}
-
-export function buildJourneyProgress(
-  events: AnalyticsEventRow[],
-): JourneyProgressStats {
-  const screenEvents = events.filter((e) => e.event_type === "screen_view");
-  const byUser = new Map<
-    number,
-    { maxPct: number; finished: boolean; lastLocation: string | null }
-  >();
-
-  for (const e of screenEvents) {
-    if (e.telegram_user_id == null) continue;
-    const meta = parseMeta(e.meta_json);
-    const pct =
-      meta?.pct ??
-      (e.label === "finish" ? 100 : 0);
-    const loc = meta?.location ?? (isScreenLocation(e.label ?? "") ? e.label! : null);
-    const cur = byUser.get(e.telegram_user_id) ?? {
-      maxPct: 0,
-      finished: false,
-      lastLocation: null,
-    };
-    if (pct >= cur.maxPct) {
-      cur.maxPct = pct;
-      cur.lastLocation = loc;
-    }
-    if (loc === "finish" || e.label === "finish") {
-      cur.finished = true;
-      cur.maxPct = 100;
-    }
-    byUser.set(e.telegram_user_id, cur);
-  }
-
-  // Only users with screen_view events enter the percent-through chart.
-  // Historical bot_start traffic (pre-instrumentation) would otherwise pile into 0%.
-  const starters = byUser.size;
-  let finishers = 0;
-  let pctSum = 0;
-  const bandPeople = new Array(BANDS.length).fill(0) as number[];
-  const bandDropped = new Array(BANDS.length).fill(0) as number[];
-
-  for (const u of byUser.values()) {
-    pctSum += u.maxPct;
-    if (u.finished) finishers += 1;
-    const bi = bandIndex(u.maxPct);
-    bandPeople[bi]! += 1;
-    if (!u.finished) bandDropped[bi]! += 1;
-  }
-
+export function countReports(events: AnalyticsEventRow[]): ReportCounts {
   const reports = events.filter((e) => e.event_type === "report_created");
   const reportUsers = new Set<number>();
   for (const e of reports) {
     if (e.telegram_user_id != null) reportUsers.add(e.telegram_user_id);
   }
-
-  const buckets: JourneyBucket[] = [];
-  for (let i = 0; i < BANDS.length; i++) {
-    const { id, label } = bandLabel(i);
-    const floor = BANDS[i]!;
-    let stillIn = 0;
-    for (const u of byUser.values()) {
-      if (u.maxPct >= floor) stillIn += 1;
-    }
-    const people = bandPeople[i]!;
-    const dropped = bandDropped[i]!;
-    buckets.push({
-      id,
-      label,
-      people,
-      reachedPct: starters === 0 ? 0 : Math.round((stillIn / starters) * 1000) / 10,
-      dropped,
-      dropPct: people === 0 ? 0 : Math.round((dropped / people) * 1000) / 10,
-      stillIn,
-      retentionPct:
-        starters === 0 ? 0 : Math.round((stillIn / starters) * 1000) / 10,
-    });
-  }
-
   return {
-    starters,
-    finishers,
     reportsCreated: reports.length,
     reportRecipients: reportUsers.size,
-    buckets,
-    avgPctThrough:
-      starters === 0 ? 0 : Math.round((pctSum / starters) * 10) / 10,
   };
 }
 

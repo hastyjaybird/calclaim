@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CalClaim – Demo</title>
+  <title>CalClaim – The gap</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="/impact/styles.css?v=20260812-share-channels" />
+  <link rel="stylesheet" href="/impact/styles.css?v=20260815-partner-aid" />
   <link rel="stylesheet" href="/donate/donate.css?v=20260812-donate" />
 </head>
 <body data-page="impact">
@@ -26,7 +26,7 @@
       </a>
       <span class="banner-sep" aria-hidden="true"></span>
       <nav class="site-nav" data-i18n-aria="nav.site" aria-label="Site">
-        <a href="#impact" aria-current="page" data-i18n="nav.impact">Impact</a>
+        <a href="#gap" aria-current="page" data-i18n="nav.impact">Impact</a>
         <a href="#partners" data-i18n="nav.partners">Leaderboard</a>
         <a href="#about" data-i18n="nav.about">About</a>
         <a href="#contact" data-i18n="nav.contact">Contact</a>
@@ -37,11 +37,61 @@
     </div>
   </div>
 
-  <header class="hero" id="impact">
+  <header class="hero gap-hero" id="gap">
+    <div class="gap-hero-inner">
+      <p class="eyebrow" data-i18n="impact.gapEyebrow">The gap</p>
+      <h1 data-i18n="impact.gapTitle">Billions in California benefits go unclaimed each year</h1>
+      <p class="lede gap-lede" data-i18n="impact.gapLede">
+        Hundreds of thousands of eligible people never finish applying—or get pushed off by paperwork—while federal and state aid sits unused.
+      </p>
+      <div class="gap-stats" data-i18n-aria="impact.gapStatsAria" aria-label="Scale of the benefits gap">
+        <div class="gap-stat">
+          <p class="gap-stat-value" data-i18n="impact.gapStat1Value">~$1.5–2B</p>
+          <p class="gap-stat-label">
+            <span data-i18n="impact.gapStat1Label">Forgone CalFresh benefits each year</span>
+            <sup class="gap-fn"><a href="#gap-ref-1">1</a></sup>
+          </p>
+        </div>
+        <div class="gap-stat">
+          <p class="gap-stat-value" data-i18n="impact.gapStat2Value">~710k</p>
+          <p class="gap-stat-label">
+            <span data-i18n="impact.gapStat2Label">Uninsured Californians who appear eligible for Medi-Cal</span>
+            <sup class="gap-fn"><a href="#gap-ref-2">2</a></sup>
+          </p>
+        </div>
+        <div class="gap-stat">
+          <p class="gap-stat-value" data-i18n="impact.gapStat3Value">~80%</p>
+          <p class="gap-stat-label">
+            <span data-i18n="impact.gapStat3Label">Eligible households not getting the FERA utility discount</span>
+            <sup class="gap-fn"><a href="#gap-ref-3">3</a></sup>
+          </p>
+        </div>
+        <div class="gap-stat">
+          <p class="gap-stat-value" data-i18n="impact.gapStat4Value">~47%</p>
+          <p class="gap-stat-label">
+            <span data-i18n="impact.gapStat4Label">Eligible CalFresh households who miss California’s earned-income tax credit</span>
+            <sup class="gap-fn"><a href="#gap-ref-4">4</a></sup>
+          </p>
+        </div>
+        <div class="gap-stat">
+          <p class="gap-stat-value" data-i18n="impact.gapStat5Value">~40%</p>
+          <p class="gap-stat-label">
+            <span data-i18n="impact.gapStat5Label">Eligible CalWORKs families who never enroll</span>
+            <sup class="gap-fn"><a href="#gap-ref-5">5</a></sup>
+          </p>
+        </div>
+      </div>
+      <p class="hero-actions">
+        <button type="button" class="cta cta-lg" data-donate-open data-i18n="donate.cta">Donate</button>
+      </p>
+    </div>
+  </header>
+
+  <section class="hero live-hero" id="live">
     <div class="hero-grid">
       <div class="hero-copy">
-        <p class="eyebrow" data-i18n="impact.eyebrow">Demo</p>
-        <h1>
+        <p class="eyebrow" data-i18n="impact.eyebrow">Live data</p>
+        <h2 class="live-brand">
           <img
             class="hero-logo"
             src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
@@ -49,7 +99,7 @@
             width="352"
             height="124"
           />
-        </h1>
+        </h2>
         <p class="lede" data-i18n="impact.lede">
           CalClaim finds help with food, health coverage, phone discounts, energy bills, and more – and gives you a personalized Application Guide for California and federal programs to make it easier to apply.
         </p>
@@ -58,7 +108,7 @@
           <button type="button" class="cta cta-ghost" data-donate-open data-i18n="donate.cta">Donate</button>
         </p>
         <p class="partner-signup-note" data-i18n="impact.partnerSignupBody">
-          Organizations and individuals sign up the same way and verify by email. Organizations need a real work domain and appear on the public leaderboard; individuals get a private stats page.
+          Partner organizations sign up for a dedicated QR code for campaigns, private back end for statistics and media assets for fundraising.
         </p>
       </div>
       <aside class="try-card" data-i18n-aria="impact.openCta" aria-label="Open CalClaim">
@@ -73,14 +123,14 @@
         <div class="try-copy">
           <a class="cta" href="/go/link_website" data-i18n="impact.openCta">Open CalClaim</a>
           <p data-i18n="impact.tryBody">
-            Scan the code or tap Open CalClaim to start.
+            Scan the code or click to start.
           </p>
         </div>
       </aside>
     </div>
-  </header>
+  </section>
 
-  <main>
+  <main id="impact">
     <section class="metrics" data-i18n-aria="impact.metricsAria" aria-label="Key metrics">
       <article class="metric">
         <p class="metric-label" data-i18n="impact.peopleReached">People reached</p>
@@ -107,53 +157,6 @@
       </article>
     </section>
 
-    <section class="panel" id="spread" aria-labelledby="spread-heading">
-      <div class="panel-head">
-        <h2 id="spread-heading" data-i18n="impact.spreadHeading">How CalClaim spreads</h2>
-        <p data-i18n="impact.spreadBody">
-          Organization QR codes versus people sharing with friends. Each person who shares gets an anonymous link, so we can see whether word of mouth is growing – without collecting who they sent it to.
-        </p>
-      </div>
-      <div class="spread-compare" data-i18n-aria="impact.spreadCompareAria" aria-label="Organizations compared with friend shares">
-        <article class="spread-card" id="spread-org">
-          <p class="metric-label" data-i18n="impact.spreadOrgs">Organizations</p>
-          <p class="metric-value" id="m-org-reached">–</p>
-          <p class="metric-note" data-i18n="impact.spreadOrgsNote">Partner QR codes and events</p>
-          <p class="spread-sub" id="m-org-detail"></p>
-        </article>
-        <article class="spread-card spread-card-friends" id="spread-friends">
-          <p class="metric-label" data-i18n="impact.spreadFriends">Friends sharing</p>
-          <p class="metric-value" id="m-friend-reached">–</p>
-          <p class="metric-note" data-i18n="impact.spreadFriendsNote">People sending CalClaim to someone they know</p>
-          <p class="spread-sub" id="m-friend-detail"></p>
-        </article>
-      </div>
-      <p class="spread-verdict" id="spread-verdict"></p>
-      <div class="spread-meta">
-        <article>
-          <p class="metric-label" data-i18n="impact.spreadSharers">People who shared</p>
-          <p class="metric-value" id="m-sharers">–</p>
-          <p class="metric-note" data-i18n="impact.spreadSharersNote">Opened Share in CalClaim</p>
-        </article>
-        <article>
-          <p class="metric-label" data-i18n="impact.spreadClicks">Friend-link clicks</p>
-          <p class="metric-value" id="m-friend-clicks">–</p>
-          <p class="metric-note" data-i18n="impact.spreadClicksNote">New people reached through those shares</p>
-        </article>
-        <article>
-          <p class="metric-label" data-i18n="impact.spreadViral">Clicks per person who shared</p>
-          <p class="metric-value" id="m-viral">–</p>
-          <p class="metric-note" data-i18n="impact.spreadViralNote">How far each share travels</p>
-        </article>
-      </div>
-      <p class="spread-website" id="spread-website" hidden></p>
-      <div class="spread-chart-wrap">
-        <h3 class="spread-chart-title" data-i18n="impact.spreadChart">People reached per day</h3>
-        <p class="spread-chart-note" data-i18n="impact.spreadChartNote">Organizations vs friends sharing</p>
-        <canvas id="chart-spread" height="220"></canvas>
-      </div>
-    </section>
-
     <section class="panel" aria-labelledby="map-heading">
       <div class="panel-head">
         <h2 id="map-heading" data-i18n="impact.mapHeading">Where people found CalClaim</h2>
@@ -166,57 +169,44 @@
       <div class="panel-head">
         <h2 id="partners-heading" data-i18n="impact.partnersHeading">Community partners</h2>
         <p data-i18n="impact.partnersBody">
-          Verified organizations hosting CalClaim QR codes – ranked by people reached through their unique code and any event codes they generate. The star marks the outreach leader; the medal marks the most feedback. Individuals partner privately and are not listed here.
+          Verified organizations hosting CalClaim QR codes – ranked by people reached through their unique code and any event codes they generate. The star marks the outreach leader. Individuals partner privately and are not listed here.
         </p>
       </div>
+      <div class="partner-login-bar">
+        <button
+          type="button"
+          class="cta"
+          id="partner-login-open"
+          aria-expanded="false"
+          aria-controls="partner-login-panel"
+          data-i18n="impact.partnerLoginCta"
+        >Partner Log-in</button>
+      </div>
+      <form id="partner-login-panel" class="partner-login-panel" hidden>
+        <label class="field" for="partner-login-id">
+          <span data-i18n="partners.partnerIdLabel">Partner ID</span>
+          <input
+            id="partner-login-id"
+            name="partnerId"
+            type="text"
+            autocomplete="username"
+            spellcheck="false"
+            required
+            data-i18n-placeholder="partners.partnerIdHelp"
+            placeholder="From your CalClaim welcome email."
+          />
+        </label>
+        <div class="partner-login-actions">
+          <button type="submit" class="cta" data-i18n="partners.signInSubmit">Sign in</button>
+          <button type="button" class="cta cta-ghost" id="partner-login-cancel" data-i18n="partners.editCancel">Cancel</button>
+          <p class="partner-login-status" id="partner-login-status" hidden></p>
+        </div>
+      </form>
       <ol class="partner-board" id="partner-board" data-i18n-aria="impact.partnersAria" aria-label="Partner leaderboard">
         <li class="partner-row partner-row-loading" data-i18n="impact.loading">Loading…</li>
       </ol>
       <button type="button" class="list-expand" id="partners-expand" hidden data-i18n="impact.showMorePartners">
         Show more
-      </button>
-    </section>
-
-    <section class="charts" data-i18n-aria="impact.chartsAria" aria-label="Usage over time">
-      <div class="panel">
-        <div class="panel-head">
-          <h2 data-i18n="impact.usersPerDay">Users per day</h2>
-          <p data-i18n="impact.usersPerDayNote">QR scans + link clicks by day</p>
-        </div>
-        <canvas id="chart-daily" height="220"></canvas>
-      </div>
-      <div class="panel">
-        <div class="panel-head">
-          <h2 data-i18n="impact.cumulative">Total users over time</h2>
-          <p data-i18n="impact.cumulativeNote">Cumulative people reached</p>
-        </div>
-        <canvas id="chart-cumulative" height="220"></canvas>
-      </div>
-    </section>
-
-    <section class="panel" id="programs" aria-labelledby="programs-heading">
-      <div class="panel-head">
-        <h2 id="programs-heading" data-i18n="impact.programsHeading">Programs opened from CalClaim</h2>
-        <p data-i18n="impact.programsBody">Each open is a tracked redirect to the official application site.</p>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th data-i18n="impact.thProgram">Program</th>
-              <th data-i18n="impact.thCategory">Category</th>
-              <th class="num" data-i18n="impact.thOpens">Opens</th>
-              <th class="num" data-i18n="impact.thFollow">Follow-throughs</th>
-              <th class="num" data-i18n="impact.thDollars">Est. $ unlocked</th>
-            </tr>
-          </thead>
-          <tbody id="program-rows">
-            <tr><td colspan="5" data-i18n="impact.loading">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="list-expand" id="programs-expand" hidden data-i18n="impact.showAllPrograms">
-        Show all
       </button>
     </section>
 
@@ -226,18 +216,12 @@
       <div class="panel-head">
         <h2 id="about-heading" data-i18n="about.title">About</h2>
         <p data-i18n="about.lede">
-          Built so California families can claim help they already qualify for – without selling your data, and without turning benefits into a product.
+          CalClaim was created by concerned and caring citizens of California who want to make sure their friends and communities can access the help they need.
         </p>
       </div>
 
       <p data-i18n="about.storyWhy">
-        Too many households leave food benefits, health coverage, phone discounts, and bill assistance on the table – not because they don’t qualify, but because the maze is exhausting. CalClaim was made to meet people where they already are (a chat on their phone) and walk them to the finish line.
-      </p>
-      <p data-i18n="about.storyValues">
-        I’m Jay, and this is a not-for-profit project. There is no ad network, no data marketplace, and no growth team trying to monetize your answers. Privacy is the point: asking about household size and income is intimate, so we keep only what we need to guide you, never sell it, and let you erase everything anytime.
-      </p>
-      <p data-i18n="about.storyImpact">
-        The impact we care about is practical – more people finishing applications, more community partners handing someone a QR code instead of a dead-end flyer, and fewer families walking away from help they were always meant to have.
+        This project started out as a local personal project in Oakland, then launched formally to expand and serve all of California.
       </p>
     </section>
 
@@ -280,7 +264,7 @@
       <div class="panel-head">
         <h2 id="privacy-heading" data-i18n="privacy.title">Privacy</h2>
         <p data-i18n="privacy.lede">
-          Your answers stay with you. We use them only to find programs you may qualify for – never to sell, never for ads. Type erase anytime and your CalClaim data is gone.
+          We can’t see your phone number or answers. We only see a unique id and whether you got through CalClaim successfully or ran into issues. We use that to detect problems and improve the system. We only save your preferences if you opt in to further messages; otherwise, type ERASE to the CalClaim messenger bot in Telegram to delete your information anytime.
         </p>
       </div>
 
@@ -322,14 +306,16 @@
           <ul>
             <li data-i18n="privacy.choiceStop">Type 'stop' – pause deadline reminders (keeps your data for your reference)</li>
             <li data-i18n="privacy.choiceErase">Type 'erase' – delete your CalClaim session data</li>
+            <li data-i18n="privacy.choicePartnerDownload">Sign in from the partner leaderboard, then download the data shown on your status page (CSV of the metrics, charts, and map on that page)</li>
+            <li data-i18n="privacy.choicePartnerDelete">Sign in from the partner leaderboard, then delete your account from your status page – we’ll warn you that all your partner information will be removed</li>
           </ul>
 
           <h3 data-i18n="privacy.disclaimerHeading">Disclaimer</h3>
           <p data-i18n="privacy.disclaimer">
-            CalClaim is a personal portfolio project – not an official agency service. Estimates only. Not affiliated with PG&amp;E, DHCS, CDSS, USDA, FCC, IRS, or any agency. Not tax, legal, or benefits advice. Official agencies decide eligibility.
+            CalClaim is a personal portfolio project – not an official agency service. Estimates only. Not affiliated with PG&amp;E, DHCS, CDSS, USDA, FCC, IRS, or any agency. Not tax, legal, or benefits advice. For tax credits or filing questions, consult a tax professional or a free VITA site. Official agencies decide eligibility.
           </p>
           <p data-i18n="privacy.scope">
-            Energy / utility programs (CARE, ESA, etc.) are just some of the programs in the list – not the whole product.
+            CalClaim currently focuses more on California state benefits than federal ones. The federal programs shown are not exhaustive, and neither list is a complete catalog of available aid. Energy / utility programs (CARE, ESA, etc.) are just some of the programs in the list – not the whole product.
           </p>
 
           <p>
@@ -340,12 +326,47 @@
         </div>
       </details>
     </section>
+
+    <section class="panel prose gap-refs-panel" id="gap-refs" aria-labelledby="gap-refs-heading">
+      <div class="panel-head">
+        <h2 id="gap-refs-heading" data-i18n="impact.gapRefsHeading">Sources</h2>
+        <p data-i18n="impact.gapRefsIntro">Notes for the gap statistics at the top of this page.</p>
+      </div>
+      <ol class="gap-refs" data-i18n-aria="impact.gapRefsAria" aria-label="Sources for gap statistics">
+        <li id="gap-ref-1" data-i18n="impact.gapRef1" data-i18n-html>
+          Estimate from USDA/Mathematica FY2022 California SNAP take-up (81% of 4.618M eligible ≈ 880k not enrolled) × LAO SFY2022–23 average benefit (~$185/person/month, excluding pandemic emergency allotments).
+          <a href="https://fns-prod.azureedge.us/sites/default/files/resource-files/ear-SNAP-Participation-Rates-2022.pdf" target="_blank" rel="noopener noreferrer">USDA FY2022 (PDF)</a>
+          ·
+          <a href="https://lao.ca.gov/Publications/Report/4845" target="_blank" rel="noopener noreferrer">LAO Feb 2024</a>
+        </li>
+        <li id="gap-ref-2" data-i18n="impact.gapRef2" data-i18n-html>
+          UC Berkeley Labor Center projection for 2024: among remaining uninsured under 65, about 710,000 appear eligible for Medi-Cal.
+          <a href="https://laborcenter.berkeley.edu/wp-content/uploads/2023/03/CA-remaining-uninsured-2024.pdf" target="_blank" rel="noopener noreferrer">Labor Center 2024 brief (PDF)</a>
+          ·
+          <a href="https://laborcenter.berkeley.edu/californias-uninsured-in-2024/" target="_blank" rel="noopener noreferrer">Summary page</a>
+        </li>
+        <li id="gap-ref-3" data-i18n="impact.gapRef3" data-i18n-html>
+          CPUC Low-Income Oversight Board / Joint IOU report, Jan–Sep 2024: 81,654 FERA enrollments of 409,677 estimated eligible households (~20% enrolled / ~80% not).
+          <a href="https://liob.cpuc.ca.gov/wp-content/uploads/sites/14/2024/12/Item-9-Joint-IOU-Presentations.pdf" target="_blank" rel="noopener noreferrer">Joint IOU LIOB Dec 2024 (PDF)</a>
+        </li>
+        <li id="gap-ref-4" data-i18n="impact.gapRef4" data-i18n-html>
+          California Policy Lab (2021): among CalFresh households eligible for CalEITC in tax year 2017, take-up was 53% (~47% missed). Leading administrative estimate; no newer statewide take-up study has replaced it.
+          <a href="https://www.capolicylab.org/wp-content/uploads/2021/07/Measuring-Take-up-of-the-CalEITC-with-State-Administrative-Data.pdf" target="_blank" rel="noopener noreferrer">CPL working paper (PDF)</a>
+          ·
+          <a href="https://www.ppic.org/publication/understanding-the-reach-of-the-california-earned-income-tax-credit/" target="_blank" rel="noopener noreferrer">PPIC Nov 2023</a>
+        </li>
+        <li id="gap-ref-5" data-i18n="impact.gapRef5" data-i18n-html>
+          California Legislative Analyst’s Office (2021): in 2019, about 60% of CalWORKs-eligible families enrolled (~40% did not).
+          <a href="https://lao.ca.gov/Publications/Report/4340" target="_blank" rel="noopener noreferrer">LAO Feb 2021</a>
+        </li>
+      </ol>
+    </section>
   </main>
 
   <footer>
     <div class="site-footer-inner">
       <p data-i18n="impact.footer" data-i18n-html>
-        CalClaim demo · Not affiliated with any agency · Estimates only ·
+        CalClaim · Not affiliated with any agency · Estimates only ·
         <a href="#contact">Contact</a> ·
         <a href="#privacy">Privacy policy</a>
       </p>
@@ -355,10 +376,9 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="/i18n/messages.js?v=20260813-lede2"></script>
-  <script src="/i18n/lang.js"></script>
+  <script src="/i18n/messages.js?v=20260815-partner-aid"></script>
+  <script src="/i18n/lang.js?v=20260815-vi-tl"></script>
   <script src="/donate/donate.js?v=20260812-donate"></script>
-  <script src="/impact/app.js?v=20260812-share-channels"></script>
+  <script src="/impact/app.js?v=20260815-partner-aid"></script>
 </body>
 </html>

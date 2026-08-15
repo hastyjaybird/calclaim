@@ -1,4 +1,5 @@
 import type { Context } from "grammy";
+import type { InlineKeyboard } from "grammy";
 import { InputFile } from "grammy";
 import { recordEvent } from "../analytics/db.js";
 import { getCampaign } from "../analytics/campaigns.js";
@@ -72,6 +73,8 @@ import {
   abdHouseholdKeyboard,
   buyingEvKeyboard,
   firstTimeZevKeyboard,
+  buyingEbikeKeyboard,
+  retireVehicleKeyboard,
   fosterYouthKeyboard,
   refugeeStatusKeyboard,
   medicalNeedKeyboard,
@@ -115,6 +118,12 @@ import { SHARED_METER_PROMPT } from "../library/sharedMeter.js";
 import { primaryTerritoryForProgram } from "../library/utilityTerritory.js";
 import { formatOfferCardBody } from "./offerCard.js";
 import { replyTracked, repeatLastMessage } from "./reply.js";
+import {
+  clearUndoStack,
+  popUndoFrame,
+  pushUndoFrame,
+  withNavBack,
+} from "./navBack.js";
 import {
   getOrCreatePeerShareCampaigns,
   SHARE_LINK_CAMPAIGN,
@@ -185,6 +194,264 @@ function escapeTelegramHtml(s: string): string {
 /** Public site linked from the opt-in message (Telegram HTML <a>). */
 const CALCLAIM_SITE_FALLBACK = "https://calclaim.jayhasty.com";
 
+
+function treeKb(session: SessionState, kb: InlineKeyboard): InlineKeyboard {
+  return withNavBack(kb, session);
+}
+
+/**
+ * Re-show the screen that matches restored session state after Back.
+ * Does not clear draft multiselects (gate / utility bills).
+ */
+async function repaintCurrentScreen(
+  ctx: Context,
+  session: SessionState,
+): Promise<void> {
+  switch (session.step) {
+    case "opt_in":
+      await sendOptIn(ctx, session);
+      return;
+    case "gate":
+      await replyTracked(
+        ctx,
+        session,
+        `Is anyone in your household already on any of these?
+
+${HOUSEHOLD_EXPLAIN}
+
+Tap all that apply (or None), then Done.`,
+        { reply_markup: treeKb(session, gateKeyboard(session.alreadyOn)) },
+      );
+      return;
+    case "household_size":
+      await replyTracked(
+        ctx,
+        session,
+        `How many people are in your household?
+
+${HOUSEHOLD_EXPLAIN}
+
+Tap a number (or More):`,
+        { reply_markup: treeKb(session, householdKeyboard()) },
+      );
+      return;
+    case "household_size_custom":
+      await replyTracked(
+        ctx,
+        session,
+        "Type how many people are in your household (9 or more):",
+      );
+      return;
+    case "income_band":
+      await replyTracked(
+        ctx,
+        session,
+        `About how much is your household's total yearly income before taxes?
+
+${HOUSEHOLD_EXPLAIN}
+
+Add up income for everyone you just counted.`,
+        {
+          reply_markup: treeKb(
+            session,
+            incomeKeyboard(session.householdSize ?? 1),
+          ),
+        },
+      );
+      return;
+    case "past_due":
+      await replyTracked(ctx, session, "Is your utility bill past due?", {
+        reply_markup: treeKb(session, pastDueKeyboard()),
+      });
+      return;
+    case "has_utility_bills":
+      await replyTracked(
+        ctx,
+        session,
+        `Which bills do you have in your name?
+
+Tap all that apply (or None), then Done.`,
+        {
+          reply_markup: treeKb(
+            session,
+            utilityBillsKeyboard(session.billsInMyName),
+          ),
+        },
+      );
+      return;
+    case "has_shared_meter":
+      await replyTracked(ctx, session, SHARED_METER_PROMPT, {
+        reply_markup: treeKb(session, sharedMeterKeyboard()),
+      });
+      return;
+    case "has_shutoff_zone":
+      await replyTracked(
+        ctx,
+        session,
+        `PG&E has rebates for a portable generator or battery if your home is in a shut-off or high fire-risk area. Renters also qualify.
+
+Do you already know whether you're in one of those areas?`,
+        { reply_markup: treeKb(session, shutoffZoneKeyboard()) },
+      );
+      return;
+    case "has_shutoff_address":
+      await promptShutoffAddress(ctx, session);
+      return;
+    case "has_ca_residency":
+      await replyTracked(ctx, session, "Where do you live most of the year?", {
+        reply_markup: treeKb(session, caResidencyKeyboard()),
+      });
+      return;
+    case "has_ca_work":
+      await replyTracked(
+        ctx,
+        session,
+        "Do you work in California (commute, job site, or CA employer wages)?",
+        { reply_markup: treeKb(session, caWorkKeyboard()) },
+      );
+      return;
+    case "has_buying_ev":
+      await replyTracked(
+        ctx,
+        session,
+        "Are you trying to buy an electric vehicle (or a hydrogen car) this year?",
+        { reply_markup: treeKb(session, buyingEvKeyboard()) },
+      );
+      return;
+    case "has_first_time_zev":
+      await replyTracked(
+        ctx,
+        session,
+        "Would this be your first battery-electric or hydrogen vehicle (not a plug-in hybrid)?",
+        { reply_markup: treeKb(session, firstTimeZevKeyboard()) },
+      );
+      return;
+    case "has_buying_ebike":
+      await replyTracked(
+        ctx,
+        session,
+        "Are you trying to buy a pedal e-bike this year (not a scooter)?",
+        { reply_markup: treeKb(session, buyingEbikeKeyboard()) },
+      );
+      return;
+    case "has_retire_vehicle":
+      await replyTracked(
+        ctx,
+        session,
+        "Do you have an older gas or diesel car you could retire (scrap) for a bigger rebate?",
+        { reply_markup: treeKb(session, retireVehicleKeyboard()) },
+      );
+      return;
+    case "has_child":
+      await replyTracked(
+        ctx,
+        session,
+        `Any kids under 18 (or a pregnancy) in the household?
+
+${HOUSEHOLD_EXPLAIN}`,
+        { reply_markup: treeKb(session, childHouseholdKeyboard()) },
+      );
+      return;
+    case "has_foster_youth":
+      await replyTracked(
+        ctx,
+        session,
+        "Are you (or someone filing) a former foster youth age 18–25 who was in foster care on or after their 18th birthday?",
+        { reply_markup: treeKb(session, fosterYouthKeyboard()) },
+      );
+      return;
+    case "has_refugee_status":
+      await replyTracked(
+        ctx,
+        session,
+        "Are you a refugee, asylee, or similar eligible newcomer (SIV holder, Afghan or Ukrainian parolee, Cuban/Haitian entrant, or certified trafficking victim)?",
+        { reply_markup: treeKb(session, refugeeStatusKeyboard()) },
+      );
+      return;
+    case "has_medical_need":
+      await replyTracked(
+        ctx,
+        session,
+        "Does anyone living in the home have a qualifying medical condition or device that needs extra electricity or gas (for example life-support equipment, dialysis, asthma, or extra heating or cooling)?",
+        { reply_markup: treeKb(session, medicalNeedKeyboard()) },
+      );
+      return;
+    case "has_abd":
+      await replyTracked(
+        ctx,
+        session,
+        `Is anyone in the household 65 or older, blind, or disabled?
+
+${HOUSEHOLD_EXPLAIN}`,
+        { reply_markup: treeKb(session, abdHouseholdKeyboard()) },
+      );
+      return;
+    case "has_work_disruption":
+      await replyTracked(
+        ctx,
+        session,
+        session.residencyTie === "out_of_state_ca_work"
+          ? "About your California job – has anything affected your ability to work in the last few months?"
+          : "Has anything affected your ability to work in the last few months?",
+        { reply_markup: treeKb(session, workDisruptionKeyboard()) },
+      );
+      return;
+    case "has_disaster_area": {
+      const windows = offerableDisasterWindows();
+      const q = disasterImpactQuestion(windows);
+      await replyTracked(ctx, session, q, {
+        reply_markup: treeKb(session, disasterAreaKeyboard()),
+      });
+      return;
+    }
+    case "has_disaster_zip": {
+      const zipPrompt =
+        session.residencyTie === "out_of_state_ca_work"
+          ? disasterWorkZipConfirmPrompt()
+          : disasterZipConfirmPrompt();
+      await replyTracked(ctx, session, zipPrompt, {
+        reply_markup: treeKb(session, disasterZipKeyboard()),
+      });
+      return;
+    }
+    case "has_zip":
+      await replyTracked(
+        ctx,
+        session,
+        "What's your home ZIP code? (5 digits – used only to check county-specific programs.)",
+        { reply_markup: treeKb(session, zipKeyboard()) },
+      );
+      return;
+    case "has_immigration_status":
+      await askImmigrationStatus(ctx, session);
+      return;
+    case "has_reopen_notify": {
+      const held = listHeldQualifyingPrograms(session);
+      await replyTracked(
+        ctx,
+        session,
+        `A few programs you may qualify for are waitlisted or closed to new enrollments right now (not shown in the offer tree):\n\n${formatHeldProgramList(held)}\n\nWant a text if one of these opens and you still qualify on your saved answers?`,
+        { reply_markup: treeKb(session, reopenNotifyKeyboard()) },
+      );
+      return;
+    }
+    case "offer":
+      await presentOffer(ctx, session);
+      return;
+    case "idle":
+      await replyTracked(ctx, session, "What next?", {
+        reply_markup: idleKeyboard(hasOpenReport(session)),
+      });
+      return;
+    default:
+      if (session.queue.length && session.queueIndex < session.queue.length) {
+        await presentOffer(ctx, session);
+        return;
+      }
+      await beginOfferQueue(ctx, session);
+  }
+}
+
 export async function sendOptIn(
   ctx: Context,
   session: SessionState,
@@ -219,7 +486,7 @@ export async function sendGate(ctx: Context, session: SessionState): Promise<voi
 ${HOUSEHOLD_EXPLAIN}
 
 Tap all that apply (or None), then Done.`,
-    { reply_markup: gateKeyboard([]) },
+    { reply_markup: treeKb(session, gateKeyboard([])) },
   );
 }
 
@@ -380,7 +647,7 @@ async function finishQueue(ctx: Context, session: SessionState): Promise<void> {
       ctx,
       session,
       `A few programs you may qualify for are waitlisted or closed to new enrollments right now (not shown above):\n\n${formatHeldProgramList(held)}\n\nWant a text if one of these opens and you still qualify on your saved answers?\n\nWe'll keep your profile for that check. You can say STOP anytime to pause alerts, or erase to delete your data.`,
-      { reply_markup: reopenNotifyKeyboard() },
+      { reply_markup: treeKb(session, reopenNotifyKeyboard()) },
     );
     return;
   }
@@ -421,9 +688,9 @@ export async function presentOffer(ctx: Context, session: SessionState): Promise
   const remainingHtml = `<i>${escapeTelegramHtml(remaining)}</i>`;
 
   await replyTracked(ctx, session, `${body}\n\n${remainingHtml}`, {
-    reply_markup: offerKeyboard(program.id, {
+    reply_markup: treeKb(session, offerKeyboard(program.id, {
       canExitGuide: hasOpenReport(session),
-    }),
+    })),
     parse_mode: "HTML",
   });
 }
@@ -481,7 +748,7 @@ async function askImmigrationStatus(
     ctx,
     session,
     IMMIGRATION_STATUS_PROMPT,
-    { reply_markup: immigrationStatusKeyboard() },
+    { reply_markup: treeKb(session, immigrationStatusKeyboard()) },
   );
 }
 
@@ -503,7 +770,7 @@ async function askTriageGate(
 ${HOUSEHOLD_EXPLAIN}
 
 Tap a number (or More):`,
-          { reply_markup: householdKeyboard() },
+          { reply_markup: treeKb(session, householdKeyboard()) },
         );
         return;
       }
@@ -517,14 +784,14 @@ Tap a number (or More):`,
 ${HOUSEHOLD_EXPLAIN}
 
 Add up income for everyone you just counted.`,
-        { reply_markup: incomeKeyboard(session.householdSize) },
+        { reply_markup: treeKb(session, incomeKeyboard(session.householdSize)) },
       );
       return;
     case "past_due":
       session.step = "past_due";
       saveSession(session);
       await replyTracked(ctx, session, "Is your utility bill past due?", {
-        reply_markup: pastDueKeyboard(),
+        reply_markup: treeKb(session, pastDueKeyboard()),
       });
       return;
     case "utility_bills":
@@ -537,14 +804,14 @@ Add up income for everyone you just counted.`,
         `Which bills do you have in your name?
 
 Tap all that apply (or None), then Done.`,
-        { reply_markup: utilityBillsKeyboard([]) },
+        { reply_markup: treeKb(session, utilityBillsKeyboard([])) },
       );
       return;
     case "shared_meter":
       session.step = "has_shared_meter";
       saveSession(session);
       await replyTracked(ctx, session, SHARED_METER_PROMPT, {
-        reply_markup: sharedMeterKeyboard(),
+        reply_markup: treeKb(session, sharedMeterKeyboard()),
       });
       return;
     case "shutoff_zone":
@@ -557,7 +824,7 @@ Tap all that apply (or None), then Done.`,
         `PG&E has rebates for a portable generator or battery if your home is in a shut-off or high fire-risk area. Renters also qualify.
 
 Do you already know whether you're in one of those areas?`,
-        { reply_markup: shutoffZoneKeyboard() },
+        { reply_markup: treeKb(session, shutoffZoneKeyboard()) },
       );
       return;
     case "ca_residency":
@@ -567,7 +834,7 @@ Do you already know whether you're in one of those areas?`,
         ctx,
         session,
         "Where do you live most of the year?",
-        { reply_markup: caResidencyKeyboard() },
+        { reply_markup: treeKb(session, caResidencyKeyboard()) },
       );
       return;
     case "buying_ev":
@@ -577,7 +844,7 @@ Do you already know whether you're in one of those areas?`,
         ctx,
         session,
         "Are you trying to buy an electric vehicle (or a hydrogen car) this year?",
-        { reply_markup: buyingEvKeyboard() },
+        { reply_markup: treeKb(session, buyingEvKeyboard()) },
       );
       return;
     case "first_time_zev":
@@ -587,7 +854,27 @@ Do you already know whether you're in one of those areas?`,
         ctx,
         session,
         "Would this be your first battery-electric or hydrogen vehicle (not a plug-in hybrid)?",
-        { reply_markup: firstTimeZevKeyboard() },
+        { reply_markup: treeKb(session, firstTimeZevKeyboard()) },
+      );
+      return;
+    case "buying_ebike":
+      session.step = "has_buying_ebike";
+      saveSession(session);
+      await replyTracked(
+        ctx,
+        session,
+        "Are you trying to buy a pedal e-bike this year (not a scooter)?",
+        { reply_markup: treeKb(session, buyingEbikeKeyboard()) },
+      );
+      return;
+    case "retire_vehicle":
+      session.step = "has_retire_vehicle";
+      saveSession(session);
+      await replyTracked(
+        ctx,
+        session,
+        "Do you have an older gas or diesel car you could retire (scrap) for a bigger rebate?",
+        { reply_markup: treeKb(session, retireVehicleKeyboard()) },
       );
       return;
     case "child":
@@ -599,7 +886,7 @@ Do you already know whether you're in one of those areas?`,
         `Any kids under 18 (or a pregnancy) in the household?
 
 ${HOUSEHOLD_EXPLAIN}`,
-        { reply_markup: childHouseholdKeyboard() },
+        { reply_markup: treeKb(session, childHouseholdKeyboard()) },
       );
       return;
     case "foster_youth":
@@ -609,7 +896,7 @@ ${HOUSEHOLD_EXPLAIN}`,
         ctx,
         session,
         "Are you (or someone filing) a former foster youth age 18–25 who was in foster care on or after their 18th birthday?",
-        { reply_markup: fosterYouthKeyboard() },
+        { reply_markup: treeKb(session, fosterYouthKeyboard()) },
       );
       return;
     case "refugee":
@@ -619,7 +906,7 @@ ${HOUSEHOLD_EXPLAIN}`,
         ctx,
         session,
         "Are you a refugee, asylee, or similar eligible newcomer (SIV holder, Afghan or Ukrainian parolee, Cuban/Haitian entrant, or certified trafficking victim)?",
-        { reply_markup: refugeeStatusKeyboard() },
+        { reply_markup: treeKb(session, refugeeStatusKeyboard()) },
       );
       return;
     case "medical_need":
@@ -629,7 +916,7 @@ ${HOUSEHOLD_EXPLAIN}`,
         ctx,
         session,
         "Does anyone living in the home have a qualifying medical condition or device that needs extra electricity or gas (for example life-support equipment, dialysis, asthma, or extra heating or cooling)?",
-        { reply_markup: medicalNeedKeyboard() },
+        { reply_markup: treeKb(session, medicalNeedKeyboard()) },
       );
       return;
     case "abd":
@@ -641,7 +928,7 @@ ${HOUSEHOLD_EXPLAIN}`,
         `Is anyone in the household 65 or older, blind, or disabled?
 
 ${HOUSEHOLD_EXPLAIN}`,
-        { reply_markup: abdHouseholdKeyboard() },
+        { reply_markup: treeKb(session, abdHouseholdKeyboard()) },
       );
       return;
     case "work":
@@ -653,7 +940,7 @@ ${HOUSEHOLD_EXPLAIN}`,
         session.residencyTie === "out_of_state_ca_work"
           ? "About your California job – has anything affected your ability to work in the last few months?"
           : "Has anything affected your ability to work in the last few months?",
-        { reply_markup: workDisruptionKeyboard() },
+        { reply_markup: treeKb(session, workDisruptionKeyboard()) },
       );
       return;
     case "disaster": {
@@ -666,7 +953,7 @@ ${HOUSEHOLD_EXPLAIN}`,
       session.step = "has_disaster_area";
       saveSession(session);
       await replyTracked(ctx, session, disasterImpactQuestion(windows), {
-        reply_markup: disasterAreaKeyboard(),
+        reply_markup: treeKb(session, disasterAreaKeyboard()),
       });
       return;
     }
@@ -677,7 +964,7 @@ ${HOUSEHOLD_EXPLAIN}`,
         ctx,
         session,
         "What's your home ZIP code? (5 digits – used only to check county-specific programs.)",
-        { reply_markup: zipKeyboard() },
+        { reply_markup: treeKb(session, zipKeyboard()) },
       );
       return;
   }
@@ -747,6 +1034,7 @@ export async function handleShutoffAddressText(
   session: SessionState,
   query: string,
 ): Promise<void> {
+  pushUndoFrame(session);
   const { inZone, message } = await resolveShutoffZone(query);
   session.inShutoffZone = inZone;
   session.shutoffAddressChoices = null;
@@ -771,6 +1059,7 @@ export async function handleShutoffLocation(
     });
     return;
   }
+  pushUndoFrame(session);
   session.inShutoffZone = result.inZone;
   session.shutoffAddressChoices = null;
   await ctx.reply(result.message, { reply_markup: REMOVE_REPLY_KEYBOARD });
@@ -800,11 +1089,32 @@ export async function handleCallback(
     await ctx.answerCallbackQuery().catch(() => undefined);
   }
 
+
+  if (data === "nav:back") {
+    if (!popUndoFrame(session)) {
+      await ctx.reply("Nothing to go back to.");
+      return;
+    }
+    saveSession(session);
+    await replyTracked(
+      ctx,
+      session,
+      "Went back one step. Your last answer was cleared – choose again.",
+    );
+    await repaintCurrentScreen(ctx, session);
+    return;
+  }
+
   if (data === "opt:start") {
+    pushUndoFrame(session);
     trackFunnel("started", session.telegramUserId, {
       campaignId: session.campaignId,
     });
     await sendGate(ctx, session);
+    return;
+  }
+  if (data === "opt:share") {
+    await sendShareMenu(ctx, session);
     return;
   }
 
@@ -855,6 +1165,10 @@ export async function handleCallback(
       await replyTracked(ctx, session, "You're on the idle screen.", {
         reply_markup: idleKeyboard(hasOpenReport(session)),
       });
+    } else if (!session.branch) {
+      session.step = "opt_in";
+      saveSession(session);
+      await sendOptIn(ctx, session);
     } else {
       await sendGate(ctx, session);
     }
@@ -890,6 +1204,7 @@ export async function handleCallback(
     const isProgram = GATE_OPTIONS.some((o) => o.id === id);
     const isNone = id === GATE_NONE_ID;
     if (isProgram || isNone) {
+      pushUndoFrame(session);
       if (session.alreadyOn.includes(id)) {
         session.alreadyOn = session.alreadyOn.filter((x) => x !== id);
       } else if (isNone) {
@@ -903,7 +1218,7 @@ export async function handleCallback(
       }
       saveSession(session);
       await ctx.editMessageReplyMarkup({
-        reply_markup: gateKeyboard(session.alreadyOn),
+        reply_markup: treeKb(session, gateKeyboard(session.alreadyOn)),
       }).catch(() => undefined);
       return;
     }
@@ -915,6 +1230,7 @@ export async function handleCallback(
       await ctx.reply("Pick at least one program, or check None.");
       return;
     }
+    pushUndoFrame(session);
     trackFunnel("gate_done", session.telegramUserId, {
       campaignId: session.campaignId,
     });
@@ -928,6 +1244,7 @@ export async function handleCallback(
 
   // Stale inline button / voice "none" shortcut – same as check None + Done.
   if (data === "gate:none") {
+    pushUndoFrame(session);
     trackFunnel("gate_done", session.telegramUserId, {
       campaignId: session.campaignId,
     });
@@ -936,6 +1253,7 @@ export async function handleCallback(
   }
 
   if (data === "hh:more") {
+    pushUndoFrame(session);
     session.step = "household_size_custom";
     saveSession(session);
     await replyTracked(
@@ -956,10 +1274,11 @@ export async function handleCallback(
         onCustom
           ? "Please type a whole number between 9 and 30."
           : "Please tap a number 1–8, or More.",
-        onCustom ? undefined : { reply_markup: householdKeyboard() },
+        onCustom ? undefined : { reply_markup: treeKb(session, householdKeyboard()) },
       );
       return;
     }
+    pushUndoFrame(session);
     session.householdSize = n;
     session.step = "income_band";
     saveSession(session);
@@ -971,13 +1290,14 @@ export async function handleCallback(
 ${HOUSEHOLD_EXPLAIN}
 
 Add up income for everyone you just counted.`,
-      { reply_markup: incomeKeyboard(n) },
+      { reply_markup: treeKb(session, incomeKeyboard(n)) },
     );
     return;
   }
 
   if (data.startsWith("income:")) {
     const band = data.slice("income:".length) as IncomeBand;
+    pushUndoFrame(session);
     session.incomeBand = band;
     session.branch = "no";
     // aboveFera drops income-gated programs; keep any earlier zero-question offers.
@@ -986,6 +1306,7 @@ Add up income for everyone you just counted.`,
   }
 
   if (data === "pastdue:yes" || data === "pastdue:no") {
+    pushUndoFrame(session);
     session.pastDue = data === "pastdue:yes";
     await beginOfferQueue(ctx, session);
     return;
@@ -996,6 +1317,7 @@ Add up income for everyone you just counted.`,
     const isBill = UTILITY_BILL_OPTIONS.some((o) => o.id === id);
     const isNone = id === UTILITY_BILL_NONE_ID;
     if (isBill || isNone) {
+      pushUndoFrame(session);
       if (session.billsInMyName.includes(id)) {
         session.billsInMyName = session.billsInMyName.filter((x) => x !== id);
       } else if (isNone) {
@@ -1009,7 +1331,7 @@ Add up income for everyone you just counted.`,
       saveSession(session);
       await ctx
         .editMessageReplyMarkup({
-          reply_markup: utilityBillsKeyboard(session.billsInMyName),
+          reply_markup: treeKb(session, utilityBillsKeyboard(session.billsInMyName)),
         })
         .catch(() => undefined);
       return;
@@ -1021,6 +1343,7 @@ Add up income for everyone you just counted.`,
       await ctx.reply("Pick at least one bill type, or check None.");
       return;
     }
+    pushUndoFrame(session);
     session.utilityBillsAsked = true;
     session.billNotInMyName = session.billsInMyName.includes(
       UTILITY_BILL_NONE_ID,
@@ -1033,6 +1356,7 @@ Add up income for everyone you just counted.`,
   }
 
   if (data === "shutoff:yes") {
+    pushUndoFrame(session);
     session.inShutoffZone = true;
     session.shutoffAddressChoices = null;
     await beginOfferQueue(ctx, session);
@@ -1040,11 +1364,13 @@ Add up income for everyone you just counted.`,
   }
 
   if (data === "shutoff:unsure" || data === "shutoff:locate") {
+    pushUndoFrame(session);
     await promptShutoffAddress(ctx, session);
     return;
   }
 
   if (data === "shutoff:no") {
+    pushUndoFrame(session);
     session.inShutoffZone = false;
     session.shutoffAddressChoices = null;
     await beginOfferQueue(ctx, session);
@@ -1052,6 +1378,7 @@ Add up income for everyone you just counted.`,
   }
 
   if (data === "shutoffaddr:skip") {
+    pushUndoFrame(session);
     session.inShutoffZone = false;
     session.shutoffAddressChoices = null;
     await ctx.reply("Okay, skipping the map check.", {
@@ -1062,18 +1389,21 @@ Add up income for everyone you just counted.`,
   }
 
   if (data === "child:yes" || data === "child:no") {
+    pushUndoFrame(session);
     session.hasChildInHousehold = data === "child:yes";
     await beginOfferQueue(ctx, session);
     return;
   }
 
   if (data === "home:ca") {
+    pushUndoFrame(session);
     applyResidencyTie(session, "ca_home");
     await beginOfferQueue(ctx, session);
     return;
   }
 
   if (data === "home:visit") {
+    pushUndoFrame(session);
     applyResidencyTie(session, "visitor");
     await replyTracked(
       ctx,
@@ -1085,18 +1415,20 @@ Add up income for everyone you just counted.`,
   }
 
   if (data === "home:other") {
+    pushUndoFrame(session);
     session.step = "has_ca_work";
     saveSession(session);
     await replyTracked(
       ctx,
       session,
       "Do you work in California (commute, job site, or CA employer wages)?",
-      { reply_markup: caWorkKeyboard() },
+      { reply_markup: treeKb(session, caWorkKeyboard()) },
     );
     return;
   }
 
   if (data === "cawork:yes") {
+    pushUndoFrame(session);
     applyResidencyTie(session, "out_of_state_ca_work");
     await replyTracked(
       ctx,
@@ -1108,6 +1440,7 @@ Add up income for everyone you just counted.`,
   }
 
   if (data === "cawork:no") {
+    pushUndoFrame(session);
     applyResidencyTie(session, "out_of_state");
     await replyTracked(
       ctx,
@@ -1119,36 +1452,56 @@ Add up income for everyone you just counted.`,
   }
 
   if (data === "buyingev:yes" || data === "buyingev:no") {
+    pushUndoFrame(session);
     session.buyingEvThisYear = data === "buyingev:yes";
     await beginOfferQueue(ctx, session);
     return;
   }
 
   if (data === "firstzev:yes" || data === "firstzev:no") {
+    pushUndoFrame(session);
     session.firstTimeZev = data === "firstzev:yes";
     await beginOfferQueue(ctx, session);
     return;
   }
 
+  if (data === "buyingebike:yes" || data === "buyingebike:no") {
+    pushUndoFrame(session);
+    session.buyingEbikeThisYear = data === "buyingebike:yes";
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
+  if (data === "retirecar:yes" || data === "retirecar:no") {
+    pushUndoFrame(session);
+    session.wouldRetireVehicle = data === "retirecar:yes";
+    await beginOfferQueue(ctx, session);
+    return;
+  }
+
   if (data === "abd:yes" || data === "abd:no") {
+    pushUndoFrame(session);
     session.hasAgedBlindOrDisabled = data === "abd:yes";
     await beginOfferQueue(ctx, session);
     return;
   }
 
   if (data === "foster:yes" || data === "foster:no") {
+    pushUndoFrame(session);
     session.isFosterYouth = data === "foster:yes";
     await beginOfferQueue(ctx, session);
     return;
   }
 
   if (data === "refugee:yes" || data === "refugee:no") {
+    pushUndoFrame(session);
     session.isRefugeeOrAsylee = data === "refugee:yes";
     await beginOfferQueue(ctx, session);
     return;
   }
 
   if (data === "medneed:yes" || data === "medneed:no") {
+    pushUndoFrame(session);
     session.hasMedicalDeviceOrCondition = data === "medneed:yes";
     await beginOfferQueue(ctx, session);
     return;
@@ -1159,6 +1512,7 @@ Add up income for everyone you just counted.`,
     data === "meter:shared" ||
     data === "meter:landlord"
   ) {
+    pushUndoFrame(session);
     const sharing: MeterSharing =
       data === "meter:own"
         ? "own"
@@ -1171,12 +1525,14 @@ Add up income for everyone you just counted.`,
   }
 
   if (data === "disaster:yes" || data === "disaster:no") {
+    pushUndoFrame(session);
     session.inDisasterArea = data === "disaster:yes";
     await beginOfferQueue(ctx, session);
     return;
   }
 
   if (data === "disaster:unsure") {
+    pushUndoFrame(session);
     session.step = "has_disaster_zip";
     saveSession(session);
     const zipPrompt =
@@ -1184,12 +1540,13 @@ Add up income for everyone you just counted.`,
         ? disasterWorkZipConfirmPrompt()
         : disasterZipConfirmPrompt();
     await replyTracked(ctx, session, zipPrompt, {
-      reply_markup: disasterZipKeyboard(),
+      reply_markup: treeKb(session, disasterZipKeyboard()),
     });
     return;
   }
 
   if (data === "disasterzip:skip") {
+    pushUndoFrame(session);
     session.inDisasterArea = false;
     await beginOfferQueue(ctx, session);
     return;
@@ -1202,7 +1559,7 @@ Add up income for everyone you just counted.`,
         ctx,
         session,
         "Please send a 5-digit ZIP code, or tap Skip.",
-        { reply_markup: disasterZipKeyboard() },
+        { reply_markup: treeKb(session, disasterZipKeyboard()) },
       );
       return;
     }
@@ -1211,16 +1568,18 @@ Add up income for everyone you just counted.`,
         ctx,
         session,
         "I couldn't match that to a California ZIP. Try again, or tap Skip.",
-        { reply_markup: disasterZipKeyboard() },
+        { reply_markup: treeKb(session, disasterZipKeyboard()) },
       );
       return;
     }
+    pushUndoFrame(session);
     session.inDisasterArea = zipInOfferableDisasterArea(zip);
     await beginOfferQueue(ctx, session);
     return;
   }
 
   if (data === "zip:skip") {
+    pushUndoFrame(session);
     session.residenceZip = "";
     session.residenceCounty = null;
     await beginOfferQueue(ctx, session);
@@ -1235,7 +1594,7 @@ Add up income for everyone you just counted.`,
         ctx,
         session,
         "Please send a 5-digit ZIP code, or tap Skip.",
-        { reply_markup: zipKeyboard() },
+        { reply_markup: treeKb(session, zipKeyboard()) },
       );
       return;
     }
@@ -1245,10 +1604,11 @@ Add up income for everyone you just counted.`,
         ctx,
         session,
         "I couldn't match that to a California ZIP. Try again, or tap Skip.",
-        { reply_markup: zipKeyboard() },
+        { reply_markup: treeKb(session, zipKeyboard()) },
       );
       return;
     }
+    pushUndoFrame(session);
     session.residenceZip = zip;
     session.residenceCounty = county;
     await beginOfferQueue(ctx, session);
@@ -1263,6 +1623,7 @@ Add up income for everyone you just counted.`,
       reason === "family_care" ||
       reason === "none"
     ) {
+      pushUndoFrame(session);
       session.workDisruption = reason;
       await beginOfferQueue(ctx, session);
       return;
@@ -1275,6 +1636,7 @@ Add up income for everyone you just counted.`,
     data === "status:declined"
   ) {
     const answer = data.slice("status:".length) as ImmigrationAnswer;
+    pushUndoFrame(session);
     setImmigrationAnswer(session.telegramUserId, answer);
     await beginOfferQueue(ctx, session);
     return;
@@ -1282,6 +1644,7 @@ Add up income for everyone you just counted.`,
 
   if (data.startsWith("offer:signup:")) {
     const id = data.split(":")[2]!;
+    pushUndoFrame(session);
     recordEvent({
       eventType: "follow_through",
       source: "bot",
@@ -1298,6 +1661,7 @@ Add up income for everyone you just counted.`,
   }
   if (data.startsWith("offer:already:")) {
     const id = data.split(":")[2]!;
+    pushUndoFrame(session);
     upsertItem(session, id, "done");
     advanceQueue(session);
     saveSession(session);
@@ -1306,6 +1670,7 @@ Add up income for everyone you just counted.`,
   }
   if (data.startsWith("offer:remind:")) {
     const id = data.split(":")[2]!;
+    pushUndoFrame(session);
     upsertItem(session, id, "snoozed");
     advanceQueue(session);
     saveSession(session);
@@ -1314,6 +1679,7 @@ Add up income for everyone you just counted.`,
   }
   if (data.startsWith("offer:skip:")) {
     const id = data.split(":")[2]!;
+    pushUndoFrame(session);
     const dropped = applySkipCascade(session, id);
     for (const droppedId of dropped) {
       upsertItem(
@@ -1335,12 +1701,14 @@ Add up income for everyone you just counted.`,
       await presentOffer(ctx, session);
       return;
     }
+    pushUndoFrame(session);
     await finishQueue(ctx, session);
     return;
   }
 
   if (data === "reopen:yes" || data === "reopen:no") {
     const held = listHeldQualifyingPrograms(session);
+    pushUndoFrame(session);
     session.reopenNotifyOptIn = data === "reopen:yes";
     if (session.reopenNotifyOptIn) {
       session.reopenWatchProgramIds = held.map((p) => p.id);
@@ -1532,6 +1900,7 @@ export function resetSession(telegramUserId: number): SessionState {
   clearImmigrationAnswer(telegramUserId);
   eraseUserFeedbackTodos(telegramUserId);
   const s = emptySession(telegramUserId);
+  clearUndoStack(s);
   saveSession(s);
   return s;
 }

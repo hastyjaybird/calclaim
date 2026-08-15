@@ -69,6 +69,7 @@ export function formatOfferCardBody(
       ? `${program.name} – ${disasterOneLiner(window, supplement)}`
       : `${program.name} – ${program.oneLiner}`,
     ...(ownerLine ? [ownerLine] : []),
+    "",
     supplement
       ? "Est. a one-time top-up to the maximum food benefit for your household size"
       : formatMaxBenefitEstimate(program, session.householdSize),
@@ -94,7 +95,7 @@ export function formatOfferCardBody(
   return lines.join("\n");
 }
 
-/** Full offer-card copy (body + remaining count), shared by Telegram and /dev/tree. */
+/** Full offer-card copy (body + remaining count), shared by Telegram and /dev#tree. */
 export function formatOfferCardText(
   program: Program,
   session: SessionState,

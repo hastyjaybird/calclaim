@@ -14,33 +14,34 @@
   <link rel="stylesheet" href="/dev/tree/chart/styles.css" />
 </head>
 <body>
-  <div class="banner" role="banner">
-    <div class="banner-inner">
-      <a class="banner-brand" href="/impact" aria-label="CalClaim home">
-        <img
-          class="banner-mark"
-          src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
-          alt="CalClaim"
-          width="180"
-          height="63"
-        />
-      </a>
-      <span class="banner-sep" aria-hidden="true"></span>
-      <nav class="site-nav" aria-label="Site">
-        <a href="/impact">Impact</a>
-        <a href="/dev">Developer</a>
-        <a href="/dev/tree">Message tree</a>
-        <a href="/dev/tree/chart" aria-current="page">Gate chart</a>
-        <a href="/dev/tree/flowchart">Flowchart</a>
-        <a href="/dev/tree/utilities">Utilities</a>
-        <button type="button" class="nav-logout" id="btn-logout">Log out</button>
-      </nav>
-      <span class="banner-line">Temporary review · not linked from public pages</span>
+  <div class="dev-chrome">
+    <div class="banner" role="banner">
+      <div class="banner-inner">
+        <a class="banner-brand" href="/impact" aria-label="CalClaim home">
+          <img
+            class="banner-mark"
+            src="/brand/calclaim-logo-horizontal-v2-fraunces-cropped.png"
+            alt="CalClaim"
+            width="180"
+            height="63"
+          />
+        </a>
+        <span class="banner-sep" aria-hidden="true"></span>
+        <nav class="site-nav" aria-label="Site">
+          <a href="/impact">Impact</a>
+          <a href="/impact#partners">Leaderboard</a>
+          <a href="/impact#about">About</a>
+          <a href="/impact#contact">Contact</a>
+          <a href="/impact#privacy">Privacy</a>
+          <a href="/dev" aria-current="page">Developer dashboard</a>
+          <button type="button" class="nav-logout" id="btn-logout">Log out</button>
+        </nav>
+      </div>
     </div>
   </div>
 
   <header class="hero hero-dev tree-hero chart-hero">
-    <p class="eyebrow">Temporary developer review</p>
+    <p class="eyebrow">Developer tools</p>
     <h1>Gate chart</h1>
     <p class="lede">
       Programs on the left in message-tree offer order (<code>yesOrder</code> /
@@ -48,8 +49,7 @@
       (CA address, CA utility, ZIP/county, immigration). Each program is tagged
       Federal, State, or Fed · State. Drag rows to try a different offer order;
       filled cells are qualifications that program still needs. Immigration
-      status sits last on purpose. For the full conversation diagram, open
-      <a href="/dev/tree/flowchart">Flowchart</a>.
+      status sits last on purpose.
     </p>
     <div class="tree-toolbar chart-toolbar">
       <div class="branch-toggle" role="group" aria-label="Branch">
@@ -58,7 +58,8 @@
       </div>
       <button type="button" class="cta cta-ghost" id="btn-reset">Reset row &amp; column order</button>
       <button type="button" class="cta" id="btn-save" disabled>Save order to library</button>
-      <a class="cta cta-ghost" href="/dev/tree/flowchart">Whole flowchart</a>
+      <a class="cta cta-ghost" href="/dev#tree">Message tree</a>
+      <a class="cta cta-ghost" href="/dev/tree/utilities">Utilities</a>
       <label class="chart-check">
         <input type="checkbox" id="chk-feeders-first" />
         Keep gate-feeders at the front

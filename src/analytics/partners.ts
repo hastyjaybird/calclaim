@@ -23,6 +23,8 @@ export interface Partner {
   emailDomain: string;
   /** True when the partner's signup email has been verified (library demos are always verified). */
   emailVerified: boolean;
+  /** ISO timestamp when canceled; null/undefined while active. Library demos are never canceled. */
+  canceledAt?: string | null;
 }
 
 interface LibraryPartnerJson {
@@ -83,27 +85,37 @@ function asPartner(p: SignedUpPartner): Partner {
     accountType: p.accountType,
     emailDomain: p.emailDomain,
     emailVerified: Boolean(p.emailVerifiedAt),
+    canceledAt: p.canceledAt,
   };
 }
 
-/** Library demo partners plus verified live signups from SQLite. */
+/** Library demo partners plus verified, active live signups from SQLite. */
 export function listPartners(): Partner[] {
   const fromLibrary = libraryPartners();
   const librarySlugs = new Set(fromLibrary.map((p) => p.slug));
   const fromSignup = listSignedUpPartners()
-    .filter((p) => p.emailVerifiedAt && !librarySlugs.has(p.slug))
+    .filter((p) => p.emailVerifiedAt && !p.canceledAt && !librarySlugs.has(p.slug))
     .map(asPartner);
   return [...fromLibrary, ...fromSignup];
 }
 
 /**
- * Public leaderboard partners only: verified organizations.
- * Individuals keep private status pages via getPartnerBySlug / email links.
+ * Public leaderboard partners: verified organizations and individuals who have
+ * not canceled. Individuals use a public status page (no private /org dashboard).
+ *
+ * Pass `{ includeLibrary: false }` for live dashboards so staged library
+ * demo partners (Oakland Library, etc.) do not appear with empty real stats.
  */
-export function listLeaderboardPartners(): Partner[] {
-  return listPartners().filter(
-    (p) => p.emailVerified && p.accountType === "organization",
-  );
+export function listLeaderboardPartners(opts?: {
+  includeLibrary?: boolean;
+}): Partner[] {
+  const includeLibrary = opts?.includeLibrary !== false;
+  const fromLibrary = includeLibrary ? libraryPartners() : [];
+  const librarySlugs = new Set(fromLibrary.map((p) => p.slug));
+  const fromSignup = listSignedUpPartners()
+    .filter((p) => p.emailVerifiedAt && !p.canceledAt && !librarySlugs.has(p.slug))
+    .map(asPartner);
+  return [...fromLibrary, ...fromSignup].filter((p) => p.emailVerified && !p.canceledAt);
 }
 
 export function getPartnerBySlug(slug: string): Partner | undefined {
@@ -112,7 +124,9 @@ export function getPartnerBySlug(slug: string): Partner | undefined {
   if (fromLibrary) return fromLibrary;
   const signed = getSignedUpPartnerBySlug(cleaned);
   // Status pages remain reachable before verification; leaderboard uses listPartners().
-  return signed ? asPartner(signed) : undefined;
+  // Canceled partners stay in SQLite for operators but are hidden from public pages.
+  if (!signed || signed.canceledAt) return undefined;
+  return asPartner(signed);
 }
 
 export function getPartnerByCampaignId(campaignId: string): Partner | undefined {
@@ -134,6 +148,7 @@ export function getPartnerByCampaignId(campaignId: string): Partner | undefined 
   const eventPartner =
     getSignedUpPartnerById(event.partnerId) ??
     getSignedUpPartnerBySlug(event.partnerSlug);
+  // Canceled partners still resolve for campaign attribution; public pages use getPartnerBySlug.
   return eventPartner ? asPartner(eventPartner) : undefined;
 }
 

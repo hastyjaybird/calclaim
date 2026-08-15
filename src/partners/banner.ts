@@ -20,13 +20,11 @@ const LETTER_W = 612;
 const LETTER_H = 792;
 
 const INK = "#000000";
-const INK_SOFT = "#333333";
 const RULE = "#000000";
 const PAPER = "#ffffff";
 
 type BannerShared = {
   partnerName: string;
-  partnerId: string;
   eventName?: string;
   qrPng: Buffer;
   calclaimBuf: Buffer | null;
@@ -136,9 +134,15 @@ function drawBannerLayout(
   }
 
   // QR bordered block – geometric center of the placard (half-fliers reuse this layout)
-  const idSize = Math.max(7, 9 * scale);
-  const footerReserve = margin * 0.65 + idSize + 4 * scale;
-  const headerReserve = Math.min(h * 0.3, 230 * scale);
+  const tagSize = Math.max(10, 15 * scale);
+  const taglineBlockH = tagSize * 2.8 + 10 * scale;
+  // Leave room under the QR for the two-line scan tagline
+  const footerReserve = taglineBlockH + margin * 0.65;
+  // Stacked partner → CalClaim header needs more vertical room than the old side-by-side lockup
+  const headerReserve = Math.min(
+    h * 0.36,
+    input.partnerLogoBuf ? 280 * scale : 230 * scale,
+  );
   const qrPad = 14 * scale;
   const pageCenterX = x + w / 2;
   const pageCenterY = y + h / 2;
@@ -157,23 +161,16 @@ function drawBannerLayout(
   const qrY = qrBoxY + qrPad;
 
   let cy = y + margin * 0.85;
-  const headerBottom = qrBoxY - 14 * scale;
 
   if (input.partnerLogoBuf) {
-    // Partner logo (name under it) & CalClaim – tight co-brand lockup
-    const logoBox = Math.min(64 * scale, h * 0.095);
+    // Partner logo (name under it), then CalClaim below
+    const logoBox = Math.min(72 * scale, h * 0.1);
     const nameSize = Math.max(10, 14 * scale);
-    const ampSize = Math.max(14, 20 * scale);
-    const gap = 8 * scale;
     const nameH = nameSize * 2.4;
-    const colW = Math.min(contentW * 0.32, 150 * scale);
-    const calclaimDrawW = Math.min(contentW * 0.3, 140 * scale);
-    const calclaimDrawH = logoBox * 0.72;
-    const ampW = ampSize * 0.85;
-    const lockupW = colW + gap + ampW + gap + calclaimDrawW;
-    const lockupX = x + margin + (contentW - lockupW) / 2;
+    const calclaimDrawW = Math.min(contentW * 0.55, 220 * scale);
+    const calclaimDrawH = Math.min(52 * scale, h * 0.065);
 
-    doc.image(input.partnerLogoBuf, lockupX + (colW - logoBox) / 2, cy, {
+    doc.image(input.partnerLogoBuf, x + margin + (contentW - logoBox) / 2, cy, {
       fit: [logoBox, logoBox],
       align: "center",
       valign: "center",
@@ -183,45 +180,34 @@ function drawBannerLayout(
       .fillColor(INK)
       .font("Helvetica-Bold")
       .fontSize(nameSize)
-      .text(input.partnerName, lockupX, cy + logoBox + 4 * scale, {
-        width: colW,
+      .text(input.partnerName, x + margin, cy + logoBox + 4 * scale, {
+        width: contentW,
         height: nameH,
         align: "center",
         ellipsis: true,
       });
 
-    const ampX = lockupX + colW + gap;
-    const ampY = cy + logoBox * 0.28;
-    doc
-      .fillColor(INK)
-      .font("Helvetica-Bold")
-      .fontSize(ampSize)
-      .text("&", ampX, ampY, {
-        width: ampW,
-        align: "center",
-        lineBreak: false,
-      });
+    cy += logoBox + nameH + 10 * scale;
 
-    const calclaimX = ampX + ampW + gap;
     if (input.calclaimBuf) {
-      doc.image(input.calclaimBuf, calclaimX, cy + (logoBox - calclaimDrawH) / 2, {
+      doc.image(input.calclaimBuf, x + margin + (contentW - calclaimDrawW) / 2, cy, {
         fit: [calclaimDrawW, calclaimDrawH],
         align: "center",
         valign: "center",
       });
+      cy += calclaimDrawH + 12 * scale;
     } else {
       doc
         .fillColor(INK)
         .font("Helvetica-Bold")
         .fontSize(Math.max(12, 20 * scale))
-        .text("CalClaim", calclaimX, cy + logoBox * 0.25, {
-          width: calclaimDrawW,
+        .text("CalClaim", x + margin, cy, {
+          width: contentW,
           align: "center",
           lineBreak: false,
         });
+      cy += 28 * scale;
     }
-
-    cy += logoBox + nameH + 14 * scale;
   } else {
     if (input.calclaimBuf) {
       const logoH = Math.min(90 * scale, h * 0.12);
@@ -262,20 +248,25 @@ function drawBannerLayout(
         height: Math.max(16, 24 * scale),
         ellipsis: true,
       });
-    cy = doc.y + 8 * scale;
   }
 
-  // Keep tagline in the band above the centered QR
-  if (cy > headerBottom - 36 * scale) {
-    cy = Math.min(cy, headerBottom - 36 * scale);
-  }
+  doc.save();
+  doc
+    .lineWidth(Math.max(0.6, 1 * scale))
+    .strokeColor(RULE)
+    .rect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize)
+    .stroke();
+  doc.restore();
 
-  const tagSize = Math.max(10, 15 * scale);
+  doc.image(input.qrPng, qrX, qrY, { width: qrSize, height: qrSize });
+
+  // Scan tagline directly under the QR
+  const tagY = qrBoxY + qrBoxSize + 10 * scale;
   doc
     .fillColor(INK)
     .font("Helvetica-Bold")
     .fontSize(tagSize)
-    .text(TAGLINE_LINE1, x + margin, cy, {
+    .text(TAGLINE_LINE1, x + margin, tagY, {
       width: contentW,
       align: "center",
       height: tagSize * 1.4,
@@ -290,27 +281,6 @@ function drawBannerLayout(
       align: "center",
       height: tagSize * 1.4,
       ellipsis: true,
-    });
-
-  doc.save();
-  doc
-    .lineWidth(Math.max(0.6, 1 * scale))
-    .strokeColor(RULE)
-    .rect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize)
-    .stroke();
-  doc.restore();
-
-  doc.image(input.qrPng, qrX, qrY, { width: qrSize, height: qrSize });
-
-  // Partner ID – footnote, bottom-right corner
-  doc
-    .fillColor(INK_SOFT)
-    .font("Helvetica")
-    .fontSize(idSize)
-    .text(input.partnerId, x + margin, y + h - margin * 0.65 - idSize, {
-      width: contentW,
-      align: "right",
-      lineBreak: false,
     });
 
   doc.page.margins.bottom = savedBottom;
@@ -364,7 +334,6 @@ function drawCutGuide(doc: PDFKit.PDFDocument, pageW: number, midY: number): voi
  */
 export async function renderPartnerBoothBannerPdf(input: {
   partnerName: string;
-  partnerId: string;
   qrTargetUrl: string;
   partnerLogoPath?: string | null;
   eventName?: string;
@@ -390,7 +359,6 @@ export async function renderPartnerBoothBannerPdf(input: {
 
   const shared: BannerShared = {
     partnerName: input.partnerName,
-    partnerId: input.partnerId,
     eventName: input.eventName?.trim() || undefined,
     qrPng,
     calclaimBuf,

@@ -407,6 +407,24 @@ export const ELIGIBILITY_TAGS: readonly VocabItem[] = [
     group: "Vehicle",
   },
   {
+    id: "buying_ebike_this_year",
+    label: "Planning to buy a pedal e-bike this year (not a scooter)",
+    short: "Buying e-bike",
+    group: "Vehicle",
+  },
+  {
+    id: "pedal_ebike",
+    label: "Class 1–3 e-bike with working pedals (not a scooter or e-moto)",
+    short: "Pedal e-bike",
+    group: "Vehicle",
+  },
+  {
+    id: "retire_older_vehicle",
+    label: "Must retire (scrap) an eligible older vehicle",
+    short: "Scrap old car",
+    group: "Vehicle",
+  },
+  {
     id: "foster_youth_18_25",
     label: "Former foster youth age 18–25 who was in care on/after 18",
     short: "Foster youth 18–25",
@@ -984,6 +1002,8 @@ export interface MatrixRow extends ProgramRequirements {
   oneLiner: string;
   applyUrl: string;
   librarySources: string[];
+  deadlineCount: number;
+  hasNullDeadline: boolean;
   formFillMinutes: number;
   timeToMoneyDays: number;
   difficultyScore: number;
@@ -1053,6 +1073,8 @@ export function buildProgramMatrix(ctx: AvailabilityContext = {}): ProgramMatrix
       oneLiner: p.oneLiner,
       applyUrl: p.applyUrl,
       librarySources: p.sources,
+      deadlineCount: p.deadlines.length,
+      hasNullDeadline: p.deadlines.some((d) => d.date == null),
       formFillMinutes: p.formFillMinutes,
       timeToMoneyDays: p.timeToMoneyDays,
       difficultyScore: difficulty.score,
@@ -1290,6 +1312,8 @@ export function updateProgramRequirements(
     oneLiner: program.oneLiner,
     applyUrl: program.applyUrl,
     librarySources: program.sources,
+    deadlineCount: program.deadlines.length,
+    hasNullDeadline: program.deadlines.some((d) => d.date == null),
     formFillMinutes: program.formFillMinutes,
     timeToMoneyDays: program.timeToMoneyDays,
     difficultyScore: difficulty.score,

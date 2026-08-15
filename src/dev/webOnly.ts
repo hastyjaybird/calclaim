@@ -1,6 +1,6 @@
 /**
  * Local web-only CalClaim (no Telegram polling).
- * Used by scripts/dev-web.sh so /dev and /dev/tree stay up outside agent shells.
+ * Used by scripts/dev-web.sh so /dev stays up outside agent shells.
  */
 import fs from "node:fs";
 import {
@@ -24,6 +24,5 @@ setBotUsername(config.botUsername || "CalClaim_bot");
 startWebServer(config);
 
 console.log(`web-only on :${port} (pid ${process.pid})`);
-console.log(`Message tree: http://localhost:${port}/dev/tree`);
+console.log(`Message tree: http://localhost:${port}/dev#tree`);
 console.log(`Gate chart:   http://localhost:${port}/dev/tree/chart`);
-console.log(`Flowchart:    http://localhost:${port}/dev/tree/flowchart`);

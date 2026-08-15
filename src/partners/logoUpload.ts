@@ -31,6 +31,7 @@ export async function readPartnerSignupMultipart(
   city: string;
   partnerId: string;
   editToken: string;
+  ownerToken: string;
   accountType: string;
   logo?: { buffer: Buffer; mime: string; filename: string };
 }> {
@@ -48,6 +49,7 @@ export async function readPartnerSignupMultipart(
   let city = "";
   let partnerId = "";
   let editToken = "";
+  let ownerToken = "";
   let accountType = "";
   let logo: { buffer: Buffer; mime: string; filename: string } | undefined;
 
@@ -92,10 +94,34 @@ export async function readPartnerSignupMultipart(
       partnerId = text.slice(0, 40).toLowerCase();
     } else if (field === "editToken" || field === "edit_token") {
       editToken = text.slice(0, 200);
+    } else if (field === "ownerToken" || field === "owner_token") {
+      ownerToken = text.slice(0, 240);
     }
   }
 
-  return { name, email, city, partnerId, editToken, accountType, logo };
+  return { name, email, city, partnerId, editToken, ownerToken, accountType, logo };
+}
+
+export function deletePartnerLogoFiles(partnerId: string, logoPath = ""): void {
+  const safeId = partnerId.replace(/[^a-zA-Z0-9-]/g, "");
+  if (safeId) {
+    for (const ext of [".png", ".jpg", ".jpeg", ".webp", ".gif"]) {
+      try {
+        fs.unlinkSync(path.join(PARTNER_LOGO_UPLOAD_DIR, `${safeId}${ext}`));
+      } catch {
+        // ignore missing files
+      }
+    }
+  }
+  const cleaned = logoPath.trim();
+  if (!cleaned.startsWith("/brand/partners/uploads/")) return;
+  const name = path.basename(cleaned);
+  if (!name || name === "." || name === "..") return;
+  try {
+    fs.unlinkSync(path.join(PARTNER_LOGO_UPLOAD_DIR, name));
+  } catch {
+    // ignore
+  }
 }
 
 export function savePartnerLogoUpload(

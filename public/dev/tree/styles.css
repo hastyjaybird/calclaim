@@ -25,6 +25,7 @@
   border-radius: 1rem;
   padding: 1rem 1.1rem 1.2rem;
   min-width: 0;
+  overflow-x: hidden;
 }
 
 .tree-col h2,
@@ -264,6 +265,11 @@
   background: var(--leaf);
   border-color: var(--leaf);
   color: #f7f3ea;
+}
+
+.program-list {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .program-card {

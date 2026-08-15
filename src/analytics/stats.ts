@@ -4,11 +4,10 @@ import { listEvents, type AnalyticsEventRow } from "./db.js";
 import { getCampaign, loadCampaignsFile } from "./campaigns.js";
 import { FUNNEL_STAGES, type FunnelStageId } from "./funnel.js";
 import {
-  buildJourneyProgress,
   buildScreenDropout,
   buildScreenTiming,
+  countReports,
   emptyScreenTiming,
-  type JourneyProgressStats,
   type ScreenDropoutStats,
   type ScreenTimingStats,
 } from "./screens.js";
@@ -21,12 +20,19 @@ import {
   type Partner,
 } from "./partners.js";
 import { getSignedUpPartnerBySlug } from "../partners/db.js";
+import { partnerHasPrivateDashboard } from "../partners/accountKind.js";
 import {
   campaignIdsForPartner,
   getPartnerEventBySlug,
   listPartnerEventsByPartnerSlug,
   type PartnerEvent,
 } from "../partners/events.js";
+
+function partnerEditable(slug: string): boolean {
+  const signed = getSignedUpPartnerBySlug(slug);
+  if (!signed || signed.canceledAt) return false;
+  return partnerHasPrivateDashboard(signed.accountType);
+}
 
 export interface DailyCount {
   date: string;
@@ -130,8 +136,6 @@ export interface ImpactStats {
   reportsCreated: number;
   /** Unique people who received at least one PDF (live only). */
   reportRecipients: number;
-  /** Percent-through / dropout bands from screen_view events (live). */
-  journey: JourneyProgressStats;
   /** Per tree-location dropout for developer feedback (live). */
   screenDropout: ScreenDropoutStats;
   /** Time-on-question + time-to-finish for developer UX (live). */
@@ -139,12 +143,50 @@ export interface ImpactStats {
   disclaimer: string;
 }
 
+/** Public `/api/stats` payload – no operator funnel, dropout, timing, or sharing. */
+export type PublicImpactStats = Pick<
+  ImpactStats,
+  | "generatedAt"
+  | "statsSource"
+  | "peopleReached"
+  | "qrScans"
+  | "linkClicks"
+  | "botStarts"
+  | "programOpens"
+  | "followThroughs"
+  | "estDollarsUnlocked"
+  | "usersPerDay"
+  | "chartSeriesSource"
+  | "programs"
+  | "mapPoints"
+  | "disclaimer"
+>;
+
+export function toPublicImpactStats(stats: ImpactStats): PublicImpactStats {
+  return {
+    generatedAt: stats.generatedAt,
+    statsSource: stats.statsSource,
+    peopleReached: stats.peopleReached,
+    qrScans: stats.qrScans,
+    linkClicks: stats.linkClicks,
+    botStarts: stats.botStarts,
+    programOpens: stats.programOpens,
+    followThroughs: stats.followThroughs,
+    estDollarsUnlocked: stats.estDollarsUnlocked,
+    usersPerDay: stats.usersPerDay,
+    chartSeriesSource: stats.chartSeriesSource,
+    programs: stats.programs,
+    mapPoints: stats.mapPoints,
+    disclaimer: stats.disclaimer,
+  };
+}
+
 /**
  * Default public-site stats mode. Env `IMPACT_STATS_MODE=demo|live` overrides.
- * Demo = staged “fully running” numbers for funders; live = collected events
- * (operator Telegram ids excluded). Say “switch website to live data” to flip.
+ * Live = collected events (operator Telegram ids excluded). Demo = staged
+ * “fully running” numbers for funders. Say “switch website to demo data” to flip.
  */
-export const DEFAULT_IMPACT_STATS_MODE: StatsSource = "demo";
+export const DEFAULT_IMPACT_STATS_MODE: StatsSource = "live";
 
 /** @deprecated Use DEFAULT_IMPACT_STATS_MODE / impactStatsMode(). */
 export const USE_SAMPLE_CHART_SERIES = DEFAULT_IMPACT_STATS_MODE === "demo";
@@ -170,14 +212,43 @@ export function operatorTelegramUserIds(): Set<number> {
   return ids;
 }
 
-/** Live events with operator Telegram traffic stripped. */
+/**
+ * Live events with operator Telegram traffic stripped.
+ * Also drops anonymous awareness clicks that sit within a few minutes of an
+ * excluded user's bot_start on the same campaign (operator testing the site).
+ */
 export function listEventsForStats(): AnalyticsEventRow[] {
   const exclude = operatorTelegramUserIds();
   const all = listEvents();
   if (exclude.size === 0) return all;
-  return all.filter(
-    (e) => e.telegram_user_id == null || !exclude.has(e.telegram_user_id),
+
+  const operatorStarts = all.filter(
+    (e) =>
+      e.event_type === "bot_start" &&
+      e.telegram_user_id != null &&
+      exclude.has(e.telegram_user_id) &&
+      e.campaign_id,
   );
+
+  const WINDOW_MS = 5 * 60 * 1000;
+  function nearOperatorStart(e: AnalyticsEventRow): boolean {
+    if (e.event_type !== "awareness" || !e.campaign_id) return false;
+    const t = Date.parse(e.created_at);
+    if (!Number.isFinite(t)) return false;
+    return operatorStarts.some((s) => {
+      if (s.campaign_id !== e.campaign_id) return false;
+      const st = Date.parse(s.created_at);
+      return Number.isFinite(st) && Math.abs(t - st) <= WINDOW_MS;
+    });
+  }
+
+  return all.filter((e) => {
+    if (e.telegram_user_id != null && exclude.has(e.telegram_user_id)) {
+      return false;
+    }
+    if (nearOperatorStart(e)) return false;
+    return true;
+  });
 }
 
 const SAMPLE_CHART_DAYS = 90;
@@ -444,7 +515,7 @@ function buildDemoProgramStats(programOpens: number, followThroughs: number): Pr
 
 function buildDemoMapPoints(): MapPoint[] {
   const points: MapPoint[] = [];
-  for (const partner of listLeaderboardPartners()) {
+  for (const partner of listLeaderboardPartners({ includeLibrary: true })) {
     const campaign = getCampaign(partner.campaignId);
     if (campaign?.lat == null || campaign.lng == null) continue;
     const reached = seriesTotal(buildSamplePartnerUsersPerDay(partner.slug));
@@ -705,17 +776,6 @@ function buildLiveSharingStats(
   };
 }
 
-function emptyJourney(): JourneyProgressStats {
-  return {
-    starters: 0,
-    finishers: 0,
-    reportsCreated: 0,
-    reportRecipients: 0,
-    buckets: [],
-    avgPctThrough: 0,
-  };
-}
-
 function emptyScreenDropout(): ScreenDropoutStats {
   return {
     starters: 0,
@@ -762,7 +822,6 @@ function buildDemoImpactStats(usersPerDayLive: DailyCount[]): ImpactStats {
     funnel: buildDemoFunnel(peopleReached, botStarts, programOpens, followThroughs),
     reportsCreated,
     reportRecipients: reportsCreated,
-    journey: emptyJourney(),
     screenDropout: emptyScreenDropout(),
     screenTiming: emptyScreenTiming(),
     disclaimer: IMPACT_DISCLAIMER,
@@ -784,7 +843,7 @@ function buildLiveImpactStats(events: AnalyticsEventRow[]): ImpactStats {
   }
 
   const usersPerDayLive = buildUsersPerDay(awareness);
-  const journey = buildJourneyProgress(events);
+  const reports = countReports(events);
   const screenDropout = buildScreenDropout(events);
   const screenTiming = buildScreenTiming(events);
   const sharing = buildLiveSharingStats(events, firstBotStartCampaignByUser(events));
@@ -804,11 +863,10 @@ function buildLiveImpactStats(events: AnalyticsEventRow[]): ImpactStats {
     usersPerDayLive,
     chartSeriesSource: "live",
     programs: buildProgramStats(events),
-    mapPoints: buildMapPoints(awareness),
+    mapPoints: buildMapPoints(awareness, { ghostPins: false }),
     funnel: buildFunnel(events),
-    reportsCreated: journey.reportsCreated,
-    reportRecipients: journey.reportRecipients,
-    journey,
+    reportsCreated: reports.reportsCreated,
+    reportRecipients: reports.reportRecipients,
     screenDropout,
     screenTiming,
     disclaimer: IMPACT_DISCLAIMER,
@@ -1188,8 +1246,11 @@ function demoPartnerRollup(partner: Partner): Omit<PartnerLeaderboardRow, "rank"
 }
 
 export function buildPartnerLeaderboard(): PartnerLeaderboardRow[] {
-  // Public front-page leaderboard: organizations only (individuals use private status URLs).
-  const partners = listLeaderboardPartners();
+  // Public front-page leaderboard: verified orgs + individuals who have not canceled.
+  // Live mode omits staged library demo partners so only real signups appear.
+  const partners = listLeaderboardPartners({
+    includeLibrary: impactStatsMode() === "demo",
+  });
   if (impactStatsMode() === "demo") {
     const rows = partners.map((p) => demoPartnerRollup(p));
     rows.sort(
@@ -1259,7 +1320,7 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
         emailDomain: partner.emailDomain,
         emailVerified: partner.emailVerified,
       },
-      editable: Boolean(getSignedUpPartnerBySlug(partner.slug)),
+      editable: partnerEditable(partner.slug),
       peopleReached: summary.peopleReached,
       botStarts: summary.botStarts,
       programOpens,
@@ -1282,7 +1343,7 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
   );
   const programOpens = attributed.filter((e) => e.event_type === "program_open");
 
-  const mapPoints = buildMapPoints(awarenessLive);
+  const mapPoints = buildMapPoints(awarenessLive, { ghostPins: false });
   if (
     campaign?.lat != null &&
     campaign.lng != null &&
@@ -1316,7 +1377,7 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
       emailDomain: partner.emailDomain,
       emailVerified: partner.emailVerified,
     },
-    editable: Boolean(getSignedUpPartnerBySlug(partner.slug)),
+    editable: partnerEditable(partner.slug),
     peopleReached: summary.peopleReached,
     botStarts: summary.botStarts,
     programOpens: programOpens.length,
