@@ -26,16 +26,14 @@ db.exec("DELETE FROM analytics_events");
 type Loc = ScreenLocationId;
 
 const daysBack = 14;
-/** Weighted so partner leaderboard has a clear #1 (Fresno) for the trophy demo. */
+/** Weighted so partner leaderboard has a clear #1 (Resilient Markets) for demos. */
 const campaignWeights: { id: string; weight: number }[] = [
-  { id: "qr_fresno_foodbank", weight: 38 },
-  { id: "qr_oakland_library", weight: 24 },
-  { id: "qr_la_family_resource", weight: 16 },
-  { id: "qr_sf_mission", weight: 12 },
+  { id: "qr_resilient_markets", weight: 38 },
+  { id: "qr_bay_area_makerfarm", weight: 28 },
   { id: "link_share", weight: 6 },
   { id: "qr_peer_share", weight: 4 },
   { id: "link_website", weight: 2 },
-  { id: "qr_website", weight: 5 },
+  { id: "qr_website", weight: 12 },
 ];
 const weightTotal = campaignWeights.reduce((s, c) => s + c.weight, 0);
 

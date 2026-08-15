@@ -598,7 +598,8 @@ body.is-event-view #owner-account-panel {
 }
 
 .partner-edit-form input[type="text"],
-.partner-edit-form input[type="email"] {
+.partner-edit-form input[type="email"],
+.partner-edit-form input[type="url"] {
   width: 100%;
   /* Extra right padding so password-manager icons don’t cover typed text */
   padding: 0.75rem 2.25rem 0.75rem 0.85rem;

@@ -55,6 +55,31 @@ export function validateSignupEmail(
   return { email: cleaned, domain };
 }
 
+/**
+ * Normalize an organization email domain (e.g. "Acme.ORG", "@acme.org" → "acme.org").
+ * Rejects free mailbox providers – same rule as organization signup emails.
+ */
+export function normalizeOrgEmailDomain(
+  value: unknown,
+): { domain: string } | { error: string } {
+  if (typeof value !== "string") return { error: "email_domain_required" };
+  let domain = value.trim().toLowerCase();
+  if (!domain) return { error: "email_domain_required" };
+  if (domain.startsWith("@")) domain = domain.slice(1);
+  if (domain.includes("@")) {
+    // Allow pasting a full email; keep only the domain part.
+    domain = emailDomain(domain) || domain;
+  }
+  domain = domain.replace(/\.+$/, "").replace(/^\.+/, "");
+  if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/.test(domain)) {
+    return { error: "email_domain_invalid" };
+  }
+  if (isFreeEmailDomain(domain)) {
+    return { error: "email_org_domain_required" };
+  }
+  return { domain };
+}
+
 export function parseAccountType(value: unknown): PartnerAccountType | { error: string } {
   const raw = typeof value === "string" ? value.trim().toLowerCase() : "";
   if (raw === "organization" || raw === "org") return "organization";

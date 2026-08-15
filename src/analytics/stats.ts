@@ -258,10 +258,8 @@ const PARTNER_SAMPLE_PROFILES: Record<
   string,
   { base: number; growth: number; startOffsetDays: number }
 > = {
-  "fresno-food-bank": { base: 18, growth: 0.12, startOffsetDays: 0 },
-  "oakland-library": { base: 13, growth: 0.09, startOffsetDays: 8 },
-  "la-family-resource": { base: 11, growth: 0.07, startOffsetDays: 14 },
-  "mission-community": { base: 8, growth: 0.06, startOffsetDays: 22 },
+  "resilient-markets": { base: 18, growth: 0.12, startOffsetDays: 0 },
+  "bay-area-makerfarm": { base: 13, growth: 0.09, startOffsetDays: 8 },
   website: { base: 5, growth: 0.045, startOffsetDays: 10 },
 };
 
@@ -1059,6 +1057,7 @@ export interface PartnerLeaderboardRow {
   city: string;
   logo: string;
   blurb: string;
+  website: string;
   campaignId: string;
   accountType: "organization" | "individual";
   emailDomain: string;
@@ -1083,6 +1082,7 @@ export interface PartnerStats {
     city: string;
     logo: string;
     blurb: string;
+    website: string;
     campaignId: string;
     accountType: "organization" | "individual";
     emailDomain: string;
@@ -1205,6 +1205,7 @@ function rollupPartner(
     city: partner.city,
     logo: partner.logo,
     blurb: partner.blurb,
+    website: partner.website || "",
     campaignId: partner.campaignId,
     accountType: partner.accountType,
     emailDomain: partner.emailDomain,
@@ -1232,6 +1233,7 @@ function demoPartnerRollup(partner: Partner): Omit<PartnerLeaderboardRow, "rank"
     city: partner.city,
     logo: partner.logo,
     blurb: partner.blurb,
+    website: partner.website || "",
     campaignId: partner.campaignId,
     accountType: partner.accountType,
     emailDomain: partner.emailDomain,
@@ -1247,10 +1249,8 @@ function demoPartnerRollup(partner: Partner): Omit<PartnerLeaderboardRow, "rank"
 
 export function buildPartnerLeaderboard(): PartnerLeaderboardRow[] {
   // Public front-page leaderboard: verified orgs + individuals who have not canceled.
-  // Live mode omits staged library demo partners so only real signups appear.
-  const partners = listLeaderboardPartners({
-    includeLibrary: impactStatsMode() === "demo",
-  });
+  // Library holds the live outreach partners; verified signups merge in too.
+  const partners = listLeaderboardPartners({ includeLibrary: true });
   if (impactStatsMode() === "demo") {
     const rows = partners.map((p) => demoPartnerRollup(p));
     rows.sort(
@@ -1315,6 +1315,7 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
         city: partner.city,
         logo: partner.logo,
         blurb: partner.blurb,
+        website: partner.website || "",
         campaignId: partner.campaignId,
         accountType: partner.accountType,
         emailDomain: partner.emailDomain,
@@ -1372,6 +1373,7 @@ export function buildPartnerStats(slug: string): PartnerStats | null {
       city: partner.city,
       logo: partner.logo,
       blurb: partner.blurb,
+      website: partner.website || "",
       campaignId: partner.campaignId,
       accountType: partner.accountType,
       emailDomain: partner.emailDomain,
@@ -1526,6 +1528,7 @@ export function buildPartnerEventStats(
       city: partner.city,
       logo: partner.logo,
       blurb: partner.blurb,
+      website: partner.website || "",
       campaignId: partner.campaignId,
       accountType: partner.accountType,
       emailDomain: partner.emailDomain,

@@ -2,6 +2,7 @@ button.cta[data-donate-open] {
   appearance: none;
   cursor: pointer;
   font: inherit;
+  font-weight: 600;
 }
 
 .site-nav .nav-donate {

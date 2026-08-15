@@ -55,8 +55,9 @@ Demo partners live in [`library/partners.json`](../library/partners.json) (linke
 
 | Route | Event | Then |
 |---|---|---|
-| `GET /go/:campaignId` | `awareness` (qr or link) | 302 → `t.me/<bot>?start=<campaignId>` |
-| Help / finish-line **Share** | `share_out` + unique `sl_` / `sq_` campaign | Friend gets `/go/sl_…` or `/go/sq_…` |
+| `GET /go/:campaignId` | `awareness` (qr or link; peer shares include referrer meta) | Bridge → `t.me/<bot>?start=<campaignId>` |
+| Help / finish-line **Share** | `share_out` + unique `sl_` / `sq_` campaign (+ prompt meta) | Friend gets `/go/sl_…` or `/go/sq_…` |
+| Friend `/start` via peer share | `bot_start` + `share_in` + `referral_edges` row (first touch) | opt-in flow |
 | `GET /r/:programId` | `program_open` | 302 → official `applyUrl` |
 | Telegram `/start <payload>` | `bot_start` + session `campaignId` | opt-in flow |
 | Offer “Add to My Application Guide” | `follow_through` (with session campaign) | next-steps PDF |

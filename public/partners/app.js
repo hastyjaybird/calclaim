@@ -530,6 +530,7 @@ function renderPartner(stats) {
     city: p.city,
     logo: p.logo || "",
     blurb: p.blurb || "",
+    website: p.website || "",
     accountType: p.accountType || "organization",
     emailDomain: p.emailDomain || "",
     emailVerified: Boolean(p.emailVerified),
@@ -728,6 +729,10 @@ function fillEditForm() {
   if (el("edit-name")) el("edit-name").value = currentAccount?.name || currentPartner?.name || "";
   if (el("edit-email")) el("edit-email").value = currentAccount?.email || "";
   if (el("edit-city")) el("edit-city").value = currentAccount?.city || currentPartner?.city || "";
+  if (el("edit-website")) {
+    el("edit-website").value =
+      currentAccount?.website || currentPartner?.website || "";
+  }
   if (el("edit-logo")) el("edit-logo").value = "";
 }
 
@@ -764,6 +769,7 @@ async function fetchAccount() {
     email: data.email || "",
     city: data.city || "",
     logo: data.logo || "",
+    website: data.website || "",
     accountType: data.accountType || "organization",
   };
   return currentAccount;
@@ -819,6 +825,7 @@ async function submitPartnerEdit(event) {
   const name = el("edit-name")?.value?.trim() ?? "";
   const email = el("edit-email")?.value?.trim() ?? "";
   const city = el("edit-city")?.value?.trim() ?? "";
+  const website = el("edit-website")?.value?.trim() ?? "";
   const logoFile = el("edit-logo")?.files?.[0] || null;
   const isOrg = currentAccount?.accountType !== "individual";
   if (!name) {
@@ -852,6 +859,7 @@ async function submitPartnerEdit(event) {
     body.set("name", name);
     body.set("email", email);
     body.set("city", city);
+    body.set("website", website);
     body.set("ownerToken", ownerToken);
     if (logoFile) body.set("logo", logoFile);
     const res = await fetch(
@@ -874,6 +882,14 @@ async function submitPartnerEdit(event) {
         );
       } else if (data.error === "email_invalid") {
         setEditStatus(txt("signup.errorEmailInvalid", "Enter a valid email address."), true);
+      } else if (data.error === "website_invalid") {
+        setEditStatus(
+          txt(
+            "partners.websiteInvalid",
+            "Enter a valid website URL (http or https).",
+          ),
+          true,
+        );
       } else {
         setEditStatus(txt("partners.editError", "Could not save changes. Try again."), true);
       }

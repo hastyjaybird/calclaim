@@ -126,9 +126,12 @@ import {
 } from "./navBack.js";
 import {
   getOrCreatePeerShareCampaigns,
+  peerShareAttributionMeta,
+  recordReferralFromBotStart,
   SHARE_LINK_CAMPAIGN,
   SHARE_QR_CAMPAIGN,
   trackShareOut,
+  type ShareOutPrompt,
 } from "../analytics/peerShare.js";
 import {
   buildShareMenuText,
@@ -1114,7 +1117,7 @@ export async function handleCallback(
     return;
   }
   if (data === "opt:share") {
-    await sendShareMenu(ctx, session);
+    await sendShareMenu(ctx, session, "opt_in");
     return;
   }
 
@@ -1140,11 +1143,11 @@ export async function handleCallback(
     return;
   }
   if (data === "help:share") {
-    await sendShareMenu(ctx, session);
+    await sendShareMenu(ctx, session, "help");
     return;
   }
   if (data === "help:share_qr") {
-    await sendShareQr(ctx, session);
+    await sendShareQr(ctx, session, "help");
     return;
   }
   if (data === "help:erase_ask") {
@@ -1749,7 +1752,7 @@ Add up income for everyone you just counted.`,
     return;
   }
   if (data === "idle:share") {
-    await sendShareMenu(ctx, session);
+    await sendShareMenu(ctx, session, "idle");
     return;
   }
   if (data === "idle:email") {
@@ -1801,6 +1804,7 @@ Add up income for everyone you just counted.`,
 async function sendShareMenu(
   ctx: Context,
   session: SessionState,
+  prompt: ShareOutPrompt = "unknown",
 ): Promise<void> {
   session.step = "help_menu";
   saveSession(session);
@@ -1828,6 +1832,7 @@ async function sendShareMenu(
     telegramUserId: session.telegramUserId,
     campaignId: campaigns.linkCampaignId,
     source: "link",
+    prompt,
   });
   // t.me/share/url is always Telegram-safe; the target may be /go or t.me deep link.
   const shareHref = telegramShareUrl(linkUrl);
@@ -1840,6 +1845,7 @@ async function sendShareMenu(
 async function sendShareQr(
   ctx: Context,
   session: SessionState,
+  prompt: ShareOutPrompt = "unknown",
 ): Promise<void> {
   session.step = "help_menu";
   saveSession(session);
@@ -1868,6 +1874,7 @@ async function sendShareQr(
     telegramUserId: session.telegramUserId,
     campaignId: campaigns.qrCampaignId,
     source: "qr",
+    prompt,
   });
   const shareHref = linkUrl ? telegramShareUrl(linkUrl) : null;
   const markup = shareKeyboard(shareHref);
@@ -1913,6 +1920,8 @@ export function trackBotStart(telegramUserId: number, campaignId: string | null)
     lng: campaign?.lng ?? null,
     label: campaign?.label ?? campaign?.name ?? null,
   });
+  const shareMeta =
+    campaignId != null ? peerShareAttributionMeta(campaignId) : null;
   recordEvent({
     eventType: "bot_start",
     source: campaign ? (campaign.kind === "qr" ? "qr" : "link") : "bot",
@@ -1921,5 +1930,10 @@ export function trackBotStart(telegramUserId: number, campaignId: string | null)
     lat: pin.lat,
     lng: pin.lng,
     label: pin.label,
+    meta: shareMeta,
+  });
+  recordReferralFromBotStart({
+    recipientUserId: telegramUserId,
+    campaignId,
   });
 }

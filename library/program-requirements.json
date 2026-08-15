@@ -989,10 +989,6 @@
         {
           "label": "SmartFlex Rewards",
           "url": "https://smartflexrewards.com/"
-        },
-        {
-          "label": "PG&E – Automated Response Technology",
-          "url": "https://www.pge.com/en/save-energy-and-money/energy-saving-programs/automated-response-technology.html"
         }
       ],
       "notes": "PG&E SmartFlex (Uplight; formerly ART Nest). Needs a PG&E electric account in the applicant's name (dropped when utility-bills gate is None or has no PG&E bill). $25 signup bonus plus monthly prize drawings; device must stay on Wi-Fi. Official site said enrollment was temporarily paused as of 2026-08-12.",
@@ -1559,7 +1555,7 @@
       "reviewRefs": [
         {
           "label": "IRS – Saver's Credit",
-          "url": "https://www.irs.gov/credits-deductions/individuals/save-for-retirement-if-youre-eligible-claim-the-saver-s-credit"
+          "url": "https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-savings-contributions-credit-savers-credit"
         }
       ],
       "notes": "CARE/FERA band approximates the Saver's Credit income ceiling. Requires an actual retirement contribution in the tax year.",

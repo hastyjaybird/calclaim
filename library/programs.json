@@ -1224,8 +1224,7 @@
       "skipCascades": [],
       "skipReasons": [],
       "sources": [
-        "https://smartflexrewards.com/",
-        "https://www.pge.com/en/save-energy-and-money/energy-saving-programs/automated-response-technology.html"
+        "https://smartflexrewards.com/"
       ],
       "estAnnualUsd": 25,
       "maxBenefitUsd": {
@@ -2072,7 +2071,7 @@
       "jurisdiction": "federal",
       "oneLiner": "Federal credit for contributing to an IRA or workplace retirement plan",
       "maxBenefit": "Up to $1,000 single / $2,000 joint (estimate; rate depends on income)",
-      "applyUrl": "https://www.irs.gov/credits-deductions/individuals/save-for-retirement-if-youre-eligible-claim-the-saver-s-credit",
+      "applyUrl": "https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-savings-contributions-credit-savers-credit",
       "deadlines": [
         {
           "label": "Tax year 2026 federal filing deadline",
@@ -2105,7 +2104,7 @@
       "skipCascades": [],
       "skipReasons": [],
       "sources": [
-        "https://www.irs.gov/credits-deductions/individuals/save-for-retirement-if-youre-eligible-claim-the-saver-s-credit"
+        "https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-savings-contributions-credit-savers-credit"
       ],
       "estAnnualUsd": 1000,
       "maxBenefitUsd": {

@@ -531,14 +531,16 @@ body {
 }
 
 .cta-lg {
-  padding: 1.05rem 2rem;
-  font-size: 1.2rem;
-  letter-spacing: 0.01em;
+  /* Same look as .cta; only wider horizontally */
+  padding: 0.75rem 4.5rem;
+  min-width: 16rem;
+  justify-content: center;
 }
 
 button.cta {
   cursor: pointer;
   font: inherit;
+  font-weight: 600;
 }
 
 button.cta:not(.cta-ghost) {
@@ -576,6 +578,16 @@ main {
   padding: 0 1.25rem 4rem;
   display: grid;
   gap: 1.5rem;
+}
+
+.live-metrics-rule {
+  margin: 0.15rem 0 0.15rem;
+  padding-top: 1.35rem;
+  border-top: 1px solid var(--line);
+}
+
+.live-metrics-label {
+  margin: 0 0 0.85rem;
 }
 
 .metrics {
@@ -819,15 +831,42 @@ main {
   border-radius: 0.9rem;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.55);
-  text-decoration: none;
   color: inherit;
   transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
 }
 
-a.partner-row:hover {
+.partner-row:has(a:hover),
+.partner-row:has(a:focus-visible) {
   border-color: rgba(13, 122, 95, 0.35);
   background: rgba(255, 255, 255, 0.85);
   transform: translateY(-1px);
+}
+
+.partner-logo-link {
+  display: block;
+  line-height: 0;
+  text-decoration: none;
+}
+
+.partner-city-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.partner-website {
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--leaf-deep);
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+  white-space: nowrap;
+}
+
+.partner-website:hover,
+.partner-website:focus-visible {
+  color: var(--leaf);
 }
 
 .partner-row-loading,
@@ -895,6 +934,14 @@ a.partner-row:hover {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-decoration: none;
+}
+
+.partner-name:hover,
+.partner-name:focus-visible {
+  color: var(--leaf-deep);
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
 }
 
 .partner-name-row {
@@ -943,6 +990,8 @@ a.partner-row:hover {
   align-items: baseline;
   justify-content: flex-end;
   gap: 1.25rem;
+  text-decoration: none;
+  color: inherit;
 }
 
 .partner-stat {
@@ -995,7 +1044,8 @@ a.partner-row:hover {
     height: 1.5rem;
   }
   .partner-rank { grid-area: rank; align-self: start; padding-top: 0.3rem; }
-  .partner-logo { grid-area: logo; width: 2.5rem; height: 2.5rem; }
+  .partner-logo-link { grid-area: logo; }
+  .partner-logo { width: 2.5rem; height: 2.5rem; }
   .partner-meta { grid-area: meta; }
   .partner-stats {
     grid-area: stats;

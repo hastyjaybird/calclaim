@@ -2,7 +2,11 @@ import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
 import { initAnalytics } from "../analytics/db.js";
-import { erasePeerShareToken, initPeerShare } from "../analytics/peerShare.js";
+import {
+  erasePeerShareToken,
+  eraseReferralEdgesForUser,
+  initPeerShare,
+} from "../analytics/peerShare.js";
 import type { SessionState } from "../library/types.js";
 import { migrateBillsInMyName } from "../library/utilityBills.js";
 import { initDisasterWindows } from "../disaster/db.js";
@@ -174,6 +178,7 @@ export function saveSession(state: SessionState): void {
 export function deleteSession(telegramUserId: number): void {
   eraseTelegramUserData(telegramUserId);
   erasePeerShareToken(telegramUserId);
+  eraseReferralEdgesForUser(telegramUserId);
   eraseSessionProgramLog(telegramUserId);
   getDb()
     .prepare("DELETE FROM sessions WHERE telegram_user_id = ?")

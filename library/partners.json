@@ -1,55 +1,7 @@
 {
-  "version": "08-05-26",
-  "disclaimer": "Community outreach partners host CalClaim QR codes. Not official agency affiliations. Demo partners use verified organization email domains.",
+  "version": "08-15-26",
+  "disclaimer": "Community outreach partners host CalClaim QR codes. Not official agency affiliations.",
   "partners": [
-    {
-      "id": "oakland_library",
-      "slug": "oakland-library",
-      "name": "Oakland Main Library",
-      "city": "Oakland, CA",
-      "campaignId": "qr_oakland_library",
-      "logo": "/brand/partners/oakland-library.svg",
-      "blurb": "Community outreach partner",
-      "accountType": "organization",
-      "emailDomain": "oaklandlibrary.org",
-      "emailVerified": true
-    },
-    {
-      "id": "sf_mission",
-      "slug": "mission-community",
-      "name": "Mission District Community Board",
-      "city": "San Francisco, CA",
-      "campaignId": "qr_sf_mission",
-      "logo": "/brand/partners/mission-community.svg",
-      "blurb": "Community outreach partner",
-      "accountType": "organization",
-      "emailDomain": "missioncommunity.org",
-      "emailVerified": true
-    },
-    {
-      "id": "fresno_food_bank",
-      "slug": "fresno-food-bank",
-      "name": "Fresno Food Bank",
-      "city": "Fresno, CA",
-      "campaignId": "qr_fresno_foodbank",
-      "logo": "/brand/partners/fresno-food-bank.svg",
-      "blurb": "Community outreach partner",
-      "accountType": "organization",
-      "emailDomain": "fresnofoodbank.org",
-      "emailVerified": true
-    },
-    {
-      "id": "la_family_resource",
-      "slug": "la-family-resource",
-      "name": "LA Family Resource Center",
-      "city": "Los Angeles, CA",
-      "campaignId": "qr_la_family_resource",
-      "logo": "/brand/partners/la-family-resource.svg",
-      "blurb": "Community outreach partner",
-      "accountType": "organization",
-      "emailDomain": "lafrc.org",
-      "emailVerified": true
-    },
     {
       "id": "website",
       "slug": "website",
@@ -58,8 +10,35 @@
       "campaignId": "qr_website",
       "logo": "/brand/calclaim-logo-icon-cropped.png",
       "blurb": "QR on the public impact page",
+      "website": "",
       "accountType": "organization",
       "emailDomain": "calclaim.jayhasty.com",
+      "emailVerified": true
+    },
+    {
+      "id": "resilient_markets",
+      "slug": "resilient-markets",
+      "name": "Resilient Markets",
+      "city": "Albany, CA",
+      "campaignId": "qr_resilient_markets",
+      "logo": "/brand/partners/resilient-markets.png",
+      "blurb": "Community outreach partner",
+      "website": "https://resilientmarkets.com",
+      "accountType": "organization",
+      "emailDomain": "resilientmarkets.com",
+      "emailVerified": true
+    },
+    {
+      "id": "bay_area_makerfarm",
+      "slug": "bay-area-makerfarm",
+      "name": "Bay Area Makerfarm",
+      "city": "Alameda, CA",
+      "campaignId": "qr_bay_area_makerfarm",
+      "logo": "/brand/partners/bay-area-makerfarm.svg",
+      "blurb": "Community outreach partner",
+      "website": "https://bayareamaker.farm",
+      "accountType": "organization",
+      "emailDomain": "bayareamaker.farm",
       "emailVerified": true
     }
   ]

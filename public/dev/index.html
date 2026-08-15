@@ -53,22 +53,22 @@
     </div>
     <nav class="dev-section-nav" aria-label="Page sections">
       <div class="dev-section-nav-inner">
-        <a href="#tree">Message tree</a>
         <a href="#status">Status</a>
         <a href="#usage">Users</a>
-        <a href="#program-opens">Opens</a>
-        <a href="#scan">Scan</a>
+        <a href="#spread">Spread</a>
         <a href="#partners">Partners</a>
         <a href="#feedback">Feedback</a>
-        <a href="#dev-tickets">Tickets</a>
         <a href="#org-tickets">Org tickets</a>
-        <a href="#checklist">Checklist</a>
+        <a href="#dev-tickets">Tickets</a>
+        <a href="#scan">Scan</a>
+        <a href="#program-opens">Opens</a>
         <a href="#funnel">Pipeline</a>
-        <a href="#spread">Spread</a>
         <a href="#screen-dropout">Dropout</a>
         <a href="#screen-timing">Timing</a>
+        <a href="#checklist">Checklist</a>
         <a href="#disaster">Disaster</a>
         <a href="#programs">Programs</a>
+        <a href="#tree">Message tree</a>
       </div>
     </nav>
   </div>
@@ -134,279 +134,6 @@
       </div>
     </section>
 
-    <section class="panel" id="program-opens" aria-labelledby="program-opens-heading">
-      <div class="panel-head">
-        <h2 id="program-opens-heading">Programs opened from CalClaim</h2>
-        <p>
-          Live tracked redirects to official application sites (operator traffic excluded).
-        </p>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Program</th>
-              <th>Category</th>
-              <th class="num">Opens</th>
-              <th class="num">Follow-throughs</th>
-              <th class="num">Est. $ unlocked</th>
-            </tr>
-          </thead>
-          <tbody id="program-open-rows">
-            <tr><td colspan="5">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="panel" id="scan" aria-labelledby="scans-heading">
-      <div id="scans" class="programs-anchor" aria-hidden="true"></div>
-      <details class="panel-fold" open>
-        <summary class="panel-fold-summary">
-          <h2 id="scans-heading">Recent scans</h2>
-        </summary>
-        <div class="panel-fold-body">
-      <div class="panel-head panel-head-row">
-        <div>
-          <p>
-            Past library checks. Each run hits apply URLs and source citations;
-            it never writes to the library. Open findings land in Tickets.
-          </p>
-        </div>
-        <button type="button" class="cta" id="btn-scan">Run library check</button>
-      </div>
-      <p class="scan-status" id="scan-status" aria-live="polite"></p>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Status</th>
-              <th>Progress</th>
-              <th>Findings</th>
-              <th>LLM</th>
-              <th>Started</th>
-            </tr>
-          </thead>
-          <tbody id="scan-rows">
-            <tr><td colspan="6">No scans yet</td></tr>
-          </tbody>
-        </table>
-      </div>
-        </div>
-      </details>
-    </section>
-
-    <section class="panel" id="partners" aria-labelledby="partners-heading">
-      <div class="panel-head panel-head-row">
-        <div>
-          <h2 id="partners-heading">Community partners</h2>
-          <p>Signed-up organizations and individuals. Canceled partners stay listed here with signup and cancel dates; they are hidden from the public leaderboard.</p>
-        </div>
-        <button type="button" class="cta cta-ghost" id="btn-partners-refresh">Refresh</button>
-      </div>
-      <p class="scan-status" id="partners-status" aria-live="polite"></p>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>City</th>
-              <th>Email / status</th>
-              <th>Partner ID</th>
-              <th>Dates</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="partner-rows">
-            <tr><td colspan="6">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <dialog class="partner-edit-dialog" id="dev-partner-edit-dialog" aria-labelledby="dev-edit-dialog-title">
-      <form id="dev-partner-edit-form" class="partner-edit-form" novalidate>
-        <header class="partner-edit-head">
-          <h2 id="dev-edit-dialog-title">Edit partner</h2>
-          <button type="button" class="partner-edit-close" id="dev-edit-dialog-close" aria-label="Close">×</button>
-        </header>
-        <p class="partner-edit-lede">
-          Partner ID and status URL stay the same when the organization name changes.
-        </p>
-        <p class="partner-edit-meta">
-          <span>ID: <code id="dev-edit-partner-id">–</code></span>
-          <span>Slug: <code id="dev-edit-slug">–</code></span>
-        </p>
-        <label class="field">
-          <span>Organization name</span>
-          <input id="dev-edit-organization" name="organization" type="text" required maxlength="120" autocomplete="organization" />
-        </label>
-        <label class="field">
-          <span>City</span>
-          <input id="dev-edit-city" name="city" type="text" maxlength="80" autocomplete="address-level2" />
-        </label>
-        <label class="field">
-          <span>Work email</span>
-          <input id="dev-edit-email" name="email" type="email" inputmode="email" required maxlength="200" autocomplete="email" />
-        </label>
-        <label class="field">
-          <span>Organization logo (optional)</span>
-          <input id="dev-edit-logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp,image/gif" autocomplete="off" />
-          <span class="field-help">Leave empty to keep the current logo. PNG or JPG, up to 2&nbsp;MB.</span>
-        </label>
-        <p id="dev-edit-status" class="partner-edit-status" role="status" aria-live="polite" hidden></p>
-        <div class="partner-edit-actions">
-          <button type="button" class="cta cta-ghost" id="dev-edit-cancel">Cancel</button>
-          <button type="submit" class="cta" id="dev-edit-submit">Save changes</button>
-        </div>
-      </form>
-    </dialog>
-
-    <section class="panel" id="feedback" aria-labelledby="feedback-heading">
-      <div class="panel-head panel-head-row">
-        <div>
-          <h2 id="feedback-heading">Alpha user feedback – to do</h2>
-          <p>
-            Text and voice notes from testers, web contact form messages,
-            partner organization feedback (from the private org page), and developer requests pinned from the
-            message-tree review. Multi-point partner feedback is split into one
-            point per message and credited on that organization’s metrics.
-            Disqualify junk or non-feedback so it drops out of partner tallies.
-            Send real work to Developer tickets with
-            <strong>Send to dev tickets</strong> – partner pages never mention tickets. Voice is transcribed to text when
-            <code>OPENAI_API_KEY</code> is set. Mark done if you handle it here
-            without a ticket.
-          </p>
-        </div>
-        <label class="filter">
-          Show
-          <select id="feedback-filter">
-            <option value="open">Open</option>
-            <option value="all">All</option>
-            <option value="done">Done</option>
-            <option value="disqualified">Disqualified</option>
-          </select>
-        </label>
-      </div>
-      <div id="feedback-list" class="findings">
-        <p class="empty">Loading…</p>
-      </div>
-    </section>
-
-    <section class="panel" id="dev-tickets" aria-labelledby="findings-heading">
-      <details class="panel-fold" open>
-        <summary class="panel-fold-summary">
-          <h2 id="findings-heading">Developer tickets</h2>
-        </summary>
-        <div class="panel-fold-body">
-      <div class="panel-head panel-head-row">
-        <div>
-          <p>
-            Library-scan issues and user feedback sent from the inbox above.
-            Acknowledge or dismiss after you update the library or ship a fix.
-          </p>
-        </div>
-        <label class="filter">
-          Show
-          <select id="finding-filter">
-            <option value="open">Open</option>
-            <option value="all">All</option>
-            <option value="acknowledged">Acknowledged</option>
-            <option value="dismissed">Dismissed</option>
-            <option value="fixed">Fixed</option>
-          </select>
-        </label>
-      </div>
-      <div id="findings-list" class="findings">
-        <p class="empty">Loading…</p>
-      </div>
-        </div>
-      </details>
-    </section>
-
-    <section class="panel" id="org-tickets" aria-labelledby="org-tickets-heading">
-      <details class="panel-fold" open>
-        <summary class="panel-fold-summary">
-          <h2 id="org-tickets-heading">Dev tickets by organization</h2>
-        </summary>
-        <div class="panel-fold-body">
-      <div class="panel-head panel-head-row">
-        <div>
-          <p>
-            Feedback that has been sent to developer tickets, grouped by the
-            partner organization that was credited. Partner-facing pages never
-            mention developer tickets – this view is for operators only.
-          </p>
-        </div>
-        <label class="filter">
-          Show
-          <select id="org-ticket-filter">
-            <option value="open">Open</option>
-            <option value="all">All</option>
-            <option value="done">Done</option>
-            <option value="disqualified">Disqualified</option>
-          </select>
-        </label>
-      </div>
-      <div id="org-tickets-list" class="findings">
-        <p class="empty">Loading…</p>
-      </div>
-        </div>
-      </details>
-    </section>
-
-    <section class="panel" id="checklist" aria-labelledby="checklist-heading">
-      <details class="panel-fold" open>
-        <summary class="panel-fold-summary">
-          <h2 id="checklist-heading">What to keep an eye on</h2>
-        </summary>
-        <div class="panel-fold-body">
-      <div class="panel-head">
-        <p>Beyond dates, qualifications, apply steps, funding, max amounts, and URLs – these fields also break CalClaim when stale.</p>
-      </div>
-      <ul class="checklist" id="checklist-items"></ul>
-        </div>
-      </details>
-    </section>
-
-    <section class="panel" id="funnel" aria-labelledby="funnel-heading">
-      <details class="panel-fold" open>
-        <summary class="panel-fold-summary">
-          <h2 id="funnel-heading">Pipeline fall-off</h2>
-        </summary>
-        <div class="panel-fold-body">
-      <div class="panel-head">
-        <p>
-          Live collected traffic only (operator Telegram ids excluded) – not the public demo dataset.
-          Where people leave the conversation tree – from finding CalClaim to finishing the offer queue.
-        </p>
-      </div>
-      <p class="funnel-callout" id="funnel-callout" hidden></p>
-      <div class="funnel-layout">
-        <div class="funnel-chart-wrap">
-          <canvas id="chart-funnel" height="320"></canvas>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Stage</th>
-                <th class="num">Users</th>
-                <th class="num">Drop-off</th>
-                <th class="num">Still in</th>
-              </tr>
-            </thead>
-            <tbody id="funnel-rows">
-              <tr><td colspan="4">Loading…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-        </div>
-      </details>
-    </section>
-
     <section class="panel" id="spread" aria-labelledby="spread-heading">
       <details class="panel-fold" open>
         <summary class="panel-fold-summary">
@@ -454,6 +181,322 @@
         </article>
       </div>
       <p class="spread-website" id="spread-website" hidden></p>
+        </div>
+      </details>
+    </section>
+
+    <section class="panel" id="partners" aria-labelledby="partners-heading">
+      <div class="panel-head panel-head-row">
+        <div>
+          <h2 id="partners-heading">Community partners</h2>
+          <p>Signed-up organizations and individuals. Canceled partners stay listed here with signup and cancel dates; they are hidden from the public leaderboard. Manually added partners can stay off the leaderboard until you check “Show on leaderboard.”</p>
+        </div>
+        <div class="panel-head-actions">
+          <button type="button" class="cta" id="btn-partners-create">Add partner</button>
+          <button type="button" class="cta cta-ghost" id="btn-partners-refresh">Refresh</button>
+        </div>
+      </div>
+      <p class="scan-status" id="partners-status" aria-live="polite"></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>City</th>
+              <th>Email / status</th>
+              <th>Partner ID</th>
+              <th>Dates</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="partner-rows">
+            <tr><td colspan="6">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <dialog class="partner-edit-dialog" id="dev-partner-create-dialog" aria-labelledby="dev-create-dialog-title">
+      <form id="dev-partner-create-form" class="partner-edit-form" novalidate>
+        <header class="partner-edit-head">
+          <h2 id="dev-create-dialog-title">Add community partner</h2>
+          <button type="button" class="partner-edit-close" id="dev-create-dialog-close" aria-label="Close">×</button>
+        </header>
+        <p class="partner-edit-lede">
+          Creates a verified organization partner with a status page and QR. Leave “Show on leaderboard” unchecked to keep them off the public leaderboard.
+        </p>
+        <label class="field">
+          <span>Organization name</span>
+          <input id="dev-create-organization" name="organization" type="text" required maxlength="120" autocomplete="organization" />
+        </label>
+        <label class="field">
+          <span>Organization email domain</span>
+          <input id="dev-create-email-domain" name="emailDomain" type="text" required maxlength="200" placeholder="example.org" autocomplete="off" inputmode="url" />
+          <span class="field-help">Work domain only (not Gmail, Yahoo, or Outlook). Anyone with an email on this domain can sign in to the private org page.</span>
+        </label>
+        <label class="field">
+          <span>Contact email (optional)</span>
+          <input id="dev-create-email" name="email" type="email" inputmode="email" maxlength="200" autocomplete="email" />
+          <span class="field-help">Must use the organization domain. Defaults to contact@domain if left blank.</span>
+        </label>
+        <label class="field">
+          <span>City (optional)</span>
+          <input id="dev-create-city" name="city" type="text" maxlength="80" autocomplete="address-level2" />
+        </label>
+        <label class="field field-check">
+          <input id="dev-create-show-leaderboard" name="showOnLeaderboard" type="checkbox" />
+          <span>Show on leaderboard</span>
+        </label>
+        <p id="dev-create-status" class="partner-edit-status" role="status" aria-live="polite" hidden></p>
+        <div class="partner-edit-actions">
+          <button type="button" class="cta cta-ghost" id="dev-create-cancel">Cancel</button>
+          <button type="submit" class="cta" id="dev-create-submit">Create partner</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="partner-edit-dialog" id="dev-partner-edit-dialog" aria-labelledby="dev-edit-dialog-title">
+      <form id="dev-partner-edit-form" class="partner-edit-form" novalidate>
+        <header class="partner-edit-head">
+          <h2 id="dev-edit-dialog-title">Edit partner</h2>
+          <button type="button" class="partner-edit-close" id="dev-edit-dialog-close" aria-label="Close">×</button>
+        </header>
+        <p class="partner-edit-lede">
+          Partner ID and status URL stay the same when the organization name changes.
+        </p>
+        <p class="partner-edit-meta">
+          <span>ID: <code id="dev-edit-partner-id">–</code></span>
+          <span>Slug: <code id="dev-edit-slug">–</code></span>
+        </p>
+        <label class="field">
+          <span>Organization name</span>
+          <input id="dev-edit-organization" name="organization" type="text" required maxlength="120" autocomplete="organization" />
+        </label>
+        <label class="field">
+          <span>City</span>
+          <input id="dev-edit-city" name="city" type="text" maxlength="80" autocomplete="address-level2" />
+        </label>
+        <label class="field">
+          <span>Work email</span>
+          <input id="dev-edit-email" name="email" type="email" inputmode="email" required maxlength="200" autocomplete="email" />
+        </label>
+        <label class="field" id="dev-edit-email-domain-field">
+          <span>Organization email domain</span>
+          <input id="dev-edit-email-domain" name="emailDomain" type="text" maxlength="200" placeholder="example.org" autocomplete="off" inputmode="url" />
+          <span class="field-help">Must match the work email domain for organizations.</span>
+        </label>
+        <label class="field">
+          <span>Organization logo (optional)</span>
+          <input id="dev-edit-logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp,image/gif" autocomplete="off" />
+          <span class="field-help">Leave empty to keep the current logo. PNG or JPG, up to 2&nbsp;MB.</span>
+        </label>
+        <label class="field field-check">
+          <input id="dev-edit-show-leaderboard" name="showOnLeaderboard" type="checkbox" />
+          <span>Show on leaderboard</span>
+        </label>
+        <p id="dev-edit-status" class="partner-edit-status" role="status" aria-live="polite" hidden></p>
+        <div class="partner-edit-actions">
+          <button type="button" class="cta cta-ghost" id="dev-edit-cancel">Cancel</button>
+          <button type="submit" class="cta" id="dev-edit-submit">Save changes</button>
+        </div>
+      </form>
+    </dialog>
+
+    <section class="panel" id="feedback" aria-labelledby="feedback-heading">
+      <div class="panel-head panel-head-row">
+        <div>
+          <h2 id="feedback-heading">Alpha user feedback – to do</h2>
+          <p>
+            Text and voice notes from testers, web contact form messages,
+            partner organization feedback (from the private org page), and developer requests pinned from the
+            message-tree review. Multi-point partner feedback is split into one
+            point per message and credited on that organization’s metrics.
+            Disqualify junk or non-feedback so it drops out of partner tallies.
+            Send real work to Developer tickets with
+            <strong>Send to dev tickets</strong> – partner pages never mention tickets. Voice is transcribed to text when
+            <code>OPENAI_API_KEY</code> is set. Mark done if you handle it here
+            without a ticket.
+          </p>
+        </div>
+        <label class="filter">
+          Show
+          <select id="feedback-filter">
+            <option value="open">Open</option>
+            <option value="all">All</option>
+            <option value="done">Done</option>
+            <option value="disqualified">Disqualified</option>
+          </select>
+        </label>
+      </div>
+      <div id="feedback-list" class="findings">
+        <p class="empty">Loading…</p>
+      </div>
+    </section>
+
+    <section class="panel" id="org-tickets" aria-labelledby="org-tickets-heading">
+      <details class="panel-fold" open>
+        <summary class="panel-fold-summary">
+          <h2 id="org-tickets-heading">Dev tickets by organization</h2>
+        </summary>
+        <div class="panel-fold-body">
+      <div class="panel-head panel-head-row">
+        <div>
+          <p>
+            Feedback that has been sent to developer tickets, grouped by the
+            partner organization that was credited. Partner-facing pages never
+            mention developer tickets – this view is for operators only.
+          </p>
+        </div>
+        <label class="filter">
+          Show
+          <select id="org-ticket-filter">
+            <option value="open">Open</option>
+            <option value="all">All</option>
+            <option value="done">Done</option>
+            <option value="disqualified">Disqualified</option>
+          </select>
+        </label>
+      </div>
+      <div id="org-tickets-list" class="findings">
+        <p class="empty">Loading…</p>
+      </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="panel" id="dev-tickets" aria-labelledby="findings-heading">
+      <details class="panel-fold" open>
+        <summary class="panel-fold-summary">
+          <h2 id="findings-heading">Developer tickets</h2>
+        </summary>
+        <div class="panel-fold-body">
+      <div class="panel-head panel-head-row">
+        <div>
+          <p>
+            Library-scan issues and user feedback sent from the inbox above.
+            Acknowledge or dismiss after you update the library or ship a fix.
+          </p>
+        </div>
+        <label class="filter">
+          Show
+          <select id="finding-filter">
+            <option value="open">Open</option>
+            <option value="all">All</option>
+            <option value="acknowledged">Acknowledged</option>
+            <option value="dismissed">Dismissed</option>
+            <option value="fixed">Fixed</option>
+          </select>
+        </label>
+      </div>
+      <div id="findings-list" class="findings">
+        <p class="empty">Loading…</p>
+      </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="panel" id="scan" aria-labelledby="scans-heading">
+      <div id="scans" class="programs-anchor" aria-hidden="true"></div>
+      <details class="panel-fold" open>
+        <summary class="panel-fold-summary">
+          <h2 id="scans-heading">Recent scans</h2>
+        </summary>
+        <div class="panel-fold-body">
+      <div class="panel-head panel-head-row">
+        <div>
+          <p>
+            Past library checks. Each run hits apply URLs and source citations;
+            it never writes to the library. Open findings land in Tickets.
+          </p>
+        </div>
+        <button type="button" class="cta" id="btn-scan">Run library check</button>
+      </div>
+      <p class="scan-status" id="scan-status" aria-live="polite"></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Status</th>
+              <th>Progress</th>
+              <th>Findings</th>
+              <th>LLM</th>
+              <th>Started</th>
+            </tr>
+          </thead>
+          <tbody id="scan-rows">
+            <tr><td colspan="6">No scans yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="panel" id="program-opens" aria-labelledby="program-opens-heading">
+      <details class="panel-fold">
+        <summary class="panel-fold-summary">
+          <h2 id="program-opens-heading">Programs opened from CalClaim</h2>
+        </summary>
+        <div class="panel-fold-body">
+      <div class="panel-head">
+        <p>
+          Live tracked redirects to official application sites (operator traffic excluded).
+        </p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Program</th>
+              <th>Category</th>
+              <th class="num">Opens</th>
+              <th class="num">Follow-throughs</th>
+              <th class="num">Est. $ unlocked</th>
+            </tr>
+          </thead>
+          <tbody id="program-open-rows">
+            <tr><td colspan="5">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="panel" id="funnel" aria-labelledby="funnel-heading">
+      <details class="panel-fold" open>
+        <summary class="panel-fold-summary">
+          <h2 id="funnel-heading">Pipeline fall-off</h2>
+        </summary>
+        <div class="panel-fold-body">
+      <div class="panel-head">
+        <p>
+          Live collected traffic only (operator Telegram ids excluded) – not the public demo dataset.
+          Where people leave the conversation tree – from finding CalClaim to finishing the offer queue.
+        </p>
+      </div>
+      <p class="funnel-callout" id="funnel-callout" hidden></p>
+      <div class="funnel-layout">
+        <div class="funnel-chart-wrap">
+          <canvas id="chart-funnel" height="320"></canvas>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th class="num">Users</th>
+                <th class="num">Drop-off</th>
+                <th class="num">Still in</th>
+              </tr>
+            </thead>
+            <tbody id="funnel-rows">
+              <tr><td colspan="4">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
         </div>
       </details>
     </section>
@@ -533,6 +576,20 @@
           </table>
         </div>
       </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="panel" id="checklist" aria-labelledby="checklist-heading">
+      <details class="panel-fold" open>
+        <summary class="panel-fold-summary">
+          <h2 id="checklist-heading">What to keep an eye on</h2>
+        </summary>
+        <div class="panel-fold-body">
+      <div class="panel-head">
+        <p>Beyond dates, qualifications, apply steps, funding, max amounts, and URLs – these fields also break CalClaim when stale.</p>
+      </div>
+      <ul class="checklist" id="checklist-items"></ul>
         </div>
       </details>
     </section>

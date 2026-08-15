@@ -76,6 +76,7 @@ function profileCsv(stats: PartnerStats): string {
     ["name", p.name],
     ["city", p.city],
     ["blurb", p.blurb],
+    ["website", p.website || ""],
     ["account_type", p.accountType],
     ["email_verified", p.emailVerified ? "yes" : "no"],
     ["email_domain", p.emailDomain],

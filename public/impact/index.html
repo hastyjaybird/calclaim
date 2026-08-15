@@ -9,8 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="/impact/styles.css?v=20260815-partner-aid" />
-  <link rel="stylesheet" href="/donate/donate.css?v=20260812-donate" />
+  <link rel="stylesheet" href="/impact/styles.css?v=20260815-cta-wide" />
+  <link rel="stylesheet" href="/donate/donate.css?v=20260815-cta-weight" />
 </head>
 <body data-page="impact">
   <div class="banner" role="banner">
@@ -42,41 +42,41 @@
       <p class="eyebrow" data-i18n="impact.gapEyebrow">The gap</p>
       <h1 data-i18n="impact.gapTitle">Billions in California benefits go unclaimed each year</h1>
       <p class="lede gap-lede" data-i18n="impact.gapLede">
-        Hundreds of thousands of eligible people never finish applying—or get pushed off by paperwork—while federal and state aid sits unused.
+        Hundreds of thousands of eligible people in California stall on paperwork while federal and state aid sits unused.
       </p>
       <div class="gap-stats" data-i18n-aria="impact.gapStatsAria" aria-label="Scale of the benefits gap">
         <div class="gap-stat">
-          <p class="gap-stat-value" data-i18n="impact.gapStat1Value">~$1.5–2B</p>
+          <p class="gap-stat-value" data-i18n="impact.gapStat1Value">$1.5–2B</p>
           <p class="gap-stat-label">
-            <span data-i18n="impact.gapStat1Label">Forgone CalFresh benefits each year</span>
+            <span data-i18n="impact.gapStat1Label">CalFresh left unclaimed each year</span>
             <sup class="gap-fn"><a href="#gap-ref-1">1</a></sup>
           </p>
         </div>
         <div class="gap-stat">
           <p class="gap-stat-value" data-i18n="impact.gapStat2Value">~710k</p>
           <p class="gap-stat-label">
-            <span data-i18n="impact.gapStat2Label">Uninsured Californians who appear eligible for Medi-Cal</span>
+            <span data-i18n="impact.gapStat2Label">Uninsured but Medi-Cal–eligible</span>
             <sup class="gap-fn"><a href="#gap-ref-2">2</a></sup>
           </p>
         </div>
         <div class="gap-stat">
           <p class="gap-stat-value" data-i18n="impact.gapStat3Value">~80%</p>
           <p class="gap-stat-label">
-            <span data-i18n="impact.gapStat3Label">Eligible households not getting the FERA utility discount</span>
+            <span data-i18n="impact.gapStat3Label">Eligible for FERA, not enrolled</span>
             <sup class="gap-fn"><a href="#gap-ref-3">3</a></sup>
           </p>
         </div>
         <div class="gap-stat">
           <p class="gap-stat-value" data-i18n="impact.gapStat4Value">~47%</p>
           <p class="gap-stat-label">
-            <span data-i18n="impact.gapStat4Label">Eligible CalFresh households who miss California’s earned-income tax credit</span>
+            <span data-i18n="impact.gapStat4Label">CalFresh households missing CalEITC</span>
             <sup class="gap-fn"><a href="#gap-ref-4">4</a></sup>
           </p>
         </div>
         <div class="gap-stat">
           <p class="gap-stat-value" data-i18n="impact.gapStat5Value">~40%</p>
           <p class="gap-stat-label">
-            <span data-i18n="impact.gapStat5Label">Eligible CalWORKs families who never enroll</span>
+            <span data-i18n="impact.gapStat5Label">CalWORKs-eligible, never enrolled</span>
             <sup class="gap-fn"><a href="#gap-ref-5">5</a></sup>
           </p>
         </div>
@@ -90,7 +90,7 @@
   <section class="hero live-hero" id="live">
     <div class="hero-grid">
       <div class="hero-copy">
-        <p class="eyebrow" data-i18n="impact.eyebrow">Live data</p>
+        <p class="eyebrow" data-i18n="impact.eyebrow">Start here</p>
         <h2 class="live-brand">
           <img
             class="hero-logo"
@@ -101,14 +101,14 @@
           />
         </h2>
         <p class="lede" data-i18n="impact.lede">
-          CalClaim finds help with food, health coverage, phone discounts, energy bills, and more – and gives you a personalized Application Guide for California and federal programs to make it easier to apply.
+          Find benefits for food, health, phone, and energy bills. CalClaim creates a personalized Application Guide that makes applying easier.
         </p>
         <p class="hero-actions">
           <a class="cta" href="/partners/signup" data-i18n="impact.partnerSignupCta">Sign up to be a partner</a>
           <button type="button" class="cta cta-ghost" data-donate-open data-i18n="donate.cta">Donate</button>
         </p>
         <p class="partner-signup-note" data-i18n="impact.partnerSignupBody">
-          Partner organizations sign up for a dedicated QR code for campaigns, private back end for statistics and media assets for fundraising.
+          Partners get dedicated campaign QR codes, private statistics dashboard and fundraising media.
         </p>
       </div>
       <aside class="try-card" data-i18n-aria="impact.openCta" aria-label="Open CalClaim">
@@ -131,6 +131,9 @@
   </section>
 
   <main id="impact">
+    <div class="live-metrics-rule" role="presentation">
+      <p class="eyebrow live-metrics-label" data-i18n="impact.liveEyebrow">Live data</p>
+    </div>
     <section class="metrics" data-i18n-aria="impact.metricsAria" aria-label="Key metrics">
       <article class="metric">
         <p class="metric-label" data-i18n="impact.peopleReached">People reached</p>
@@ -148,7 +151,7 @@
       <article class="metric">
         <p class="metric-label" data-i18n="impact.followThroughs">Follow-throughs</p>
         <p class="metric-value" id="m-follow">–</p>
-        <p class="metric-note" data-i18n="impact.followNote">People who opened a page and added it to their list</p>
+        <p class="metric-note" data-i18n="impact.followNote">Opened a page and saved it</p>
       </article>
       <article class="metric metric-accent">
         <p class="metric-label" data-i18n="impact.estAid">Est. aid unlocked</p>
@@ -169,7 +172,7 @@
       <div class="panel-head">
         <h2 id="partners-heading" data-i18n="impact.partnersHeading">Community partners</h2>
         <p data-i18n="impact.partnersBody">
-          Verified organizations hosting CalClaim QR codes – ranked by people reached through their unique code and any event codes they generate. The star marks the outreach leader. Individuals partner privately and are not listed here.
+          Verified organizations ranked by people reached. Star marks the leader. Individuals partner privately—not listed here.
         </p>
       </div>
       <div class="partner-login-bar">
@@ -229,7 +232,7 @@
       <div class="panel-head">
         <h2 id="contact-heading" data-i18n="contact.title">Contact</h2>
         <p data-i18n="contact.lede">
-          CalClaim is a portfolio demo that helps California people find financial aid and benefits.
+          Comments, questions, feedback or collaborations?
         </p>
       </div>
 
@@ -330,7 +333,7 @@
     <section class="panel prose gap-refs-panel" id="gap-refs" aria-labelledby="gap-refs-heading">
       <div class="panel-head">
         <h2 id="gap-refs-heading" data-i18n="impact.gapRefsHeading">Sources</h2>
-        <p data-i18n="impact.gapRefsIntro">Notes for the gap statistics at the top of this page.</p>
+        <p data-i18n="impact.gapRefsIntro">For the gap stats above.</p>
       </div>
       <ol class="gap-refs" data-i18n-aria="impact.gapRefsAria" aria-label="Sources for gap statistics">
         <li id="gap-ref-1" data-i18n="impact.gapRef1" data-i18n-html>
@@ -376,9 +379,9 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script src="/i18n/messages.js?v=20260815-partner-aid"></script>
+  <script src="/i18n/messages.js?v=20260815-copy-tighten"></script>
   <script src="/i18n/lang.js?v=20260815-vi-tl"></script>
   <script src="/donate/donate.js?v=20260812-donate"></script>
-  <script src="/impact/app.js?v=20260815-partner-aid"></script>
+  <script src="/impact/app.js?v=20260815-copy-tighten"></script>
 </body>
 </html>

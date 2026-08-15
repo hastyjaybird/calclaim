@@ -19,12 +19,19 @@ export interface Partner {
   campaignId: string;
   logo: string;
   blurb: string;
+  /** Optional public website URL (shown on the community partner leaderboard). */
+  website: string;
   accountType: PartnerAccountType;
   emailDomain: string;
   /** True when the partner's signup email has been verified (library demos are always verified). */
   emailVerified: boolean;
   /** ISO timestamp when canceled; null/undefined while active. Library demos are never canceled. */
   canceledAt?: string | null;
+  /**
+   * When false, omitted from the public community leaderboard.
+   * Library demos are always shown; live signups default to true unless set otherwise.
+   */
+  showOnLeaderboard: boolean;
 }
 
 interface LibraryPartnerJson {
@@ -35,6 +42,7 @@ interface LibraryPartnerJson {
   campaignId: string;
   logo: string;
   blurb: string;
+  website?: string;
   accountType?: PartnerAccountType;
   emailDomain?: string;
   emailVerified?: boolean;
@@ -66,10 +74,12 @@ function libraryPartners(): Partner[] {
     campaignId: p.campaignId,
     logo: p.logo,
     blurb: p.blurb,
+    website: (p.website || "").trim(),
     accountType: p.accountType === "individual" ? "individual" : "organization",
     emailDomain: (p.emailDomain || "").toLowerCase(),
     // Demo library partners are treated as verified accounts for demos.
     emailVerified: p.emailVerified !== false,
+    showOnLeaderboard: true,
   }));
 }
 
@@ -82,10 +92,12 @@ function asPartner(p: SignedUpPartner): Partner {
     campaignId: p.campaignId,
     logo: p.logo,
     blurb: p.blurb,
+    website: p.website || "",
     accountType: p.accountType,
     emailDomain: p.emailDomain,
     emailVerified: Boolean(p.emailVerifiedAt),
     canceledAt: p.canceledAt,
+    showOnLeaderboard: p.showOnLeaderboard,
   };
 }
 
@@ -101,10 +113,11 @@ export function listPartners(): Partner[] {
 
 /**
  * Public leaderboard partners: verified organizations and individuals who have
- * not canceled. Individuals use a public status page (no private /org dashboard).
+ * not canceled and are marked show-on-leaderboard. Individuals use a public
+ * status page (no private /org dashboard).
  *
- * Pass `{ includeLibrary: false }` for live dashboards so staged library
- * demo partners (Oakland Library, etc.) do not appear with empty real stats.
+ * Pass `{ includeLibrary: false }` to omit library partners (CalClaim website,
+ * Resilient Markets, Bay Area Makerfarm) and show only live signups.
  */
 export function listLeaderboardPartners(opts?: {
   includeLibrary?: boolean;
@@ -113,9 +126,17 @@ export function listLeaderboardPartners(opts?: {
   const fromLibrary = includeLibrary ? libraryPartners() : [];
   const librarySlugs = new Set(fromLibrary.map((p) => p.slug));
   const fromSignup = listSignedUpPartners()
-    .filter((p) => p.emailVerifiedAt && !p.canceledAt && !librarySlugs.has(p.slug))
+    .filter(
+      (p) =>
+        p.emailVerifiedAt &&
+        !p.canceledAt &&
+        p.showOnLeaderboard &&
+        !librarySlugs.has(p.slug),
+    )
     .map(asPartner);
-  return [...fromLibrary, ...fromSignup].filter((p) => p.emailVerified && !p.canceledAt);
+  return [...fromLibrary, ...fromSignup].filter(
+    (p) => p.emailVerified && !p.canceledAt && p.showOnLeaderboard,
+  );
 }
 
 export function getPartnerBySlug(slug: string): Partner | undefined {

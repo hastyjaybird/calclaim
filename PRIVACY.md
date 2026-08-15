@@ -1,7 +1,7 @@
 # CalClaim Privacy Policy (demo)
 
 **Product:** CalClaim v2 – California financial aid / benefits navigator (Telegram)  
-**Last updated:** 2026-08-13
+**Last updated:** 2026-08-15
 
 ## What we collect
 
@@ -27,12 +27,14 @@ Tables: `telegram_users`, `telegram_messages` in the demo database.
 - Free-form text or voice notes you send that are not a recognized button/command (alpha feedback / developer quality control)
 - Voice notes are transcribed to text (when transcription is configured) and stored as feedback for the developer To Do List
 - Optional email and comments submitted on the public contact form (stored in the developer feedback To Do List in SQLite)
-- Partner signup: organization name, work email, and optional city (stored in SQLite `partner_signups`; used to email the QR kit and power the partner status page). Signed-in partners can download the data shown on that page (CSV) or delete the account.
+- Partner signup: organization name, work email, optional city, and optional website (stored in SQLite `partner_signups`; used to email the QR kit, power the partner status page, and link the website on the public leaderboard when provided). Signed-in partners can download the data shown on that page (CSV) or delete the account.
 - Optional gifts on the public site: gift amount, monthly vs one-time, and Stripe payment / subscription ids (SQLite `donations`). Card numbers, bank account numbers, and PayPal credentials are collected by Stripe / PayPal, not by CalClaim.
 
 ### Impact analytics (aggregate funder dashboard)
 
 - QR scans and shared-link clicks (campaign id, timestamp). Friend-share links use an anonymous per-person code so we can tell organization outreach from people sharing with friends – we do not store who a link was sent to.
+- When someone opens the bot from a friend-share link/QR, we store a first-touch referral edge (sharer’s Telegram user id → recipient’s Telegram user id, campaign id, timestamp) so operators can study how sharing spreads. We still do not store the contact list or “who you texted.” Erase removes edges that name you.
+- Share-menu opens (`share_out`) and friend arrivals (`share_in`) are logged with the same anonymous share code.
 - Clicks from the bot to official program apply pages (program id, timestamp)
 - “Add to My Application Guide” follow-through taps
 - Coarse location only: QR poster placement coordinates, and optionally city-level IP geolocation (rounded; never street address)

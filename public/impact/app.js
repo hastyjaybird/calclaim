@@ -217,19 +217,30 @@ function partnerRowHtml(p) {
     "impact.partnersTickets",
     "dev tickets",
   )}`;
+  const website = typeof p.website === "string" ? p.website.trim() : "";
+  const websiteLink = website
+    ? `<a class="partner-website" href="${escapeHtml(website)}" target="_blank" rel="noopener noreferrer">${escapeHtml(
+        txt("impact.partnersWebsite", "Website"),
+      )}</a>`
+    : "";
   return `<li>
-    <a class="partner-row" href="${escapeHtml(href)}">
+    <div class="partner-row">
       <span class="partner-trophy-slot">${trophy}</span>
       <span class="partner-rank">${p.rank}</span>
-      <img class="partner-logo" src="${escapeHtml(p.logo)}" alt="" width="48" height="48" />
+      <a class="partner-logo-link" href="${escapeHtml(href)}">
+        <img class="partner-logo" src="${escapeHtml(p.logo)}" alt="" width="48" height="48" />
+      </a>
       <div class="partner-meta">
         <div class="partner-name-row">
-          <p class="partner-name">${escapeHtml(p.name)}</p>
+          <a class="partner-name" href="${escapeHtml(href)}">${escapeHtml(p.name)}</a>
           ${verifiedBadgeHtml(p)}
+          ${websiteLink}
         </div>
-        <p class="partner-city">${escapeHtml(p.city)} · ${escapeHtml(secondary)}</p>
+        <p class="partner-city">
+          <a class="partner-city-link" href="${escapeHtml(href)}">${escapeHtml(p.city)} · ${escapeHtml(secondary)}</a>
+        </p>
       </div>
-      <div class="partner-stats">
+      <a class="partner-stats" href="${escapeHtml(href)}">
         <div class="partner-stat">
           <p class="partner-stat-value">${number.format(p.peopleReached)}</p>
           <p class="partner-stat-label">${escapeHtml(
@@ -242,8 +253,8 @@ function partnerRowHtml(p) {
             txt("impact.partnersEstAid", "Est. aid unlocked"),
           )}</p>
         </div>
-      </div>
-    </a>
+      </a>
+    </div>
   </li>`;
 }
 

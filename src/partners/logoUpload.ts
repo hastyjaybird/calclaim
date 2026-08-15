@@ -33,6 +33,9 @@ export async function readPartnerSignupMultipart(
   editToken: string;
   ownerToken: string;
   accountType: string;
+  website: string;
+  emailDomain: string;
+  showOnLeaderboard?: boolean;
   logo?: { buffer: Buffer; mime: string; filename: string };
 }> {
   const contentType = String(req.headers["content-type"] || "");
@@ -51,6 +54,9 @@ export async function readPartnerSignupMultipart(
   let editToken = "";
   let ownerToken = "";
   let accountType = "";
+  let website = "";
+  let emailDomain = "";
+  let showOnLeaderboard: boolean | undefined;
   let logo: { buffer: Buffer; mime: string; filename: string } | undefined;
 
   for (const part of parts) {
@@ -88,7 +94,13 @@ export async function readPartnerSignupMultipart(
     if (field === "name") name = text.slice(0, 120);
     else if (field === "email") email = text.slice(0, 200).toLowerCase();
     else if (field === "city") city = text.slice(0, 80);
-    else if (field === "accountType" || field === "account_type") {
+    else if (field === "website") website = text.slice(0, 500);
+    else if (field === "emailDomain" || field === "email_domain") {
+      emailDomain = text.slice(0, 200).toLowerCase();
+    } else if (field === "showOnLeaderboard" || field === "show_on_leaderboard") {
+      const v = text.toLowerCase();
+      showOnLeaderboard = v === "1" || v === "true" || v === "on" || v === "yes";
+    } else if (field === "accountType" || field === "account_type") {
       accountType = text.slice(0, 40).toLowerCase();
     } else if (field === "partnerId" || field === "partner_id") {
       partnerId = text.slice(0, 40).toLowerCase();
@@ -99,7 +111,19 @@ export async function readPartnerSignupMultipart(
     }
   }
 
-  return { name, email, city, partnerId, editToken, ownerToken, accountType, logo };
+  return {
+    name,
+    email,
+    city,
+    partnerId,
+    editToken,
+    ownerToken,
+    accountType,
+    website,
+    emailDomain,
+    showOnLeaderboard,
+    logo,
+  };
 }
 
 export function deletePartnerLogoFiles(partnerId: string, logoPath = ""): void {

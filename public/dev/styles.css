@@ -212,6 +212,13 @@ button.cta:disabled {
   gap: 1rem;
 }
 
+.panel-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .panel-fold {
   margin: 0;
 }
@@ -1292,6 +1299,27 @@ footer a {
   font-size: 0.85rem;
   color: var(--ink-soft);
   line-height: 1.4;
+}
+
+.partner-edit-form .field-check {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.25rem;
+}
+
+.partner-edit-form .field-check input[type="checkbox"] {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+  accent-color: var(--leaf);
+  flex-shrink: 0;
+}
+
+.partner-edit-form .field-check > span {
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .partner-edit-form input[type="text"],

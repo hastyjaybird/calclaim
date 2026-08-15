@@ -195,7 +195,7 @@ function renderScans(scans, latest) {
         <td>#${s.id}${current}</td>
         <td>${escapeHtml(s.status)}</td>
         <td>${s.programsDone}/${s.programsTotal}</td>
-        <td class="num">${s.findingsCount}</td>
+        <td>${s.findingsCount}</td>
         <td>${s.llmEnabled ? "yes" : "no"}</td>
         <td>${formatWhen(s.startedAt)}</td>
       </tr>`;
@@ -2222,8 +2222,8 @@ let devPartners = null;
 /** @type {{ id: string, slug: string, name: string, email: string, city: string, logo: string } | null} */
 let editingDevPartner = null;
 
-function showDevPartnerStatus(message, isError) {
-  const status = el("dev-edit-status");
+function showDevPartnerStatus(message, isError, which = "edit") {
+  const status = el(which === "create" ? "dev-create-status" : "dev-edit-status");
   if (!status) return;
   status.hidden = !message;
   status.textContent = message || "";
@@ -2238,6 +2238,26 @@ function closeDevPartnerDialog() {
   editingDevPartner = null;
 }
 
+function closeDevPartnerCreateDialog() {
+  const dialog = el("dev-partner-create-dialog");
+  if (!dialog) return;
+  if (typeof dialog.close === "function") dialog.close();
+  else dialog.removeAttribute("open");
+}
+
+function openDevPartnerCreateDialog() {
+  const dialog = el("dev-partner-create-dialog");
+  if (!dialog) return;
+  const form = el("dev-partner-create-form");
+  if (form) form.reset();
+  const showBox = el("dev-create-show-leaderboard");
+  if (showBox) showBox.checked = false;
+  showDevPartnerStatus("", false, "create");
+  if (typeof dialog.showModal === "function") dialog.showModal();
+  else dialog.setAttribute("open", "");
+  el("dev-create-organization")?.focus();
+}
+
 function openDevPartnerDialog(partner) {
   editingDevPartner = partner;
   const dialog = el("dev-partner-edit-dialog");
@@ -2247,6 +2267,16 @@ function openDevPartnerDialog(partner) {
   el("dev-edit-organization").value = partner.name || "";
   el("dev-edit-city").value = partner.city || "";
   el("dev-edit-email").value = partner.email || "";
+  const domainInput = el("dev-edit-email-domain");
+  const domainField = el("dev-edit-email-domain-field");
+  const isOrg = (partner.accountType || "organization") === "organization";
+  if (domainInput) {
+    domainInput.value = partner.emailDomain || "";
+    domainInput.required = isOrg;
+  }
+  if (domainField) domainField.hidden = !isOrg;
+  const showBox = el("dev-edit-show-leaderboard");
+  if (showBox) showBox.checked = partner.showOnLeaderboard !== false;
   const logoInput = el("dev-edit-logo");
   if (logoInput) logoInput.value = "";
   showDevPartnerStatus("", false);
@@ -2267,8 +2297,12 @@ function renderPartnerMetric(partners) {
   const verified = partners.filter((p) => p.emailVerified && !p.canceledAt).length;
   const canceled = partners.filter((p) => p.canceledAt).length;
   const pending = partners.length - verified - canceled;
+  const hidden = partners.filter(
+    (p) => p.emailVerified && !p.canceledAt && p.showOnLeaderboard === false,
+  ).length;
   const parts = [`${number.format(verified)} active`];
   if (pending) parts.push(`${number.format(pending)} pending`);
+  if (hidden) parts.push(`${number.format(hidden)} off leaderboard`);
   if (canceled) parts.push(`${number.format(canceled)} canceled`);
   noteEl.textContent = parts.join(" · ");
 }
@@ -2284,6 +2318,12 @@ function renderDevPartners(partners) {
   }
   tbody.innerHTML = partners
     .map((p) => {
+      const board =
+        p.canceledAt || !p.emailVerified
+          ? null
+          : p.showOnLeaderboard === false
+            ? "Hidden from leaderboard"
+            : "On leaderboard";
       const status = p.canceledAt
         ? "Canceled"
         : p.emailVerified
@@ -2291,6 +2331,7 @@ function renderDevPartners(partners) {
             ? `Verified · @${p.emailDomain}`
             : "Verified email"
           : "Pending verification";
+      const statusBits = [status, board].filter(Boolean).join(" · ");
       const dates = [
         `Signed up ${formatWhen(p.createdAt)}`,
         p.canceledAt ? `Canceled ${formatWhen(p.canceledAt)}` : null,
@@ -2306,7 +2347,7 @@ function renderDevPartners(partners) {
       return `<tr data-slug="${escapeHtml(p.slug)}" class="${p.canceledAt ? "is-canceled" : ""}">
         <td>${escapeHtml(p.name)}<br><small>${escapeHtml(p.accountType || "organization")}</small></td>
         <td>${escapeHtml(p.city || "–")}</td>
-        <td>${escapeHtml(p.email || "–")}<br><small>${escapeHtml(status)}</small></td>
+        <td>${escapeHtml(p.email || "–")}<br><small>${escapeHtml(statusBits)}</small></td>
         <td><code>${escapeHtml(p.id)}</code><br><small><a href="${escapeHtml(p.statusUrl)}" target="_blank" rel="noopener">${escapeHtml(p.slug)}</a></small></td>
         <td><small>${dates}</small></td>
         <td>${actions}</td>
@@ -2342,9 +2383,32 @@ async function refreshDevPartners() {
   }
 }
 
+function partnerFormErrorMessage(error) {
+  switch (error) {
+    case "name_required":
+      return "Add the organization name.";
+    case "email_required":
+      return "Add a contact email.";
+    case "email_invalid":
+      return "Enter a valid email address.";
+    case "email_domain_required":
+      return "Add the organization email domain.";
+    case "email_domain_invalid":
+      return "Enter a valid email domain (for example example.org).";
+    case "email_org_domain_required":
+      return "Use a work email domain (not Gmail, Yahoo, or Outlook).";
+    case "email_domain_mismatch":
+      return "Contact email must use the organization domain.";
+    case "website_invalid":
+      return "Enter a valid website URL.";
+    default:
+      return "Could not save. Try again.";
+  }
+}
+
 function bindDevPartnerEdit() {
   const form = el("dev-partner-edit-form");
-  if (!form) return;
+  const createForm = el("dev-partner-create-form");
 
   el("dev-edit-dialog-close")?.addEventListener("click", closeDevPartnerDialog);
   el("dev-edit-cancel")?.addEventListener("click", closeDevPartnerDialog);
@@ -2352,6 +2416,62 @@ function bindDevPartnerEdit() {
     if (event.target === el("dev-partner-edit-dialog")) closeDevPartnerDialog();
   });
   el("btn-partners-refresh")?.addEventListener("click", () => void refreshDevPartners());
+  el("btn-partners-create")?.addEventListener("click", openDevPartnerCreateDialog);
+  el("dev-create-dialog-close")?.addEventListener("click", closeDevPartnerCreateDialog);
+  el("dev-create-cancel")?.addEventListener("click", closeDevPartnerCreateDialog);
+  el("dev-partner-create-dialog")?.addEventListener("click", (event) => {
+    if (event.target === el("dev-partner-create-dialog")) closeDevPartnerCreateDialog();
+  });
+
+  createForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const name = String(el("dev-create-organization")?.value || "").trim();
+    const emailDomain = String(el("dev-create-email-domain")?.value || "").trim();
+    const email = String(el("dev-create-email")?.value || "").trim();
+    const city = String(el("dev-create-city")?.value || "").trim();
+    const showOnLeaderboard = Boolean(el("dev-create-show-leaderboard")?.checked);
+    const submit = el("dev-create-submit");
+
+    if (!name) {
+      showDevPartnerStatus("Add the organization name.", true, "create");
+      return;
+    }
+    if (!emailDomain) {
+      showDevPartnerStatus("Add the organization email domain.", true, "create");
+      return;
+    }
+
+    if (submit) submit.disabled = true;
+    showDevPartnerStatus("Creating partner…", false, "create");
+
+    try {
+      const res = await api("/api/dev/partners", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          emailDomain,
+          email: email || undefined,
+          city: city || undefined,
+          showOnLeaderboard,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showDevPartnerStatus(partnerFormErrorMessage(data.error), true, "create");
+        return;
+      }
+      closeDevPartnerCreateDialog();
+      await refreshDevPartners();
+    } catch (err) {
+      console.error(err);
+      showDevPartnerStatus("Could not create partner. Try again.", true, "create");
+    } finally {
+      if (submit) submit.disabled = false;
+    }
+  });
+
+  if (!form) return;
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -2360,8 +2480,11 @@ function bindDevPartnerEdit() {
     const name = String(el("dev-edit-organization")?.value || "").trim();
     const email = String(el("dev-edit-email")?.value || "").trim();
     const city = String(el("dev-edit-city")?.value || "").trim();
+    const emailDomain = String(el("dev-edit-email-domain")?.value || "").trim();
+    const showOnLeaderboard = Boolean(el("dev-edit-show-leaderboard")?.checked);
     const logoFile = el("dev-edit-logo")?.files?.[0] || null;
     const submit = el("dev-edit-submit");
+    const isOrg = (editingDevPartner.accountType || "organization") === "organization";
 
     if (!name) {
       showDevPartnerStatus("Add the organization name.", true);
@@ -2369,6 +2492,10 @@ function bindDevPartnerEdit() {
     }
     if (!email) {
       showDevPartnerStatus("Add the work email.", true);
+      return;
+    }
+    if (isOrg && !emailDomain) {
+      showDevPartnerStatus("Add the organization email domain.", true);
       return;
     }
     if (logoFile && logoFile.size > 2_000_000) {
@@ -2384,6 +2511,8 @@ function bindDevPartnerEdit() {
       body.set("name", name);
       body.set("email", email);
       body.set("city", city);
+      if (isOrg) body.set("emailDomain", emailDomain);
+      body.set("showOnLeaderboard", showOnLeaderboard ? "1" : "0");
       if (logoFile) body.set("logo", logoFile);
 
       const res = await api(
@@ -2392,12 +2521,7 @@ function bindDevPartnerEdit() {
       );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        showDevPartnerStatus(
-          data.error === "email_invalid"
-            ? "Enter a valid email address."
-            : "Could not save changes. Try again.",
-          true,
-        );
+        showDevPartnerStatus(partnerFormErrorMessage(data.error), true);
         return;
       }
       closeDevPartnerDialog();

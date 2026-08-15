@@ -8,7 +8,8 @@ export type AnalyticsEventType =
   | "funnel"
   | "screen_view"
   | "report_created"
-  | "share_out";
+  | "share_out"
+  | "share_in";
 
 export type AnalyticsSource = "qr" | "link" | "bot" | "unknown";
 

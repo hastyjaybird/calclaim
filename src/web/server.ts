@@ -9,6 +9,7 @@ import {
 import { recordEvent } from "../analytics/db.js";
 import { clientIp, coarseFromIp, fromCampaignPin } from "../analytics/geo.js";
 import { getPartnerBySlug } from "../analytics/partners.js";
+import { peerShareAttributionMeta } from "../analytics/peerShare.js";
 import {
   buildImpactStats,
   toPublicImpactStats,
@@ -89,6 +90,7 @@ import {
   deletePartnerAccount,
   parsePartnerProfileUpdate,
   parsePartnerSignup,
+  registerManualPartner,
   registerPartnerSignup,
   updatePartnerProfile,
 } from "../partners/signup.js";
@@ -540,6 +542,7 @@ async function handleDevApi(
           emailDomain: p.emailDomain,
           emailVerified: Boolean(p.emailVerifiedAt),
           emailVerifiedAt: p.emailVerifiedAt,
+          showOnLeaderboard: p.showOnLeaderboard,
           status: p.canceledAt
             ? "canceled"
             : p.emailVerifiedAt
@@ -552,6 +555,76 @@ async function handleDevApi(
       "application/json; charset=utf-8",
       noIndex,
     );
+    return true;
+  }
+
+  if (pathname === "/api/dev/partners" && req.method === "POST") {
+    try {
+      const body = (await readJsonBody(req, 16_384)) as {
+        name?: unknown;
+        email?: unknown;
+        emailDomain?: unknown;
+        city?: unknown;
+        website?: unknown;
+        showOnLeaderboard?: unknown;
+      };
+      const result = registerManualPartner({
+        name: typeof body.name === "string" ? body.name : "",
+        email: typeof body.email === "string" ? body.email : "",
+        emailDomain: typeof body.emailDomain === "string" ? body.emailDomain : "",
+        city: typeof body.city === "string" ? body.city : "",
+        website: typeof body.website === "string" ? body.website : undefined,
+        showOnLeaderboard: Boolean(body.showOnLeaderboard),
+      });
+      if ("error" in result) {
+        send(
+          res,
+          400,
+          JSON.stringify({ error: result.error }),
+          "application/json; charset=utf-8",
+          noIndex,
+        );
+        return true;
+      }
+      const p = result.partner;
+      send(
+        res,
+        201,
+        JSON.stringify({
+          ok: true,
+          partner: {
+            id: p.id,
+            slug: p.slug,
+            name: p.name,
+            email: p.email,
+            city: p.city,
+            logo: p.logo || "",
+            campaignId: p.campaignId,
+            createdAt: p.createdAt,
+            canceledAt: p.canceledAt,
+            accountType: p.accountType,
+            emailDomain: p.emailDomain,
+            emailVerified: Boolean(p.emailVerifiedAt),
+            emailVerifiedAt: p.emailVerifiedAt,
+            showOnLeaderboard: p.showOnLeaderboard,
+            status: "active",
+            statusUrl: `/partners/${encodeURIComponent(p.slug)}`,
+            bannerUrl: `/api/partners/${encodeURIComponent(p.slug)}/banner`,
+          },
+        }),
+        "application/json; charset=utf-8",
+        noIndex,
+      );
+    } catch (err) {
+      console.error("Manual partner create failed:", err);
+      send(
+        res,
+        500,
+        JSON.stringify({ error: "create_failed" }),
+        "application/json; charset=utf-8",
+        noIndex,
+      );
+    }
     return true;
   }
 
@@ -1079,6 +1152,7 @@ async function handleGo(
     lat: geo.lat,
     lng: geo.lng,
     label: geo.label,
+    meta: peerShareAttributionMeta(campaignId),
   });
 
   const username = getBotUsername(config.botUsername);
@@ -2088,6 +2162,7 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               email: signed.email,
               city: signed.city,
               logo: signed.logo || "",
+              website: signed.website || "",
               accountType: signed.accountType,
               emailDomain: signed.emailDomain,
               emailVerified: Boolean(signed.emailVerifiedAt),
@@ -2242,9 +2317,12 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
             let name = "";
             let email = "";
             let city = "";
+            let website = "";
             let partnerId = "";
             let editToken = "";
             let ownerToken = "";
+            let emailDomain = "";
+            let showOnLeaderboard: boolean | undefined;
             let logo: { buffer: Buffer; mime: string; filename: string } | undefined;
 
             if (contentType.includes("multipart/form-data")) {
@@ -2252,28 +2330,51 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               name = multi.name;
               email = multi.email;
               city = multi.city;
+              website = multi.website;
               partnerId = multi.partnerId;
               editToken = multi.editToken;
               ownerToken = multi.ownerToken;
+              emailDomain = multi.emailDomain;
+              showOnLeaderboard = multi.showOnLeaderboard;
               logo = multi.logo;
             } else {
               const body = (await readJsonBody(req, 16_384)) as {
                 name?: unknown;
                 email?: unknown;
                 city?: unknown;
+                website?: unknown;
                 partnerId?: unknown;
                 editToken?: unknown;
                 ownerToken?: unknown;
+                emailDomain?: unknown;
+                showOnLeaderboard?: unknown;
               };
               name = typeof body.name === "string" ? body.name : "";
               email = typeof body.email === "string" ? body.email : "";
               city = typeof body.city === "string" ? body.city : "";
+              website = typeof body.website === "string" ? body.website : "";
               partnerId =
                 typeof body.partnerId === "string" ? body.partnerId : "";
               editToken =
                 typeof body.editToken === "string" ? body.editToken : "";
               ownerToken =
                 typeof body.ownerToken === "string" ? body.ownerToken : "";
+              emailDomain =
+                typeof body.emailDomain === "string" ? body.emailDomain : "";
+              if (typeof body.showOnLeaderboard === "boolean") {
+                showOnLeaderboard = body.showOnLeaderboard;
+              } else if (
+                body.showOnLeaderboard === "1" ||
+                body.showOnLeaderboard === "true" ||
+                body.showOnLeaderboard === "on"
+              ) {
+                showOnLeaderboard = true;
+              } else if (
+                body.showOnLeaderboard === "0" ||
+                body.showOnLeaderboard === "false"
+              ) {
+                showOnLeaderboard = false;
+              }
             }
 
             const ownerAuthToken = readPartnerOwnerToken(req, { ownerToken });
@@ -2308,6 +2409,7 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               name: parsed.name,
               email: parsed.email,
               city: parsed.city,
+              website,
               partnerId: asDeveloper || asOwner ? undefined : partnerId,
               editToken,
               asDeveloper,
@@ -2315,6 +2417,8 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
               editTokenSecret: config.developerSessionSecret,
               logo,
               accountType,
+              emailDomain: asDeveloper && emailDomain ? emailDomain : undefined,
+              showOnLeaderboard: asDeveloper ? showOnLeaderboard : undefined,
               publicBaseUrl: config.publicBaseUrl,
             });
             if ("error" in result) {
@@ -2344,9 +2448,11 @@ export function createWebHandler(config: AppConfig, telegramWebhook?: RequestHan
                 city: result.partner.city,
                 email: result.partner.email,
                 logo: result.partner.logo || "",
+                website: result.partner.website || "",
                 accountType: result.partner.accountType,
                 emailDomain: result.partner.emailDomain,
                 emailVerified: Boolean(result.partner.emailVerifiedAt),
+                showOnLeaderboard: result.partner.showOnLeaderboard,
                 pendingVerification: Boolean(result.pendingVerification),
                 verifyUrl: result.verifyUrl || null,
                 bannerUrl: result.bannerUrl,
@@ -2811,7 +2917,7 @@ export function startWebServer(
         ? `  Developer (password + CAPTCHA): ${config.publicBaseUrl}/dev`
         : `  Developer (auth off): ${config.publicBaseUrl}/dev`,
     );
-    console.log(`  Sample QR landing: ${config.publicBaseUrl}/go/qr_oakland_library`);
+    console.log(`  Sample QR landing: ${config.publicBaseUrl}/go/qr_resilient_markets`);
     if (config.developerAuthRequired && !config.developerPassword) {
       console.warn("  DEVELOPER_PASSWORD is unset – developer login will fail until set.");
     }

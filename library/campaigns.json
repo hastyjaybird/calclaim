@@ -1,42 +1,24 @@
 {
-  "version": "07-31-26",
+  "version": "08-15-26",
   "disclaimer": "Campaign pins are poster/QR placement sites, not home addresses. Map dots are coarse (city or placement).",
   "campaigns": [
     {
-      "id": "qr_oakland_library",
-      "name": "Oakland Main Library",
+      "id": "qr_resilient_markets",
+      "name": "Resilient Markets",
       "kind": "qr",
-      "lat": 37.8062,
-      "lng": -122.2689,
-      "label": "Oakland, CA",
-      "zip": "94612"
+      "lat": 37.8869,
+      "lng": -122.2977,
+      "label": "Albany, CA",
+      "zip": "94706"
     },
     {
-      "id": "qr_sf_mission",
-      "name": "Mission District community board",
+      "id": "qr_bay_area_makerfarm",
+      "name": "Bay Area Makerfarm",
       "kind": "qr",
-      "lat": 37.7599,
-      "lng": -122.4148,
-      "label": "San Francisco, CA",
-      "zip": "94110"
-    },
-    {
-      "id": "qr_fresno_foodbank",
-      "name": "Fresno food bank partner",
-      "kind": "qr",
-      "lat": 36.7378,
-      "lng": -119.7871,
-      "label": "Fresno, CA",
-      "zip": "93721"
-    },
-    {
-      "id": "qr_la_family_resource",
-      "name": "LA family resource center",
-      "kind": "qr",
-      "lat": 34.0522,
-      "lng": -118.2437,
-      "label": "Los Angeles, CA",
-      "zip": "90012"
+      "lat": 37.7802,
+      "lng": -122.3048,
+      "label": "Alameda, CA",
+      "zip": "94501"
     },
     {
       "id": "link_share",

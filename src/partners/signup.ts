@@ -17,6 +17,7 @@ import { deletePartnerEventsForPartner } from "./events.js";
 import {
   parseAccountType,
   validateSignupEmail,
+  normalizeOrgEmailDomain,
   type PartnerAccountType,
 } from "./emailDomains.js";
 import { partnerHasPrivateDashboard } from "./accountKind.js";
@@ -65,6 +66,31 @@ export interface PartnerKitResult {
 function trimField(value: unknown, max: number): string {
   if (typeof value !== "string") return "";
   return value.trim().slice(0, max);
+}
+
+/**
+ * Normalize an optional partner website URL for storage / leaderboard links.
+ * Empty input clears the field. Bare domains get https://. Only http(s) allowed.
+ */
+export function normalizePartnerWebsite(
+  value: unknown,
+): { website: string } | { error: "website_invalid" } {
+  const raw = trimField(value, 500);
+  if (!raw) return { website: "" };
+  const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : `https://${raw}`;
+  let parsed: URL;
+  try {
+    parsed = new URL(withScheme);
+  } catch {
+    return { error: "website_invalid" };
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    return { error: "website_invalid" };
+  }
+  if (!parsed.hostname || !parsed.hostname.includes(".")) {
+    return { error: "website_invalid" };
+  }
+  return { website: parsed.toString().slice(0, 500) };
 }
 
 export function parsePartnerSignup(input: PartnerSignupInput): {
@@ -144,6 +170,7 @@ export async function registerPartnerSignup(
     accountType: fields.accountType,
     emailDomain: fields.emailDomain,
     emailVerifiedAt: null,
+    showOnLeaderboard: true,
   });
 
   const verifyToken = issueEmailVerifyToken(
@@ -163,6 +190,79 @@ export async function registerPartnerSignup(
     email,
     verifyUrl: email.mode === "outbox" ? verifyUrl : undefined,
   };
+}
+
+/**
+ * Developer-created organization partner. Skips email verification, sets the
+ * work domain explicitly, and defaults to hidden from the public leaderboard
+ * unless `showOnLeaderboard` is true.
+ */
+export function registerManualPartner(fields: {
+  name: string;
+  emailDomain: string;
+  email?: string;
+  city?: string;
+  website?: string;
+  showOnLeaderboard?: boolean;
+  logo?: { buffer: Buffer; mime: string; filename: string };
+}): { partner: SignedUpPartner } | { error: string } {
+  const name = trimField(fields.name, 120);
+  if (!name) return { error: "name_required" };
+
+  const domainCheck = normalizeOrgEmailDomain(fields.emailDomain);
+  if ("error" in domainCheck) return domainCheck;
+  const emailDomain = domainCheck.domain;
+
+  let email = trimField(fields.email, 200).toLowerCase();
+  if (email) {
+    const emailCheck = validateSignupEmail("organization", email);
+    if ("error" in emailCheck) return emailCheck;
+    if (emailCheck.domain !== emailDomain) {
+      return { error: "email_domain_mismatch" };
+    }
+    email = emailCheck.email;
+  } else {
+    email = `contact@${emailDomain}`;
+  }
+
+  let website = "";
+  if (fields.website !== undefined) {
+    const web = normalizePartnerWebsite(fields.website);
+    if ("error" in web) return web;
+    website = web.website;
+  }
+
+  const token = randomPartnerToken(4);
+  const id = `p_${token}`;
+  let finalSlug = allocateUniqueSlug(name);
+  if (getPartnerBySlug(finalSlug)) {
+    finalSlug = allocateUniqueSlug(`${name}-${token}`);
+  }
+  const campaignId = `qr_p_${token}`;
+
+  let logoPath = "";
+  if (fields.logo) {
+    logoPath = savePartnerLogoUpload(id, fields.logo);
+  }
+
+  const partner = insertSignedUpPartner({
+    id,
+    slug: finalSlug,
+    name,
+    email,
+    city: trimField(fields.city, 80) || "California",
+    campaignId,
+    logo: logoPath,
+    blurb: "Community outreach partner",
+    website,
+    accountType: "organization",
+    emailDomain,
+    // Operator-created: ready for domain login without a verification email.
+    emailVerifiedAt: new Date().toISOString(),
+    showOnLeaderboard: Boolean(fields.showOnLeaderboard),
+  });
+
+  return { partner };
 }
 
 /** Build QR kit + welcome email after the signup email is verified. */
@@ -242,6 +342,7 @@ export async function updatePartnerProfile(
     name: string;
     email: string;
     city: string;
+    website?: string;
     partnerId?: string;
     editToken?: string;
     asDeveloper?: boolean;
@@ -250,6 +351,7 @@ export async function updatePartnerProfile(
     editTokenSecret?: string;
     accountType?: PartnerAccountType;
     emailDomain?: string;
+    showOnLeaderboard?: boolean;
     /** When set, re-issue verification for a changed email. */
     publicBaseUrl?: string;
   },
@@ -298,14 +400,38 @@ export async function updatePartnerProfile(
   const emailCheck = validateSignupEmail(accountType, nextEmail);
   if ("error" in emailCheck) return emailCheck;
 
-  // Name/email/city/logo only – id, slug, and campaignId stay fixed.
+  let emailDomain = emailCheck.domain;
+  if (fields.asDeveloper && fields.emailDomain !== undefined) {
+    const domainCheck = normalizeOrgEmailDomain(fields.emailDomain);
+    if ("error" in domainCheck) return domainCheck;
+    if (accountType === "organization" && emailCheck.domain !== domainCheck.domain) {
+      return { error: "email_domain_mismatch" };
+    }
+    emailDomain = domainCheck.domain;
+  }
+
+  let website = existing.website;
+  if (fields.website !== undefined) {
+    const web = normalizePartnerWebsite(fields.website);
+    if ("error" in web) return web;
+    website = web.website;
+  }
+
+  const showOnLeaderboard =
+    fields.asDeveloper && fields.showOnLeaderboard !== undefined
+      ? fields.showOnLeaderboard
+      : undefined;
+
+  // Name/email/city/logo/website only – id, slug, and campaignId stay fixed.
   const partner = updateSignedUpPartner(existing.slug, {
     name: fields.name,
     email: emailCheck.email,
     city: fields.city || "California",
     logo: logoPath,
-    emailDomain: emailCheck.domain,
+    website,
+    emailDomain,
     emailVerifiedAt: emailChanged ? null : existing.emailVerifiedAt,
+    showOnLeaderboard,
   });
   if (!partner) return { error: "not_found" };
 

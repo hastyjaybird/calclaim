@@ -296,6 +296,22 @@
         <span data-i18n="signup.cityLabel">City</span>
         <input id="edit-city" name="city" type="text" maxlength="80" autocomplete="address-level2" />
       </label>
+      <label class="field" for="edit-website">
+        <span data-i18n="partners.websiteLabel">Website (optional)</span>
+        <input
+          id="edit-website"
+          name="website"
+          type="url"
+          maxlength="500"
+          inputmode="url"
+          autocomplete="url"
+          placeholder="https://example.org"
+          data-i18n-placeholder="partners.websitePlaceholder"
+        />
+        <span class="field-help" data-i18n="partners.websiteHelp">
+          Shown as a link on the community partner leaderboard.
+        </span>
+      </label>
       <label class="field" for="edit-logo">
         <span id="edit-logo-label" data-i18n="signup.logoLabel">Organization logo (optional)</span>
         <input

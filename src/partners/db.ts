@@ -11,6 +11,8 @@ export interface SignedUpPartner {
   campaignId: string;
   logo: string;
   blurb: string;
+  /** Optional public website URL (shown on the community partner leaderboard). */
+  website: string;
   createdAt: string;
   accountType: PartnerAccountType;
   emailDomain: string;
@@ -18,6 +20,11 @@ export interface SignedUpPartner {
   emailVerifiedAt: string | null;
   /** ISO timestamp when the partner canceled; null while active. */
   canceledAt: string | null;
+  /**
+   * When false, the partner stays off the public community leaderboard
+   * (status page + QR attribution still work). Default true for public signups.
+   */
+  showOnLeaderboard: boolean;
 }
 
 let db: Database.Database | null = null;
@@ -50,6 +57,7 @@ export function initPartnerSignup(database: Database.Database): void {
       campaign_id TEXT NOT NULL UNIQUE,
       logo TEXT NOT NULL DEFAULT '',
       blurb TEXT NOT NULL DEFAULT 'Community outreach partner',
+      website TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_partner_signups_email
@@ -60,6 +68,9 @@ export function initPartnerSignup(database: Database.Database): void {
   ensureColumn(db, "partner_signups", "email_domain", "TEXT NOT NULL DEFAULT ''");
   ensureColumn(db, "partner_signups", "email_verified_at", "TEXT");
   ensureColumn(db, "partner_signups", "canceled_at", "TEXT");
+  ensureColumn(db, "partner_signups", "website", "TEXT NOT NULL DEFAULT ''");
+  // Existing public signups stay listed; manual creates opt in via the checkbox.
+  ensureColumn(db, "partner_signups", "show_on_leaderboard", "INTEGER NOT NULL DEFAULT 1");
 
   // Backfill domain from email; grandfather existing rows as verified so they stay listed.
   const rows = db
@@ -129,15 +140,18 @@ type PartnerRow = {
   campaign_id: string;
   logo: string;
   blurb: string;
+  website: string;
   created_at: string;
   account_type: string;
   email_domain: string;
   email_verified_at: string | null;
   canceled_at: string | null;
+  show_on_leaderboard: number | null;
 };
 
 const PARTNER_SELECT = `SELECT id, slug, name, email, city, campaign_id, logo, blurb,
-  created_at, account_type, email_domain, email_verified_at, canceled_at
+  website, created_at, account_type, email_domain, email_verified_at, canceled_at,
+  show_on_leaderboard
   FROM partner_signups`;
 
 function rowToPartner(row: PartnerRow): SignedUpPartner {
@@ -152,11 +166,13 @@ function rowToPartner(row: PartnerRow): SignedUpPartner {
     campaignId: row.campaign_id,
     logo: row.logo,
     blurb: row.blurb,
+    website: row.website || "",
     createdAt: row.created_at,
     accountType,
     emailDomain: row.email_domain || "",
     emailVerifiedAt: row.email_verified_at || null,
     canceledAt: row.canceled_at || null,
+    showOnLeaderboard: row.show_on_leaderboard !== 0,
   };
 }
 
@@ -212,20 +228,24 @@ export function insertSignedUpPartner(input: {
   campaignId: string;
   logo?: string;
   blurb?: string;
+  website?: string;
   accountType: PartnerAccountType;
   emailDomain: string;
   emailVerifiedAt?: string | null;
+  showOnLeaderboard?: boolean;
 }): SignedUpPartner {
   const createdAt = new Date().toISOString();
   const logo = input.logo ?? "";
   const blurb = input.blurb ?? "Community outreach partner";
+  const website = input.website ?? "";
   const emailVerifiedAt = input.emailVerifiedAt ?? null;
+  const showOnLeaderboard = input.showOnLeaderboard !== false;
   getDb()
     .prepare(
       `INSERT INTO partner_signups
-        (id, slug, name, email, city, campaign_id, logo, blurb, created_at,
-         account_type, email_domain, email_verified_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, slug, name, email, city, campaign_id, logo, blurb, website, created_at,
+         account_type, email_domain, email_verified_at, show_on_leaderboard)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       input.id,
@@ -236,10 +256,12 @@ export function insertSignedUpPartner(input: {
       input.campaignId,
       logo,
       blurb,
+      website,
       createdAt,
       input.accountType,
       input.emailDomain,
       emailVerifiedAt,
+      showOnLeaderboard ? 1 : 0,
     );
   return {
     id: input.id,
@@ -250,11 +272,13 @@ export function insertSignedUpPartner(input: {
     campaignId: input.campaignId,
     logo,
     blurb,
+    website,
     createdAt,
     accountType: input.accountType,
     emailDomain: input.emailDomain,
     emailVerifiedAt,
     canceledAt: null,
+    showOnLeaderboard,
   };
 }
 
@@ -265,24 +289,31 @@ export function updateSignedUpPartner(
     email: string;
     city: string;
     logo?: string;
+    website?: string;
     emailDomain?: string;
     emailVerifiedAt?: string | null;
+    showOnLeaderboard?: boolean;
   },
 ): SignedUpPartner | undefined {
   const existing = getSignedUpPartnerBySlug(slug);
   if (!existing) return undefined;
   const logo = patch.logo !== undefined ? patch.logo : existing.logo;
+  const website = patch.website !== undefined ? patch.website : existing.website;
   const emailDomain =
     patch.emailDomain !== undefined ? patch.emailDomain : existing.emailDomain;
   const emailVerifiedAt =
     patch.emailVerifiedAt !== undefined
       ? patch.emailVerifiedAt
       : existing.emailVerifiedAt;
+  const showOnLeaderboard =
+    patch.showOnLeaderboard !== undefined
+      ? patch.showOnLeaderboard
+      : existing.showOnLeaderboard;
   getDb()
     .prepare(
       `UPDATE partner_signups
-       SET name = ?, email = ?, city = ?, logo = ?,
-           email_domain = ?, email_verified_at = ?
+       SET name = ?, email = ?, city = ?, logo = ?, website = ?,
+           email_domain = ?, email_verified_at = ?, show_on_leaderboard = ?
        WHERE slug = ?`,
     )
     .run(
@@ -290,8 +321,10 @@ export function updateSignedUpPartner(
       patch.email,
       patch.city,
       logo,
+      website,
       emailDomain,
       emailVerifiedAt,
+      showOnLeaderboard ? 1 : 0,
       existing.slug,
     );
   return {
@@ -300,8 +333,10 @@ export function updateSignedUpPartner(
     email: patch.email,
     city: patch.city,
     logo,
+    website,
     emailDomain,
     emailVerifiedAt,
+    showOnLeaderboard,
   };
 }
 
