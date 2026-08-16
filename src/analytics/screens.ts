@@ -212,6 +212,7 @@ export function treeLocationForStep(step: StepId): ScreenLocationId | null {
     case "idle":
       return "finish";
     case "help_menu":
+    case "awaiting_feedback":
     case "confirm_stop":
     case "confirm_erase":
       return null;

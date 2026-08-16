@@ -259,10 +259,6 @@ function immigrationLabel(v: ImmigrationAnswer | null): string {
   return "prefer not to say";
 }
 
-function formatFinishClosingMessage(): string {
-  return "For more help, visit BenefitsCal at https://benefitscal.com/";
-}
-
 function formatStopOptOutMessage(): string {
   return "Say STOP if you do not want any infrequent updates for benefit updates and changes.";
 }
@@ -270,9 +266,7 @@ function formatStopOptOutMessage(): string {
 function formatEmptyQueueMessage(): string {
   return `You're through the list – nothing to add to an Application Guide right now.
 
-Know someone who might need benefits help? Share CalClaim with a friend.
-
-${formatFinishClosingMessage()}`;
+Know someone who might need benefits help? Share CalClaim with a friend.`;
 }
 
 function continueAfterWave(session: SessionState): void {
@@ -1419,8 +1413,13 @@ ${formatStopOptOutMessage()}`,
             action: null,
             kind: "url",
           },
-          { label: "Update my answers", action: "idle:restart", kind: "callback" },
+          { label: "Restart", action: "idle:restart", kind: "callback" },
           { label: "More info", action: null, kind: "url" },
+          {
+            label: "Donate",
+            action: "https://calclaim.jayhasty.com/impact#donate",
+            kind: "url",
+          },
         ],
       };
     }
@@ -1431,24 +1430,22 @@ ${formatStopOptOutMessage()}`,
 
 [PDF] calclaim-application-guide.pdf
 
-${formatFinishClosingMessage()}
-
 ${formatStopOptOutMessage()}`,
       telegramNote:
-        "Telegram sends summary → PDF → closing → STOP as separate messages, then idle buttons.",
+        "Telegram sends summary → PDF (unassessed programs + arrival QR at bottom when applicable; BenefitsCal help link is on the PDF) → STOP as separate messages, then idle buttons.",
       buttons: [
-        {
-          label: "Email Application Guide to my computer",
-          action: null,
-          kind: "url",
-        },
         {
           label: "Share CalClaim with friends",
           action: null,
           kind: "url",
         },
-        { label: "Update my answers", action: "idle:restart", kind: "callback" },
+        { label: "Restart", action: "idle:restart", kind: "callback" },
         { label: "More info", action: null, kind: "url" },
+        {
+          label: "Donate",
+          action: "https://calclaim.jayhasty.com/impact#donate",
+          kind: "url",
+        },
       ],
     };
   }
@@ -1457,7 +1454,7 @@ ${formatStopOptOutMessage()}`,
     step,
     title: step.toUpperCase(),
     text: `(Screen ${step} is not part of the main offer tree.)`,
-    buttons: [{ label: "Update my answers", action: "idle:restart", kind: "callback" }],
+    buttons: [{ label: "Restart", action: "idle:restart", kind: "callback" }],
   };
 }
 
@@ -2596,7 +2593,11 @@ export async function simulateTreeReview(
       notice,
       whyThisScreen: whyThisScreen(session, nextGate),
       nextGate,
-      screen: previewScreen(session, actions.length > 0),
+      // opt:start alone is the first question — no Back to opt-in.
+      screen: previewScreen(
+        session,
+        actions.some((a) => String(a) !== "opt:start"),
+      ),
       facts: {
         step: session.step,
         branch: session.branch,

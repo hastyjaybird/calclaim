@@ -1,4 +1,5 @@
 import PDFDocument from "pdfkit";
+import { getCampaign } from "../analytics/campaigns.js";
 import { formatUsd, maxBenefitAmountUsd } from "../library/benefitEstimate.js";
 import { docLabel, hasDoc } from "../library/docs.js";
 import { estimateFormFillMinutes } from "../library/formFill.js";
@@ -10,6 +11,7 @@ import {
   type TerritoryApplyLink,
 } from "../library/utilityTerritory.js";
 import { windowForProgram } from "../disaster/liveWindow.js";
+import { listUnassessedPrograms } from "../queue/ranker.js";
 import {
   closestDeadline,
   docsSavingsTable,
@@ -17,6 +19,16 @@ import {
   openProgramsAnnualUsd,
   openTodos,
 } from "./model.js";
+
+/** Fallback when the session has no arrival campaign (plain /start). */
+export const WEBSITE_ENTRY_CAMPAIGN = "qr_website";
+
+export interface ApplicationGuidePdfOpts {
+  /** Pre-rendered arrival QR PNG (partner / peer / website). */
+  arrivalQrPng?: Buffer | null;
+  /** Campaign id for the QR caption (defaults to session.campaignId). */
+  arrivalCampaignId?: string | null;
+}
 
 const TAX_PREPARER_HEADING = "For your tax preparer";
 const TAX_PREPARER_INTRO =
@@ -557,7 +569,10 @@ function drawTaxPreparerBox(
 }
 
 /** One living PDF: the Application Guide (programs to apply for + how). */
-export async function renderNextStepsPdf(session: SessionState): Promise<Buffer> {
+export async function renderNextStepsPdf(
+  session: SessionState,
+  opts: ApplicationGuidePdfOpts = {},
+): Promise<Buffer> {
   const doc = new PDFDocument({ margin: 48, size: "LETTER" });
   const done = collectPdf(doc);
   const total = openProgramsAnnualUsd(session);
@@ -643,6 +658,27 @@ export async function renderNextStepsPdf(session: SessionState): Promise<Buffer>
   }
   doc.moveDown();
 
+  const unassessed = listUnassessedPrograms(session);
+  if (unassessed.length > 0) {
+    sectionTitle(doc, "Programs not assessed yet");
+    doc
+      .fontSize(9)
+      .fillColor("#444")
+      .text(
+        "You exited before reviewing these. Message CalClaim anytime to continue where you left off.",
+      );
+    doc.moveDown(0.35);
+    for (const program of unassessed) {
+      doc
+        .fontSize(10)
+        .fillColor("#000")
+        .text(`• ${program.name} (${program.category})`);
+    }
+    doc.moveDown();
+  }
+
+  drawArrivalQr(doc, session, opts);
+
   doc.fontSize(9).fillColor("#555").text(getDisclaimer());
   doc.text("In Telegram: say “guide” to resend this file · STOP pauses reminders · erase deletes your data.");
   doc.moveDown(0.6);
@@ -658,4 +694,40 @@ export async function renderNextStepsPdf(session: SessionState): Promise<Buffer>
     });
   doc.end();
   return done;
+}
+
+function drawArrivalQr(
+  doc: PDFKit.PDFDocument,
+  session: SessionState,
+  opts: ApplicationGuidePdfOpts,
+): void {
+  const png = opts.arrivalQrPng;
+  if (!png?.length) return;
+
+  const campaignId =
+    opts.arrivalCampaignId?.trim() ||
+    session.campaignId?.trim() ||
+    WEBSITE_ENTRY_CAMPAIGN;
+  const campaign = getCampaign(campaignId);
+  const isWebsite =
+    campaignId === WEBSITE_ENTRY_CAMPAIGN || campaignId === "link_website";
+
+  const qrSize = 120;
+  ensureSpace(doc, qrSize + 72);
+  sectionTitle(doc, "Your CalClaim QR");
+  doc
+    .fontSize(9)
+    .fillColor("#444")
+    .text(
+      isWebsite
+        ? "Scan to open CalClaim (website entry)."
+        : campaign?.name
+          ? `Scan to open CalClaim the same way you did (${campaign.name}).`
+          : "Scan to open CalClaim the same way you did.",
+    );
+  doc.moveDown(0.4);
+  const left = doc.page.margins.left;
+  doc.image(png, left, doc.y, { width: qrSize, height: qrSize });
+  doc.y += qrSize + 10;
+  doc.moveDown(0.35);
 }

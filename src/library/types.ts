@@ -65,7 +65,8 @@ export type StepId =
   | "idle"
   | "confirm_stop"
   | "confirm_erase"
-  | "help_menu";
+  | "help_menu"
+  | "awaiting_feedback";
 
 /** Saved for reopen-watch only – never required for normal triage. */
 export type SavedImmigrationStatus = "eligible" | "ineligible";

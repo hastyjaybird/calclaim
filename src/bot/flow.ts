@@ -21,7 +21,7 @@ import {
   openTodos,
   upsertItem,
 } from "../nextsteps/model.js";
-import { renderNextStepsPdf } from "../nextsteps/pdf.js";
+import { renderNextStepsPdf, WEBSITE_ENTRY_CAMPAIGN } from "../nextsteps/pdf.js";
 import {
   reportSharePageUrl,
   storeReportPdf,
@@ -29,10 +29,12 @@ import {
 import { eraseUserFeedbackTodos } from "../feedback/todos.js";
 import {
   ABOUT_TEXT,
+  FEEDBACK_PROMPT,
   HELP_MENU_TEXT,
   HOUSEHOLD_EXPLAIN,
   IMMIGRATION_STATUS_PROMPT,
   PRIVACY_SHORT,
+  THANKS_FEEDBACK,
 } from "../privacy/copy.js";
 import { eraseUserQc } from "../qc/responses.js";
 import {
@@ -93,6 +95,7 @@ import {
   helpKeyboard,
   householdKeyboard,
   idleKeyboard,
+  leaveFeedbackKeyboard,
   incomeKeyboard,
   offerKeyboard,
   optInKeyboard,
@@ -152,6 +155,58 @@ function hasOpenReport(session: SessionState): boolean {
   return openTodos(session).length > 0;
 }
 
+/**
+ * Arrival campaign for the Application Guide QR. Missing payload → website QR
+ * and attribute the session as a CalClaim website entry.
+ */
+function resolveArrivalCampaign(session: SessionState): {
+  campaignId: string;
+  inferredWebsite: boolean;
+} {
+  const existing = session.campaignId?.trim() || null;
+  if (existing) return { campaignId: existing, inferredWebsite: false };
+  return { campaignId: WEBSITE_ENTRY_CAMPAIGN, inferredWebsite: true };
+}
+
+function applyArrivalCampaignAttribution(session: SessionState): string {
+  const { campaignId, inferredWebsite } = resolveArrivalCampaign(session);
+  if (inferredWebsite) {
+    session.campaignId = campaignId;
+    saveSession(session);
+    recordEvent({
+      eventType: "awareness",
+      source: "qr",
+      campaignId,
+      telegramUserId: session.telegramUserId,
+      label: "CalClaim website entry",
+      meta: { inferred: true, reason: "missing_arrival_campaign" },
+    });
+  }
+  return campaignId;
+}
+
+async function applicationGuidePdfOpts(session: SessionState): Promise<{
+  campaignId: string;
+  opts: { arrivalQrPng: Buffer | null; arrivalCampaignId: string };
+}> {
+  const campaignId = applyArrivalCampaignAttribution(session);
+  let arrivalQrPng: Buffer | null = null;
+  if (appConfig) {
+    const qrUrl = shareTargetUrl(appConfig, campaignId);
+    if (qrUrl) {
+      try {
+        arrivalQrPng = await renderShareQrPng(qrUrl);
+      } catch (err) {
+        console.error("Application Guide arrival QR failed:", err);
+      }
+    }
+  }
+  return {
+    campaignId,
+    opts: { arrivalQrPng, arrivalCampaignId: campaignId },
+  };
+}
+
 function peerShareCampaignsOrFallback(telegramUserId: number): {
   linkCampaignId: string;
   qrCampaignId: string;
@@ -198,6 +253,29 @@ function escapeTelegramHtml(s: string): string {
 
 /** Public site linked from the opt-in message (Telegram HTML <a>). */
 const CALCLAIM_SITE_FALLBACK = "https://calclaim.jayhasty.com";
+
+function calclaimSiteUrl(): string {
+  const configured = appConfig?.publicBaseUrl;
+  if (configured && telegramSafeUrl(configured)) return configured;
+  return CALCLAIM_SITE_FALLBACK;
+}
+
+function calclaimDonateUrl(): string | null {
+  const siteUrl = calclaimSiteUrl();
+  return telegramSafeUrl(siteUrl)
+    ? `${siteUrl.replace(/\/$/, "")}/impact#donate`
+    : null;
+}
+
+/** Idle actions including Donate when a public HTTPS site URL is available. */
+export function idleMarkup(): ReturnType<typeof idleKeyboard> {
+  return idleKeyboard(calclaimDonateUrl());
+}
+
+/** Help menu actions including Donate when a public HTTPS site URL is available. */
+export function helpMarkup(): ReturnType<typeof helpKeyboard> {
+  return helpKeyboard(calclaimDonateUrl());
+}
 
 
 function treeKb(session: SessionState, kb: InlineKeyboard): InlineKeyboard {
@@ -445,7 +523,7 @@ ${HOUSEHOLD_EXPLAIN}`,
       return;
     case "idle":
       await replyTracked(ctx, session, "What next?", {
-        reply_markup: idleKeyboard(hasOpenReport(session)),
+        reply_markup: idleMarkup(),
       });
       return;
     default:
@@ -461,14 +539,8 @@ export async function sendOptIn(
   ctx: Context,
   session: SessionState,
 ): Promise<void> {
-  const configured = appConfig?.publicBaseUrl;
-  const siteUrl =
-    configured && telegramSafeUrl(configured)
-      ? configured
-      : CALCLAIM_SITE_FALLBACK;
-  const donateUrl = telegramSafeUrl(siteUrl)
-    ? `${siteUrl.replace(/\/$/, "")}/impact#donate`
-    : null;
+  const siteUrl = calclaimSiteUrl();
+  const donateUrl = calclaimDonateUrl();
   await replyTracked(
     ctx,
     session,
@@ -519,12 +591,13 @@ async function continueAfterGateNo(ctx: Context, session: SessionState): Promise
 }
 
 async function sendNextStepsFile(ctx: Context, session: SessionState): Promise<void> {
-  const buf = await renderNextStepsPdf(session);
+  const { campaignId, opts } = await applicationGuidePdfOpts(session);
+  const buf = await renderNextStepsPdf(session, opts);
   await ctx.replyWithDocument(
     new InputFile(buf, "calclaim-application-guide.pdf"),
     { caption: "Click to download your Application Guide" },
   );
-  trackReportCreated(session.telegramUserId, session.campaignId);
+  trackReportCreated(session.telegramUserId, campaignId);
 }
 
 /** Resolve Telegram-safe apply URLs (prefer tracked /r/:id when public base is https). */
@@ -569,10 +642,6 @@ async function sendReportBundle(
   await promptVisitProgramSites(ctx, session);
 }
 
-function formatFinishClosingMessage(): string {
-  return "For more help, visit BenefitsCal at https://benefitscal.com/";
-}
-
 function formatStopOptOutMessage(): string {
   return "Say STOP anytime to pause deadline reminders and reopen alerts. Say erase to delete your saved answers and exit.";
 }
@@ -580,9 +649,7 @@ function formatStopOptOutMessage(): string {
 function formatEmptyQueueMessage(): string {
   return `You're through the list – nothing to add to an Application Guide right now.
 
-Know someone who might need benefits help? Share CalClaim with a friend.
-
-${formatFinishClosingMessage()}`;
+Know someone who might need benefits help? Share CalClaim with a friend.`;
 }
 
 /** Pause deadline reminders + reopen alerts – keeps session, todos, and data. */
@@ -600,8 +667,8 @@ export async function stopRemindersOnly(
   await replyTracked(
     ctx,
     session,
-    "Alerts stopped (deadline reminders and waitlist reopen texts). Your Application Guide and saved answers stay. Message me anytime to turn alerts back on – or say 'guide' for your guide, help for more info. Tap Update my answers if your situation changed.",
-    { reply_markup: idleKeyboard(hasOpenReport(session)) },
+    "Alerts stopped (deadline reminders and waitlist reopen texts). Your Application Guide and saved answers stay. Message me anytime to turn alerts back on – or say 'guide' for your guide, help for more info. Tap Restart if your situation changed.",
+    { reply_markup: idleMarkup() },
   );
 }
 
@@ -629,15 +696,14 @@ async function completeFinish(
   if (open.length === 0) {
     await replyTracked(ctx, session, formatEmptyQueueMessage());
     await replyTracked(ctx, session, formatStopOptOutMessage(), {
-      reply_markup: idleKeyboard(false),
+      reply_markup: idleMarkup(),
     });
     return;
   }
 
   await sendReportBundle(ctx, session);
-  await replyTracked(ctx, session, formatFinishClosingMessage());
   await replyTracked(ctx, session, formatStopOptOutMessage(), {
-    reply_markup: idleKeyboard(true),
+    reply_markup: idleMarkup(),
   });
 }
 
@@ -995,7 +1061,7 @@ async function promptEmailToComputer(
       ctx,
       session,
       "There's no Application Guide to email right now. Share CalClaim with a friend who might need help?",
-      { reply_markup: idleKeyboard(false) },
+      { reply_markup: idleMarkup() },
     );
     return;
   }
@@ -1009,12 +1075,13 @@ async function promptEmailToComputer(
 
   if (!appConfig?.publicBaseUrl) {
     await replyTracked(ctx, session, forwardFallback, {
-      reply_markup: idleKeyboard(true),
+      reply_markup: idleMarkup(),
     });
     return;
   }
 
-  const pdf = await renderNextStepsPdf(session);
+  const { opts } = await applicationGuidePdfOpts(session);
+  const pdf = await renderNextStepsPdf(session, opts);
   const token = storeReportPdf(pdf);
   const shareUrl = reportSharePageUrl(appConfig.publicBaseUrl, token);
 
@@ -1023,7 +1090,7 @@ async function promptEmailToComputer(
       ctx,
       session,
       `${forwardFallback}\n\n(Link sharing needs a public HTTPS URL.)`,
-      { reply_markup: idleKeyboard(true) },
+      { reply_markup: idleMarkup() },
     );
     return;
   }
@@ -1114,7 +1181,7 @@ export async function handleCallback(
   }
 
   if (data === "opt:start") {
-    pushUndoFrame(session);
+    // No undo frame: gate is the first question — Back should not return to opt-in.
     trackFunnel("started", session.telegramUserId, {
       campaignId: session.campaignId,
     });
@@ -1130,21 +1197,25 @@ export async function handleCallback(
     session.step = "help_menu";
     saveSession(session);
     await replyTracked(ctx, session, HELP_MENU_TEXT, {
-      reply_markup: helpKeyboard(),
+      reply_markup: helpMarkup(),
       link_preview_options: { is_disabled: true },
     });
     return;
   }
   if (data === "help:privacy") {
     await replyTracked(ctx, session, PRIVACY_SHORT, {
-      reply_markup: helpKeyboard(),
+      reply_markup: helpMarkup(),
     });
     return;
   }
   if (data === "help:about") {
     await replyTracked(ctx, session, ABOUT_TEXT, {
-      reply_markup: helpKeyboard(),
+      reply_markup: helpMarkup(),
     });
+    return;
+  }
+  if (data === "help:feedback") {
+    await promptLeaveFeedback(ctx, session);
     return;
   }
   if (data === "help:share") {
@@ -1171,7 +1242,7 @@ export async function handleCallback(
       session.step = "idle";
       saveSession(session);
       await replyTracked(ctx, session, "You're on the idle screen.", {
-        reply_markup: idleKeyboard(hasOpenReport(session)),
+        reply_markup: idleMarkup(),
       });
     } else if (!session.branch) {
       session.step = "opt_in";
@@ -1745,6 +1816,39 @@ Add up income for everyone you just counted.`,
     return;
   }
 
+  if (data === "inactivity:continue") {
+    await replyTracked(
+      ctx,
+      session,
+      "Glad you're back – picking up where you left off.",
+    );
+    await repaintCurrentScreen(ctx, session);
+    return;
+  }
+  if (data === "inactivity:restart") {
+    const uid = session.telegramUserId;
+    const fresh = resetSession(uid);
+    await replyTracked(
+      ctx,
+      fresh,
+      "Starting over – this rewrites your saved profile (including any waitlist alerts). Answer with what's true now.",
+    );
+    await sendOptIn(ctx, fresh);
+    return;
+  }
+  if (data === "inactivity:snooze") {
+    await replyTracked(
+      ctx,
+      session,
+      "Okay – I'll check back in 2 weeks. Message anytime if you want to continue sooner.",
+    );
+    return;
+  }
+  if (data === "inactivity:stop") {
+    await stopRemindersOnly(ctx, session);
+    return;
+  }
+
   if (data === "idle:restart") {
     const uid = session.telegramUserId;
     const fresh = resetSession(uid);
@@ -1768,7 +1872,7 @@ Add up income for everyone you just counted.`,
     session.step = "idle";
     saveSession(session);
     await replyTracked(ctx, session, "What next?", {
-      reply_markup: idleKeyboard(hasOpenReport(session)),
+      reply_markup: idleMarkup(),
     });
     return;
   }
@@ -1783,14 +1887,14 @@ Add up income for everyone you just counted.`,
         ctx,
         session,
         "There's no Application Guide right now. Share CalClaim with a friend who might need help?",
-        { reply_markup: idleKeyboard(false) },
+        { reply_markup: idleMarkup() },
       );
       return;
     }
     await sendReportBundle(ctx, session);
     if (data === "idle:resend") {
       await replyTracked(ctx, session, "What next?", {
-        reply_markup: idleKeyboard(true),
+        reply_markup: idleMarkup(),
       });
     }
     return;
@@ -1818,7 +1922,7 @@ async function sendShareMenu(
       ctx,
       session,
       "Sharing isn't ready yet – try again in a moment, or type help.",
-      { reply_markup: helpKeyboard() },
+      { reply_markup: helpMarkup() },
     );
     return;
   }
@@ -1830,7 +1934,7 @@ async function sendShareMenu(
       ctx,
       session,
       "Sharing isn't ready yet (bot username still loading). Try again in a moment.",
-      { reply_markup: helpKeyboard() },
+      { reply_markup: helpMarkup() },
     );
     return;
   }
@@ -1857,7 +1961,7 @@ async function sendShareMenu(
     await replyTracked(
       ctx,
       session,
-      "Copy and forward the message below:",
+      "Copy the draft message below.",
       { link_preview_options: { is_disabled: true } },
     );
   }
@@ -1886,7 +1990,7 @@ async function sendShareQr(
       ctx,
       session,
       "Sharing isn't ready yet – try again in a moment, or type help.",
-      { reply_markup: helpKeyboard() },
+      { reply_markup: helpMarkup() },
     );
     return;
   }
@@ -1898,7 +2002,7 @@ async function sendShareQr(
       ctx,
       session,
       "Couldn't build a QR code yet. Copy the share link from Help → Share instead.",
-      { reply_markup: helpKeyboard() },
+      { reply_markup: helpMarkup() },
     );
     return;
   }
@@ -1933,6 +2037,30 @@ async function sendShareQr(
     replyMarkup: { inline_keyboard: markup.inline_keyboard },
   };
   saveSession(session);
+}
+
+/** Help / About → Leave feedback: wait for text, voice, or a picture. */
+export async function promptLeaveFeedback(
+  ctx: Context,
+  session: SessionState,
+): Promise<void> {
+  session.step = "awaiting_feedback";
+  saveSession(session);
+  await replyTracked(ctx, session, FEEDBACK_PROMPT, {
+    reply_markup: leaveFeedbackKeyboard(),
+  });
+}
+
+/** After intentional feedback is saved – thank them and return to Help. */
+export async function finishLeaveFeedback(
+  ctx: Context,
+  session: SessionState,
+): Promise<void> {
+  session.step = "help_menu";
+  saveSession(session);
+  await replyTracked(ctx, session, THANKS_FEEDBACK, {
+    reply_markup: helpMarkup(),
+  });
 }
 
 export function resetSession(telegramUserId: number): SessionState {

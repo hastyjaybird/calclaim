@@ -1,8 +1,14 @@
 import cron from "node-cron";
 import type { Bot } from "grammy";
-import { listReminderSessions } from "../db/session.js";
+import {
+  getOrCreateSession,
+  listIncompleteInactiveSessions,
+  listReminderSessions,
+  saveSession,
+} from "../db/session.js";
 import { closestDeadline, openTodos } from "../nextsteps/model.js";
 import type { NextStepsItem } from "../library/types.js";
+import { inactivityNudgeKeyboard } from "../bot/keyboards.js";
 
 function todayYmd(tz: string): string {
   return new Intl.DateTimeFormat("en-CA", {
@@ -32,8 +38,37 @@ async function send(bot: Bot, userId: number, text: string): Promise<void> {
   }
 }
 
+const INACTIVITY_NUDGE_TEXT =
+  "Hundreds of thousands of eligible people never follow through to get paid out the benefits they qualify for. Just wanted to remind you that we are here to help.";
+
+/** Ping users who stalled before the Application Guide after 2 weeks idle. */
+export async function runInactivityNudgePass(bot: Bot): Promise<number> {
+  const sessions = listIncompleteInactiveSessions();
+  let messaged = 0;
+
+  for (const session of sessions) {
+    try {
+      await bot.api.sendMessage(session.telegramUserId, INACTIVITY_NUDGE_TEXT, {
+        reply_markup: inactivityNudgeKeyboard(),
+      });
+      // Bump updatedAt so we do not re-ping until another 2 weeks of silence.
+      const live = getOrCreateSession(session.telegramUserId);
+      saveSession(live);
+      messaged += 1;
+    } catch (err) {
+      console.error(
+        `Inactivity nudge failed for ${session.telegramUserId}:`,
+        err,
+      );
+    }
+  }
+
+  return messaged;
+}
+
 export function startReminderCron(bot: Bot, tz: string): void {
   // Every day at 12:00 America/Los_Angeles – handles Tue closest + T-3 + T-1
+  // plus 2-week inactivity nudges for incomplete journeys.
   cron.schedule(
     "0 12 * * *",
     async () => {
@@ -80,7 +115,10 @@ export function startReminderCron(bot: Bot, tz: string): void {
         }
       }
 
-      console.log(`Reminders scanned ${sessions.length} sessions on ${today} (${weekday})`);
+      const nudged = await runInactivityNudgePass(bot);
+      console.log(
+        `Reminders scanned ${sessions.length} sessions on ${today} (${weekday}); inactivity nudges sent ${nudged}`,
+      );
     },
     { timezone: tz },
   );

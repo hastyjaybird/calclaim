@@ -22,16 +22,16 @@ import {
   type TextIntent,
 } from "./interpret.js";
 import {
+  finishLeaveFeedback,
   handleCallback,
   handleShutoffAddressText,
   handleShutoffLocation,
+  idleMarkup,
   resetSession,
   resumeRemindersAfterMessage,
   sendOptIn,
   trackBotStart,
 } from "./flow.js";
-import { idleKeyboard } from "./keyboards.js";
-import { openTodos } from "../nextsteps/model.js";
 import { repeatLastMessage } from "./reply.js";
 
 // #region agent log
@@ -176,6 +176,18 @@ async function handleInterpretedText(
       session,
       suggestAck(intent.display, session.step),
     );
+    return true;
+  }
+
+  // Leave-feedback screen: any free text / voice transcript is intentional.
+  if (session.step === "awaiting_feedback") {
+    recordAlphaFeedback({
+      session,
+      text: rawText,
+      source,
+      transcriptStatus: source === "voice" ? "ok" : undefined,
+    });
+    await finishLeaveFeedback(ctx, session);
     return true;
   }
 
@@ -339,6 +351,10 @@ export function createBot(token: string): Bot {
         source: "voice",
         transcriptStatus: "failed",
       });
+      if (session.step === "awaiting_feedback") {
+        await finishLeaveFeedback(ctx, session);
+        return;
+      }
       await reorient(ctx, session, mediaAck(session.step));
       return;
     }
@@ -362,6 +378,10 @@ export function createBot(token: string): Bot {
           transcriptStatus: status,
         });
         if (resumeRemindersAfterMessage(session)) await noteRemindersResumed(ctx);
+        if (session.step === "awaiting_feedback") {
+          await finishLeaveFeedback(ctx, session);
+          return;
+        }
         await reorient(ctx, session, unknownAck(session.step));
         return;
       }
@@ -382,6 +402,10 @@ export function createBot(token: string): Bot {
       });
     }
     if (resumeRemindersAfterMessage(session)) await noteRemindersResumed(ctx);
+    if (session.step === "awaiting_feedback") {
+      await finishLeaveFeedback(ctx, session);
+      return;
+    }
     await reorient(ctx, session, mediaAck(session.step));
   });
 
@@ -408,6 +432,10 @@ export function createBot(token: string): Bot {
       text: "[non-text message: location]",
       source: "text",
     });
+    if (session.step === "awaiting_feedback") {
+      await finishLeaveFeedback(ctx, session);
+      return;
+    }
     await reorient(ctx, session, mediaAck(session.step));
   });
 
@@ -443,11 +471,21 @@ export function createBot(token: string): Bot {
                 : ctx.message.video
                   ? "video"
                   : "media";
+      const caption =
+        typeof ctx.message.caption === "string" && ctx.message.caption.trim()
+          ? ctx.message.caption.trim()
+          : null;
       recordAlphaFeedback({
         session,
-        text: `[non-text message: ${kind}]`,
+        text: caption
+          ? `[non-text message: ${kind}] ${caption}`
+          : `[non-text message: ${kind}]`,
         source: "text",
       });
+      if (session.step === "awaiting_feedback") {
+        await finishLeaveFeedback(ctx, session);
+        return;
+      }
       await reorient(ctx, session, mediaAck(session.step));
     },
   );
@@ -485,6 +523,10 @@ export function createBot(token: string): Bot {
       text: "[unsupported message type]",
       source: "text",
     });
+    if (session.step === "awaiting_feedback") {
+      await finishLeaveFeedback(ctx, session);
+      return;
+    }
     await reorient(ctx, session, mediaAck(session.step));
   });
 
@@ -525,7 +567,7 @@ export async function sendReminder(
 ): Promise<void> {
   const session = getOrCreateSession(ctxLike.telegramUserId);
   await bot.api.sendMessage(ctxLike.telegramUserId, ctxLike.text, {
-    reply_markup: idleKeyboard(openTodos(session).length > 0),
+    reply_markup: idleMarkup(),
   });
 }
 

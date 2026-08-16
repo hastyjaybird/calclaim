@@ -645,12 +645,12 @@ export function extendOfferQueue(
 }
 
 /**
- * Programs still ahead on offer cards: the current card, later cards in the
+ * Program ids still ahead on offer cards: the current card, later cards in the
  * queue (not yet seen), and programs still locked behind unanswered gates
  * (not yet unlocked). Mutually exclusive forks (work disruption, immigration)
  * count each program at most once via a union of favorable probes.
  */
-export function countRemainingOfferPrograms(session: SessionState): number {
+function collectUnassessedProgramIds(session: SessionState): Set<string> {
   const done = new Set<string>(session.items.map((i) => i.programId));
   for (const id of session.alreadyOn) done.add(id);
   for (let i = 0; i < session.queueIndex; i++) {
@@ -689,7 +689,39 @@ export function countRemainingOfferPrograms(session: SessionState): number {
     }
   }
 
-  return remaining.size;
+  return remaining;
+}
+
+export function countRemainingOfferPrograms(session: SessionState): number {
+  return collectUnassessedProgramIds(session).size;
+}
+
+/**
+ * Programs not yet shown / decided when the user exits early (queue order
+ * first, then any still locked behind unanswered gates by name).
+ */
+export function listUnassessedPrograms(session: SessionState): Program[] {
+  const ids = collectUnassessedProgramIds(session);
+  if (ids.size === 0) return [];
+
+  const ordered: Program[] = [];
+  const seen = new Set<string>();
+  for (let i = session.queueIndex; i < session.queue.length; i++) {
+    const id = session.queue[i];
+    if (!id || !ids.has(id) || seen.has(id)) continue;
+    const program = getProgram(id);
+    if (!program) continue;
+    ordered.push(program);
+    seen.add(id);
+  }
+
+  const rest = [...ids]
+    .filter((id) => !seen.has(id))
+    .map((id) => getProgram(id))
+    .filter((p): p is Program => Boolean(p))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  return [...ordered, ...rest];
 }
 
 /** Parenthetical for offer cards, e.g. "(3 programs remaining)". */
@@ -744,6 +776,7 @@ export function estimateMaxScreensRemaining(session: SessionState): number {
     "has_immigration_status",
     "has_reopen_notify",
     "help_menu",
+    "awaiting_feedback",
     "confirm_stop",
     "confirm_erase",
   ]);

@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { renderShareQrPng } from "../src/bot/share.js";
+import { campaignLandingUrl } from "../src/config.js";
 import type { SessionState } from "../src/library/types.js";
 import { renderNextStepsPdf } from "../src/nextsteps/pdf.js";
 
@@ -37,11 +39,12 @@ const sample: SessionState = {
   residenceCounty: null,
   // Leave common docs out so the "Find your documents" incentive table has rows.
   docsInHand: ["categoricalProof"],
-  queue: [],
+  // Simulate early exit: remaining queue programs appear under "not assessed".
+  queue: ["liheap", "esa", "amp"],
   queueIndex: 0,
   alreadyOn: [],
   lastBotMessage: null,
-  campaignId: null,
+  campaignId: "qr_website",
   screensSeen: [],
   screenShownAt: null,
   items: [
@@ -135,7 +138,13 @@ const sample: SessionState = {
 
 const outDir = path.join(root, "docs", "samples");
 fs.mkdirSync(outDir, { recursive: true });
-const buf = await renderNextStepsPdf(sample);
+const arrivalQrPng = await renderShareQrPng(
+  campaignLandingUrl("https://calclaim.jayhasty.com", "qr_website"),
+);
+const buf = await renderNextStepsPdf(sample, {
+  arrivalQrPng,
+  arrivalCampaignId: "qr_website",
+});
 const out = path.join(outDir, "calclaim-application-guide-sample.pdf");
 fs.writeFileSync(out, buf);
 console.log("Wrote", out);

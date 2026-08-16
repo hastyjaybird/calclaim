@@ -248,17 +248,26 @@ export function offerKeyboard(
   return kb;
 }
 
-export function helpKeyboard(): InlineKeyboard {
-  return new InlineKeyboard()
-    .url("Privacy policy", PRIVACY_POLICY_URL)
-    .row()
+export function helpKeyboard(donateUrl: string | null = null): InlineKeyboard {
+  const kb = new InlineKeyboard();
+  if (donateUrl) {
+    kb.url("Donate", donateUrl).row();
+  }
+  return kb
     .text("Share", "help:share")
     .row()
-    .text("Erase all my data", "help:erase_ask")
+    .url("Privacy policy", PRIVACY_POLICY_URL)
     .row()
     .text("About", "help:about")
     .row()
-    .text("Back", "help:back");
+    .text("Leave feedback", "help:feedback")
+    .row()
+    .text("Restart", "idle:restart");
+}
+
+/** Cancel while collecting intentional feedback from Help / About. */
+export function leaveFeedbackKeyboard(): InlineKeyboard {
+  return new InlineKeyboard().text("Cancel", "help:menu");
 }
 
 /** Share submenu: Telegram native share + QR; link is in the message text. */
@@ -292,27 +301,30 @@ export function reopenNotifyKeyboard(): InlineKeyboard {
     .text("No thanks", "reopen:no");
 }
 
-/** End-of-flow actions. Email only when there is an open Application Guide. */
-export function idleKeyboard(hasReport = true): InlineKeyboard {
-  const kb = new InlineKeyboard();
-  // No guide → lead with share (primary nudge when nothing to apply for).
-  if (!hasReport) {
-    kb.text("Share CalClaim with friends", "idle:share")
-      .row()
-      .text("Update my answers", "idle:restart")
-      .row()
-      .text("More info", "idle:more_info");
-    return kb;
-  }
-  // Guide ready → email-to-computer is the primary next job.
-  return kb
-    .text("Email Application Guide to my computer", "idle:email")
+/** Re-engage users who stalled before reaching the Application Guide. */
+export function inactivityNudgeKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text("Continue", "inactivity:continue")
     .row()
+    .text("Restart", "inactivity:restart")
+    .row()
+    .text("Remind me in 2 weeks", "inactivity:snooze")
+    .row()
+    .text("Stop", "inactivity:stop");
+}
+
+/** End-of-flow actions after the Application Guide (or empty queue). */
+export function idleKeyboard(donateUrl: string | null = null): InlineKeyboard {
+  const kb = new InlineKeyboard()
     .text("Share CalClaim with friends", "idle:share")
     .row()
-    .text("Update my answers", "idle:restart")
+    .text("Restart", "idle:restart")
     .row()
     .text("More info", "idle:more_info");
+  if (donateUrl) {
+    kb.row().url("Donate", donateUrl);
+  }
+  return kb;
 }
 
 /** Opens share page that auto-launches Mail with a download link. */

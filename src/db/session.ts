@@ -212,6 +212,31 @@ export function listReminderSessions(): SessionState[] {
     );
 }
 
+const INACTIVITY_MS = 14 * 24 * 60 * 60 * 1000;
+
+/**
+ * Sessions that never reached the Application Guide finish path and have been
+ * idle for 2+ weeks. STOP pauses these nudges (same flag as deadline reminders).
+ * Sending or snoozing bumps updatedAt via saveSession so we do not re-ping daily.
+ */
+export function listIncompleteInactiveSessions(
+  now: Date = new Date(),
+): SessionState[] {
+  const nowMs = now.getTime();
+  const rows = getDb()
+    .prepare("SELECT state_json FROM sessions")
+    .all() as { state_json: string }[];
+  return rows
+    .map((r) => JSON.parse(r.state_json) as SessionState)
+    .filter((s) => {
+      if (s.remindersEnabled) return false;
+      if (s.remindersStopped) return false;
+      const last = Date.parse(s.updatedAt);
+      if (Number.isNaN(last)) return false;
+      return nowMs - last >= INACTIVITY_MS;
+    });
+}
+
 /** Users who opted in to waitlist/paused reopen alerts and have not STOPped. */
 export function listReopenNotifySessions(): SessionState[] {
   const rows = getDb()

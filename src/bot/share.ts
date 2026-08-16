@@ -14,9 +14,9 @@ export {
 const SHARE_BLURB =
   "Find California benefits help with CalClaim – food, health, phone, energy bill programs, and more.";
 
-/** Caption on the peer-share QR: in-person scan or copy/forward the next message. */
+/** Caption on the peer-share QR: in-person scan or copy the draft below. */
 export const SHARE_QR_CAPTION =
-  "Show this QR to someone standing next to you – they can scan it with their phone camera.\n\nOr copy and forward the message below:";
+  "Show this QR code to a friend.\n\nOr copy the draft message below.";
 
 function telegramSafePublicUrl(url: string): boolean {
   try {
@@ -75,7 +75,7 @@ Or tap below to share in Telegram, or show a QR code they can scan with their ph
 
 /** Sample message a user can copy or forward to someone they know. */
 export function buildShareForwardText(linkUrl: string): string {
-  return `Hey — I found this free bot that helps with California benefits for food, health, phone, and energy bills. CalClaim builds a personalized Application Guide so applying is easier.
+  return `Hey, I found this free bot that helps with California benefits for food, health, phone, and energy bills. It builds a personalized application guide so applying is easier.
 
 Worth checking out:
 ${linkUrl}`;

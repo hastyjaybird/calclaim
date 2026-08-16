@@ -6,33 +6,26 @@ export const HELP_MENU_TEXT = `Help – type one of these anytime:
 
 • stop – pause deadline reminders (keeps your data; message again to resume)
 • guide – resend your Application Guide
-• email – open your email app with a link to your Application Guide (for your computer)
 • share – get a link or QR code for someone else
 • restart – start over from the beginning (clears your Application Guide)
 • erase – delete all your CalClaim data from this session
 
-We store Telegram profile info and messages to run this demo. We do not sell your data or send it to third-party marketers.
-Privacy policy: ${PRIVACY_POLICY_URL}
-
 Or pick a button below:`;
 
-export const PRIVACY_SHORT = `Privacy (short):
-• We store Telegram user id, name, username, language, and your messages/taps in our demo database.
-• Home ZIP only when needed to check a county-specific program (e.g. CMSP).
-• Immigration status is asked only when needed for later programs – your answer is not stored and is not connected to your phone number.
-• Phone/location only if you share them in Telegram.
-• Street + city for the optional PG&E shut-off check is looked up once, then discarded (we keep only yes/no). If you share location, we snap to the nearest street for that same check and do not keep GPS or the street.
-• Friend-share links use an anonymous code so we can count clicks – not who you sent them to.
-• We do not sell your data or send it to third-party marketers.
-• Type STOP to pause reminders (keeps your data). Type erase to delete your data.
+export const PRIVACY_SHORT =
+  "We do not sell your data or send it to third-party marketers.";
 
-Full policy: ${PRIVACY_POLICY_URL}`;
+/** Prompt after Help → Leave feedback. */
+export const FEEDBACK_PROMPT =
+  "What feedback would you like to share? You can send text, a voice message, or a picture.";
 
 export const ABOUT_TEXT = `CalClaim finds help with food, health coverage, phone discounts, energy bills, and more – and gives you a personalized Application Guide for California and federal programs to make it easier to apply.
 
 Estimates only. Not affiliated with PG&E, DHCS, CDSS, USDA, FCC, IRS, or any agency. Not tax, legal, or benefits advice. For tax credits or filing questions, consult a tax professional or a free VITA site. Official agencies decide eligibility.
 
-CalClaim currently focuses more on California state benefits than federal ones. The federal programs shown are not exhaustive, and neither list is a complete catalog of available aid. Energy / utility programs (CARE, ESA, etc.) are just some of the programs in the list – not the whole product.`;
+CalClaim currently focuses more on California state benefits than federal ones. The federal programs shown are not exhaustive, and neither list is a complete catalog of available aid. Energy / utility programs (CARE, ESA, etc.) are just some of the programs in the list.
+
+Please share if you'd like us to include a missing program, or if you found something incorrect – we'd be grateful for your feedback. Tap Leave feedback below.`;
 
 /** Soft default when we capture free-form alpha feedback (then re-show last prompt). */
 export const THANKS_FEEDBACK = "Thanks for your feedback!";

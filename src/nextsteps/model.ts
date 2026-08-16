@@ -257,12 +257,28 @@ export function formatReportSummary(session: SessionState): string {
       }
     }
     if (taxSeason.length > 0) {
-      lines.push(
-        "",
-        "For your tax preparer (boxed section in the PDF – do not apply now):",
-      );
+      const deadlineDates = [
+        ...new Set(
+          taxSeason
+            .map((item) => item.deadlineDate)
+            .filter((d): d is string => Boolean(d)),
+        ),
+      ];
+      const heading =
+        deadlineDates.length === 1
+          ? `For your tax preparer – file by ${deadlineDates[0]}:`
+          : "For your tax preparer:";
+      lines.push("", heading);
       for (const item of taxSeason) {
-        lines.push(`• ${item.programName}`);
+        if (deadlineDates.length === 1) {
+          lines.push(`• ${item.programName}`);
+        } else if (item.deadlineDate) {
+          lines.push(`• ${item.programName} – file by ${item.deadlineDate}`);
+        } else if (item.deadlineLabel) {
+          lines.push(`• ${item.programName} – ${item.deadlineLabel}`);
+        } else {
+          lines.push(`• ${item.programName}`);
+        }
       }
     }
   }

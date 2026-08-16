@@ -458,6 +458,7 @@ function interpretStepAnswer(
 
   if (
     step !== "help_menu" &&
+    step !== "awaiting_feedback" &&
     step !== "confirm_stop" &&
     step !== "confirm_erase" &&
     (session.undoStack?.length ?? 0) > 0 &&
@@ -467,6 +468,17 @@ function interpretStepAnswer(
       normalized === "oops")
   ) {
     return { kind: "step_answer", callback: "nav:back" };
+  }
+
+  if (step === "awaiting_feedback") {
+    if (
+      normalized === "cancel" ||
+      normalized === "back" ||
+      normalized === "nevermind" ||
+      normalized === "never mind"
+    ) {
+      return { kind: "step_answer", callback: "help:menu" };
+    }
   }
 
   if (step === "opt_in") {
@@ -1089,13 +1101,15 @@ export function stepNudge(step: StepId): string {
     case "offer":
       return "Use the buttons – add to your Application Guide, say you're already enrolled, skip, or exit and print your guide if you have one.";
     case "idle":
-      return "You're all set for now. Update my answers (rewrites your profile), share with a friend, email your Application Guide to a computer, or more info.";
+      return "You're all set for now. Restart (rewrites your profile), share with a friend, or more info.";
     case "confirm_stop":
       return "Want me to pause reminders and reopen alerts? Tap Yes or No below.";
     case "confirm_erase":
       return "This would delete your CalClaim data. Tap Yes or No below.";
     case "help_menu":
       return "Pick a button below, or type stop, guide, share, restart, or erase.";
+    case "awaiting_feedback":
+      return "Send your feedback as text, a voice message, or a picture – or tap Cancel.";
     default:
       return "Tap a button below to keep going – or type help if you're stuck.";
   }
