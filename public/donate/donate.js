@@ -425,4 +425,11 @@
   });
 
   maybeReturnFromRedirect();
+
+  if (location.hash === "#donate") {
+    openDonate();
+  }
+  window.addEventListener("hashchange", () => {
+    if (location.hash === "#donate") openDonate();
+  });
 })();

@@ -22,11 +22,15 @@ export const GATE_OPTIONS = [
 /** Sentinel in `alreadyOn` while on the gate step: "none of these programs". */
 export const GATE_NONE_ID = "none";
 
-export function optInKeyboard(): InlineKeyboard {
-  return new InlineKeyboard()
+export function optInKeyboard(donateUrl: string | null = null): InlineKeyboard {
+  const kb = new InlineKeyboard()
     .text("Start", "opt:start")
     .row()
     .text("Share CalClaim with friends", "opt:share");
+  if (donateUrl) {
+    kb.row().url("Donate", donateUrl);
+  }
+  return kb;
 }
 
 export function gateKeyboard(selected: string[] = []): InlineKeyboard {

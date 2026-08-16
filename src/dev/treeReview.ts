@@ -886,7 +886,7 @@ function previewScreenInner(session: SessionState): ReviewScreen {
     return {
       step,
       title: "OPT_IN",
-      text: `CalClaim finds help with food, health coverage, phone discounts, energy bills, and more – and gives you a personalized Application Guide for California and federal programs to make it easier to apply.
+      text: `Find benefits for food, health, phone, and energy bills. CalClaim creates a personalized Application Guide that makes applying easier.
 
 At any time, text about an issue, correction or suggest an improvement.
 
@@ -898,6 +898,11 @@ Type 'help' for more options.`,
           label: "Share CalClaim with friends",
           action: "opt:share",
           kind: "callback",
+        },
+        {
+          label: "Donate",
+          action: "https://calclaim.jayhasty.com/impact#donate",
+          kind: "url",
         },
       ],
     };

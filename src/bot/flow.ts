@@ -134,8 +134,10 @@ import {
   type ShareOutPrompt,
 } from "../analytics/peerShare.js";
 import {
+  buildShareForwardText,
   buildShareMenuText,
   renderShareQrPng,
+  SHARE_QR_CAPTION,
   shareTargetUrl,
   telegramShareUrl,
 } from "./share.js";
@@ -464,16 +466,19 @@ export async function sendOptIn(
     configured && telegramSafeUrl(configured)
       ? configured
       : CALCLAIM_SITE_FALLBACK;
+  const donateUrl = telegramSafeUrl(siteUrl)
+    ? `${siteUrl.replace(/\/$/, "")}/impact#donate`
+    : null;
   await replyTracked(
     ctx,
     session,
-    `<a href="${siteUrl}">CalClaim</a> finds help with food, health coverage, phone discounts, energy bills, and more – and gives you a personalized Application Guide for California and federal programs to make it easier to apply.
+    `Find benefits for food, health, phone, and energy bills. <a href="${siteUrl}">CalClaim</a> creates a personalized Application Guide that makes applying easier.
 
 At any time, text about an issue, correction or suggest an improvement.
 
 Estimates only. Not affiliated with any agency.
 Type 'help' for more options.`,
-    { reply_markup: optInKeyboard(), parse_mode: "HTML" },
+    { reply_markup: optInKeyboard(donateUrl), parse_mode: "HTML" },
   );
 }
 
@@ -1819,6 +1824,7 @@ async function sendShareMenu(
   }
   const campaigns = peerShareCampaignsOrFallback(session.telegramUserId);
   const linkUrl = shareTargetUrl(appConfig, campaigns.linkCampaignId);
+  const qrUrl = shareTargetUrl(appConfig, campaigns.qrCampaignId);
   if (!linkUrl) {
     await replyTracked(
       ctx,
@@ -1828,16 +1834,42 @@ async function sendShareMenu(
     );
     return;
   }
+
+  let sentQr = false;
+  if (qrUrl) {
+    try {
+      const png = await renderShareQrPng(qrUrl);
+      await ctx.replyWithPhoto(new InputFile(png, "calclaim-share-qr.png"), {
+        caption: SHARE_QR_CAPTION,
+      });
+      trackShareOut({
+        telegramUserId: session.telegramUserId,
+        campaignId: campaigns.qrCampaignId,
+        source: "qr",
+        prompt,
+      });
+      sentQr = true;
+    } catch (err) {
+      console.error("sendShareMenu QR failed:", err);
+    }
+  }
+  if (!sentQr) {
+    await replyTracked(
+      ctx,
+      session,
+      "Copy and forward the message below:",
+      { link_preview_options: { is_disabled: true } },
+    );
+  }
+
   trackShareOut({
     telegramUserId: session.telegramUserId,
     campaignId: campaigns.linkCampaignId,
     source: "link",
     prompt,
   });
-  // t.me/share/url is always Telegram-safe; the target may be /go or t.me deep link.
-  const shareHref = telegramShareUrl(linkUrl);
-  await replyTracked(ctx, session, buildShareMenuText(linkUrl), {
-    reply_markup: shareKeyboard(shareHref),
+  // Plain message so users can long-press → Forward / Copy.
+  await replyTracked(ctx, session, buildShareForwardText(linkUrl), {
     link_preview_options: { is_disabled: true },
   });
 }
