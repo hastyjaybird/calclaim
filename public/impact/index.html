@@ -42,7 +42,7 @@
       <p class="eyebrow" data-i18n="impact.gapEyebrow">The gap</p>
       <h1 data-i18n="impact.gapTitle">Billions in California benefits go unclaimed each year</h1>
       <p class="lede gap-lede" data-i18n="impact.gapLede">
-        Hundreds of thousands of eligible people in California stall on paperwork while federal and state aid sits unused.
+        Hundreds of thousands of eligible people in California stall on paperwork while federal and state aid is unused.
       </p>
       <div class="gap-stats" data-i18n-aria="impact.gapStatsAria" aria-label="Scale of the benefits gap">
         <div class="gap-stat">
@@ -283,7 +283,7 @@
             <li data-i18n="privacy.collect5">Coarse location only (poster sites and city-level IP for the map – never street addresses)</li>
             <li data-i18n="privacy.collect6">Optional email and comments you submit on the contact form</li>
             <li data-i18n="privacy.collect7">Organization name, work email, and optional city if you sign up as a community partner (to send your QR kit and show your status page)</li>
-            <li data-i18n="privacy.collect8">Street + city typed for the optional PG&E shut-off check is looked up once (US Census standardizer + PG&E map), then discarded – we keep only yes/no, never the street address</li>
+            <li data-i18n="privacy.collect8">Street + city typed for the optional PG&E shut-off check is looked up once (US Census standardizer + PG&E map), then discarded – we keep only yes/no, never the street address, and we do not use that address for marketing, profiling, or anything else</li>
             <li data-i18n="privacy.collect9">If you give, the gift amount, whether it is monthly, and Stripe’s payment id – not your card or bank numbers</li>
           </ul>
 
@@ -294,15 +294,17 @@
             <li data-i18n="privacy.not3">Marketing email lists</li>
             <li data-i18n="privacy.not4">Precise GPS unless you choose to share a location</li>
             <li data-i18n="privacy.not5">Immigration status answers (asked only when needed – not stored, not linked to your phone number)</li>
-            <li data-i18n="privacy.not6">Stored street addresses (the PG&E shut-off lookup does not keep them)</li>
+            <li data-i18n="privacy.not6">Stored street addresses – CalClaim does not keep your street address or use it for marketing or profiling; the optional PG&E shut-off check discards it after a one-time lookup</li>
           </ul>
 
           <h3 data-i18n="privacy.useHeading">How we use data</h3>
           <p data-i18n="privacy.useBody">
-            We use your data anonymously to run your session, send next-steps and reminders,
+            We use your data anonymously to run your session, send your Application Guide and reminders,
             improve the demo UX, and publish aggregate impact metrics on the public dashboard.
+            Partner signup details are used to email your QR kit and credit scans on your status page.
             Optional gifts are processed by Stripe and PayPal; we do not store card or bank numbers.
-            We do not give or sell your data.
+            We do not give or sell your data. We do not use your street address for anything beyond
+            the optional one-time shut-off check that discards it.
           </p>
 
           <h3 data-i18n="privacy.choicesHeading">Your choices</h3>
@@ -322,7 +324,7 @@
           </p>
 
           <p>
-            <a href="https://github.com/hastyjaybird/calclaim/blob/main/PRIVACY.md" target="_blank" rel="noopener" data-i18n="privacy.fullCta">
+            <a href="https://github.com/heyhastyjay/calclaim/blob/main/PRIVACY.md" target="_blank" rel="noopener" data-i18n="privacy.fullCta">
               Read the policy on GitHub
             </a>
           </p>

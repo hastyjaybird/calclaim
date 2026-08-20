@@ -1,6 +1,6 @@
 /** Public privacy policy (GitHub); Telegram auto-linkifies this in messages. */
 export const PRIVACY_POLICY_URL =
-  "https://github.com/hastyjaybird/calclaim/blob/main/PRIVACY.md";
+  "https://github.com/heyhastyjay/calclaim/blob/main/PRIVACY.md";
 
 export const HELP_MENU_TEXT = `Help – type one of these anytime:
 
@@ -13,7 +13,7 @@ export const HELP_MENU_TEXT = `Help – type one of these anytime:
 Or pick a button below:`;
 
 export const PRIVACY_SHORT =
-  "We do not sell your data or send it to third-party marketers.";
+  "We do not sell your data or send it to third-party marketers. We do not use your street address for anything beyond an optional one-time PG&E shut-off check that discards it — never for marketing or profiling.";
 
 /** Prompt after Help → Leave feedback. */
 export const FEEDBACK_PROMPT =
